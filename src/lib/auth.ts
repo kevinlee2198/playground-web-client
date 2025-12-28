@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 
 export const auth = betterAuth({
@@ -26,5 +27,6 @@ export const auth = betterAuth({
         },
       ],
     }),
+    nextCookies(), // make sure this is the last plugin in the array
   ],
 });
