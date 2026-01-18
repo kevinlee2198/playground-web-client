@@ -1,8 +1,10 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
+import { keycloak } from "better-auth/plugins/generic-oauth";
 
 export const auth = betterAuth({
+  trustedOrigins: [process.env.BETTER_AUTH_URL!],
   session: {
     cookieCache: {
       enabled: true,
@@ -18,13 +20,13 @@ export const auth = betterAuth({
   plugins: [
     genericOAuth({
       config: [
-        {
-          providerId: "keycloak",
+        keycloak({
           clientId: process.env.KEYCLOAK_CLIENT_ID as string,
-          clientSecret: process.env.KEYCLOAK_CLIENT_SECRET as string,
-          discoveryUrl: process.env.KEYCLOAK_DISCOVERY_URL as string,
-          // "https://auth.example.com/.well-known/openid-configuration",
-        },
+          clientSecret: "", // Empty for public clients
+          issuer: `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_REALM}`,
+          pkce: true,
+          scopes: ["openid", "profile", "email"],
+        }),
       ],
     }),
     nextCookies(), // make sure this is the last plugin in the array

@@ -2,6 +2,14 @@
   "common": {
     "title": "Playground"
   },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out"
+  },
+  "header": {
+    "home": "Home"
+  },
   "footer": {
     "company": {
       "about": "About the company",

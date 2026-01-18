@@ -48,7 +48,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <LocaleProvider dict={dict}>
-          <Navbar lang={lang} />
+          <Navbar dict={dict} />
           {children}
           <Footer dict={dict} />
         </LocaleProvider>
