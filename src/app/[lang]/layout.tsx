@@ -1,7 +1,15 @@
 import "@/app/globals.css";
+import { LocaleProvider } from "@/components/i18n/locale-provider";
 import Footer from "@/components/playground/footer";
+import { Navbar } from "@/components/playground/navbar";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import {
+  defaultLocal,
+  getDictionary,
+  hasLocale,
+  Locale,
+} from "../../lib/i18n/dictionaries";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,14 +39,19 @@ export default async function RootLayout({
   children,
   params,
 }: RootLayoutProps) {
-  const { lang } = await params;
+  const { lang: initialLang } = await params;
+  const lang: Locale = hasLocale(initialLang) ? initialLang : defaultLocal();
+  const dict = await getDictionary(lang);
   return (
     <html lang={lang}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Footer lang={lang} />
+        <LocaleProvider dict={dict}>
+          <Navbar lang={lang} />
+          {children}
+          <Footer dict={dict} />
+        </LocaleProvider>
       </body>
     </html>
   );
