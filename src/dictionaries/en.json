@@ -1,5 +1,26 @@
 {
   "common": {
     "title": "Playground"
+  },
+  "footer": {
+    "company": {
+      "about": "About the company",
+      "contact": "Contact"
+    },
+    "features": {
+      "title": "Features",
+      "pricing": "Pricing",
+      "statTracking": "Stat Tracking"
+    },
+    "help": {
+      "title": "Help",
+      "gettingStarted": "Getting Started"
+    },
+    "resources": {
+      "title": "Resources",
+      "privacyPolicy": "Privacy Policy",
+      "faq": "FAQ"
+    },
+    "allRightsReserved": "All rights reserved."
   }
 }

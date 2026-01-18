@@ -1,4 +1,5 @@
 import "@/app/globals.css";
+import Footer from "@/components/playground/footer";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -21,16 +22,23 @@ export async function generateStaticParams() {
   return [{ lang: "en-US" }];
 }
 
+interface RootLayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ lang: string }>;
+}
+
 export default async function RootLayout({
   children,
   params,
-}: LayoutProps<"/[lang]">) {
+}: RootLayoutProps) {
+  const { lang } = await params;
   return (
-    <html lang={(await params).lang}>
+    <html lang={lang}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Footer lang={lang} />
       </body>
     </html>
   );
