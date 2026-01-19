@@ -38,3 +38,30 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Authentication
 
 This project uses [better-auth](https://www.better-auth.com/) to handle authentication. It uses keycloak as the IDP and better auth as a stateless management system.
+
+## Features
+
+This project is a NextJS webapp that makes playing sports with friends easier. It contains aspects of Facebook, Twitch, and Strava.
+Users can friend other users, schedule sporting events like basketball games with their friends, and track their stats. Users can also livestream their
+sporting event. Live chat with friends is also available.
+
+## Server
+
+This webapp communicates with a spring boot server using GraphQL. Use the `graphql-request.ts` file to communicate with it
+
+## Development with Claude Code
+
+This project uses [Claude Code](https://claude.ai/code) with specialized subagents for spec-driven development.
+
+### Subagent Workflow
+
+1. `/requirements` - Product manager interviews you and writes requirements
+2. `/design` - Principal engineer creates technical design
+3. `/implementation` - Frontend engineer implements the feature
+4. `/qa` - Verifies implementation against requirements
+5. `/code-reviewer` - Reviews code quality and security
+6. `/debugger` - Troubleshoots issues
+
+Specifications are stored in `.claudedoc/<feature-name>/` with `requirements.md`, `design.md`, and `qa-report.md`.
+
+See `CLAUDE.md` for full documentation.
