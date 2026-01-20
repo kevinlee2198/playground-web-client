@@ -29,6 +29,6 @@
       "privacyPolicy": "Privacy Policy",
       "faq": "FAQ"
     },
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "© {currentDate, date, ::yyyy} Playground. All rights reserved."
   }
 }

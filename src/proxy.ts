@@ -1,46 +1,11 @@
-import { match } from "@formatjs/intl-localematcher";
-import Negotiator from "negotiator";
-import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
 
-let locales = ["en-US"];
-let defaultLocale = "en-US";
-
-function getLocale(request: NextRequest): string {
-  // Extract only the accept-language header
-  const acceptLanguage = request.headers.get("accept-language");
-  const headers = { "accept-language": acceptLanguage || "" };
-
-  let languages = new Negotiator({ headers }).languages();
-  return match(languages, locales, defaultLocale);
-}
-
-export function proxy(request: NextRequest) {
-  // Check if there is any supported locale in the pathname
-  const { pathname } = request.nextUrl;
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-
-  if (pathnameHasLocale) return;
-
-  // Redirect if there is no locale
-  const locale = getLocale(request);
-  request.nextUrl.pathname = `/${locale}${pathname}`;
-  // e.g. incoming request is /products
-  // The new URL is now /en-US/products
-  return NextResponse.redirect(request.nextUrl);
-}
+export default createMiddleware(routing);
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (svg, png, jpg, etc.)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|.*\\.ico).*)",
-  ],
+  // Match all pathnames except for
+  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
+  // - … the ones containing a dot (e.g. `favicon.ico`)
+  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
 };

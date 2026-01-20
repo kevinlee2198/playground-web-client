@@ -37,11 +37,13 @@ This project uses specialized subagents for structured feature development. Agen
 6. **debugger** (opus) - Troubleshoots issues when they arise
 
 **Specifications directory:** `.claudedoc/<feature-name>/`
+
 - `requirements.md` - Functional requirements from requirements agent
 - `design.md` - Technical design from design agent
 - `qa-report.md` - Verification report from QA agent
 
 **Usage:**
+
 ```
 # Start with requirements gathering
 /requirements
@@ -65,7 +67,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 
 ### Directory Structure
 
-- `src/app/[lang]/` - Dynamic language routing (i18n). All pages are nested under a `[lang]` segment.
+- `src/app/[locale]/` - Dynamic language routing (i18n). All pages are nested under a `[locale]` segment.
 - `src/components/ui/` - shadcn/ui components (new-york style with Lucide icons)
 - `src/components/playground/` - App-specific components (navbar, footer)
 - `src/components/auth/` - Authentication UI components
@@ -89,7 +91,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 - Error format follows Netflix DGS specification
 - Queries are sent to a spring-boot graphql server
 
-**i18n** (`src/lib/i18n/`): Type-safe translation with dot-notation paths (e.g., `t("footer.company.about")`). Dictionary loaded server-side, provided via `LocaleProvider` context.
+**i18n** (`src/lib/i18n/`): Type-safe translation with dot-notation paths (e.g., `t("footer.company.about")`). Uses the `next-intl` library.
 
 **Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names.
 

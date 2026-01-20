@@ -1,18 +1,15 @@
-import { createTranslator } from "@/lib/i18n/translator";
-import { Dictionary } from "@/lib/i18n/types";
+import { useNow, useTranslations } from "next-intl";
 import Link from "next/link";
 import { TypographyH5, TypographyP } from "../ui/typography";
 
-interface Props {
-  dict: Dictionary;
-}
+interface Props {}
 
-export default async function Footer({ dict }: Props) {
-  const t = createTranslator(dict);
+export default function Footer({}: Props) {
+  const t = useTranslations();
 
   return (
-    <footer className="bg-gray-900 text-gray-300 py-12">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="border-t border-muted">
+      <div className="mx-auto max-w-7xl px-6 py-4 flex justify-center">
         <div className="grid grid-cols-4 gap-8">
           {/* Help Section */}
           <div className="text-center">
@@ -83,8 +80,7 @@ export default async function Footer({ dict }: Props) {
         {/* Footer Bottom */}
         <div className="text-center mt-8">
           <TypographyP>
-            &copy; {new Date().getFullYear()} {t("common.title")}{" "}
-            {t("footer.allRightsReserved")}
+            {t("footer.allRightsReserved", { currentDate: useNow() })}
           </TypographyP>
         </div>
       </div>

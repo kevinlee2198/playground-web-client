@@ -1,5 +1,4 @@
-import { createTranslator } from "@/lib/i18n/translator";
-import { Dictionary } from "@/lib/i18n/types";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import AuthButton from "../auth/auth-button";
@@ -13,12 +12,10 @@ import {
 } from "../ui/navigation-menu";
 import { TypographyH1, TypographyP } from "../ui/typography";
 
-interface Props {
-  dict: Dictionary;
-}
+interface Props {}
 
-export async function Navbar({ dict }: Props) {
-  const t = createTranslator(dict);
+export function Navbar({}: Props) {
+  const t = useTranslations();
 
   return (
     <nav className="w-full border-b">

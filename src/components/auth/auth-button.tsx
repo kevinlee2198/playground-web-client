@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "@/lib/auth-client";
-import { useTranslator } from "../i18n/locale-provider";
+import { useTranslations } from "next-intl";
 import { TypographyP } from "../ui/typography";
 
 interface Props {}
 
-export default function AuthButton(props: Props) {
-  const t = useTranslator();
+export default function AuthButton({}: Props) {
+  const t = useTranslations();
   const session = useSession();
 
   const handleSignIn = async () => {
