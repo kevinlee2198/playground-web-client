@@ -65,3 +65,12 @@ This project uses [Claude Code](https://claude.ai/code) with specialized subagen
 Specifications are stored in `.claudedoc/<feature-name>/` with `requirements.md`, `design.md`, and `qa-report.md`.
 
 See `CLAUDE.md` for full documentation.
+
+### Skills
+
+See https://code.claude.com/docs/en/skills for claude skills
+
+Skills can be found at:
+
+- https://github.com/VoltAgent/awesome-claude-skills
+- https://github.com/vercel-labs/agent-skills
