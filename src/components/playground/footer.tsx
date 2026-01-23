@@ -1,5 +1,5 @@
+import { Link } from "@/i18n/navigation";
 import { useNow, useTranslations } from "next-intl";
-import Link from "next/link";
 import { TypographyH5, TypographyP } from "../ui/typography";
 
 interface Props {}
@@ -9,7 +9,7 @@ export default function Footer({}: Props) {
 
   return (
     <footer className="border-t border-muted">
-      <div className="mx-auto max-w-7xl px-6 py-4 flex justify-center">
+      <div className="mx-auto max-w-7xl px-6 py-4">
         <div className="grid grid-cols-4 gap-8">
           {/* Help Section */}
           <div className="text-center">
@@ -45,12 +45,12 @@ export default function Footer({}: Props) {
             <TypographyH5>{t("common.title")}</TypographyH5>
             <ul className="space-y-2">
               <li>
-                <Link href="/resources/about">
+                <Link href="/resource/about">
                   <TypographyP>{t("footer.company.about")}</TypographyP>
                 </Link>
               </li>
               <li>
-                <Link href="/resources/contact">
+                <Link href="/resource/contact">
                   <TypographyP>{t("footer.company.contact")}</TypographyP>
                 </Link>
               </li>
@@ -62,14 +62,14 @@ export default function Footer({}: Props) {
             <TypographyH5>{t("footer.resources.title")}</TypographyH5>
             <ul className="space-y-2">
               <li>
-                <Link href="/resources/privacy-policy">
+                <Link href="/resource/privacy-policy">
                   <TypographyP>
                     {t("footer.resources.privacyPolicy")}
                   </TypographyP>
                 </Link>
               </li>
               <li>
-                <Link href="/resources/frequently-asked-questions">
+                <Link href="/resource/frequently-asked-questions">
                   <TypographyP>{t("footer.resources.faq")}</TypographyP>
                 </Link>
               </li>

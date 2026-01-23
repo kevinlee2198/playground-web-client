@@ -1,6 +1,6 @@
+import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 import AuthButton from "../auth/auth-button";
 import {
   NavigationMenu,
@@ -81,7 +81,7 @@ export function Navbar({}: Props) {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link
-                  href="/contact"
+                  href="/resource/contact"
                   className="px-4 py-2 text-sm font-medium hover:text-primary"
                 >
                   Contact
