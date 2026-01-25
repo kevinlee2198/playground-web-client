@@ -31,6 +31,61 @@
     },
     "allRightsReserved": "© {currentDate, date, ::yyyy} Playground. All rights reserved."
   },
+  "sports": {
+    "BASKETBALL": "Basketball",
+    "FOOTBALL": "Football",
+    "TENNIS": "Tennis"
+  },
+  "sportSubtypes": {
+    "FIVE_ON_FIVE": "5v5",
+    "THREE_ON_THREE": "3v3",
+    "FLAG_FOOTBALL": "Flag Football",
+    "AMERICAN_FOOTBALL": "American Football",
+    "SINGLES": "Singles",
+    "DOUBLES": "Doubles"
+  },
+  "profile": {
+    "title": "Profile",
+    "viewProfile": "View Profile",
+    "settings": "Settings",
+    "editProfile": "Edit Profile",
+    "message": "Message",
+    "messageFriendsOnly": "You must be friends to send messages",
+    "stats": {
+      "title": "Player Stats",
+      "age": "Age",
+      "height": "Height",
+      "weight": "Weight",
+      "years": "years",
+      "biography": "Biography"
+    },
+    "games": {
+      "title": "Game History",
+      "noGames": "No games played yet",
+      "noActivity": "No Activity",
+      "loadMore": "Load More",
+      "vs": "vs",
+      "status": {
+        "scheduled": "Scheduled",
+        "inProgress": "In Progress",
+        "complete": "Complete"
+      }
+    },
+    "friends": {
+      "addFriend": "Add Friend",
+      "pending": "Friend Request Pending",
+      "acceptRequest": "Accept Friend Request",
+      "friends": "Friends",
+      "requestSent": "Friend request sent",
+      "requestAccepted": "Friend request accepted",
+      "error": "Failed to process friend request"
+    },
+    "errors": {
+      "notFound": "User not found",
+      "playerDataUnavailable": "Player information unavailable",
+      "loadError": "Failed to load profile"
+    }
+  },
   "contact": {
     "title": "Contact Us",
     "email": "Email: playgroundsocool@gmail.com",

@@ -5,7 +5,19 @@ type User implements Node {
   id: ID!
   firstName: String!
   lastName: String!
+  player: Player
+  friendship: Friendship
+}
+
+"""
+The current authenticated user with private fields
+"""
+type CurrentUser implements Node {
+  id: ID!
+  firstName: String!
+  lastName: String!
   email: String!
+  player: Player
 }
 
 """
@@ -26,14 +38,56 @@ enum FriendshipStatus {
 }
 
 """
+Direction of a friendship relative to the current user
+"""
+enum FriendshipDirection {
+  """
+  Requests sent TO the current user
+  """
+  INCOMING
+  """
+  Requests sent BY the current user
+  """
+  OUTGOING
+}
+
+"""
 The Friendship between two users
 Can be bidirectional - ACCEPTED status
 Can be unidirectional - PENDING status
 """
-type Friendship {
-  requesterId: ID!
-  addresseeId: ID!
-  friendshipStatus: FriendshipStatus!
+type Friendship implements Node {
+  id: ID!
+  requester: User!
+  addressee: User!
+  status: FriendshipStatus!
+  createdDate: DateTime!
+}
+
+type FriendshipEdge implements Edge {
+  cursor: String!
+  node: Friendship!
+}
+
+type FriendshipConnection implements Connection {
+  edges: [FriendshipEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Filters for querying friendships
+"""
+input FriendshipFilterInput {
+  """
+  Filter by friendship status
+  """
+  status: FriendshipStatus
+  """
+  Filter by direction relative to current user.
+  INCOMING = other users requested me, OUTGOING = I requested them.
+  If null, returns both directions.
+  """
+  direction: FriendshipDirection
 }
 
 type UserEdge implements Edge {
@@ -46,11 +100,11 @@ type UserConnection implements Connection {
   pageInfo: PageInfo!
 }
 
-input FriendInput {
+input SendFriendRequestInput {
   userId: ID!
 }
 
-type FriendResponse {
+type SendFriendRequestResponse {
   friendship: Friendship!
 }
 
@@ -81,7 +135,8 @@ type UnfriendResponse {
 type Notification implements Node {
   id: ID!
   body: String!
-  read: Boolean!
+  isRead: Boolean!
+  createdDate: DateTime!
 }
 
 type NotificationEdge implements Edge {
@@ -102,6 +157,95 @@ type ReadNotificationsResponse {
   notifications: [Notification!]!
 }
 
+input UserSearchInput {
+  query: String!
+  #    excludeFriends: Boolean
+  #    hasFriendshipStatus: FriendshipStatus
+  #    hasPlayer: Boolean
+}
+
+"""
+A player in a game. Persists across games
+"""
+type Player implements Node {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  age: Int
+  height: Float
+  weight: Float
+  biography: String
+}
+
+"""
+Creates a new player
+"""
+input CreatePlayerInput {
+  firstName: String!
+  lastName: String!
+  age: Int
+  height: Float
+  weight: Float
+  biography: String
+}
+
+"""
+Updates an existing player
+Fields not specified will not be updated
+"""
+input UpdatePlayerInput {
+  id: ID!
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here is not allowed
+  """
+  firstName: String
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here is not allowed
+  """
+  lastName: String
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  age: Int
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  height: Float
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  weight: Float
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  biography: String
+}
+
+"""
+Deletes a player
+"""
+input DeletePlayerInput {
+  id: ID!
+}
+
+type CreatePlayerResponse {
+  player: Player!
+}
+
+type UpdatePlayerResponse {
+  player: Player!
+}
+
+type DeletePlayerResponse implements DeleteResponse {
+  id: ID
+}
+
 """
 What state a game is in.
 """
@@ -112,9 +256,52 @@ enum GameStatus {
 }
 
 """
+Different sport types supported by Playground
+"""
+enum SportType {
+  BASKETBALL
+  FOOTBALL
+  TENNIS
+}
+
+"""
+Subtypes of the main sport type
+"""
+enum BasketballSubtype {
+  FIVE_ON_FIVE
+  THREE_ON_THREE
+}
+
+enum TennisSubtype {
+  SINGLES
+  DOUBLES
+}
+
+enum FootballSubtype {
+  FLAG_FOOTBALL
+  AMERICAN_FOOTBALL
+}
+
+"""
+Unified sport subtype enum for output types.
+The valid subtypes depend on the sportType field.
+"""
+enum SportSubtype {
+  # Basketball
+  FIVE_ON_FIVE
+  THREE_ON_THREE
+  # Football
+  FLAG_FOOTBALL
+  AMERICAN_FOOTBALL
+  # Tennis
+  SINGLES
+  DOUBLES
+}
+
+"""
 A grouping of players in a game. Is game-specific
 """
-type TeamInstance implements Node {
+type TeamInstance implements Node & GameParticipant {
   id: ID!
   name: String!
   description: String
@@ -125,13 +312,22 @@ type TeamInstance implements Node {
   attributes: JSON!
 }
 
-type TeamInstanceEdge implements Edge {
-  cursor: String!
-  node: TeamInstance!
+type IndividualParticipant implements Node & GameParticipant {
+  id: ID!
+  player: Player
 }
 
-type TeamInstanceConnection implements Connection {
-  edges: [TeamInstanceEdge!]!
+interface GameParticipant implements Node {
+  id: ID!
+}
+
+type GameParticipantEdge implements Edge {
+  cursor: String!
+  node: GameParticipant!
+}
+
+type GameParticipantConnection implements Connection {
+  edges: [GameParticipantEdge!]!
   pageInfo: PageInfo!
 }
 
@@ -143,16 +339,17 @@ type Game implements Node {
   startDate: DateTime!
   endDate: DateTime
   sportType: SportType!
+  sportSubtype: SportSubtype!
   gameStatus: GameStatus!
   """
-  Teams in a game. Relay / Connection pagination
+  Participants in a game. Relay / Connection pagination. Will either be teams or individuals
   """
-  teamInstances(
+  participants(
     first: Int
     after: String
     last: Int
     before: String
-  ): TeamInstanceConnection!
+  ): GameParticipantConnection!
   livestreams(
     first: Int
     after: String
@@ -211,7 +408,7 @@ Fields to sort a game by
 enum GameSortField {
   START_DATE
   END_DATE
-  GAME_STATE
+  GAME_STATUS
 }
 
 """
@@ -222,24 +419,105 @@ input GameSortInput {
   direction: SortDirection = ASC
 }
 
+# ============================================================================
+# Add Game Participant (Singular)
+# ============================================================================
+
 """
-Create a new team instance
+Add a team instance to a game.
+Use for team sports (5v5 basketball, doubles tennis, football).
 """
-input CreateTeamInstanceInput {
+input AddTeamInstanceInput {
   gameId: ID!
   name: String!
   description: String
   playerIds: [ID!]
   """
-  Map of flexible attributes
-  If null will be set to empty map
+  Map of flexible attributes.
+  If null will be set to empty map.
   """
   attributes: JSON
 }
 
 """
-Update a team instance
-Fields not specified will not be updated
+Add an individual participant to a game.
+Use for individual sports (singles tennis, 3v3 basketball).
+"""
+input AddIndividualParticipantInput {
+  gameId: ID!
+  playerId: ID!
+}
+
+"""
+Add a participant to a game.
+The participant type must match the game's sport subtype:
+- Team sports (5v5 basketball, doubles tennis, football): use teamInstance
+- Individual sports (singles tennis, 3v3 basketball): use individual
+"""
+input AddGameParticipantInput @oneOf {
+  teamInstance: AddTeamInstanceInput
+  individual: AddIndividualParticipantInput
+}
+
+type AddGameParticipantResponse {
+  participant: GameParticipant!
+}
+
+# ============================================================================
+# Add Game Participants (Bulk)
+# ============================================================================
+
+"""
+Team instance data for bulk add (gameId is at parent level).
+"""
+input AddTeamInstanceData {
+  name: String!
+  description: String
+  playerIds: [ID!]
+  """
+  Map of flexible attributes.
+  If null will be set to empty map.
+  """
+  attributes: JSON
+}
+
+"""
+Add multiple team instances to a game.
+"""
+input AddTeamInstancesInput {
+  gameId: ID!
+  teamInstances: [AddTeamInstanceData!]!
+}
+
+"""
+Add multiple individual participants to a game.
+"""
+input AddIndividualParticipantsInput {
+  gameId: ID!
+  playerIds: [ID!]!
+}
+
+"""
+Add multiple participants to a game.
+The participant type must match the game's sport subtype.
+Schema enforces that all participants in a batch are the same type.
+"""
+input AddGameParticipantsInput @oneOf {
+  teamInstances: AddTeamInstancesInput
+  individuals: AddIndividualParticipantsInput
+}
+
+type AddGameParticipantsResponse {
+  participants: [GameParticipant!]!
+}
+
+# ============================================================================
+# Update Game Participant (Singular)
+# ============================================================================
+
+"""
+Update a team instance.
+Fields not specified will not be updated.
 """
 input UpdateTeamInstanceInput {
   id: ID!
@@ -250,55 +528,144 @@ input UpdateTeamInstanceInput {
   description: String
   playerIds: [ID!]
   """
-  Map of flexible attributes
-  If null will be set to empty map
+  Map of flexible attributes.
+  If null will not be updated.
   """
   attributes: JSON
 }
 
-input CreateTeamInstancesInput {
-  teamInstances: [CreateTeamInstanceInput!]!
+"""
+Update a participant in a game.
+Currently only team instances have updatable fields.
+"""
+input UpdateGameParticipantInput @oneOf {
+  teamInstance: UpdateTeamInstanceInput
 }
 
+type UpdateGameParticipantResponse {
+  participant: GameParticipant!
+}
+
+# ============================================================================
+# Update Game Participants (Bulk)
+# ============================================================================
+
+"""
+Update multiple team instances.
+"""
 input UpdateTeamInstancesInput {
   teamInstances: [UpdateTeamInstanceInput!]!
 }
 
-input DeleteTeamInstanceInput {
+"""
+Update multiple participants in a game.
+Currently only team instances have updatable fields.
+Schema enforces that all participants in a batch are the same type.
+"""
+input UpdateGameParticipantsInput @oneOf {
+  teamInstances: UpdateTeamInstancesInput
+}
+
+type UpdateGameParticipantsResponse {
+  participants: [GameParticipant!]!
+}
+
+# ============================================================================
+# Remove Game Participant (Singular)
+# ============================================================================
+
+"""
+Remove a team instance from a game.
+"""
+input RemoveTeamInstanceInput {
   id: ID!
 }
 
-input DeleteTeamInstancesInput {
+"""
+Remove an individual participant from a game.
+"""
+input RemoveIndividualParticipantInput {
+  gameId: ID!
+  playerId: ID!
+}
+
+"""
+Remove a participant from a game.
+Must specify which type of participant is being removed.
+"""
+input RemoveGameParticipantInput @oneOf {
+  teamInstance: RemoveTeamInstanceInput
+  individual: RemoveIndividualParticipantInput
+}
+
+type RemoveGameParticipantResponse {
+  id: ID!
+}
+
+# ============================================================================
+# Remove Game Participants (Bulk)
+# ============================================================================
+
+"""
+Remove multiple team instances from a game.
+"""
+input RemoveTeamInstancesInput {
   ids: [ID!]!
 }
 
-type CreateTeamInstanceResponse {
-  teamInstance: TeamInstance!
+"""
+Remove multiple individual participants from a game.
+"""
+input RemoveIndividualParticipantsInput {
+  gameId: ID!
+  playerIds: [ID!]!
 }
 
-type CreateTeamInstancesResponse {
-  teamInstances: [TeamInstance!]!
+"""
+Remove multiple participants from a game.
+Schema enforces that all participants in a batch are the same type.
+"""
+input RemoveGameParticipantsInput @oneOf {
+  teamInstances: RemoveTeamInstancesInput
+  individuals: RemoveIndividualParticipantsInput
 }
 
-type UpdateTeamInstanceResponse {
-  teamInstance: TeamInstance!
+type RemoveGameParticipantsResponse {
+  ids: [ID!]!
 }
 
-type UpdateTeamInstancesResponse {
-  teamInstances: [TeamInstance!]!
+"""
+Sport-specific game configuration. Exactly one must be provided.
+The main SportType is derived from the sport config chosen.
+"""
+input CreateGameInput @oneOf {
+  basketball: CreateBasketballGameInput
+  football: CreateFootballGameInput
+  tennis: CreateTennisGameInput
 }
 
-type DeleteTeamInstanceResponse implements DeleteResponse {
-  id: ID
-}
-
-type DeleteTeamInstancesResponse {
-  ids: [ID]!
-}
-
-input CreateGameInput {
+"""
+Create a basketball game
+"""
+input CreateBasketballGameInput {
   startDate: DateTime!
-  sportType: SportType!
+  subtype: BasketballSubtype!
+}
+
+"""
+Create a football game
+"""
+input CreateFootballGameInput {
+  startDate: DateTime!
+  subtype: FootballSubtype!
+}
+
+"""
+Create a tennis game
+"""
+input CreateTennisGameInput {
+  startDate: DateTime!
+  subtype: TennisSubtype!
 }
 
 input UpdateGameInput {
@@ -346,72 +713,6 @@ type EndGameResponse {
   game: Game!
 }
 
-"""
-A player in a game. Persists across games
-"""
-type Player implements Node {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
-}
-
-"""
-Creates a new player
-"""
-input CreatePlayerInput {
-  firstName: String!
-  lastName: String!
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
-}
-
-"""
-Updates an existing player
-Fields not specified will not be updated
-"""
-input UpdatePlayerInput {
-  id: ID!
-  """
-  Omit a field to leave it unchanged.
-  Setting to null will leave it unchanged.
-  """
-  firstName: String
-  """
-  Omit a field to leave it unchanged.
-  Setting to null will leave it unchanged.
-  """
-  lastName: String
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
-}
-
-"""
-Deletes a player
-"""
-input DeletePlayerInput {
-  id: ID!
-}
-
-type CreatePlayerResponse {
-  player: Player!
-}
-
-type UpdatePlayerResponse {
-  player: Player!
-}
-
-type DeletePlayerResponse implements DeleteResponse {
-  id: ID
-}
-
 interface ChatMessage implements Node & HasUser {
   id: ID!
   chatRoom: ChatRoom!
@@ -432,7 +733,7 @@ interface ChatMessage implements Node & HasUser {
   """
   If a message is sent by the system - i.e. person was removed
   """
-  systemMessage: Boolean!
+  isSystemMessage: Boolean!
 }
 
 type TextChatMessage implements ChatMessage & Node & HasUser {
@@ -447,7 +748,7 @@ type TextChatMessage implements ChatMessage & Node & HasUser {
   updatedDate: DateTime
   deletedDate: DateTime
   replyTo: ChatMessage
-  systemMessage: Boolean!
+  isSystemMessage: Boolean!
 }
 
 type FileChatMessage implements ChatMessage & Node & HasUser {
@@ -458,7 +759,7 @@ type FileChatMessage implements ChatMessage & Node & HasUser {
   updatedDate: DateTime
   deletedDate: DateTime
   replyTo: ChatMessage
-  systemMessage: Boolean!
+  isSystemMessage: Boolean!
   fileName: String!
   fileUrl: String!
   fileSize: Int!
@@ -473,7 +774,7 @@ type ImageChatMessage implements ChatMessage & Node & HasUser {
   updatedDate: DateTime
   deletedDate: DateTime
   replyTo: ChatMessage
-  systemMessage: Boolean!
+  isSystemMessage: Boolean!
   imageUrl: String!
   thumbnailUrl: String
   width: Int
@@ -504,12 +805,12 @@ type ChatRoomMember implements HasUser & Node {
   joinedDate: DateTime!
 }
 
-type ChatRoomMemberEdge {
+type ChatRoomMemberEdge implements Edge {
   cursor: String!
   node: ChatRoomMember!
 }
 
-type ChatRoomMemberConnection {
+type ChatRoomMemberConnection implements Connection {
   edges: [ChatRoomMemberEdge!]!
   pageInfo: PageInfo!
 }
@@ -579,7 +880,7 @@ type RemoveChatRoomMemberResponse {
   userId: ID!
 }
 
-interface SendChatMessageResponse {
+type SendChatMessageResponse {
   chatMessage: ChatMessage!
 }
 
@@ -589,8 +890,12 @@ input SendTextChatMessageInput {
   replyToId: ID
 }
 
-type SendTextChatMessageResponse implements SendChatMessageResponse {
-  chatMessage: TextChatMessage!
+"""
+Polymorphic input for sending different types of chat messages.
+Exactly one field must be provided.
+"""
+input SendChatMessageInput @oneOf {
+  textMessage: SendTextChatMessageInput
 }
 
 input UpdateTextChatMessageInput {
@@ -598,8 +903,16 @@ input UpdateTextChatMessageInput {
   content: String!
 }
 
-type UpdateTextChatMessageResponse {
-  message: TextChatMessage!
+"""
+Polymorphic input for updating different types of chat messages.
+Exactly one field must be provided.
+"""
+input UpdateChatMessageInput @oneOf {
+  textMessage: UpdateTextChatMessageInput
+}
+
+type UpdateChatMessageResponse {
+  chatMessage: ChatMessage!
 }
 
 input DeleteChatMessageInput {
@@ -607,7 +920,7 @@ input DeleteChatMessageInput {
 }
 
 type DeleteChatMessageResponse implements DeleteResponse {
-  id: ID!
+  id: ID
 }
 
 interface ChatEvent {
@@ -796,15 +1109,6 @@ scalar DateTime
 scalar JSON
 
 """
-Different sport types supported by Playground
-"""
-enum SportType {
-  BASKETBALL
-  FOOTBALL
-  TENNIS
-}
-
-"""
 The direction to sort results
 """
 enum SortDirection {
@@ -812,6 +1116,9 @@ enum SortDirection {
   DESC
 }
 
+"""
+Node IDs are unique only within a type
+"""
 interface Node {
   id: ID!
 }
@@ -843,14 +1150,33 @@ type Query {
   """
   user(id: ID!): User
   """
-  Get the user info for the current logged-in user
+  Get the user info for the current logged-in user.
+  Returns additional private fields like email.
   """
-  currentUser: User!
+  me: CurrentUser!
   """
-  Get friends for the current logged-in user.
+  Search for users by name.
   User must be authenticated.
   """
-  friends(first: Int, after: String, last: Int, before: String): UserConnection!
+  searchUsers(
+    input: UserSearchInput!
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): UserConnection!
+  """
+  Query friendships for the current user.
+  Use filters to get pending requests, accepted friends, blocked users, etc.
+  User must be authenticated.
+  """
+  friendships(
+    input: FriendshipFilterInput
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FriendshipConnection!
   """
   Get a player by ID
   """
@@ -945,41 +1271,43 @@ type Mutation {
   """
   deleteGame(input: DeleteGameInput!): DeleteGameResponse!
   """
-  Create team instance for a game.
+  Add a participant to a game.
+  Use teamInstance for team sports, individual for individual competition formats.
   """
-  createTeamInstance(
-    input: CreateTeamInstanceInput!
-  ): CreateTeamInstanceResponse!
+  addGameParticipant(
+    input: AddGameParticipantInput!
+  ): AddGameParticipantResponse!
   """
-  Create team instances for a game.
+  Add multiple participants to a game.
   """
-  createTeamInstances(
-    input: CreateTeamInstancesInput!
-  ): CreateTeamInstancesResponse!
+  addGameParticipants(
+    input: AddGameParticipantsInput!
+  ): AddGameParticipantsResponse!
   """
-  Update a team instance in a game.
+  Update a participant in a game.
+  Currently only team instances have updatable fields.
   """
-  updateTeamInstance(
-    input: UpdateTeamInstanceInput!
-  ): UpdateTeamInstanceResponse!
+  updateGameParticipant(
+    input: UpdateGameParticipantInput!
+  ): UpdateGameParticipantResponse!
   """
-  Update team instances in a game.
+  Update multiple participants in a game.
   """
-  updateTeamInstances(
-    input: UpdateTeamInstancesInput!
-  ): UpdateTeamInstancesResponse!
+  updateGameParticipants(
+    input: UpdateGameParticipantsInput!
+  ): UpdateGameParticipantsResponse!
   """
-  Delete a team instance in a game.
+  Remove a participant from a game.
   """
-  deleteTeamInstance(
-    input: DeleteTeamInstanceInput!
-  ): DeleteTeamInstanceResponse!
+  removeGameParticipant(
+    input: RemoveGameParticipantInput!
+  ): RemoveGameParticipantResponse!
   """
-  Delete team instances.
+  Remove multiple participants from a game.
   """
-  deleteTeamInstances(
-    input: DeleteTeamInstancesInput!
-  ): DeleteTeamInstancesResponse!
+  removeGameParticipants(
+    input: RemoveGameParticipantsInput!
+  ): RemoveGameParticipantsResponse!
   """
   Start a game.
   Enables saving of statistics to the game.
@@ -1000,7 +1328,7 @@ type Mutation {
   """
   Add a friend.
   """
-  friend(input: FriendInput!): FriendResponse!
+  sendFriendRequest(input: SendFriendRequestInput!): SendFriendRequestResponse!
   """
   Accept a friend request.
   """
@@ -1036,17 +1364,13 @@ type Mutation {
     input: RemoveChatRoomMemberInput!
   ): RemoveChatRoomMemberResponse!
   """
-  Send a text message
+  Send a chat message
   """
-  sendTextChatMessage(
-    input: SendTextChatMessageInput!
-  ): SendTextChatMessageResponse!
+  sendChatMessage(input: SendChatMessageInput!): SendChatMessageResponse!
   """
-  Update a text message
+  Update a chat message
   """
-  updateTextChatMessage(
-    input: UpdateTextChatMessageInput!
-  ): UpdateTextChatMessageResponse!
+  updateChatMessage(input: UpdateChatMessageInput!): UpdateChatMessageResponse!
   """
   Delete a message
   """
@@ -1068,9 +1392,5 @@ type Mutation {
 }
 
 type Subscription {
-  chatMessageSent(chatRoomId: ID!): ChatMessageEvent!
-  chatMessageUpdated(chatRoomId: ID!): ChatMessageEvent!
-  chatMessageDeleted(chatRoomId: ID!): ChatMessageEvent!
-  chatRoomMemberAdded(chatRoomId: ID!): ChatRoomMemberAddedEvent!
-  chatRoomMemberRemoved(chatRoomId: ID!): ChatRoomMemberRemovedEvent!
+  chatRoomEvents(chatRoomId: ID!): ChatEvent!
 }
