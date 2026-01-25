@@ -93,7 +93,9 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 
 **i18n** (`src/lib/i18n/`): Type-safe translation with dot-notation paths (e.g., `t("footer.company.about")`). Uses the `next-intl` library.
 
-**Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names.
+**Routing**: next-intl wraps around these NextJS components for routing. Use these instead of the built-in NextJS ones: `Link, redirect, usePathname, useRouter, getPathname` should all be imported from `"@/i18n/navigation"`
+
+**Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`
 
 ### Path Aliases
 

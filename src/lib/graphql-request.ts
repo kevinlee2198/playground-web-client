@@ -6,9 +6,9 @@ const GRAPHQL_URL = "/graphql";
 
 function buildRequestObject(
   data: BodyInit,
-  inputHeaders: object = {}
+  inputHeaders: object = {},
 ): Request {
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL + GRAPHQL_URL;
+  const baseUrl = process.env.API_SERVER_URL + GRAPHQL_URL;
 
   return new Request(baseUrl, {
     method: "POST",
@@ -21,11 +21,11 @@ function buildRequestObject(
   });
 }
 
-async function fetchData(
+async function fetchData<T>(
   data: string,
   inputHeaders?: object,
-  options?: NextFetchOptions
-): Promise<any> {
+  options?: NextFetchOptions,
+): Promise<T> {
   let response;
   if (options === undefined) {
     response = await fetch(buildRequestObject(data, inputHeaders));
@@ -39,7 +39,7 @@ async function fetchData(
 async function query(
   query: object,
   headers?: object,
-  options?: NextFetchOptions
+  options?: NextFetchOptions,
 ): Promise<GraphQLResponse> {
   const graphQLQuery = { query: query };
   const body = JSON.stringify({
@@ -51,7 +51,7 @@ async function query(
 async function mutate(
   mutation: object,
   headers: object,
-  options?: NextFetchOptions
+  options?: NextFetchOptions,
 ): Promise<GraphQLResponse> {
   const graphQLQuery = { mutation: mutation };
   const body = JSON.stringify({
@@ -61,19 +61,29 @@ async function mutate(
 }
 
 async function getAuthHeaders() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
+  const reqHeaders = await headers();
+  const session = await auth.api.getSession({ headers: reqHeaders });
+
+  if (!session?.user?.id) {
+    return {};
+  }
+
+  // Get the Keycloak access token from the account cookie
+  const tokenResponse = await auth.api.getAccessToken({
+    headers: reqHeaders,
+    body: { providerId: "keycloak" },
   });
-  const token = session?.session?.token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+
+  const accessToken = tokenResponse?.accessToken;
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 }
 
-async function authQuery(q: object, options?: any) {
+async function authQuery(q: object, options?: NextFetchOptions) {
   const h = await getAuthHeaders();
   return query(q, h, options);
 }
 
-async function authMutate(m: object, options?: any) {
+async function authMutate(m: object, options?: NextFetchOptions) {
   const h = await getAuthHeaders();
   return mutate(m, h, options);
 }
@@ -137,7 +147,7 @@ interface TypedError {
    * gateway. In the case of client code throwing the error, this
    * may be a client library name, or the client app name.
    */
-  origin?: String;
+  origin?: string;
 
   /**
    * Optionally provided based on request flag
@@ -153,7 +163,7 @@ interface TypedError {
    * to the class of error or specific to this
    * particular instance of the error.
    */
-  debugUri?: String;
+  debugUri?: string;
 }
 
 export { authMutate, authQuery, ErrorType, mutate, query };
