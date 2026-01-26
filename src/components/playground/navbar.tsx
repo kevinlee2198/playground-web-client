@@ -1,3 +1,5 @@
+"use client";
+
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -11,6 +13,7 @@ import {
   NavigationMenuTrigger,
 } from "../ui/navigation-menu";
 import { TypographyH1, TypographyP } from "../ui/typography";
+import { NavbarAuthLinks } from "./navbar-auth-links";
 
 interface Props {}
 
@@ -88,6 +91,8 @@ export function Navbar({}: Props) {
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
+
+            <NavbarAuthLinks />
           </NavigationMenuList>
         </NavigationMenu>
         <div className="ml-auto">

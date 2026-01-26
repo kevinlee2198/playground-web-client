@@ -1,3 +1,14 @@
+export enum FormMode {
+  VIEW = "VIEW",
+  CREATE = "CREATE",
+  EDIT = "EDIT",
+}
+
+export enum UnitPreference {
+  METRIC = "METRIC",
+  IMPERIAL = "IMPERIAL",
+}
+
 export enum SortDirection {
   ASC = "ASC",
   DESC = "DESC",
