@@ -8,7 +8,8 @@
     "signOut": "Sign Out"
   },
   "header": {
-    "home": "Home"
+    "home": "Home",
+    "player": "Player"
   },
   "footer": {
     "company": {
@@ -85,6 +86,72 @@
       "playerDataUnavailable": "Player information unavailable",
       "loadError": "Failed to load profile"
     }
+  },
+  "player": {
+    "title": "Player Profile",
+    "createTitle": "Create Player Profile",
+    "editTitle": "Edit Player Profile",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "age": "Age",
+      "height": "Height",
+      "weight": "Weight",
+      "biography": "Biography",
+      "biographyWordCount": "{count} / 1,000 words",
+      "required": "Required"
+    },
+    "actions": {
+      "create": "Create Player",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "firstNameRequired": "First name is required",
+      "firstNameMaxLength": "First name must be 255 characters or less",
+      "lastNameRequired": "Last name is required",
+      "lastNameMaxLength": "Last name must be 255 characters or less",
+      "agePositive": "Age must be greater than 0",
+      "heightPositive": "Height must be greater than 0",
+      "weightPositive": "Weight must be greater than 0",
+      "biographyMaxWords": "Biography must be 1,000 words or less"
+    },
+    "onboarding": {
+      "title": "Create Your Player Profile",
+      "description": "Create your player profile to join games and track your stats.",
+      "cta": "Create Player Profile",
+      "dismiss": "Dismiss"
+    },
+    "modal": {
+      "title": "Player Profile Required",
+      "description": "You need a player profile to perform this action. Create your profile to join games and participate in events.",
+      "create": "Create Player Profile",
+      "cancel": "Cancel"
+    },
+    "success": {
+      "created": "Player profile created successfully",
+      "updated": "Player profile updated successfully"
+    },
+    "errors": {
+      "loadError": "Failed to load player profile",
+      "createError": "Failed to create player profile",
+      "updateError": "Failed to update player profile",
+      "retry": "Retry"
+    }
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "units": {
+    "metric": "Metric",
+    "imperial": "Imperial",
+    "cm": "cm",
+    "kg": "kg",
+    "lbs": "lbs",
+    "ft": "ft",
+    "in": "in"
   },
   "contact": {
     "title": "Contact Us",
