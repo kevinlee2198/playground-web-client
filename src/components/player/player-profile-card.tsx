@@ -2,7 +2,6 @@
 
 import { createPlayer, updatePlayer } from "@/app/[locale]/player/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UnitPreferenceProvider } from "@/hooks/use-unit-preference";
 import { FormMode } from "@/lib/constants";
 import type {
   CreatePlayerInput,
@@ -79,24 +78,22 @@ export function PlayerProfileCard({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <UnitPreferenceProvider>
-          {mode === FormMode.VIEW && player ? (
-            <PlayerView player={player} onEdit={handleEdit} />
-          ) : mode === FormMode.CREATE ? (
-            <CreatePlayerForm
-              userDefaults={userDefaults}
-              onSubmit={handleCreate}
-              isPending={isPending}
-            />
-          ) : (
-            <UpdatePlayerForm
-              initialData={player!}
-              onSubmit={handleUpdate}
-              onCancel={handleCancel}
-              isPending={isPending}
-            />
-          )}
-        </UnitPreferenceProvider>
+        {mode === FormMode.VIEW && player ? (
+          <PlayerView player={player} onEdit={handleEdit} />
+        ) : mode === FormMode.CREATE ? (
+          <CreatePlayerForm
+            userDefaults={userDefaults}
+            onSubmit={handleCreate}
+            isPending={isPending}
+          />
+        ) : (
+          <UpdatePlayerForm
+            initialData={player!}
+            onSubmit={handleUpdate}
+            onCancel={handleCancel}
+            isPending={isPending}
+          />
+        )}
       </CardContent>
     </Card>
   );

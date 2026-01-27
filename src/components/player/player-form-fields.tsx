@@ -19,23 +19,26 @@ export const countWords = (text: string): number => {
   return text.trim().split(/\s+/).length;
 };
 
-export const playerFormSchema = z.object({
-  firstName: z.string().min(1).max(255),
-  lastName: z.string().min(1).max(255),
-  age: z.coerce.number().int().positive().min(1).optional(),
-  heightCm: z.coerce.number().int().min(1).optional(),
-  heightFeet: z.coerce.number().int().min(0).optional(),
-  heightInches: z.coerce.number().int().min(0).max(11).optional(),
-  weightKg: z.coerce.number().int().min(1).optional(),
-  weightLbs: z.coerce.number().int().min(1).optional(),
-  biography: z
-    .string()
-    .nullable()
-    .optional()
-    .refine((val) => !val || countWords(val) <= 1000, {
-      message: "Biography must be 1,000 words or less",
-    }),
-});
+export const createPlayerFormSchema = (
+  t: ReturnType<typeof useTranslations>,
+) =>
+  z.object({
+    firstName: z.string().min(1).max(255),
+    lastName: z.string().min(1).max(255),
+    age: z.coerce.number().int().positive().min(1).optional(),
+    heightCm: z.coerce.number().int().min(1).optional(),
+    heightFeet: z.coerce.number().int().min(0).optional(),
+    heightInches: z.coerce.number().int().min(0).max(11).optional(),
+    weightKg: z.coerce.number().int().min(1).optional(),
+    weightLbs: z.coerce.number().int().min(1).optional(),
+    biography: z
+      .string()
+      .nullable()
+      .optional()
+      .refine((val) => !val || countWords(val) <= 1000, {
+        message: t("player.validation.biographyMaxWords"),
+      }),
+  });
 
 export type PlayerFormInput = {
   firstName: string;
@@ -49,7 +52,7 @@ export type PlayerFormInput = {
   biography?: string | null;
 };
 
-export type PlayerFormOutput = z.infer<typeof playerFormSchema>;
+export type PlayerFormOutput = z.infer<ReturnType<typeof createPlayerFormSchema>>;
 
 interface PlayerFieldProps {
   control: Control<PlayerFormInput>;

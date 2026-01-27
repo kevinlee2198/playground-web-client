@@ -18,11 +18,11 @@ import { useForm } from "react-hook-form";
 import {
   BiographyField,
   countWords,
+  createPlayerFormSchema,
   NameFields,
   PhysicalFields,
   type PlayerFormInput,
   type PlayerFormOutput,
-  playerFormSchema,
   WeightFields,
 } from "./player-form-fields";
 
@@ -41,6 +41,7 @@ export function UpdatePlayerForm({
 }: UpdatePlayerFormProps) {
   const t = useTranslations();
   const { preference: unitPreference } = useUnitPreference();
+  const playerFormSchema = useMemo(() => createPlayerFormSchema(t), [t]);
 
   const defaultValues = useMemo(() => {
     const isMetric = unitPreference === UnitPreference.METRIC;

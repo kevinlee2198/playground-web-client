@@ -27,8 +27,6 @@ export interface UpdatePlayerInput {
   biography?: string | null;
 }
 
-export type UnitPreference = "metric" | "imperial";
-
 export interface HeightImperial {
   feet: number;
   inches: number;
