@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { signIn, useSession } from "@/lib/auth-client";
 import { useTranslations, useLocale } from "next-intl";
 import { TypographyP } from "../ui/typography";
 import { UserAvatarMenu } from "../playground/user-avatar-menu";
+import { fetchCurrentUser } from "./actions";
 
 interface Props {}
 
@@ -12,6 +14,18 @@ export default function AuthButton({}: Props) {
   const t = useTranslations();
   const locale = useLocale();
   const session = useSession();
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (session?.data?.user) {
+      fetchCurrentUser().then(setCurrentUser);
+    }
+  }, [session?.data?.user]);
 
   const handleSignIn = async () => {
     await signIn.oauth2({
@@ -38,12 +52,20 @@ export default function AuthButton({}: Props) {
   }
 
   if (session?.data?.user) {
+    if (!currentUser) {
+      return (
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+        </div>
+      );
+    }
+
     return (
       <UserAvatarMenu
         user={{
-          id: session.data.user.id,
-          name: session.data.user.name,
-          email: session.data.user.email,
+          id: currentUser.id,
+          name: `${currentUser.firstName} ${currentUser.lastName}`,
+          email: currentUser.email,
         }}
         locale={locale}
       />
