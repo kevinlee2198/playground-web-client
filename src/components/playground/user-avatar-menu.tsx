@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/auth-client";
+import { getKeycloakLogoutUrl } from "@/components/auth/actions";
 import { LogOut, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -41,13 +41,8 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.reload();
-        },
-      },
-    });
+    const logoutUrl = await getKeycloakLogoutUrl();
+    window.location.href = logoutUrl;
   };
 
   return (

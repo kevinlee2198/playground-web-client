@@ -1,12 +1,47 @@
 "use server";
 
+import { auth, keycloakIssuer } from "@/lib/auth";
 import { authQuery } from "@/lib/graphql-request";
+import { headers } from "next/headers";
 
 interface CurrentUserInfo {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
+}
+
+export async function getKeycloakLogoutUrl(): Promise<string> {
+  const clientId = process.env.KEYCLOAK_CLIENT_ID!;
+  const redirectUri = process.env.BETTER_AUTH_URL!;
+  const reqHeaders = await headers();
+
+  // Retrieve the id_token before signing out so Keycloak can skip the
+  // "Do you want to log out?" confirmation screen.
+  let idToken: string | undefined;
+  try {
+    const tokens = await auth.api.getAccessToken({
+      headers: reqHeaders,
+      body: { providerId: "keycloak" },
+    });
+    idToken = tokens?.idToken ?? undefined;
+  } catch {
+    // If token retrieval fails, proceed without id_token_hint
+  }
+
+  // Revoke the Better Auth session server-side
+  await auth.api.signOut({ headers: reqHeaders });
+
+  const logoutUrl = new URL(
+    `${keycloakIssuer}/protocol/openid-connect/logout`,
+  );
+  logoutUrl.searchParams.set("client_id", clientId);
+  logoutUrl.searchParams.set("post_logout_redirect_uri", redirectUri);
+  if (idToken) {
+    logoutUrl.searchParams.set("id_token_hint", idToken);
+  }
+
+  return logoutUrl.toString();
 }
 
 export async function fetchCurrentUser(): Promise<CurrentUserInfo | null> {
