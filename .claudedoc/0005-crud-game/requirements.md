@@ -123,7 +123,7 @@ input GameFilterInput {
   sportType: SportType
   playerId: ID
   gameStatus: GameStatus
-  ownerId: ID                       # Filter games by owner (for "My Games")
+  createdBy: ID                     # Filter games by creator (for "My Games")
 }
 
 input GameSortInput {
@@ -214,7 +214,7 @@ input EndGameInput {
 
 **FR-5.3**: The "My Games" filter can be combined with other filters (FR-2).
 
-**FR-5.4**: The `GameFilterInput` exposes an `ownerId` filter for server-side "My Games" filtering. The frontend will pass the current user's ID to this filter.
+**FR-5.4**: The `GameFilterInput` exposes a `createdBy` filter for server-side "My Games" filtering. The frontend will pass the current user's ID to this filter.
 
 ### FR-6: Game Detail Page
 
@@ -566,7 +566,7 @@ const createGameSchema = z.object({
 
 **TR-5.3**: Authorization (owner-only actions) will be implemented in a future iteration. For this initial implementation, all authenticated users with a player profile can perform all game operations.
 
-**TR-5.4**: The `GameFilterInput` exposes an `ownerId` filter which will be used for the "My Games" feature. The frontend will pass the current user's ID to filter games they created.
+**TR-5.4**: The `GameFilterInput` exposes a `createdBy` filter which will be used for the "My Games" feature. The frontend will pass the current user's ID to filter games they created.
 
 ### TR-6: shadcn/ui Components Required
 
@@ -872,6 +872,6 @@ The following existing translation keys shall be reused:
 
 12. **3-on-3 Basketball uses TeamInstance**: THREE_ON_THREE basketball uses `TeamInstance` (not `IndividualParticipant`) because it's still a team-based game format.
 
-13. **My Games filter**: The `GameFilterInput` exposes an `ownerId` filter for server-side "My Games" filtering. *(See TR-5.4)*
+13. **My Games filter**: The `GameFilterInput` exposes a `createdBy` filter for server-side "My Games" filtering. *(See TR-5.4)*
 
 14. **Team sizes**: Teams can include bench players. Max sizes are guidelines (e.g., 15 for 5v5 basketball, 6 for 3v3). *(See Team Size Guidelines)*

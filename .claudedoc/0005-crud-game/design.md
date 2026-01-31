@@ -205,7 +205,7 @@ const gamesListQuery = {
         sportType: filterSportType ? new EnumType(filterSportType) : undefined,
         playerId: filterPlayerId,
         gameStatus: filterGameStatus ? new EnumType(filterGameStatus) : undefined,
-        ownerId: myGamesOnly ? currentUserId : undefined,
+        createdBy: myGamesOnly ? currentUserId : undefined,
       },
       sort: [
         {
@@ -706,7 +706,7 @@ export interface GameFilterParams {
   sportType?: SportType;
   playerId?: string;
   gameStatus?: GameStatus;
-  ownerId?: string;
+  createdBy?: string;
 }
 
 /**
@@ -1246,7 +1246,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     startBefore: queryParams.startBefore as string | undefined,
     sportType: queryParams.sportType as string | undefined,
     gameStatus: queryParams.gameStatus as string | undefined,
-    ownerId: queryParams.myGames === "true" ? currentUserId : undefined,
+    createdBy: queryParams.myGames === "true" ? currentUserId : undefined,
   };
 
   // Parse sort from URL
@@ -1325,7 +1325,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         <div className="flex-1">
           <GameListSort
             currentSort={{ field: sortField, direction: sortDirection }}
-            myGames={filters.ownerId === currentUserId}
+            myGames={filters.createdBy === currentUserId}
           />
 
           {games?.edges.length === 0 ? (
@@ -2084,18 +2084,7 @@ The GraphQL schema adequately supports all required operations:
 
 ### Potential Improvements
 
-1. **Add `ownerId` filter to GameFilterInput**
-
-   The requirements mention filtering by owner for "My Games", but the current schema's `GameFilterInput` does not include `ownerId`. This needs to be added to the backend:
-
-   ```graphql
-   input GameFilterInput {
-     # existing fields...
-     ownerId: ID  # Add this field
-   }
-   ```
-
-   **Impact:** Without this, "My Games" filtering would need to be done client-side, which is inefficient for large datasets.
+1. ~~**Add `createdBy` filter to GameFilterInput**~~ — **RESOLVED**: Backend now includes `createdBy: ID` in `GameFilterInput`.
 
 2. **Add `owner` field to Game type**
 
@@ -2222,7 +2211,7 @@ messages/
 | 3 | Filter by date range, sport, player, status | `GameListFilters` component |
 | 4 | Sort by start date and status | `GameListSort` component |
 | 5 | Infinite scroll pagination | `GameInfiniteList` component |
-| 6 | My Games toggle | `GameListSort` with ownerId filter |
+| 6 | My Games toggle | `GameListSort` with createdBy filter |
 | 7 | Click game navigates to detail | `GameCard` Link wrapper |
 | 8 | Detail shows sport, status, schedule, participants, box scores | `GameDetailPage` and child components |
 | 9 | Create game with sport, subtype, date | `CreateGameForm` + `CreateGameDialog` |
@@ -2363,7 +2352,7 @@ GameDateTimePicker.displayName = "GameDateTimePicker";
 
 ### Schema Issues Identified
 
-1. **Missing `ownerId` in GameFilterInput**: The requirements specify a "My Games" filter using `ownerId`, but this field is not present in the current schema. **Recommendation:** Add `ownerId: ID` to `GameFilterInput` on the backend.
+1. ~~**Missing `createdBy` in GameFilterInput**~~ **(RESOLVED)**: Backend now includes `createdBy: ID` in `GameFilterInput`.
 
 2. **No `owner` field on Game type**: To display who created a game, the `owner` field should be added to the `Game` type. This would also help with future authorization checks on the frontend.
 

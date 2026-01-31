@@ -1,0 +1,316 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GameDetailHeader } from "@/components/game/game-detail-header";
+import { Link } from "@/i18n/navigation";
+import { auth } from "@/lib/auth";
+import { authQuery } from "@/lib/graphql-request";
+import type { GameDetail } from "@/lib/types/game";
+import { redirect } from "@/i18n/navigation";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
+
+interface PageProps {
+  params: Promise<{ locale: string; id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const t = await getTranslations();
+
+  try {
+    const response = await authQuery({
+      game: {
+        __args: { id },
+        sportType: true,
+        sportSubtype: true,
+      },
+    });
+    const game = response.data?.game;
+
+    if (game) {
+      return {
+        title: `${game.sportType} Game | Playground`,
+        description: `${game.sportType} - ${game.sportSubtype}`,
+      };
+    }
+  } catch (error) {
+    console.error("Failed to fetch game for metadata:", error);
+  }
+
+  return {
+    title: t("game.detailTitle"),
+  };
+}
+
+export default async function GameDetailPage({ params }: PageProps) {
+  const { locale, id } = await params;
+  const t = await getTranslations();
+
+  // Auth check
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    redirect({ href: "/", locale });
+  }
+
+  // Check if user has a player profile
+  const playerResponse = await authQuery({
+    me: {
+      id: true,
+      player: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    },
+  });
+
+  const user = playerResponse.data?.me;
+  const player = user?.player;
+
+  // Show message if no player profile
+  if (!player) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
+          <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+            {t("player.modal.title")}
+          </h2>
+          <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+            {t("player.modal.description")}
+          </p>
+          <div className="mt-4">
+            <Button asChild>
+              <Link href="/player">{t("player.modal.create")}</Link>
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Fetch game details
+  const gameResponse = await authQuery({
+    game: {
+      __args: { id },
+      id: true,
+      startDate: true,
+      endDate: true,
+      sportType: true,
+      sportSubtype: true,
+      gameStatus: true,
+      participants: {
+        __args: { first: 50 },
+        edges: {
+          cursor: true,
+          node: {
+            __on: [
+              {
+                __typeName: "TeamInstance",
+                id: true,
+                name: true,
+                description: true,
+                players: { id: true, firstName: true, lastName: true },
+                attributes: true,
+              },
+              {
+                __typeName: "IndividualParticipant",
+                id: true,
+                player: { id: true, firstName: true, lastName: true },
+              },
+            ],
+          },
+        },
+        pageInfo: { hasNextPage: true, endCursor: true },
+      },
+    },
+  });
+
+  const game: GameDetail | null = gameResponse.data?.game;
+
+  if (!game) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-12 text-center">
+          <h2 className="text-2xl font-bold text-destructive">
+            {t("game.notFound")}
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            {t("game.notFoundDescription")}
+          </p>
+          <Button variant="outline" asChild className="mt-6">
+            <Link href="/games">{t("game.title")}</Link>
+          </Button>
+        </div>
+      </main>
+    );
+  }
+
+  // Fetch box scores for basketball games
+  let boxScores = null;
+  if (game.sportType === "BASKETBALL") {
+    const boxScoreResponse = await authQuery({
+      basketballBoxScores: {
+        __args: {
+          input: { gameIds: [id] },
+          first: 50,
+        },
+        edges: {
+          node: {
+            id: true,
+            player: { id: true, firstName: true, lastName: true },
+            points: true,
+            assists: true,
+            totalRebounds: true,
+            offensiveRebounds: true,
+            defensiveRebounds: true,
+            steals: true,
+            blocks: true,
+            turnovers: true,
+            personalFouls: true,
+            fieldGoalsMade: true,
+            fieldGoalsAttempted: true,
+            fieldGoalPercentage: true,
+            threePointersMade: true,
+            threePointersAttempted: true,
+            threePointerPercentage: true,
+            twoPointersMade: true,
+            twoPointersAttempted: true,
+            twoPointerPercentage: true,
+            freeThrowsMade: true,
+            freeThrowsAttempted: true,
+            freeThrowPercentage: true,
+          },
+        },
+      },
+    });
+    boxScores = boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+  }
+
+  const startDate = new Date(game.startDate).toLocaleString(locale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const endDate = game.endDate
+    ? new Date(game.endDate).toLocaleString(locale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  return (
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Back button */}
+      <div className="mb-4">
+        <Button variant="ghost" asChild>
+          <Link href="/games">← {t("game.title")}</Link>
+        </Button>
+      </div>
+
+      {/* Header with actions */}
+      <GameDetailHeader game={game} currentPlayerId={player.id} />
+
+      {/* Schedule Info */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>{t("game.schedule")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div>
+            <span className="font-medium">{t("game.startDate")}:</span>{" "}
+            <span className="text-muted-foreground">{startDate}</span>
+          </div>
+          {endDate && (
+            <div>
+              <span className="font-medium">{t("game.endDate")}:</span>{" "}
+              <span className="text-muted-foreground">{endDate}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Participants */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>{t("game.participants.title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {game.participants.edges.length === 0 ? (
+            <p className="text-muted-foreground">
+              {t("game.participants.noParticipants")}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {game.participants.edges.map((edge) => {
+                const participant = edge.node;
+                if (participant.__typename === "TeamInstance") {
+                  return (
+                    <Card key={participant.id}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          {participant.name}
+                        </CardTitle>
+                        {participant.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {participant.description}
+                          </p>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        {participant.players.length > 0 ? (
+                          <ul className="space-y-1 text-sm">
+                            {participant.players.map((p) => (
+                              <li key={p.id}>
+                                {p.firstName} {p.lastName}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            {t("game.participants.noPlayers")}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                } else {
+                  const playerName = participant.player
+                    ? `${participant.player.firstName} ${participant.player.lastName}`
+                    : "Unknown Player";
+                  return (
+                    <div
+                      key={participant.id}
+                      className="rounded-lg border p-4"
+                    >
+                      <p className="font-medium">{playerName}</p>
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Basketball Box Scores (placeholder for now) */}
+      {game.sportType === "BASKETBALL" && boxScores && boxScores.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("game.boxScore.title")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Box score table to be implemented
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </main>
+  );
+}

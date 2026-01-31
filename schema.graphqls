@@ -400,6 +400,10 @@ input GameFilterInput {
   Equals
   """
   gameStatus: GameStatus
+  """
+  Equals
+  """
+  createdBy: ID
 }
 
 """

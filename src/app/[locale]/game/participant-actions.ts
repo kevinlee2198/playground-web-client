@@ -1,0 +1,300 @@
+"use server";
+
+import { authMutate } from "@/lib/graphql-request";
+import { revalidatePath } from "next/cache";
+import type {
+  AddTeamInput,
+  AddIndividualParticipantInput,
+  UpdateTeamParticipantInput,
+  RemoveTeamInstanceInput,
+  RemoveIndividualParticipantInput,
+  JoinTeamInput,
+  LeaveTeamInput,
+  ParticipantActionResult,
+} from "@/lib/types/game";
+
+/**
+ * Add a team to a game
+ */
+export async function addTeamParticipant(input: AddTeamInput): Promise<ParticipantActionResult> {
+  try {
+    const mutationInput: Record<string, unknown> = {
+      gameId: input.gameId,
+      name: input.name,
+    };
+
+    if (input.description !== undefined) mutationInput.description = input.description;
+    if (input.playerIds !== undefined) mutationInput.playerIds = input.playerIds;
+    if (input.attributes !== undefined) mutationInput.attributes = input.attributes;
+
+    const response = await authMutate({
+      addGameParticipant: {
+        __args: {
+          input: {
+            teamInstance: mutationInput,
+          },
+        },
+        participant: {
+          __on: {
+            __typeName: "TeamInstance",
+            id: true,
+            name: true,
+            description: true,
+            players: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+            attributes: true,
+          },
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    const participantId = response.data.addGameParticipant.participant.id;
+    revalidatePath(`/game/${input.gameId}`);
+    return { success: true, participantId };
+  } catch (error) {
+    console.error("Failed to add team participant:", error);
+    return { success: false, error: "Failed to add team participant" };
+  }
+}
+
+/**
+ * Add an individual participant to a game
+ */
+export async function addIndividualParticipant(input: AddIndividualParticipantInput): Promise<ParticipantActionResult> {
+  try {
+    const response = await authMutate({
+      addGameParticipant: {
+        __args: {
+          input: {
+            individual: {
+              gameId: input.gameId,
+              playerId: input.playerId,
+            },
+          },
+        },
+        participant: {
+          __on: {
+            __typeName: "IndividualParticipant",
+            id: true,
+            player: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    const participantId = response.data.addGameParticipant.participant.id;
+    revalidatePath(`/game/${input.gameId}`);
+    return { success: true, participantId };
+  } catch (error) {
+    console.error("Failed to add individual participant:", error);
+    return { success: false, error: "Failed to add individual participant" };
+  }
+}
+
+/**
+ * Update a team participant (name, description, players, attributes)
+ */
+export async function updateTeamParticipant(input: UpdateTeamParticipantInput): Promise<ParticipantActionResult> {
+  try {
+    const mutationInput: Record<string, unknown> = {
+      id: input.teamInstanceId,
+    };
+
+    if (input.name !== undefined) mutationInput.name = input.name;
+    if (input.description !== undefined) mutationInput.description = input.description;
+    if (input.playerIds !== undefined) mutationInput.playerIds = input.playerIds;
+    if (input.attributes !== undefined) mutationInput.attributes = input.attributes;
+
+    const response = await authMutate({
+      updateGameParticipant: {
+        __args: {
+          input: {
+            teamInstance: mutationInput,
+          },
+        },
+        participant: {
+          __on: {
+            __typeName: "TeamInstance",
+            id: true,
+            name: true,
+            description: true,
+            players: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+            attributes: true,
+          },
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    const participantId = response.data.updateGameParticipant.participant.id;
+    // Note: We need to know the gameId to revalidate the path. This might need to be passed in.
+    // For now, we'll use a wildcard revalidation
+    revalidatePath("/game/[id]", "page");
+    return { success: true, participantId };
+  } catch (error) {
+    console.error("Failed to update team participant:", error);
+    return { success: false, error: "Failed to update team participant" };
+  }
+}
+
+/**
+ * Join a team (add a player to an existing team instance).
+ * Uses the addPlayerToTeamInstance mutation to atomically add a player
+ * without race conditions from concurrent roster modifications.
+ */
+export async function joinTeam(input: JoinTeamInput): Promise<ParticipantActionResult> {
+  try {
+    const response = await authMutate({
+      addPlayerToTeamInstance: {
+        __args: {
+          input: {
+            teamInstanceId: input.teamInstanceId,
+            playerId: input.playerId,
+          },
+        },
+        teamInstance: {
+          id: true,
+          name: true,
+          players: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    revalidatePath("/game/[id]", "page");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to join team:", error);
+    return { success: false, error: "Failed to join team" };
+  }
+}
+
+/**
+ * Leave a team (remove a player from an existing team instance).
+ * Uses the removePlayerFromTeamInstance mutation to atomically remove a player
+ * without race conditions from concurrent roster modifications.
+ */
+export async function leaveTeam(input: LeaveTeamInput): Promise<ParticipantActionResult> {
+  try {
+    const response = await authMutate({
+      removePlayerFromTeamInstance: {
+        __args: {
+          input: {
+            teamInstanceId: input.teamInstanceId,
+            playerId: input.playerId,
+          },
+        },
+        teamInstance: {
+          id: true,
+          name: true,
+          players: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    revalidatePath("/game/[id]", "page");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to leave team:", error);
+    return { success: false, error: "Failed to leave team" };
+  }
+}
+
+/**
+ * Remove a team instance from a game
+ */
+export async function removeTeamParticipant(input: RemoveTeamInstanceInput): Promise<ParticipantActionResult> {
+  try {
+    const response = await authMutate({
+      removeGameParticipant: {
+        __args: {
+          input: {
+            teamInstance: {
+              id: input.teamInstanceId,
+            },
+          },
+        },
+        id: true,
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    revalidatePath("/game/[id]", "page");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to remove team participant:", error);
+    return { success: false, error: "Failed to remove team participant" };
+  }
+}
+
+/**
+ * Remove an individual participant from a game
+ */
+export async function removeIndividualParticipant(input: RemoveIndividualParticipantInput): Promise<ParticipantActionResult> {
+  try {
+    const response = await authMutate({
+      removeGameParticipant: {
+        __args: {
+          input: {
+            individual: {
+              gameId: input.gameId,
+              playerId: input.playerId,
+            },
+          },
+        },
+        id: true,
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    revalidatePath(`/game/${input.gameId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to remove individual participant:", error);
+    return { success: false, error: "Failed to remove individual participant" };
+  }
+}
+

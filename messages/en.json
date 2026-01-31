@@ -9,7 +9,8 @@
   },
   "header": {
     "home": "Home",
-    "player": "Player"
+    "player": "Player",
+    "games": "Games"
   },
   "footer": {
     "company": {
@@ -143,6 +144,144 @@
     "edit": "Edit",
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "game": {
+    "title": "Games",
+    "myGames": "My Games",
+    "allGames": "All Games",
+    "createTitle": "Create Game",
+    "editTitle": "Edit Game",
+    "detailTitle": "Game Details",
+    "notFound": "Game not found",
+    "notFoundDescription": "The game you are looking for does not exist or has been removed.",
+    "noGames": "No games found",
+    "noGamesDescription": "Try adjusting your filters or create a new game.",
+    "schedule": "Schedule",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "form": {
+      "sportType": "Sport",
+      "sportSubtype": "Format",
+      "startDate": "Start Date",
+      "selectSport": "Select a sport",
+      "selectFormat": "Select a format",
+      "selectDate": "Pick a date"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "inProgress": "In Progress",
+      "complete": "Complete"
+    },
+    "actions": {
+      "create": "Create Game",
+      "edit": "Edit Game",
+      "delete": "Delete Game",
+      "start": "Start Game",
+      "end": "End Game",
+      "save": "Save",
+      "cancel": "Cancel",
+      "starting": "Starting...",
+      "ending": "Ending...",
+      "saving": "Saving...",
+      "deleting": "Deleting..."
+    },
+    "deleteConfirmation": {
+      "title": "Delete Game",
+      "description": "Are you sure you want to delete this game? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "participants": {
+      "title": "Participants",
+      "noParticipants": "No participants yet",
+      "addTeam": "Add Team",
+      "editTeam": "Edit Team",
+      "removeTeam": "Remove Team",
+      "joinTeam": "Join Team",
+      "leaveTeam": "Leave Team",
+      "joinGame": "Join Game",
+      "leaveGame": "Leave Game",
+      "removeParticipant": "Remove",
+      "teamName": "Team Name",
+      "teamDescription": "Team Description",
+      "players": "Players",
+      "noPlayers": "No players on this team"
+    },
+    "boxScore": {
+      "title": "Box Scores",
+      "noBoxScores": "No box scores recorded yet",
+      "addBoxScores": "Add Box Scores",
+      "editBoxScores": "Edit Box Scores",
+      "saveBoxScores": "Save Box Scores",
+      "basketball": {
+        "points": "PTS",
+        "assists": "AST",
+        "totalRebounds": "REB",
+        "offensiveRebounds": "OREB",
+        "defensiveRebounds": "DREB",
+        "steals": "STL",
+        "blocks": "BLK",
+        "turnovers": "TO",
+        "personalFouls": "PF",
+        "fieldGoals": "FG",
+        "fieldGoalPercentage": "FG%",
+        "threePointers": "3PT",
+        "threePointerPercentage": "3PT%",
+        "twoPointers": "2PT",
+        "twoPointerPercentage": "2PT%",
+        "freeThrows": "FT",
+        "freeThrowPercentage": "FT%"
+      }
+    },
+    "filters": {
+      "title": "Filters",
+      "startDateRange": "Start Date Range",
+      "endDateRange": "End Date Range",
+      "sportType": "Sport Type",
+      "gameStatus": "Status",
+      "player": "Player",
+      "clearFilters": "Clear Filters",
+      "from": "From",
+      "to": "To",
+      "allSports": "All Sports",
+      "allStatuses": "All Statuses"
+    },
+    "sort": {
+      "title": "Sort",
+      "startDate": "Start Date",
+      "gameStatus": "Status",
+      "ascending": "Oldest First",
+      "descending": "Newest First"
+    },
+    "validation": {
+      "sportTypeRequired": "Sport type is required",
+      "subtypeRequired": "Sport format is required",
+      "startDateRequired": "Start date is required",
+      "teamNameRequired": "Team name is required",
+      "invalidSubtype": "Invalid format for selected sport"
+    },
+    "success": {
+      "created": "Game created successfully",
+      "updated": "Game updated successfully",
+      "deleted": "Game deleted successfully",
+      "started": "Game started",
+      "ended": "Game ended",
+      "participantAdded": "Participant added",
+      "participantRemoved": "Participant removed",
+      "teamUpdated": "Team updated",
+      "boxScoresSaved": "Box scores saved"
+    },
+    "errors": {
+      "loadError": "Failed to load games",
+      "createError": "Failed to create game",
+      "updateError": "Failed to update game",
+      "deleteError": "Failed to delete game",
+      "startError": "Failed to start game",
+      "endError": "Failed to end game",
+      "participantError": "Failed to update participants",
+      "boxScoreError": "Failed to save box scores",
+      "retry": "Retry"
+    }
   },
   "units": {
     "metric": "Metric",

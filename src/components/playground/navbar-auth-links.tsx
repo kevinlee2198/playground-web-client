@@ -13,15 +13,27 @@ export function NavbarAuthLinks() {
   if (!session?.user) return null;
 
   return (
-    <NavigationMenuItem>
-      <NavigationMenuLink asChild>
-        <Link
-          href="/player"
-          className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
-        >
-          <TypographyP>{t("header.player")}</TypographyP>
-        </Link>
-      </NavigationMenuLink>
-    </NavigationMenuItem>
+    <>
+      <NavigationMenuItem>
+        <NavigationMenuLink asChild>
+          <Link
+            href="/games"
+            className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+          >
+            <TypographyP>{t("header.games")}</TypographyP>
+          </Link>
+        </NavigationMenuLink>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink asChild>
+          <Link
+            href="/player"
+            className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+          >
+            <TypographyP>{t("header.player")}</TypographyP>
+          </Link>
+        </NavigationMenuLink>
+      </NavigationMenuItem>
+    </>
   );
 }

@@ -41,14 +41,18 @@ export enum SportSubtype {
   DOUBLES = "DOUBLES",
 }
 
-export const SportSubtypeParticipation = {
-  FIVE_ON_FIVE: ParticipationType.TEAM,
-  THREE_ON_THREE: ParticipationType.TEAM,
-  FLAG_FOOTBALL: ParticipationType.TEAM,
-  AMERICAN_FOOTBALL: ParticipationType.TEAM,
-  SINGLES: ParticipationType.INDIVIDUAL,
-  DOUBLES: ParticipationType.TEAM,
-};
+/**
+ * Configuration for each sport subtype including participation type and team size limits.
+ * maxTeamSize is only defined for team sports and includes bench players.
+ */
+export const SportSubtypeConfig = {
+  FIVE_ON_FIVE: { participation: ParticipationType.TEAM, maxTeamSize: 15 }, // 5 starters + 10 bench
+  THREE_ON_THREE: { participation: ParticipationType.TEAM, maxTeamSize: 6 }, // 3 starters + 3 bench
+  FLAG_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 15 }, // Typical flag football roster
+  AMERICAN_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 53 }, // NFL-style roster
+  SINGLES: { participation: ParticipationType.INDIVIDUAL },
+  DOUBLES: { participation: ParticipationType.TEAM, maxTeamSize: 2 }, // Tennis doubles pair
+} as const;
 
 export const SportType = {
   //   BASEBALL: [],
@@ -80,7 +84,16 @@ export function getSportIconPath(sport: SportType) {
 }
 
 export function getParticipationType(sportSubtype: SportSubtype) {
-  return SportSubtypeParticipation[sportSubtype];
+  return SportSubtypeConfig[sportSubtype].participation;
+}
+
+/**
+ * Get the maximum team size for a given sport subtype.
+ * Returns undefined for individual sports.
+ */
+export function getMaxTeamSize(sportSubtype: SportSubtype): number | undefined {
+  const config = SportSubtypeConfig[sportSubtype];
+  return "maxTeamSize" in config ? config.maxTeamSize : undefined;
 }
 
 export enum GameSortField {
@@ -97,3 +110,4 @@ export const GameStatusBadgeVariant = {
   IN_PROGRESS: "default",
   COMPLETE: "outline",
 } as const;
+
