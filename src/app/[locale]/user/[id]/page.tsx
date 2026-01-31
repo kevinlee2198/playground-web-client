@@ -1,7 +1,7 @@
+import { fetchCurrentUser } from "@/components/auth/actions";
 import { GameHistory } from "@/components/profile/game-history";
 import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
-import { auth } from "@/lib/auth";
 import {
   FriendshipStatus,
   GameSortField,
@@ -10,7 +10,6 @@ import {
 import { authQuery, query } from "@/lib/graphql-request";
 import { EnumType } from "json-to-graphql-query";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 interface PageProps {
@@ -128,9 +127,8 @@ function buildGamesQuery(playerId: number) {
 export default async function UserProfilePage({ params }: PageProps) {
   const { locale, id: userId } = await params;
 
-  // Get current user session
-  const session = await auth.api.getSession({ headers: await headers() });
-  const currentUserId = session?.user?.id; // This logic is wrong - the user ID needs to come from the me query on the backend
+  const currentUser = await fetchCurrentUser();
+  const currentUserId = currentUser?.id;
   const isAuthenticated = !!currentUserId;
   const isOwnProfile = currentUserId === userId;
 
