@@ -41,14 +41,19 @@ export enum SportSubtype {
   DOUBLES = "DOUBLES",
 }
 
-export const SportSubtypeParticipation = {
-  FIVE_ON_FIVE: ParticipationType.TEAM,
-  THREE_ON_THREE: ParticipationType.TEAM,
-  FLAG_FOOTBALL: ParticipationType.TEAM,
-  AMERICAN_FOOTBALL: ParticipationType.TEAM,
-  SINGLES: ParticipationType.INDIVIDUAL,
-  DOUBLES: ParticipationType.TEAM,
-};
+/**
+ * Configuration for each sport subtype including participation type and limits.
+ * maxTeamSize is only defined for team sports and includes bench players.
+ * maxParticipants is the max number of teams (team sports) or individual players (individual sports).
+ */
+export const SportSubtypeConfig = {
+  FIVE_ON_FIVE: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
+  THREE_ON_THREE: { participation: ParticipationType.TEAM, maxTeamSize: 6, maxParticipants: 2 },
+  FLAG_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
+  AMERICAN_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 53, maxParticipants: 2 },
+  SINGLES: { participation: ParticipationType.INDIVIDUAL, maxParticipants: 2 },
+  DOUBLES: { participation: ParticipationType.TEAM, maxTeamSize: 2, maxParticipants: 2 },
+} as const;
 
 export const SportType = {
   //   BASEBALL: [],
@@ -80,7 +85,23 @@ export function getSportIconPath(sport: SportType) {
 }
 
 export function getParticipationType(sportSubtype: SportSubtype) {
-  return SportSubtypeParticipation[sportSubtype];
+  return SportSubtypeConfig[sportSubtype].participation;
+}
+
+/**
+ * Get the maximum team size for a given sport subtype.
+ * Returns undefined for individual sports.
+ */
+export function getMaxTeamSize(sportSubtype: SportSubtype): number | undefined {
+  const config = SportSubtypeConfig[sportSubtype];
+  return "maxTeamSize" in config ? config.maxTeamSize : undefined;
+}
+
+/**
+ * Get the maximum number of participants (teams or individuals) for a given sport subtype.
+ */
+export function getMaxParticipants(sportSubtype: SportSubtype): number {
+  return SportSubtypeConfig[sportSubtype].maxParticipants;
 }
 
 export enum GameSortField {
@@ -97,3 +118,4 @@ export const GameStatusBadgeVariant = {
   IN_PROGRESS: "default",
   COMPLETE: "outline",
 } as const;
+

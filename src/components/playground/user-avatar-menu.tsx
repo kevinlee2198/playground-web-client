@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
-import { useTranslations } from "next-intl";
 import { LogOut, Settings, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 interface UserAvatarMenuProps {
@@ -62,7 +62,10 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
-          <Link href={`/${locale}/user/${user.id}`} className="flex items-center">
+          <Link
+            href={`/${locale}/user/${user.id}`}
+            className="flex items-center"
+          >
             <User className="mr-2 h-4 w-4" />
             {t("profile.viewProfile")}
           </Link>

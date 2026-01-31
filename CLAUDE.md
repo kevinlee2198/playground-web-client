@@ -97,6 +97,21 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 
 **Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`
 
+### TypeScript Type Conventions
+
+**Response types** (data from the server): fields are always present but may be null. Use `field: T | null` for nullable schema fields, never `field?: T | null`.
+
+**Input types**: use `field?: T` for optional fields that can be omitted.
+
+**Update/patch inputs**: the GraphQL backend uses PATCH semantics for all update mutations unless otherwise specified. This means three states are possible for nullable fields:
+- `undefined` (omit the field) — leave unchanged
+- `null` — clear the value in the database
+- A value — update to that value
+
+Model these as `field?: T | null`. For non-nullable schema fields on update inputs (e.g., `firstName` on a player), null is not allowed — use `field?: T`.
+
+**No barrel files**: import directly from source files, not from `index.ts` re-exports.
+
 ### Path Aliases
 
 `@/*` maps to `./src/*` (e.g., `import { Button } from "@/components/ui/button"`)

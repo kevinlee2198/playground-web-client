@@ -14,7 +14,7 @@ interface CreatePlayerInput {
 }
 
 interface UpdatePlayerInput {
-  id: string;
+  id: number;
   firstName?: string;
   lastName?: string;
   age?: number | null;
@@ -52,7 +52,7 @@ export async function createPlayer(
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/player");
+    revalidatePath("/[locale]/player", "page");
     return {
       success: true,
       player: response.data.createPlayer.player,
@@ -71,7 +71,8 @@ export async function updatePlayer(
     const mutationInput: Record<string, unknown> = { id: input.id };
 
     // Only include fields that are explicitly provided
-    if (input.firstName !== undefined) mutationInput.firstName = input.firstName;
+    if (input.firstName !== undefined)
+      mutationInput.firstName = input.firstName;
     if (input.lastName !== undefined) mutationInput.lastName = input.lastName;
     if ("age" in input) mutationInput.age = input.age;
     if ("height" in input) mutationInput.height = input.height;
@@ -97,7 +98,7 @@ export async function updatePlayer(
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/player");
+    revalidatePath("/[locale]/player", "page");
     return {
       success: true,
       player: response.data.updatePlayer.player,

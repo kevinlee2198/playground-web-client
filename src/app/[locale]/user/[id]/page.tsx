@@ -90,6 +90,7 @@ function buildGamesQuery(playerId: number) {
             edges: {
               cursor: true,
               node: {
+                __typename: true,
                 __on: [
                   {
                     __typeName: "TeamInstance",
@@ -129,7 +130,7 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   // Get current user session
   const session = await auth.api.getSession({ headers: await headers() });
-  const currentUserId = session?.user?.id;
+  const currentUserId = session?.user?.id; // This logic is wrong - the user ID needs to come from the me query on the backend
   const isAuthenticated = !!currentUserId;
   const isOwnProfile = currentUserId === userId;
 

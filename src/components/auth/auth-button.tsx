@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { signIn, useSession } from "@/lib/auth-client";
-import { useTranslations, useLocale } from "next-intl";
-import { TypographyP } from "../ui/typography";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { UserAvatarMenu } from "../playground/user-avatar-menu";
+import { TypographyP } from "../ui/typography";
 import { fetchCurrentUser } from "./actions";
 
 interface Props {}

@@ -81,7 +81,7 @@ export function CreatePlayerForm({
       age: values.age ?? undefined,
       height,
       weight,
-      biography: values.biography || null,
+      biography: values.biography || undefined,
     };
 
     await onSubmit(input);
