@@ -80,7 +80,7 @@ export function UpdatePlayerForm({
       weightLbs,
       biography: initialData.biography ?? "",
     };
-  }, [initialData, unitPreference]);
+  }, [initialData]);
 
   const form = useForm<PlayerFormInput, unknown, PlayerFormOutput>({
     resolver: zodResolver(playerFormSchema),
@@ -90,6 +90,10 @@ export function UpdatePlayerForm({
   const handleFormSubmit = async (values: PlayerFormOutput) => {
     const dirty = form.formState.dirtyFields;
     const input: UpdatePlayerInput = { id: initialData.id };
+    // bugs - sign out - can't sign in again
+    // update doesn't work - something about the dirtyness isn't triggering it
+    console.log(form.formState.touchedFields);
+    console.log(form.formState.dirtyFields);
 
     if (dirty.firstName) {
       input.firstName = values.firstName;
@@ -106,7 +110,8 @@ export function UpdatePlayerForm({
       } else {
         const feet = values.heightFeet ?? 0;
         const inches = values.heightInches ?? 0;
-        input.height = feet > 0 || inches > 0 ? feetInchesToCm(feet, inches) : null;
+        input.height =
+          feet > 0 || inches > 0 ? feetInchesToCm(feet, inches) : null;
       }
     }
     if (dirty.weightKg || dirty.weightLbs) {

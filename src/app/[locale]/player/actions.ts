@@ -52,7 +52,7 @@ export async function createPlayer(
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/player");
+    revalidatePath("/[locale]/player", "page");
     return {
       success: true,
       player: response.data.createPlayer.player,
@@ -98,7 +98,7 @@ export async function updatePlayer(
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/player");
+    revalidatePath("/[locale]/player", "page");
     return {
       success: true,
       player: response.data.updatePlayer.player,

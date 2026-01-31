@@ -60,7 +60,7 @@ export async function createGame(input: CreateGameInput): Promise<GameActionResu
     }
 
     const gameId = response.data.createGame.game.id;
-    revalidatePath("/games");
+    revalidatePath("/[locale]/games", "page");
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to create game:", error);
@@ -90,7 +90,7 @@ export async function updateGame(input: UpdateGameInput): Promise<GameActionResu
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath(`/game/${input.id}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, gameId: input.id };
   } catch (error) {
     console.error("Failed to update game:", error);
@@ -114,7 +114,7 @@ export async function deleteGame(gameId: number): Promise<GameActionResult> {
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/games");
+    revalidatePath("/[locale]/games", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete game:", error);
@@ -145,7 +145,7 @@ export async function startGame(gameId: number, startDate?: string): Promise<Gam
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath(`/game/${gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to start game:", error);
@@ -176,7 +176,7 @@ export async function endGame(gameId: number, endDate?: string): Promise<GameAct
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath(`/game/${gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to end game:", error);
@@ -228,6 +228,7 @@ export async function loadMoreGames(
               __args: { first: 10 },
               edges: {
                 node: {
+                  __typename: true,
                   __on: [
                     {
                       __typeName: "TeamInstance",

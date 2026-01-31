@@ -39,6 +39,7 @@ src/components/game/
   team-card.tsx                 # Client - team display/edit card
   add-team-form.tsx             # Client - form to add a team
   individual-participant-list.tsx  # Client - individual participants list
+  game-box-scores.tsx              # Server - box score factory/orchestrator (fetches + delegates by sport)
   basketball-box-score-table.tsx   # Client - box score display table (TanStack)
   basketball-box-score-form.tsx    # Client - box score edit form
 
@@ -72,6 +73,7 @@ src/lib/
 | `TeamCard` | Client | Team display with player list, edit/remove actions |
 | `AddTeamForm` | Client | Form for adding a new team to a game |
 | `IndividualParticipantList` | Client | List of individual participants |
+| `GameBoxScores` | **Server** | Box score factory — fetches sport-specific stats and delegates to the correct display component |
 | `BasketballBoxScoreTable` | Client | TanStack Table for box score display |
 | `BasketballBoxScoreForm` | Client | Form for editing box scores |
 
@@ -1449,13 +1451,69 @@ export default async function GameDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch box scores for basketball games
-  let boxScores = null;
+  // Box score fetching and rendering is delegated to GameBoxScores (server component factory)
+
+  return (
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <GameDetailHeader game={game} currentPlayerId={currentPlayerId} />
+
+      <div className="mt-8 space-y-8">
+        <GameParticipants
+          game={game}
+          currentPlayerId={currentPlayerId}
+        />
+
+        <GameBoxScores game={game} />
+      </div>
+    </main>
+  );
+}
+```
+
+---
+
+## Box Score Factory Pattern (GameBoxScores)
+
+### Motivation
+
+The game detail page should not contain sport-specific logic for fetching and rendering statistics. Per CLAUDE.md, **server components are the default** — orchestration and data fetching should happen on the server when no client interactivity is required. The factory pattern also satisfies FR-10.7: "designed flexibly so that future sports can have their own box score types added without major refactoring."
+
+### Architecture
+
+`GameBoxScores` is a **server component** that acts as a factory:
+- Receives the `game` object (id, sportType, sportSubtype, gameStatus)
+- Determines which sport-specific box score query to run
+- Fetches the data server-side via `authQuery`
+- Delegates rendering to the appropriate sport-specific **client** component
+
+```
+game/[id]/page.tsx (Server)
+  └── <GameBoxScores game={game} />  (Server — no "use client")
+        ├── sportType === "BASKETBALL" → authQuery(basketballBoxScores) → <BasketballBoxScoreTable />
+        ├── sportType === "FOOTBALL"   → (future) authQuery(footballBoxScores) → <FootballBoxScoreTable />
+        └── sportType === "TENNIS"     → (future) null or sport-specific component
+```
+
+### Implementation
+
+```typescript
+// src/components/game/game-box-scores.tsx
+// NO "use client" — this is a server component
+
+import { authQuery } from "@/lib/graphql-request";
+import { BasketballBoxScoreTable } from "./basketball-box-score-table";
+import type { GameDetail } from "@/lib/types/game";
+
+interface GameBoxScoresProps {
+  game: GameDetail;
+}
+
+export async function GameBoxScores({ game }: GameBoxScoresProps) {
   if (game.sportType === "BASKETBALL") {
     const boxScoreResponse = await authQuery({
       basketballBoxScores: {
         __args: {
-          input: { gameIds: [id] },
+          input: { gameIds: [game.id] },
           first: 50,
         },
         edges: {
@@ -1487,31 +1545,51 @@ export default async function GameDetailPage({ params }: PageProps) {
         },
       },
     });
-    boxScores = boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+
+    const boxScores = boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+
+    return (
+      <BasketballBoxScoreTable
+        gameId={game.id}
+        boxScores={boxScores}
+        gameStatus={game.gameStatus}
+      />
+    );
   }
 
-  return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <GameDetailHeader game={game} currentPlayerId={currentPlayerId} />
-
-      <div className="mt-8 space-y-8">
-        <GameParticipants
-          game={game}
-          currentPlayerId={currentPlayerId}
-        />
-
-        {game.sportType === "BASKETBALL" && (
-          <BasketballBoxScoreTable
-            gameId={game.id}
-            boxScores={boxScores}
-            gameStatus={game.gameStatus}
-          />
-        )}
-      </div>
-    </main>
-  );
+  // Future sports return null until their box score components are built
+  return null;
 }
 ```
+
+### Impact on Game Detail Page
+
+The detail page becomes sport-agnostic for statistics:
+
+```typescript
+// game/[id]/page.tsx — no basketball-specific imports or queries
+return (
+  <main>
+    <GameDetailHeader game={game} currentPlayerId={player.id} />
+    <GameParticipants game={game} currentPlayerId={player.id} />
+    <GameBoxScores game={game} />
+  </main>
+);
+```
+
+The conditional `if (game.sportType === "BASKETBALL")` query and the `BasketballBoxScoreTable` import are removed from the page entirely. Adding a new sport's box scores only requires:
+1. A new query function in the factory
+2. A new client display component (e.g., `FootballBoxScoreTable`)
+3. A new `else if` branch in `GameBoxScores`
+
+### Server Component Principle
+
+Components should be server components by default. Only add `"use client"` when the component requires:
+- React hooks (`useState`, `useEffect`, `useTransition`, etc.)
+- Event handlers (`onClick`, `onChange`, etc.)
+- Browser-only APIs
+
+Components that only do conditional rendering, data fetching, or pass props to children should remain server components.
 
 ---
 

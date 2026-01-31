@@ -205,11 +205,16 @@
       "teamName": "Team Name",
       "teamDescription": "Team Description",
       "players": "Players",
-      "noPlayers": "No players on this team"
+      "noPlayers": "No players on this team",
+      "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?"
     },
     "boxScore": {
       "title": "Box Scores",
       "noBoxScores": "No box scores recorded yet",
+      "selectPlayer": "Select player...",
+      "addPlayerStats": "Add Player Stats",
+      "playerStatsAdded": "Player stats row added",
+      "playerStatsError": "Failed to add player stats",
       "addBoxScores": "Add Box Scores",
       "editBoxScores": "Edit Box Scores",
       "saveBoxScores": "Save Box Scores",

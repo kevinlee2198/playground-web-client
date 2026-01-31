@@ -42,16 +42,17 @@ export enum SportSubtype {
 }
 
 /**
- * Configuration for each sport subtype including participation type and team size limits.
+ * Configuration for each sport subtype including participation type and limits.
  * maxTeamSize is only defined for team sports and includes bench players.
+ * maxParticipants is the max number of teams (team sports) or individual players (individual sports).
  */
 export const SportSubtypeConfig = {
-  FIVE_ON_FIVE: { participation: ParticipationType.TEAM, maxTeamSize: 15 }, // 5 starters + 10 bench
-  THREE_ON_THREE: { participation: ParticipationType.TEAM, maxTeamSize: 6 }, // 3 starters + 3 bench
-  FLAG_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 15 }, // Typical flag football roster
-  AMERICAN_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 53 }, // NFL-style roster
-  SINGLES: { participation: ParticipationType.INDIVIDUAL },
-  DOUBLES: { participation: ParticipationType.TEAM, maxTeamSize: 2 }, // Tennis doubles pair
+  FIVE_ON_FIVE: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
+  THREE_ON_THREE: { participation: ParticipationType.TEAM, maxTeamSize: 6, maxParticipants: 2 },
+  FLAG_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
+  AMERICAN_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 53, maxParticipants: 2 },
+  SINGLES: { participation: ParticipationType.INDIVIDUAL, maxParticipants: 2 },
+  DOUBLES: { participation: ParticipationType.TEAM, maxTeamSize: 2, maxParticipants: 2 },
 } as const;
 
 export const SportType = {
@@ -94,6 +95,13 @@ export function getParticipationType(sportSubtype: SportSubtype) {
 export function getMaxTeamSize(sportSubtype: SportSubtype): number | undefined {
   const config = SportSubtypeConfig[sportSubtype];
   return "maxTeamSize" in config ? config.maxTeamSize : undefined;
+}
+
+/**
+ * Get the maximum number of participants (teams or individuals) for a given sport subtype.
+ */
+export function getMaxParticipants(sportSubtype: SportSubtype): number {
+  return SportSubtypeConfig[sportSubtype].maxParticipants;
 }
 
 export enum GameSortField {

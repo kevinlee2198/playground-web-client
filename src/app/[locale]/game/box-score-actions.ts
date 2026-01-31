@@ -76,7 +76,7 @@ export async function saveBasketballBoxScore(input: SaveBasketballBoxScoreInput)
     }
 
     const boxScoreId = response.data.saveBasketballBoxScore.basketballBoxScore.id;
-    revalidatePath(`/game/${input.gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, boxScoreId };
   } catch (error) {
     console.error("Failed to save basketball box score:", error);
@@ -166,7 +166,7 @@ export async function saveBasketballBoxScores(scores: SaveBasketballBoxScoreInpu
     );
 
     // Revalidate using the first game ID (assuming all scores are for the same game)
-    revalidatePath(`/game/${scores[0].gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, boxScoreIds };
   } catch (error) {
     console.error("Failed to save basketball box scores:", error);

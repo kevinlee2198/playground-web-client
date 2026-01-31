@@ -1,30 +1,18 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { CreateGameDialog } from "@/components/game/create-game-dialog";
-import { Link } from "@/i18n/navigation";
+import { GameInfiniteList } from "@/components/game/game-infinite-list";
+import { GameListFilters } from "@/components/game/game-list-filters";
+import { GameListSort } from "@/components/game/game-list-sort";
+import { Button } from "@/components/ui/button";
+import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameStatusBadgeVariant } from "@/lib/constants";
+import type { SportType } from "@/lib/constants";
+import { GameStatus } from "@/lib/constants";
 import { authQuery } from "@/lib/graphql-request";
-import type { GameStatus } from "@/lib/constants";
-import type { GameNode } from "@/lib/types/game";
-
-const gameStatusI18nKey: Record<GameStatus, string> = {
-  SCHEDULED: "scheduled",
-  IN_PROGRESS: "inProgress",
-  COMPLETE: "complete",
-};
-import { redirect } from "@/i18n/navigation";
+import type { GameFilterParams } from "@/lib/types/game";
+import { EnumType } from "json-to-graphql-query";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
-import { EnumType } from "json-to-graphql-query";
 
 export const metadata: Metadata = {
   title: "Games | Playground",
@@ -33,10 +21,13 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function GamesPage({ params }: PageProps) {
+// I want to default the filters to be for all sport types, all statuses, and
+export default async function GamesPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
+  const queryParams = await searchParams;
   const t = await getTranslations();
 
   // Auth check
@@ -57,8 +48,8 @@ export default async function GamesPage({ params }: PageProps) {
     },
   });
 
-  const user = playerResponse.data?.me;
-  const player = user?.player;
+  const currentUserId = playerResponse.data?.me?.id;
+  const player = playerResponse.data?.me?.player;
 
   // Show message if no player profile
   if (!player) {
@@ -81,15 +72,77 @@ export default async function GamesPage({ params }: PageProps) {
     );
   }
 
+  // Parse filters from URL
+  const sportTypeParam =
+    typeof queryParams.sportType === "string"
+      ? queryParams.sportType
+      : undefined;
+  const gameStatusParam =
+    typeof queryParams.gameStatus === "string"
+      ? queryParams.gameStatus
+      : undefined;
+
+  // Validate sportType
+  const isValidSportType = (type: string | undefined): type is SportType => {
+    return type === "BASKETBALL" || type === "FOOTBALL" || type === "TENNIS";
+  };
+
+  // Validate gameStatus
+  const isValidGameStatus = (
+    status: string | undefined,
+  ): status is GameStatus => {
+    return (
+      status === GameStatus.SCHEDULED ||
+      status === GameStatus.IN_PROGRESS ||
+      status === GameStatus.COMPLETE
+    );
+  };
+
+  const filters: GameFilterParams = {
+    startAfter:
+      typeof queryParams.startAfter === "string"
+        ? queryParams.startAfter
+        : undefined,
+    startBefore:
+      typeof queryParams.startBefore === "string"
+        ? queryParams.startBefore
+        : undefined,
+    sportType: isValidSportType(sportTypeParam) ? sportTypeParam : undefined,
+    gameStatus: isValidGameStatus(gameStatusParam)
+      ? gameStatusParam
+      : undefined,
+    createdBy: queryParams.myGames === "true" ? currentUserId : undefined,
+  };
+
+  // Parse sort from URL
+  const sortField = (
+    typeof queryParams.sortField === "string"
+      ? queryParams.sortField
+      : "START_DATE"
+  ) as "START_DATE" | "GAME_STATUS";
+  const sortDirection = (
+    typeof queryParams.sortDir === "string" ? queryParams.sortDir : "DESC"
+  ) as "ASC" | "DESC";
+
+  // Build filter input for GraphQL
+  const filterInput: Record<string, unknown> = {};
+  if (filters.startAfter) filterInput.startAfter = filters.startAfter;
+  if (filters.startBefore) filterInput.startBefore = filters.startBefore;
+  if (filters.sportType)
+    filterInput.sportType = new EnumType(filters.sportType);
+  if (filters.gameStatus)
+    filterInput.gameStatus = new EnumType(filters.gameStatus);
+  if (filters.createdBy) filterInput.createdBy = filters.createdBy;
+
   // Fetch games
   const gamesResponse = await authQuery({
     games: {
       __args: {
-        input: {},
+        input: filterInput,
         sort: [
           {
-            field: new EnumType("START_DATE"),
-            direction: new EnumType("DESC"),
+            field: new EnumType(sortField),
+            direction: new EnumType(sortDirection),
           },
         ],
         first: 20,
@@ -107,6 +160,7 @@ export default async function GamesPage({ params }: PageProps) {
             __args: { first: 10 },
             edges: {
               node: {
+                __typename: true,
                 __on: [
                   {
                     __typeName: "TeamInstance",
@@ -132,10 +186,10 @@ export default async function GamesPage({ params }: PageProps) {
     },
   });
 
-  const games: GameNode[] = gamesResponse.data?.games?.edges?.map((edge: { node: GameNode }) => edge.node) || [];
+  const games = gamesResponse.data?.games;
 
   // Handle error state
-  if (!gamesResponse.data?.games) {
+  if (!games) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
@@ -153,97 +207,40 @@ export default async function GamesPage({ params }: PageProps) {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("game.title")}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("game.title")}</h1>
         <CreateGameDialog />
       </div>
 
-      {games.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <h3 className="text-lg font-semibold">{t("game.noGames")}</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t("game.noGamesDescription")}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {games.map((game: GameNode) => {
-            const badgeVariant = GameStatusBadgeVariant[game.gameStatus];
-            const statusText = t(`game.status.${gameStatusI18nKey[game.gameStatus]}`);
-            const sportText = t(`sports.${game.sportType}`);
-            const subtypeText = t(`sportSubtypes.${game.sportSubtype}`);
-            const startDate = new Date(game.startDate).toLocaleDateString(
-              locale,
-              {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            );
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Filters Sidebar */}
+        <aside className="lg:w-64 shrink-0">
+          <GameListFilters currentFilters={filters} />
+        </aside>
 
-            return (
-              <Link
-                key={game.id}
-                href={`/game/${game.id}`}
-                className="transition-transform hover:scale-[1.02]"
-              >
-                <Card className="h-full">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg">
-                        {sportText} - {subtypeText}
-                      </CardTitle>
-                      <Badge variant={badgeVariant as "default" | "secondary" | "outline"}>
-                        {statusText}
-                      </Badge>
-                    </div>
-                    <CardDescription>{startDate}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {game.participants.edges.length > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">
-                          {t("game.participants.title")}
-                        </p>
-                        <ul className="space-y-1 text-sm text-muted-foreground">
-                          {game.participants.edges.slice(0, 3).map((edge) => {
-                            const participant = edge.node;
-                            if (participant.__typename === "TeamInstance") {
-                              return (
-                                <li key={participant.id}>
-                                  {participant.name} ({participant.players.length}{" "}
-                                  {t("game.participants.players").toLowerCase()})
-                                </li>
-                              );
-                            } else {
-                              const playerName = participant.player
-                                ? `${participant.player.firstName} ${participant.player.lastName}`
-                                : "Unknown Player";
-                              return <li key={participant.id}>{playerName}</li>;
-                            }
-                          })}
-                          {game.participants.edges.length > 3 && (
-                            <li className="italic">
-                              +{game.participants.edges.length - 3} more
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {t("game.participants.noParticipants")}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+        {/* Main Content */}
+        <div className="flex-1">
+          <GameListSort
+            currentSort={{ field: sortField, direction: sortDirection }}
+            myGames={filters.createdBy === currentUserId}
+          />
+
+          {games.edges.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-12 text-center">
+              <h3 className="text-lg font-semibold">{t("game.noGames")}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t("game.noGamesDescription")}
+              </p>
+            </div>
+          ) : (
+            <GameInfiniteList
+              initialEdges={games.edges}
+              initialPageInfo={games.pageInfo}
+              filters={filters}
+              sort={{ field: sortField, direction: sortDirection }}
+            />
+          )}
         </div>
-      )}
+      </div>
     </main>
   );
 }

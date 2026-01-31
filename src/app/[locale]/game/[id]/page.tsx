@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailHeader } from "@/components/game/game-detail-header";
+import { GameParticipants } from "@/components/game/game-participants";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { authQuery } from "@/lib/graphql-request";
@@ -104,6 +106,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         edges: {
           cursor: true,
           node: {
+            __typename: true,
             __on: [
               {
                 __typeName: "TeamInstance",
@@ -144,47 +147,6 @@ export default async function GameDetailPage({ params }: PageProps) {
         </div>
       </main>
     );
-  }
-
-  // Fetch box scores for basketball games
-  let boxScores = null;
-  if (game.sportType === "BASKETBALL") {
-    const boxScoreResponse = await authQuery({
-      basketballBoxScores: {
-        __args: {
-          input: { gameIds: [id] },
-          first: 50,
-        },
-        edges: {
-          node: {
-            id: true,
-            player: { id: true, firstName: true, lastName: true },
-            points: true,
-            assists: true,
-            totalRebounds: true,
-            offensiveRebounds: true,
-            defensiveRebounds: true,
-            steals: true,
-            blocks: true,
-            turnovers: true,
-            personalFouls: true,
-            fieldGoalsMade: true,
-            fieldGoalsAttempted: true,
-            fieldGoalPercentage: true,
-            threePointersMade: true,
-            threePointersAttempted: true,
-            threePointerPercentage: true,
-            twoPointersMade: true,
-            twoPointersAttempted: true,
-            twoPointerPercentage: true,
-            freeThrowsMade: true,
-            freeThrowsAttempted: true,
-            freeThrowPercentage: true,
-          },
-        },
-      },
-    });
-    boxScores = boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
   }
 
   const startDate = new Date(game.startDate).toLocaleString(locale, {
@@ -236,81 +198,12 @@ export default async function GameDetailPage({ params }: PageProps) {
       </Card>
 
       {/* Participants */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>{t("game.participants.title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {game.participants.edges.length === 0 ? (
-            <p className="text-muted-foreground">
-              {t("game.participants.noParticipants")}
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {game.participants.edges.map((edge) => {
-                const participant = edge.node;
-                if (participant.__typename === "TeamInstance") {
-                  return (
-                    <Card key={participant.id}>
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          {participant.name}
-                        </CardTitle>
-                        {participant.description && (
-                          <p className="text-sm text-muted-foreground">
-                            {participant.description}
-                          </p>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        {participant.players.length > 0 ? (
-                          <ul className="space-y-1 text-sm">
-                            {participant.players.map((p) => (
-                              <li key={p.id}>
-                                {p.firstName} {p.lastName}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            {t("game.participants.noPlayers")}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                } else {
-                  const playerName = participant.player
-                    ? `${participant.player.firstName} ${participant.player.lastName}`
-                    : "Unknown Player";
-                  return (
-                    <div
-                      key={participant.id}
-                      className="rounded-lg border p-4"
-                    >
-                      <p className="font-medium">{playerName}</p>
-                    </div>
-                  );
-                }
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="mb-8">
+        <GameParticipants game={game} currentPlayerId={player.id} />
+      </div>
 
-      {/* Basketball Box Scores (placeholder for now) */}
-      {game.sportType === "BASKETBALL" && boxScores && boxScores.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("game.boxScore.title")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Box score table to be implemented
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Box Scores */}
+      <GameBoxScores game={game} />
     </main>
   );
 }

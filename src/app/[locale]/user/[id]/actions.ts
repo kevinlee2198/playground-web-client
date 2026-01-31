@@ -86,6 +86,7 @@ export async function loadMoreGames(playerId: string, after: string) {
             edges: {
               cursor: true,
               node: {
+                __typename: true,
                 __on: [
                   {
                     __typeName: "TeamInstance",

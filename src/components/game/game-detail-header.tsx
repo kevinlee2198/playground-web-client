@@ -2,8 +2,11 @@
 
 import { startGame, endGame } from "@/app/[locale]/game/actions";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { GameStatusBadge } from "./game-status-badge";
 import { DeleteGameDialog } from "./delete-game-dialog";
+import { UpdateGameForm } from "./update-game-form";
+import { GameStatus } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -19,6 +22,7 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
   const sportText = t(`sports.${game.sportType}`);
   const subtypeText = t(`sportSubtypes.${game.sportSubtype}`);
@@ -45,8 +49,8 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
     });
   };
 
-  const canStart = game.gameStatus === "SCHEDULED";
-  const canEnd = game.gameStatus === "IN_PROGRESS";
+  const canStart = game.gameStatus === GameStatus.SCHEDULED;
+  const canEnd = game.gameStatus === GameStatus.IN_PROGRESS;
 
   return (
     <div className="mb-8">
@@ -80,7 +84,11 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
               {isPending ? t("game.actions.ending") : t("game.actions.end")}
             </Button>
           )}
-          <Button variant="outline" disabled>
+          <Button
+            variant="outline"
+            onClick={() => setShowUpdateDialog(true)}
+            disabled={isPending}
+          >
             <Pencil className="mr-2 h-4 w-4" />
             {t("game.actions.edit")}
           </Button>
@@ -99,6 +107,20 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
       />
+
+      {/* Update Game Dialog */}
+      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("game.actions.edit")}</DialogTitle>
+          </DialogHeader>
+          <UpdateGameForm
+            gameId={game.id}
+            currentStartDate={game.startDate}
+            onSuccess={() => setShowUpdateDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

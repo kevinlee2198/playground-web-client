@@ -56,7 +56,7 @@ export async function addTeamParticipant(input: AddTeamInput): Promise<Participa
     }
 
     const participantId = response.data.addGameParticipant.participant.id;
-    revalidatePath(`/game/${input.gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, participantId };
   } catch (error) {
     console.error("Failed to add team participant:", error);
@@ -98,7 +98,7 @@ export async function addIndividualParticipant(input: AddIndividualParticipantIn
     }
 
     const participantId = response.data.addGameParticipant.participant.id;
-    revalidatePath(`/game/${input.gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, participantId };
   } catch (error) {
     console.error("Failed to add individual participant:", error);
@@ -151,7 +151,7 @@ export async function updateTeamParticipant(input: UpdateTeamParticipantInput): 
     const participantId = response.data.updateGameParticipant.participant.id;
     // Note: We need to know the gameId to revalidate the path. This might need to be passed in.
     // For now, we'll use a wildcard revalidation
-    revalidatePath("/game/[id]", "page");
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, participantId };
   } catch (error) {
     console.error("Failed to update team participant:", error);
@@ -190,7 +190,7 @@ export async function joinTeam(input: JoinTeamInput): Promise<ParticipantActionR
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/game/[id]", "page");
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to join team:", error);
@@ -229,7 +229,7 @@ export async function leaveTeam(input: LeaveTeamInput): Promise<ParticipantActio
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/game/[id]", "page");
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to leave team:", error);
@@ -259,7 +259,7 @@ export async function removeTeamParticipant(input: RemoveTeamInstanceInput): Pro
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath("/game/[id]", "page");
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to remove team participant:", error);
@@ -290,7 +290,7 @@ export async function removeIndividualParticipant(input: RemoveIndividualPartici
       return { success: false, error: response.errors[0].message };
     }
 
-    revalidatePath(`/game/${input.gameId}`);
+    revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to remove individual participant:", error);
