@@ -32,14 +32,20 @@ export function NavbarSearch() {
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  // Fetch results when debounced value changes
-  useEffect(() => {
+  // Clear results when debounced value is empty (during render, not in effect)
+  const [prevDebouncedValue, setPrevDebouncedValue] = useState(debouncedValue);
+  if (prevDebouncedValue !== debouncedValue) {
+    setPrevDebouncedValue(debouncedValue);
     if (!debouncedValue) {
       setResults([]);
       setIsOpen(false);
       setError(null);
-      return;
     }
+  }
+
+  // Fetch results when debounced value changes
+  useEffect(() => {
+    if (!debouncedValue) return;
 
     startTransition(async () => {
       const result = await searchUsers(debouncedValue, 5);

@@ -307,6 +307,16 @@
     "loadMore": "Load More",
     "title": "Search"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "markAsRead": "Mark as read",
+    "loadMore": "Load more",
+    "loading": "Loading notifications...",
+    "error": "Failed to load notifications",
+    "markAsReadError": "Failed to mark as read",
+    "retry": "Retry"
+  },
   "contact": {
     "title": "Contact Us",
     "email": "Email: playgroundsocool@gmail.com",

@@ -12,13 +12,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "../ui/navigation-menu";
-import { TypographyH1, TypographyP } from "../ui/typography";
+import { TypographyH1 } from "../ui/typography";
 import { NavbarAuthLinks } from "./navbar-auth-links";
 import { NavbarSearch } from "../search/navbar-search";
+import { NotificationBell } from "../notification/notification-bell";
 
-interface Props {}
-
-export function Navbar({}: Props) {
+export function Navbar() {
   const t = useTranslations();
 
   return (
@@ -87,7 +86,8 @@ export function Navbar({}: Props) {
             <NavbarAuthLinks />
           </NavigationMenuList>
         </NavigationMenu>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <NotificationBell />
           <AuthButton />
         </div>
       </div>
