@@ -16,6 +16,7 @@ export default function AuthButton({}: Props) {
   const session = useSession();
   const [currentUser, setCurrentUser] = useState<{
     id: string;
+    username: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -63,7 +64,7 @@ export default function AuthButton({}: Props) {
     return (
       <UserAvatarMenu
         user={{
-          id: currentUser.id,
+          username: currentUser.username,
           name: `${currentUser.firstName} ${currentUser.lastName}`,
           email: currentUser.email,
         }}

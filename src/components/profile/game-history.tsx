@@ -1,6 +1,6 @@
 "use client";
 
-import { loadMoreGames } from "@/app/[locale]/user/[id]/actions";
+import { loadMoreGames } from "@/app/[locale]/user/[username]/actions";
 import { Button } from "@/components/ui/button";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { GameNode } from "@/lib/types/game";

@@ -3,7 +3,7 @@
 import {
   acceptFriendRequest,
   sendFriendRequest,
-} from "@/app/[locale]/user/[id]/actions";
+} from "@/app/[locale]/user/[username]/actions";
 import { Button } from "@/components/ui/button";
 import { FriendshipStatus } from "@/lib/constants";
 import { Clock, Loader2, UserCheck, UserPlus } from "lucide-react";

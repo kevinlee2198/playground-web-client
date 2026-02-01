@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 
 interface CurrentUserInfo {
   id: string;
+  username: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -49,6 +50,7 @@ export async function fetchCurrentUser(): Promise<CurrentUserInfo | null> {
     const response = await authQuery({
       me: {
         id: true,
+        username: true,
         firstName: true,
         lastName: true,
         email: true,

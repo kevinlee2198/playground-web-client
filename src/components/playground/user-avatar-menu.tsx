@@ -15,7 +15,7 @@ import Link from "next/link";
 
 interface UserAvatarMenuProps {
   user: {
-    id: string;
+    username: string;
     name?: string | null;
     email?: string | null;
   };
@@ -58,7 +58,7 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
           <Link
-            href={`/${locale}/user/${user.id}`}
+            href={`/${locale}/user/${user.username}`}
             className="flex items-center"
           >
             <User className="mr-2 h-4 w-4" />

@@ -13,15 +13,19 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 interface PageProps {
-  params: Promise<{ locale: string; id: string }>;
+  params: Promise<{ locale: string; username: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { id: userId } = await params;
+  const { username } = await params;
   const response = await query({
-    user: { __args: { id: userId }, firstName: true, lastName: true },
+    user: {
+      __args: { input: { username } },
+      firstName: true,
+      lastName: true,
+    },
   });
   const user = response.data?.user;
 
@@ -35,11 +39,12 @@ export async function generateMetadata({
   };
 }
 
-function buildUserQuery(userId: string) {
+function buildUserQuery(username: string) {
   return {
     user: {
-      __args: { id: userId },
+      __args: { input: { username } },
       id: true,
+      username: true,
       firstName: true,
       lastName: true,
       player: {
@@ -125,17 +130,17 @@ function buildGamesQuery(playerId: number) {
 }
 
 export default async function UserProfilePage({ params }: PageProps) {
-  const { locale, id: userId } = await params;
+  const { locale, username } = await params;
 
   const currentUser = await fetchCurrentUser();
   const currentUserId = currentUser?.id;
   const isAuthenticated = !!currentUserId;
-  const isOwnProfile = currentUserId === userId;
+  const isOwnProfile = currentUser?.username === username;
 
   // Fetch user data - use authQuery if authenticated to get friendship data
   const userResponse = isAuthenticated
-    ? await authQuery(buildUserQuery(userId))
-    : await query(buildUserQuery(userId));
+    ? await authQuery(buildUserQuery(username))
+    : await query(buildUserQuery(username));
 
   const user = userResponse.data?.user;
 

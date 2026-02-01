@@ -15,6 +15,7 @@ import { FriendActions } from "./friend-actions";
 interface ProfileHeaderProps {
   user: {
     id: string;
+    username: string;
     firstName: string;
     lastName: string;
     player?: {
@@ -62,7 +63,10 @@ export async function ProfileHeader({
 
         {/* User Info */}
         <div className="flex flex-1 flex-col items-center gap-4 text-center sm:items-start sm:text-left">
-          <h1 className="text-3xl font-bold tracking-tight">{fullName}</h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{fullName}</h1>
+            <p className="text-muted-foreground">@{user.username}</p>
+          </div>
 
           {user.player?.biography && (
             <p className="max-w-2xl text-muted-foreground">
