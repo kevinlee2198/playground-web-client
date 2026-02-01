@@ -297,6 +297,16 @@
     "ft": "ft",
     "in": "in"
   },
+  "search": {
+    "placeholder": "Search users...",
+    "submit": "Search",
+    "noResults": "No users found",
+    "viewAllResults": "View all results",
+    "loading": "Searching...",
+    "error": "Failed to search. Please try again.",
+    "loadMore": "Load More",
+    "title": "Search"
+  },
   "contact": {
     "title": "Contact Us",
     "email": "Email: playgroundsocool@gmail.com",

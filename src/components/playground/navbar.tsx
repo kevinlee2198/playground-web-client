@@ -14,6 +14,7 @@ import {
 } from "../ui/navigation-menu";
 import { TypographyH1, TypographyP } from "../ui/typography";
 import { NavbarAuthLinks } from "./navbar-auth-links";
+import { NavbarSearch } from "../search/navbar-search";
 
 interface Props {}
 
@@ -30,24 +31,15 @@ export function Navbar({}: Props) {
           alt="Playground
             Logo"
         />
-        <Link href="/" className="mr-8 text-lg font-bold">
+        <Link href="/" className="mr-4 text-lg font-bold">
           <TypographyH1>{t("common.title")}</TypographyH1>
         </Link>
 
-        {/* Navigation */}
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link
-                  href="/"
-                  className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
-                >
-                  <TypographyP>{t("header.home")}</TypographyP>
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+        <NavbarSearch />
 
+        {/* Navigation */}
+        <NavigationMenu className="ml-4">
+          <NavigationMenuList>
             <NavigationMenuItem>
               <NavigationMenuTrigger>Products</NavigationMenuTrigger>
               <NavigationMenuContent>
