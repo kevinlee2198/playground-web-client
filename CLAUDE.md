@@ -72,7 +72,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 - `src/components/playground/` - App-specific components (navbar, footer)
 - `src/components/auth/` - Authentication UI components
 - `src/lib/` - Utilities, auth config, GraphQL client, i18n helpers
-- `src/dictionaries/` - i18n JSON dictionary files (currently English only)
+- `messages/{locale}.json` - i18n JSON dictionary files (currently English only)
 
 ### Key Patterns
 
@@ -87,11 +87,12 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 
 - `query(q)` / `mutate(m)` - Unauthenticated requests
 - `authQuery(q)` / `authMutate(m)` - Automatically injects Bearer token from session
+- If authenticated - use the auth versions
 - Uses `json-to-graphql-query` to build queries from objects
 - Error format follows Netflix DGS specification
 - Queries are sent to a spring-boot graphql server
 
-**i18n** (`src/lib/i18n/`): Type-safe translation with dot-notation paths (e.g., `t("footer.company.about")`). Uses the `next-intl` library.
+**i18n** (`src/i18n/`): Type-safe translation with dot-notation paths (e.g., `t("footer.company.about")`). Uses the `next-intl` library.
 
 **Routing**: next-intl wraps around these NextJS components for routing. Use these instead of the built-in NextJS ones: `Link, redirect, usePathname, useRouter, getPathname` should all be imported from `"@/i18n/navigation"`
 
@@ -104,6 +105,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 **Input types**: use `field?: T` for optional fields that can be omitted.
 
 **Update/patch inputs**: the GraphQL backend uses PATCH semantics for all update mutations unless otherwise specified. This means three states are possible for nullable fields:
+
 - `undefined` (omit the field) — leave unchanged
 - `null` — clear the value in the database
 - A value — update to that value
