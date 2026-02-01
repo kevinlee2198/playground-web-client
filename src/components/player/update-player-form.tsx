@@ -87,24 +87,22 @@ export function UpdatePlayerForm({
     defaultValues,
   });
 
-  const handleFormSubmit = async (values: PlayerFormOutput) => {
-    const dirty = form.formState.dirtyFields;
-    const input: UpdatePlayerInput = { id: initialData.id };
-    // bugs - sign out - can't sign in again
-    // update doesn't work - something about the dirtyness isn't triggering it
-    console.log(form.formState.touchedFields);
-    console.log(form.formState.dirtyFields);
+  // Destructure at render level so react-hook-form's Proxy subscribes to dirty tracking
+  const { dirtyFields } = form.formState;
 
-    if (dirty.firstName) {
+  const handleFormSubmit = async (values: PlayerFormOutput) => {
+    const input: UpdatePlayerInput = { id: initialData.id };
+
+    if (dirtyFields.firstName) {
       input.firstName = values.firstName;
     }
-    if (dirty.lastName) {
+    if (dirtyFields.lastName) {
       input.lastName = values.lastName;
     }
-    if (dirty.age) {
+    if (dirtyFields.age) {
       input.age = values.age ?? null;
     }
-    if (dirty.heightCm || dirty.heightFeet || dirty.heightInches) {
+    if (dirtyFields.heightCm || dirtyFields.heightFeet || dirtyFields.heightInches) {
       if (unitPreference === UnitPreference.METRIC) {
         input.height = values.heightCm ?? null;
       } else {
@@ -114,14 +112,14 @@ export function UpdatePlayerForm({
           feet > 0 || inches > 0 ? feetInchesToCm(feet, inches) : null;
       }
     }
-    if (dirty.weightKg || dirty.weightLbs) {
+    if (dirtyFields.weightKg || dirtyFields.weightLbs) {
       if (unitPreference === UnitPreference.METRIC) {
         input.weight = values.weightKg ?? null;
       } else {
         input.weight = values.weightLbs ? lbsToKg(values.weightLbs) : null;
       }
     }
-    if (dirty.biography) {
+    if (dirtyFields.biography) {
       input.biography = values.biography || null;
     }
 
