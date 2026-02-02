@@ -98,6 +98,7 @@ interface NextFetchOptions {
 }
 
 interface GraphQLResponse {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
   errors: [GraphQLError];
 }
@@ -139,6 +140,7 @@ interface TypedError {
    * more specific cause for the error. This enumeration
    * will be much larger and likely change/grow over time.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errorDetail?: any;
 
   /**
@@ -154,6 +156,7 @@ interface TypedError {
    * Could include e.g. stacktrace or info from
    * upstream service
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debugInfo?: any;
 
   /**

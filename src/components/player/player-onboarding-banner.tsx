@@ -15,6 +15,8 @@ export function PlayerOnboardingBanner() {
 
   useEffect(() => {
     const dismissed = localStorage.getItem(DISMISSED_KEY) === "true";
+    // Reading from localStorage (external store) on mount — setState is intentional
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDismissed(dismissed);
   }, []);
 

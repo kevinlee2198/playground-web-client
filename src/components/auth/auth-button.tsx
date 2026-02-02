@@ -8,9 +8,7 @@ import { UserAvatarMenu } from "../playground/user-avatar-menu";
 import { TypographyP } from "../ui/typography";
 import { fetchCurrentUser } from "./actions";
 
-interface Props {}
-
-export default function AuthButton({}: Props) {
+export default function AuthButton() {
   const t = useTranslations();
   const locale = useLocale();
   const session = useSession();

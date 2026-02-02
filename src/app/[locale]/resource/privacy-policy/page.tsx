@@ -5,9 +5,7 @@ import {
 } from "@/components/ui/typography";
 import { useTranslations } from "next-intl";
 
-interface Props {}
-
-export default function PrivacyPolicyPage({}: Props) {
+export default function PrivacyPolicyPage() {
   const t = useTranslations("privacyPolicy");
 
   return (

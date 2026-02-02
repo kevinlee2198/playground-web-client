@@ -2,9 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { useNow, useTranslations } from "next-intl";
 import { TypographyH5, TypographyP } from "../ui/typography";
 
-interface Props {}
-
-export default function Footer({}: Props) {
+export default function Footer() {
   const t = useTranslations();
 
   return (

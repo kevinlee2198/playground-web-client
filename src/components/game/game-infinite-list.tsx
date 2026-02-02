@@ -60,10 +60,12 @@ export function GameInfiniteList({
   }, [loadMore]);
 
   // Reset when filters/sort change (new initialEdges means server re-fetched)
-  useEffect(() => {
+  const [prevInitialEdges, setPrevInitialEdges] = useState(initialEdges);
+  if (prevInitialEdges !== initialEdges) {
+    setPrevInitialEdges(initialEdges);
     setEdges(initialEdges);
     setPageInfo(initialPageInfo);
-  }, [initialEdges, initialPageInfo]);
+  }
 
   return (
     <>
