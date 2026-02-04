@@ -24,17 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
-import {
-  getSubtypes,
-  SportSubtype,
-  SportType,
-} from "@/lib/constants";
+import { getSubtypes, SportSubtype, SportType } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
-
-const sportTypeKeys = Object.keys(SportType) as [SportType, ...SportType[]];
-const sportSubtypeKeys = Object.values(SportSubtype) as [SportSubtype, ...SportSubtype[]];
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -42,6 +35,12 @@ import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+
+const sportTypeKeys = Object.keys(SportType) as [SportType, ...SportType[]];
+const sportSubtypeKeys = Object.values(SportSubtype) as [
+  SportSubtype,
+  ...SportSubtype[],
+];
 
 interface CreateGameFormProps {
   onSuccess?: () => void;
@@ -71,7 +70,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       (data) => {
         if (!data.sportType || !data.subtype) return true;
         const validSubtypes = getSubtypes(data.sportType as SportType);
-        return (validSubtypes as readonly SportSubtype[]).includes(data.subtype);
+        return (validSubtypes as readonly SportSubtype[]).includes(
+          data.subtype,
+        );
       },
       {
         message: t("game.validation.invalidSubtype"),
@@ -102,11 +103,15 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
     setError(null);
 
     startTransition(async () => {
-      const input: CreateGameInput = {
-        sportType: values.sportType as SportType,
-        subtype: values.subtype,
+      // Zod refinement already validated that subtype matches sportType,
+      // so the cast to CreateGameInput is safe.
+      const input = {
+        sportType: values.sportType,
         startDate: values.startDate.toISOString(),
-      };
+        metadata: {
+          subtype: values.subtype,
+        },
+      } as CreateGameInput;
 
       const result = await createGame(input);
 
@@ -233,10 +238,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                       onSelect={(date) => {
                         if (!date) return;
                         const current = field.value ?? new Date();
-                        date.setHours(
-                          current.getHours(),
-                          current.getMinutes(),
-                        );
+                        date.setHours(current.getHours(), current.getMinutes());
                         field.onChange(date);
                       }}
                       disabled={isPending}

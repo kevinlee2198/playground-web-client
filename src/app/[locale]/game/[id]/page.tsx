@@ -1,13 +1,17 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailHeader } from "@/components/game/game-detail-header";
 import { GameParticipants } from "@/components/game/game-participants";
-import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
+import { getSubtypeFromMetadata } from "@/lib/constants";
+import {
+  gameMetadataFragment,
+  participantDetailNodeFragment,
+} from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { GameDetail } from "@/lib/types/game";
-import { redirect } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -16,7 +20,9 @@ interface PageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { id } = await params;
   const t = await getTranslations();
 
@@ -25,15 +31,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       game: {
         __args: { id },
         sportType: true,
-        sportSubtype: true,
+        metadata: gameMetadataFragment,
       },
     });
     const game = response.data?.game;
 
     if (game) {
+      const subtype = getSubtypeFromMetadata(game.metadata);
       return {
         title: `${game.sportType} Game | Playground`,
-        description: `${game.sportType} - ${game.sportSubtype}`,
+        description: `${game.sportType} - ${subtype}`,
       };
     }
   } catch (error) {
@@ -99,30 +106,13 @@ export default async function GameDetailPage({ params }: PageProps) {
       startDate: true,
       endDate: true,
       sportType: true,
-      sportSubtype: true,
+      metadata: gameMetadataFragment,
       gameStatus: true,
       participants: {
         __args: { first: 50 },
         edges: {
           cursor: true,
-          node: {
-            __typename: true,
-            __on: [
-              {
-                __typeName: "TeamInstance",
-                id: true,
-                name: true,
-                description: true,
-                players: { id: true, firstName: true, lastName: true },
-                attributes: true,
-              },
-              {
-                __typeName: "IndividualParticipant",
-                id: true,
-                player: { id: true, firstName: true, lastName: true },
-              },
-            ],
-          },
+          node: participantDetailNodeFragment,
         },
         pageInfo: { hasNextPage: true, endCursor: true },
       },

@@ -263,7 +263,37 @@
       "subtypeRequired": "Sport format is required",
       "startDateRequired": "Start date is required",
       "teamNameRequired": "Team name is required",
-      "invalidSubtype": "Invalid format for selected sport"
+      "invalidSubtype": "Invalid format for selected sport",
+      "periodsPositive": "Periods must be a positive number",
+      "bestOfRequired": "Best of must be 3 or 5",
+      "scoreNonNegative": "Score must be 0 or greater",
+      "gamesWonNonNegative": "Games won must be 0 or greater",
+      "tiebreakPointsNonNegative": "Tiebreak points must be 0 or greater"
+    },
+    "metadata": {
+      "periods": "{count, plural, one {# Period} other {# Periods}}",
+      "bestOf": "Best of {count}",
+      "tiebreakFinalSet": "Final Set Tiebreak",
+      "noTiebreakFinalSet": "No Final Set Tiebreak"
+    },
+    "scoreboard": {
+      "title": "Score",
+      "noParticipants": "Add participants to track scores",
+      "noScores": "No scores recorded",
+      "edit": "Edit Score",
+      "save": "Save Score",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "scoreUpdated": "Score updated",
+      "scoreUpdateError": "Failed to update score",
+      "set": "Set",
+      "sets": "Sets",
+      "addSet": "Add Set",
+      "removeSet": "Remove Set",
+      "gamesWon": "Games",
+      "tiebreakPoints": "TB",
+      "setsWon": "Sets Won",
+      "points": "Points"
     },
     "success": {
       "created": "Game created successfully",

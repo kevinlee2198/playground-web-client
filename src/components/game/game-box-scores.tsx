@@ -22,7 +22,11 @@ function groupByTeam(
   game: GameDetail,
   allBoxScores: { node: BasketballBoxScoreNode }[],
 ): TeamBoxScoreGroup[] {
-  const teams: { name: string; playerIds: Set<number>; players: PlayerRef[] }[] = [];
+  const teams: {
+    name: string;
+    playerIds: Set<number>;
+    players: PlayerRef[];
+  }[] = [];
 
   for (const edge of game.participants.edges) {
     if (edge.node.__typename === "TeamInstance") {
@@ -89,8 +93,7 @@ export async function GameBoxScores({ game }: GameBoxScoresProps) {
     },
   });
 
-  const allBoxScores =
-    boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+  const allBoxScores = boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
   const teamGroups = groupByTeam(game, allBoxScores);
 
   return (

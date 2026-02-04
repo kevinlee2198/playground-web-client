@@ -47,12 +47,32 @@ export enum SportSubtype {
  * maxParticipants is the max number of teams (team sports) or individual players (individual sports).
  */
 export const SportSubtypeConfig = {
-  FIVE_ON_FIVE: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
-  THREE_ON_THREE: { participation: ParticipationType.TEAM, maxTeamSize: 6, maxParticipants: 2 },
-  FLAG_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
-  AMERICAN_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 53, maxParticipants: 2 },
+  FIVE_ON_FIVE: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 15,
+    maxParticipants: 2,
+  },
+  THREE_ON_THREE: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 6,
+    maxParticipants: 2,
+  },
+  FLAG_FOOTBALL: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 15,
+    maxParticipants: 2,
+  },
+  AMERICAN_FOOTBALL: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 53,
+    maxParticipants: 2,
+  },
   SINGLES: { participation: ParticipationType.INDIVIDUAL, maxParticipants: 2 },
-  DOUBLES: { participation: ParticipationType.TEAM, maxTeamSize: 2, maxParticipants: 2 },
+  DOUBLES: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 2,
+    maxParticipants: 2,
+  },
 } as const;
 
 export const SportType = {
@@ -119,3 +139,13 @@ export const GameStatusBadgeVariant = {
   COMPLETE: "outline",
 } as const;
 
+/**
+ * Extract the SportSubtype value from a GameMetadata union member.
+ * All metadata types share a `subtype` field whose values align with
+ * the SportSubtype enum.
+ */
+export function getSubtypeFromMetadata(metadata: {
+  subtype: string;
+}): SportSubtype {
+  return metadata.subtype as SportSubtype;
+}

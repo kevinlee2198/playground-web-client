@@ -5,8 +5,11 @@ import { GameListSort } from "@/components/game/game-list-sort";
 import { Button } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import type { SportType } from "@/lib/constants";
-import { GameStatus } from "@/lib/constants";
+import { GameStatus, SportType } from "@/lib/constants";
+import {
+  gameMetadataFragment,
+  participantNodeFragment,
+} from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { GameFilterParams } from "@/lib/types/game";
 import { EnumType } from "json-to-graphql-query";
@@ -84,7 +87,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
 
   // Validate sportType
   const isValidSportType = (type: string | undefined): type is SportType => {
-    return type === "BASKETBALL" || type === "FOOTBALL" || type === "TENNIS";
+    return type !== undefined && type in SportType;
   };
 
   // Validate gameStatus
@@ -154,27 +157,12 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           startDate: true,
           endDate: true,
           sportType: true,
-          sportSubtype: true,
+          metadata: gameMetadataFragment,
           gameStatus: true,
           participants: {
             __args: { first: 10 },
             edges: {
-              node: {
-                __typename: true,
-                __on: [
-                  {
-                    __typeName: "TeamInstance",
-                    id: true,
-                    name: true,
-                    players: { id: true, firstName: true, lastName: true },
-                  },
-                  {
-                    __typeName: "IndividualParticipant",
-                    id: true,
-                    player: { id: true, firstName: true, lastName: true },
-                  },
-                ],
-              },
+              node: participantNodeFragment,
             },
           },
         },

@@ -1,4 +1,4 @@
-import type { GameStatus, SportSubtype, SportType } from "@/lib/constants";
+import type { GameStatus, SportType } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 
 /**
@@ -10,6 +10,60 @@ export interface PlayerRef {
   lastName: string;
 }
 
+// ---------- Game Metadata (response types -- fields are T | null for nullable) ----------
+
+export interface BasketballGameMetadata {
+  __typename: "BasketballGameMetadata";
+  subtype: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+  periods: number | null;
+}
+
+export interface TennisGameMetadata {
+  __typename: "TennisGameMetadata";
+  subtype: "SINGLES" | "DOUBLES";
+  bestOf: number;
+  tiebreakFinalSet: boolean;
+}
+
+export interface FootballGameMetadata {
+  __typename: "FootballGameMetadata";
+  subtype: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+  periods: number | null;
+}
+
+export type GameMetadata =
+  | BasketballGameMetadata
+  | TennisGameMetadata
+  | FootballGameMetadata;
+
+// ---------- Participant Metadata (response types) ----------
+
+export interface BasketballParticipantMetadata {
+  __typename: "BasketballParticipantMetadata";
+  score: number;
+}
+
+export interface TennisSetScore {
+  gamesWon: number;
+  tiebreakPoints: number | null;
+}
+
+export interface TennisParticipantMetadata {
+  __typename: "TennisParticipantMetadata";
+  setsWon: number;
+  sets: TennisSetScore[];
+}
+
+export interface FootballParticipantMetadata {
+  __typename: "FootballParticipantMetadata";
+  score: number;
+}
+
+export type ParticipantMetadata =
+  | BasketballParticipantMetadata
+  | TennisParticipantMetadata
+  | FootballParticipantMetadata;
+
 /**
  * Team instance participant in a game (basic info)
  */
@@ -18,6 +72,7 @@ export interface TeamInstanceNode {
   id: number;
   name: string;
   players: PlayerRef[];
+  metadata: ParticipantMetadata | null;
 }
 
 /**
@@ -29,7 +84,7 @@ export interface TeamInstanceDetail {
   name: string;
   description: string | null;
   players: PlayerRef[];
-  attributes: Record<string, unknown>;
+  metadata: ParticipantMetadata | null;
 }
 
 /**
@@ -39,6 +94,7 @@ export interface IndividualParticipantNode {
   __typename: "IndividualParticipant";
   id: number;
   player: PlayerRef;
+  metadata: ParticipantMetadata | null;
 }
 
 /**
@@ -49,7 +105,9 @@ export type GameParticipant = TeamInstanceNode | IndividualParticipantNode;
 /**
  * Union type for game participants with full details
  */
-export type GameParticipantDetail = TeamInstanceDetail | IndividualParticipantNode;
+export type GameParticipantDetail =
+  | TeamInstanceDetail
+  | IndividualParticipantNode;
 
 /**
  * Game node returned from GraphQL queries
@@ -59,7 +117,7 @@ export interface GameNode {
   startDate: string;
   endDate: string | null;
   sportType: SportType;
-  sportSubtype: SportSubtype;
+  metadata: GameMetadata;
   gameStatus: GameStatus;
   participants: {
     edges: Edge<GameParticipant>[];
@@ -74,7 +132,7 @@ export interface GameDetail {
   startDate: string;
   endDate: string | null;
   sportType: SportType;
-  sportSubtype: SportSubtype;
+  metadata: GameMetadata;
   gameStatus: GameStatus;
   participants: {
     edges: Edge<GameParticipantDetail>[];
@@ -83,13 +141,49 @@ export interface GameDetail {
 }
 
 /**
- * Input for creating a game
+ * Input for creating a basketball game
  */
-export interface CreateGameInput {
-  sportType: SportType;
-  subtype: SportSubtype;
-  startDate: string; // ISO date string
+export interface CreateBasketballGameInput {
+  sportType: "BASKETBALL";
+  startDate: string;
+  metadata: {
+    subtype: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+    periods?: number;
+  };
 }
+
+/**
+ * Input for creating a tennis game
+ */
+export interface CreateTennisGameInput {
+  sportType: "TENNIS";
+  startDate: string;
+  metadata: {
+    subtype: "SINGLES" | "DOUBLES";
+    bestOf?: number;
+    tiebreakFinalSet?: boolean;
+  };
+}
+
+/**
+ * Input for creating a football game
+ */
+export interface CreateFootballGameInput {
+  sportType: "FOOTBALL";
+  startDate: string;
+  metadata: {
+    subtype: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+    periods?: number;
+  };
+}
+
+/**
+ * Union type for creating a game
+ */
+export type CreateGameInput =
+  | CreateBasketballGameInput
+  | CreateTennisGameInput
+  | CreateFootballGameInput;
 
 /**
  * Input for updating a game
@@ -97,6 +191,21 @@ export interface CreateGameInput {
 export interface UpdateGameInput {
   id: number;
   startDate?: string;
+  metadata?: {
+    basketball?: {
+      subtype?: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+      periods?: number;
+    };
+    tennis?: {
+      subtype?: "SINGLES" | "DOUBLES";
+      bestOf?: number;
+      tiebreakFinalSet?: boolean;
+    };
+    football?: {
+      subtype?: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+      periods?: number;
+    };
+  };
 }
 
 /**
@@ -107,7 +216,6 @@ export interface AddTeamInput {
   name: string;
   description?: string;
   playerIds?: number[];
-  attributes?: Record<string, unknown>;
 }
 
 /**
@@ -116,6 +224,17 @@ export interface AddTeamInput {
 export interface AddIndividualParticipantInput {
   gameId: number;
   playerId: number;
+}
+
+// ---------- Participant Metadata Input (@oneOf -- exactly one key) ----------
+
+export interface ParticipantMetadataInput {
+  basketball?: { score: number };
+  tennis?: {
+    setsWon: number;
+    sets: { gamesWon: number; tiebreakPoints?: number }[];
+  };
+  football?: { score: number };
 }
 
 /**
@@ -128,7 +247,16 @@ export interface UpdateTeamParticipantInput {
   name?: string;
   description?: string;
   playerIds?: number[];
-  attributes?: Record<string, unknown>;
+  metadata?: ParticipantMetadataInput;
+}
+
+/**
+ * Entry for updating participant scores (for scoreboard bulk save)
+ */
+export interface UpdateParticipantScoreEntry {
+  id: number;
+  isTeam: boolean;
+  metadata: ParticipantMetadataInput;
 }
 
 /**

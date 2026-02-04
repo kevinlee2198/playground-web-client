@@ -7,6 +7,10 @@ import {
   GameSortField,
   SortDirection,
 } from "@/lib/constants";
+import {
+  gameMetadataFragment,
+  participantNodeFragment,
+} from "@/lib/graphql-fragments";
 import { authQuery, query } from "@/lib/graphql-request";
 import { EnumType } from "json-to-graphql-query";
 import type { Metadata } from "next";
@@ -87,36 +91,13 @@ function buildGamesQuery(playerId: number) {
           startDate: true,
           endDate: true,
           sportType: true,
-          sportSubtype: true,
+          metadata: gameMetadataFragment,
           gameStatus: true,
           participants: {
             __args: { first: 10 },
             edges: {
               cursor: true,
-              node: {
-                __typename: true,
-                __on: [
-                  {
-                    __typeName: "TeamInstance",
-                    id: true,
-                    name: true,
-                    players: {
-                      id: true,
-                      firstName: true,
-                      lastName: true,
-                    },
-                  },
-                  {
-                    __typeName: "IndividualParticipant",
-                    id: true,
-                    player: {
-                      id: true,
-                      firstName: true,
-                      lastName: true,
-                    },
-                  },
-                ],
-              },
+              node: participantNodeFragment,
             },
           },
         },

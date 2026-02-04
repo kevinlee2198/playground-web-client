@@ -17,8 +17,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import type { SportType } from "@/lib/constants";
+import type { GameMetadata, UpdateGameInput } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
-import type { UpdateGameInput } from "@/lib/types/game";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -30,12 +31,16 @@ import { z } from "zod";
 interface UpdateGameFormProps {
   gameId: number;
   currentStartDate: string;
+  metadata: GameMetadata;
+  sportType: SportType;
   onSuccess?: () => void;
 }
 
 export function UpdateGameForm({
   gameId,
   currentStartDate,
+  metadata: _metadata,
+  sportType: _sportType,
   onSuccess,
 }: UpdateGameFormProps) {
   const t = useTranslations();
@@ -125,10 +130,7 @@ export function UpdateGameForm({
                       onSelect={(date) => {
                         if (!date) return;
                         const current = field.value ?? new Date();
-                        date.setHours(
-                          current.getHours(),
-                          current.getMinutes(),
-                        );
+                        date.setHours(current.getHours(), current.getMinutes());
                         field.onChange(date);
                       }}
                       disabled={isPending}

@@ -1,9 +1,14 @@
 "use client";
 
+import { GameScore } from "@/components/game/score/game-score";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
-import { GameStatusBadgeVariant, getSportIconPath } from "@/lib/constants";
+import {
+  GameStatusBadgeVariant,
+  getSportIconPath,
+  getSubtypeFromMetadata,
+} from "@/lib/constants";
 import type {
   GameNode,
   IndividualParticipantNode,
@@ -27,10 +32,10 @@ export function GameCard({ game }: GameCardProps) {
     day: "numeric",
   });
 
+  const participants = game.participants.edges.map((e) => e.node);
+
   // Get participant display text based on type
   const getParticipantsDisplay = () => {
-    const participants = game.participants.edges.map((e) => e.node);
-
     if (participants.length === 0) return "TBD";
 
     // Check if team-based or individual
@@ -75,7 +80,7 @@ export function GameCard({ game }: GameCardProps) {
                 {t(`sports.${game.sportType}`)}
               </span>
               <Badge variant="outline">
-                {t(`sportSubtypes.${game.sportSubtype}`)}
+                {t(`sportSubtypes.${getSubtypeFromMetadata(game.metadata)}`)}
               </Badge>
               <Badge variant={GameStatusBadgeVariant[game.gameStatus]}>
                 {t(`profile.games.status.${game.gameStatus.toLowerCase()}`)}
@@ -83,6 +88,13 @@ export function GameCard({ game }: GameCardProps) {
             </div>
             <TypographyP className="text-sm text-muted-foreground">
               {getParticipantsDisplay()}
+            </TypographyP>
+            <TypographyP className="text-sm font-semibold text-primary">
+              <GameScore
+                sportType={game.sportType}
+                participants={participants}
+                variant="compact"
+              />
             </TypographyP>
           </div>
 
