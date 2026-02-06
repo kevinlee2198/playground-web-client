@@ -12,18 +12,24 @@ export const gameMetadataFragment = {
   __on: [
     {
       __typeName: "BasketballGameMetadata",
-      subtype: true,
+      basketballSubtype: {
+        __aliasFor: "subtype",
+      },
       periods: true,
     },
     {
       __typeName: "TennisGameMetadata",
-      subtype: true,
+      tennisSubtype: {
+        __aliasFor: "subtype",
+      },
       bestOf: true,
       tiebreakFinalSet: true,
     },
     {
       __typeName: "FootballGameMetadata",
-      subtype: true,
+      footballSubtype: {
+        __aliasFor: "subtype",
+      },
       periods: true,
     },
   ],

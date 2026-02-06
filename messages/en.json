@@ -165,7 +165,13 @@
       "startDate": "Start Date",
       "selectSport": "Select a sport",
       "selectFormat": "Select a format",
-      "selectDate": "Pick a date"
+      "selectDate": "Pick a date",
+      "advancedOptions": "Advanced Options",
+      "periods": "Number of Periods",
+      "periodsPlaceholder": "Default: {default}",
+      "bestOf": "Best Of",
+      "bestOfPlaceholder": "Default: 3",
+      "tiebreakFinalSet": "Tiebreak in Final Set"
     },
     "status": {
       "scheduled": "Scheduled",

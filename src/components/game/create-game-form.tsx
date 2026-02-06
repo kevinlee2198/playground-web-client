@@ -4,6 +4,11 @@ import { createGame } from "@/app/[locale]/game/actions";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Form,
   FormControl,
   FormField,
@@ -24,12 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useRouter } from "@/i18n/navigation";
 import { getSubtypes, SportSubtype, SportType } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ChevronDown } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -65,6 +71,19 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       startDate: z.date({
         message: t("game.validation.startDateRequired"),
       }),
+      // Advanced options
+      periods: z
+        .number()
+        .int()
+        .positive({ message: t("game.validation.periodsPositive") })
+        .optional(),
+      bestOf: z
+        .number()
+        .refine((v) => v === 3 || v === 5, {
+          message: t("game.validation.bestOfRequired"),
+        })
+        .optional(),
+      tiebreakFinalSet: z.boolean().optional(),
     })
     .refine(
       (data) => {
@@ -88,6 +107,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       sportType: undefined,
       subtype: undefined,
       startDate: new Date(),
+      periods: undefined,
+      bestOf: undefined,
+      tiebreakFinalSet: undefined,
     },
   });
 
@@ -103,15 +125,41 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
     setError(null);
 
     startTransition(async () => {
-      // Zod refinement already validated that subtype matches sportType,
-      // so the cast to CreateGameInput is safe.
-      const input = {
-        sportType: values.sportType,
-        startDate: values.startDate.toISOString(),
-        metadata: {
-          subtype: values.subtype,
-        },
-      } as CreateGameInput;
+      const sportType = values.sportType as SportType;
+
+      let input: CreateGameInput;
+
+      if (sportType === "BASKETBALL") {
+        input = {
+          sportType: "BASKETBALL",
+          startDate: values.startDate.toISOString(),
+          metadata: {
+            subtype: values.subtype as "FIVE_ON_FIVE" | "THREE_ON_THREE",
+            ...(values.periods !== undefined && { periods: values.periods }),
+          },
+        };
+      } else if (sportType === "FOOTBALL") {
+        input = {
+          sportType: "FOOTBALL",
+          startDate: values.startDate.toISOString(),
+          metadata: {
+            subtype: values.subtype as "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL",
+            ...(values.periods !== undefined && { periods: values.periods }),
+          },
+        };
+      } else {
+        input = {
+          sportType: "TENNIS",
+          startDate: values.startDate.toISOString(),
+          metadata: {
+            subtype: values.subtype as "SINGLES" | "DOUBLES",
+            ...(values.bestOf !== undefined && { bestOf: values.bestOf }),
+            ...(values.tiebreakFinalSet !== undefined && {
+              tiebreakFinalSet: values.tiebreakFinalSet,
+            }),
+          },
+        };
+      }
 
       const result = await createGame(input);
 
@@ -265,6 +313,104 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             );
           }}
         />
+
+        {/* Advanced Options */}
+        {selectedSportType && (
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button variant="link" type="button" className="px-0">
+                {t("game.form.advancedOptions")}
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-2">
+              {/* Basketball / Football: periods */}
+              {(selectedSportType === "BASKETBALL" ||
+                selectedSportType === "FOOTBALL") && (
+                <FormField
+                  control={form.control}
+                  name="periods"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("game.form.periods")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder={
+                            selectedSportType === "BASKETBALL" ? "4" : "4"
+                          }
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? Number(e.target.value)
+                                : undefined,
+                            )
+                          }
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Tennis: bestOf + tiebreakFinalSet */}
+              {selectedSportType === "TENNIS" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="bestOf"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("game.form.bestOf")}</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value?.toString()}
+                            onValueChange={(v) => field.onChange(Number(v))}
+                            disabled={isPending}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue
+                                placeholder={t("game.form.bestOfPlaceholder")}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="3">3</SelectItem>
+                              <SelectItem value="5">5</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tiebreakFinalSet"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2">
+                        <FormControl>
+                          <Switch
+                            checked={field.value ?? true}
+                            onCheckedChange={field.onChange}
+                            disabled={isPending}
+                          />
+                        </FormControl>
+                        <FormLabel className="!mt-0">
+                          {t("game.form.tiebreakFinalSet")}
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {/* Error message */}
         {error && (

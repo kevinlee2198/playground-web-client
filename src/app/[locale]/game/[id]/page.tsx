@@ -1,11 +1,12 @@
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailHeader } from "@/components/game/game-detail-header";
 import { GameParticipants } from "@/components/game/game-participants";
+import { GameScoreboard } from "@/components/game/game-scoreboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { getSubtypeFromMetadata } from "@/lib/constants";
+import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
 import {
   gameMetadataFragment,
   participantDetailNodeFragment,
@@ -167,6 +168,13 @@ export default async function GameDetailPage({ params }: PageProps) {
 
       {/* Header with actions */}
       <GameDetailHeader game={game} currentPlayerId={player.id} />
+
+      {/* Scoreboard - only show once game has started */}
+      {game.gameStatus !== GameStatus.SCHEDULED && (
+        <div className="mb-8">
+          <GameScoreboard game={game} />
+        </div>
+      )}
 
       {/* Schedule Info */}
       <Card className="mb-8">

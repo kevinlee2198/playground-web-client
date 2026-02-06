@@ -141,11 +141,21 @@ export const GameStatusBadgeVariant = {
 
 /**
  * Extract the SportSubtype value from a GameMetadata union member.
- * All metadata types share a `subtype` field whose values align with
- * the SportSubtype enum.
+ * Due to GraphQL field conflict resolution, each metadata type uses
+ * an aliased subtype field (basketballSubtype, tennisSubtype, footballSubtype).
  */
-export function getSubtypeFromMetadata(metadata: {
-  subtype: string;
-}): SportSubtype {
-  return metadata.subtype as SportSubtype;
+export function getSubtypeFromMetadata(
+  metadata:
+    | { __typename: "BasketballGameMetadata"; basketballSubtype: string }
+    | { __typename: "TennisGameMetadata"; tennisSubtype: string }
+    | { __typename: "FootballGameMetadata"; footballSubtype: string },
+): SportSubtype {
+  switch (metadata.__typename) {
+    case "BasketballGameMetadata":
+      return metadata.basketballSubtype as SportSubtype;
+    case "TennisGameMetadata":
+      return metadata.tennisSubtype as SportSubtype;
+    case "FootballGameMetadata":
+      return metadata.footballSubtype as SportSubtype;
+  }
 }

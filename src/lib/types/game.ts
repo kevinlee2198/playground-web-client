@@ -14,20 +14,20 @@ export interface PlayerRef {
 
 export interface BasketballGameMetadata {
   __typename: "BasketballGameMetadata";
-  subtype: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+  basketballSubtype: "FIVE_ON_FIVE" | "THREE_ON_THREE";
   periods: number | null;
 }
 
 export interface TennisGameMetadata {
   __typename: "TennisGameMetadata";
-  subtype: "SINGLES" | "DOUBLES";
+  tennisSubtype: "SINGLES" | "DOUBLES";
   bestOf: number;
   tiebreakFinalSet: boolean;
 }
 
 export interface FootballGameMetadata {
   __typename: "FootballGameMetadata";
-  subtype: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+  footballSubtype: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
   periods: number | null;
 }
 
