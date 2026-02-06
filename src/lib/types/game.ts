@@ -1,4 +1,10 @@
-import type { GameStatus, SportType } from "@/lib/constants";
+import {
+  type GameSortField,
+  type GameStatus,
+  type SortDirection,
+  SportSubtype,
+  SportType,
+} from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 
 /**
@@ -14,20 +20,20 @@ export interface PlayerRef {
 
 export interface BasketballGameMetadata {
   __typename: "BasketballGameMetadata";
-  basketballSubtype: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+  basketballSubtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
   periods: number | null;
 }
 
 export interface TennisGameMetadata {
   __typename: "TennisGameMetadata";
-  tennisSubtype: "SINGLES" | "DOUBLES";
+  tennisSubtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
   bestOf: number;
   tiebreakFinalSet: boolean;
 }
 
 export interface FootballGameMetadata {
   __typename: "FootballGameMetadata";
-  footballSubtype: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+  footballSubtype: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
   periods: number | null;
 }
 
@@ -144,10 +150,10 @@ export interface GameDetail {
  * Input for creating a basketball game
  */
 export interface CreateBasketballGameInput {
-  sportType: "BASKETBALL";
+  sportType: SportType.BASKETBALL;
   startDate: string;
   metadata: {
-    subtype: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+    subtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
     periods?: number;
   };
 }
@@ -156,10 +162,10 @@ export interface CreateBasketballGameInput {
  * Input for creating a tennis game
  */
 export interface CreateTennisGameInput {
-  sportType: "TENNIS";
+  sportType: SportType.TENNIS;
   startDate: string;
   metadata: {
-    subtype: "SINGLES" | "DOUBLES";
+    subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
     bestOf?: number;
     tiebreakFinalSet?: boolean;
   };
@@ -169,10 +175,10 @@ export interface CreateTennisGameInput {
  * Input for creating a football game
  */
 export interface CreateFootballGameInput {
-  sportType: "FOOTBALL";
+  sportType: SportType.FOOTBALL;
   startDate: string;
   metadata: {
-    subtype: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+    subtype: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
     periods?: number;
   };
 }
@@ -193,16 +199,16 @@ export interface UpdateGameInput {
   startDate?: string;
   metadata?: {
     basketball?: {
-      subtype?: "FIVE_ON_FIVE" | "THREE_ON_THREE";
+      subtype?: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
       periods?: number;
     };
     tennis?: {
-      subtype?: "SINGLES" | "DOUBLES";
+      subtype?: SportSubtype.SINGLES | SportSubtype.DOUBLES;
       bestOf?: number;
       tiebreakFinalSet?: boolean;
     };
     football?: {
-      subtype?: "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL";
+      subtype?: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
       periods?: number;
     };
   };
@@ -321,6 +327,6 @@ export interface GameFilterParams {
  * Sort input for game list
  */
 export interface GameSortParams {
-  field: "START_DATE" | "GAME_STATUS";
-  direction: "ASC" | "DESC";
+  field: GameSortField;
+  direction: SortDirection;
 }

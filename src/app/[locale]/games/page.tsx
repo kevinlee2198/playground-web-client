@@ -5,7 +5,12 @@ import { GameListSort } from "@/components/game/game-list-sort";
 import { Button } from "@/components/ui/button";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameStatus, SportType } from "@/lib/constants";
+import {
+  GameSortField,
+  GameStatus,
+  SortDirection,
+  SportType,
+} from "@/lib/constants";
 import {
   gameMetadataFragment,
   participantNodeFragment,
@@ -121,11 +126,13 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
   const sortField = (
     typeof queryParams.sortField === "string"
       ? queryParams.sortField
-      : "START_DATE"
-  ) as "START_DATE" | "GAME_STATUS";
+      : GameSortField.START_DATE
+  ) as GameSortField;
   const sortDirection = (
-    typeof queryParams.sortDir === "string" ? queryParams.sortDir : "DESC"
-  ) as "ASC" | "DESC";
+    typeof queryParams.sortDir === "string"
+      ? queryParams.sortDir
+      : SortDirection.DESC
+  ) as SortDirection;
 
   // Build filter input for GraphQL
   const filterInput: Record<string, unknown> = {};

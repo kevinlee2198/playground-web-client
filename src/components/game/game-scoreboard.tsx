@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GameStatus } from "@/lib/constants";
+import { GameStatus, SportType } from "@/lib/constants";
 import type {
   BasketballParticipantMetadata,
   FootballParticipantMetadata,
@@ -59,7 +59,10 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
 
   // Initialize edit mode state
   const handleStartEdit = () => {
-    if (game.sportType === "BASKETBALL" || game.sportType === "FOOTBALL") {
+    if (
+      game.sportType === SportType.BASKETBALL ||
+      game.sportType === SportType.FOOTBALL
+    ) {
       const metaA = participantA?.metadata;
       const metaB = participantB?.metadata;
       const initialScoreA =
@@ -74,7 +77,7 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
           : 0;
       setScoreA(initialScoreA);
       setScoreB(initialScoreB);
-    } else if (game.sportType === "TENNIS") {
+    } else if (game.sportType === SportType.TENNIS) {
       const metaA = participantA?.metadata;
       const metaB = participantB?.metadata;
 
@@ -110,7 +113,7 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
     const isTeam = participantA.__typename === "TeamInstance";
     const entries: UpdateParticipantScoreEntry[] = [];
 
-    if (game.sportType === "BASKETBALL") {
+    if (game.sportType === SportType.BASKETBALL) {
       entries.push({
         id: participantA.id,
         isTeam,
@@ -121,7 +124,7 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
         isTeam,
         metadata: { basketball: { score: scoreB } },
       });
-    } else if (game.sportType === "FOOTBALL") {
+    } else if (game.sportType === SportType.FOOTBALL) {
       entries.push({
         id: participantA.id,
         isTeam,
@@ -132,7 +135,7 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
         isTeam,
         metadata: { football: { score: scoreB } },
       });
-    } else if (game.sportType === "TENNIS") {
+    } else if (game.sportType === SportType.TENNIS) {
       // Compute setsWon
       const setsWonA = sets.filter(
         (s) => s.playerA.gamesWon > s.playerB.gamesWon,
@@ -219,7 +222,8 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
         )}
       </CardHeader>
       <CardContent>
-        {game.sportType === "BASKETBALL" || game.sportType === "FOOTBALL" ? (
+        {game.sportType === SportType.BASKETBALL ||
+        game.sportType === SportType.FOOTBALL ? (
           isEditing ? (
             <SimpleScoreEditor
               nameA={nameA}
@@ -240,7 +244,7 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
               metadataB={participantB.metadata}
             />
           )
-        ) : game.sportType === "TENNIS" ? (
+        ) : game.sportType === SportType.TENNIS ? (
           isEditing ? (
             <TennisScoreEditor
               nameA={nameA}

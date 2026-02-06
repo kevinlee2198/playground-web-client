@@ -1,5 +1,5 @@
 import { BasketballBoxScoreTable } from "@/components/game/basketball-box-score-table";
-import { GameStatus } from "@/lib/constants";
+import { GameStatus, SportType } from "@/lib/constants";
 import { authQuery } from "@/lib/graphql-request";
 import type {
   GameDetail,
@@ -49,7 +49,7 @@ function groupByTeam(
 }
 
 export async function GameBoxScores({ game }: GameBoxScoresProps) {
-  if (game.sportType !== "BASKETBALL") {
+  if (game.sportType !== SportType.BASKETBALL) {
     return null;
   }
 

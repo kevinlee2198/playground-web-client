@@ -2,7 +2,7 @@
 
 import { SimpleScore } from "@/components/game/score/simple-score";
 import { TennisScore } from "@/components/game/score/tennis-score";
-import type { SportType } from "@/lib/constants";
+import { SportType } from "@/lib/constants";
 import type { GameParticipant } from "@/lib/types/game";
 
 interface GameScoreProps {
@@ -17,11 +17,11 @@ export function GameScore({ sportType, participants }: GameScoreProps) {
   const [a, b] = participants;
   if (!a.metadata && !b.metadata) return null;
 
-  if (sportType === "BASKETBALL" || sportType === "FOOTBALL") {
+  if (sportType === SportType.BASKETBALL || sportType === SportType.FOOTBALL) {
     return <SimpleScore participantA={a} participantB={b} />;
   }
 
-  if (sportType === "TENNIS") {
+  if (sportType === SportType.TENNIS) {
     return <TennisScore participantA={a} participantB={b} />;
   }
 

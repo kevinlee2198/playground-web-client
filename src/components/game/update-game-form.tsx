@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import type { SportType } from "@/lib/constants";
+import { SportType } from "@/lib/constants";
 import type { GameMetadata, UpdateGameInput } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -132,17 +132,17 @@ export function UpdateGameForm({
       if (periodsChanged || bestOfChanged || tiebreakChanged) {
         input.metadata = {};
 
-        if (sportType === "BASKETBALL") {
+        if (sportType === SportType.BASKETBALL) {
           input.metadata.basketball = {};
           if (periodsChanged && values.periods !== undefined) {
             input.metadata.basketball.periods = values.periods;
           }
-        } else if (sportType === "FOOTBALL") {
+        } else if (sportType === SportType.FOOTBALL) {
           input.metadata.football = {};
           if (periodsChanged && values.periods !== undefined) {
             input.metadata.football.periods = values.periods;
           }
-        } else if (sportType === "TENNIS") {
+        } else if (sportType === SportType.TENNIS) {
           input.metadata.tennis = {};
           if (bestOfChanged && values.bestOf !== undefined) {
             input.metadata.tennis.bestOf = values.bestOf;
@@ -249,7 +249,8 @@ export function UpdateGameForm({
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 pt-2">
             {/* Basketball / Football: periods */}
-            {(sportType === "BASKETBALL" || sportType === "FOOTBALL") && (
+            {(sportType === SportType.BASKETBALL ||
+              sportType === SportType.FOOTBALL) && (
               <FormField
                 control={form.control}
                 name="periods"
@@ -260,7 +261,9 @@ export function UpdateGameForm({
                       <Input
                         type="number"
                         min={1}
-                        placeholder={sportType === "BASKETBALL" ? "4" : "4"}
+                        placeholder={
+                          sportType === SportType.BASKETBALL ? "4" : "4"
+                        }
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e) =>
@@ -278,7 +281,7 @@ export function UpdateGameForm({
             )}
 
             {/* Tennis: bestOf + tiebreakFinalSet */}
-            {sportType === "TENNIS" && (
+            {sportType === SportType.TENNIS && (
               <>
                 <FormField
                   control={form.control}

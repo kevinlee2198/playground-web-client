@@ -75,7 +75,13 @@ export const SportSubtypeConfig = {
   },
 } as const;
 
-export const SportType = {
+export enum SportType {
+  BASKETBALL = "BASKETBALL",
+  FOOTBALL = "FOOTBALL",
+  TENNIS = "TENNIS",
+}
+
+export const SportTypeConfig = {
   //   BASEBALL: [],
   BASKETBALL: {
     subtypes: [SportSubtype.FIVE_ON_FIVE, SportSubtype.THREE_ON_THREE],
@@ -94,14 +100,12 @@ export const SportType = {
   //   SWIM: [],
 } as const;
 
-export type SportType = keyof typeof SportType;
-
 export function getSubtypes(sport: SportType) {
-  return SportType[sport].subtypes;
+  return SportTypeConfig[sport].subtypes;
 }
 
 export function getSportIconPath(sport: SportType) {
-  return SportType[sport].icon;
+  return SportTypeConfig[sport].icon;
 }
 
 export function getParticipationType(sportSubtype: SportSubtype) {

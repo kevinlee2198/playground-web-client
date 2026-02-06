@@ -129,30 +129,36 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
 
       let input: CreateGameInput;
 
-      if (sportType === "BASKETBALL") {
+      if (sportType === SportType.BASKETBALL) {
         input = {
-          sportType: "BASKETBALL",
+          sportType: SportType.BASKETBALL,
           startDate: values.startDate.toISOString(),
           metadata: {
-            subtype: values.subtype as "FIVE_ON_FIVE" | "THREE_ON_THREE",
+            subtype: values.subtype as
+              | SportSubtype.FIVE_ON_FIVE
+              | SportSubtype.THREE_ON_THREE,
             ...(values.periods !== undefined && { periods: values.periods }),
           },
         };
-      } else if (sportType === "FOOTBALL") {
+      } else if (sportType === SportType.FOOTBALL) {
         input = {
-          sportType: "FOOTBALL",
+          sportType: SportType.FOOTBALL,
           startDate: values.startDate.toISOString(),
           metadata: {
-            subtype: values.subtype as "FLAG_FOOTBALL" | "AMERICAN_FOOTBALL",
+            subtype: values.subtype as
+              | SportSubtype.FLAG_FOOTBALL
+              | SportSubtype.AMERICAN_FOOTBALL,
             ...(values.periods !== undefined && { periods: values.periods }),
           },
         };
       } else {
         input = {
-          sportType: "TENNIS",
+          sportType: SportType.TENNIS,
           startDate: values.startDate.toISOString(),
           metadata: {
-            subtype: values.subtype as "SINGLES" | "DOUBLES",
+            subtype: values.subtype as
+              | SportSubtype.SINGLES
+              | SportSubtype.DOUBLES,
             ...(values.bestOf !== undefined && { bestOf: values.bestOf }),
             ...(values.tiebreakFinalSet !== undefined && {
               tiebreakFinalSet: values.tiebreakFinalSet,
@@ -325,8 +331,8 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-2">
               {/* Basketball / Football: periods */}
-              {(selectedSportType === "BASKETBALL" ||
-                selectedSportType === "FOOTBALL") && (
+              {(selectedSportType === SportType.BASKETBALL ||
+                selectedSportType === SportType.FOOTBALL) && (
                 <FormField
                   control={form.control}
                   name="periods"
@@ -338,7 +344,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                           type="number"
                           min={1}
                           placeholder={
-                            selectedSportType === "BASKETBALL" ? "4" : "4"
+                            selectedSportType === SportType.BASKETBALL
+                              ? "4"
+                              : "4"
                           }
                           {...field}
                           value={field.value ?? ""}
@@ -359,7 +367,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
               )}
 
               {/* Tennis: bestOf + tiebreakFinalSet */}
-              {selectedSportType === "TENNIS" && (
+              {selectedSportType === SportType.TENNIS && (
                 <>
                   <FormField
                     control={form.control}
