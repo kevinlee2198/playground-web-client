@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { useUnitPreference } from "@/hooks/use-unit-preference";
+import { FieldGroup } from "@/components/ui/field";
+import { FormTextareaField, FormTextField } from "@/components/ui/form-field";
 import { UnitPreference } from "@/lib/constants";
 import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import {
@@ -11,26 +11,61 @@ import {
   kgToLbs,
   lbsToKg,
 } from "@/lib/unit-conversion";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "@tanstack/react-form";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
-import { useForm } from "react-hook-form";
 import {
-  BiographyField,
   countWords,
-  createPlayerFormSchema,
-  NameFields,
-  PhysicalFields,
-  type PlayerFormInput,
-  type PlayerFormOutput,
-  WeightFields,
+  playerFormSchema,
+  type PlayerFormValues,
 } from "./player-form-fields";
+
+function buildDefaultValues(
+  initialData: Player,
+  unitPreference: UnitPreference,
+): PlayerFormValues {
+  let heightCm: number | undefined;
+  let heightFeet: number | undefined;
+  let heightInches: number | undefined;
+  let weightKg: number | undefined;
+  let weightLbs: number | undefined;
+
+  if (initialData.height) {
+    if (unitPreference === UnitPreference.METRIC) {
+      heightCm = initialData.height;
+    } else {
+      const converted = cmToFeetInches(initialData.height);
+      heightFeet = converted.feet;
+      heightInches = converted.inches;
+    }
+  }
+
+  if (initialData.weight) {
+    if (unitPreference === UnitPreference.METRIC) {
+      weightKg = initialData.weight;
+    } else {
+      weightLbs = Math.round(kgToLbs(initialData.weight));
+    }
+  }
+
+  return {
+    firstName: initialData.firstName,
+    lastName: initialData.lastName,
+    age: initialData.age ?? undefined,
+    heightCm,
+    heightFeet,
+    heightInches,
+    weightKg,
+    weightLbs,
+    biography: initialData.biography ?? "",
+  };
+}
 
 interface UpdatePlayerFormProps {
   initialData: Player;
   onSubmit: (data: UpdatePlayerInput) => Promise<void>;
   onCancel: () => void;
   isPending?: boolean;
+  unitPreference?: UnitPreference;
 }
 
 export function UpdatePlayerForm({
@@ -38,141 +73,206 @@ export function UpdatePlayerForm({
   onSubmit,
   onCancel,
   isPending = false,
+  unitPreference = UnitPreference.METRIC,
 }: UpdatePlayerFormProps) {
   const t = useTranslations();
-  const { preference: unitPreference } = useUnitPreference();
-  const playerFormSchema = useMemo(() => createPlayerFormSchema(t), [t]);
 
-  const defaultValues = useMemo(() => {
-    const isMetric = unitPreference === UnitPreference.METRIC;
-    let heightCm: number | undefined = undefined;
-    let heightFeet: number | undefined = undefined;
-    let heightInches: number | undefined = undefined;
-    let weightKg: number | undefined = undefined;
-    let weightLbs: number | undefined = undefined;
+  const form = useForm({
+    defaultValues: buildDefaultValues(initialData, unitPreference),
+    validators: {
+      onBlur: playerFormSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      const input: UpdatePlayerInput = { id: initialData.id };
 
-    if (initialData.height) {
-      if (isMetric) {
-        heightCm = initialData.height;
-      } else {
-        const { feet, inches } = cmToFeetInches(initialData.height);
-        heightFeet = feet;
-        heightInches = inches;
+      const isDirty = (name: keyof PlayerFormValues) =>
+        formApi.getFieldMeta(name)?.isDirty ?? false;
+
+      if (isDirty("firstName")) {
+        input.firstName = value.firstName;
       }
-    }
-
-    if (initialData.weight) {
-      if (isMetric) {
-        weightKg = initialData.weight;
-      } else {
-        weightLbs = Math.round(kgToLbs(initialData.weight));
+      if (isDirty("lastName")) {
+        input.lastName = value.lastName;
       }
-    }
+      if (isDirty("age")) {
+        input.age = value.age ?? null;
+      }
+      if (
+        isDirty("heightCm") ||
+        isDirty("heightFeet") ||
+        isDirty("heightInches")
+      ) {
+        if (unitPreference === UnitPreference.METRIC) {
+          input.height = value.heightCm ?? null;
+        } else {
+          const feet = value.heightFeet ?? 0;
+          const inches = value.heightInches ?? 0;
+          input.height =
+            feet > 0 || inches > 0 ? feetInchesToCm(feet, inches) : null;
+        }
+      }
+      if (isDirty("weightKg") || isDirty("weightLbs")) {
+        if (unitPreference === UnitPreference.METRIC) {
+          input.weight = value.weightKg ?? null;
+        } else {
+          input.weight = value.weightLbs ? lbsToKg(value.weightLbs) : null;
+        }
+      }
+      if (isDirty("biography")) {
+        input.biography = value.biography || null;
+      }
 
-    return {
-      firstName: initialData.firstName,
-      lastName: initialData.lastName,
-      age: initialData.age ?? undefined,
-      heightCm,
-      heightFeet,
-      heightInches,
-      weightKg,
-      weightLbs,
-      biography: initialData.biography ?? "",
-    };
-  }, [initialData]);
-
-  const form = useForm<PlayerFormInput, unknown, PlayerFormOutput>({
-    resolver: zodResolver(playerFormSchema),
-    defaultValues,
+      await onSubmit(input);
+    },
   });
 
-  // Destructure at render level so react-hook-form's Proxy subscribes to dirty tracking
-  const { dirtyFields } = form.formState;
-
-  const handleFormSubmit = async (values: PlayerFormOutput) => {
-    const input: UpdatePlayerInput = { id: initialData.id };
-
-    if (dirtyFields.firstName) {
-      input.firstName = values.firstName;
-    }
-    if (dirtyFields.lastName) {
-      input.lastName = values.lastName;
-    }
-    if (dirtyFields.age) {
-      input.age = values.age ?? null;
-    }
-    if (
-      dirtyFields.heightCm ||
-      dirtyFields.heightFeet ||
-      dirtyFields.heightInches
-    ) {
-      if (unitPreference === UnitPreference.METRIC) {
-        input.height = values.heightCm ?? null;
-      } else {
-        const feet = values.heightFeet ?? 0;
-        const inches = values.heightInches ?? 0;
-        input.height =
-          feet > 0 || inches > 0 ? feetInchesToCm(feet, inches) : null;
-      }
-    }
-    if (dirtyFields.weightKg || dirtyFields.weightLbs) {
-      if (unitPreference === UnitPreference.METRIC) {
-        input.weight = values.weightKg ?? null;
-      } else {
-        input.weight = values.weightLbs ? lbsToKg(values.weightLbs) : null;
-      }
-    }
-    if (dirtyFields.biography) {
-      input.biography = values.biography || null;
-    }
-
-    await onSubmit(input);
-  };
-
-  const biographyValue = form.watch("biography");
-  const wordCount = useMemo(
-    () => countWords(biographyValue || ""),
-    [biographyValue],
-  );
-
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="space-y-6"
-      >
-        <NameFields control={form.control} isPending={isPending} />
-        <PhysicalFields
-          control={form.control}
-          isPending={isPending}
-          unitPreference={unitPreference}
-        />
-        <WeightFields
-          control={form.control}
-          isPending={isPending}
-          unitPreference={unitPreference}
-        />
-        <BiographyField
-          control={form.control}
-          isPending={isPending}
-          wordCount={wordCount}
-        />
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+      className="space-y-6"
+    >
+      <FieldGroup className="sm:flex-row">
+        <form.Field name="firstName">
+          {(field) => (
+            <FormTextField
+              field={field}
+              label={t("player.form.firstName")}
+              required
+              disabled={isPending}
+              placeholder={t("player.form.firstName")}
+            />
+          )}
+        </form.Field>
 
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
+        <form.Field name="lastName">
+          {(field) => (
+            <FormTextField
+              field={field}
+              label={t("player.form.lastName")}
+              required
+              disabled={isPending}
+              placeholder={t("player.form.lastName")}
+            />
+          )}
+        </form.Field>
+      </FieldGroup>
+
+      <FieldGroup className="sm:flex-row">
+        <form.Field name="age">
+          {(field) => (
+            <FormTextField
+              field={field}
+              label={t("player.form.age")}
+              type="number"
+              disabled={isPending}
+              placeholder={t("player.form.age")}
+            />
+          )}
+        </form.Field>
+
+        {unitPreference === UnitPreference.METRIC ? (
+          <form.Field name="heightCm">
+            {(field) => (
+              <FormTextField
+                field={field}
+                label={`${t("player.form.height")} (${t("units.cm")})`}
+                type="number"
+                disabled={isPending}
+                placeholder="170"
+              />
+            )}
+          </form.Field>
+        ) : (
+          <>
+            <form.Field name="heightFeet">
+              {(field) => (
+                <FormTextField
+                  field={field}
+                  label={`${t("player.form.height")} (${t("units.ft")})`}
+                  type="number"
+                  disabled={isPending}
+                  placeholder="5"
+                />
+              )}
+            </form.Field>
+            <form.Field name="heightInches">
+              {(field) => (
+                <FormTextField
+                  field={field}
+                  label={t("units.in")}
+                  type="number"
+                  disabled={isPending}
+                  placeholder="10"
+                />
+              )}
+            </form.Field>
+          </>
+        )}
+      </FieldGroup>
+
+      <FieldGroup className="sm:flex-row">
+        {unitPreference === UnitPreference.METRIC ? (
+          <form.Field name="weightKg">
+            {(field) => (
+              <FormTextField
+                field={field}
+                label={`${t("player.form.weight")} (${t("units.kg")})`}
+                type="number"
+                disabled={isPending}
+                placeholder="70"
+              />
+            )}
+          </form.Field>
+        ) : (
+          <form.Field name="weightLbs">
+            {(field) => (
+              <FormTextField
+                field={field}
+                label={`${t("player.form.weight")} (${t("units.lbs")})`}
+                type="number"
+                disabled={isPending}
+                placeholder="154"
+              />
+            )}
+          </form.Field>
+        )}
+      </FieldGroup>
+
+      <form.Field name="biography">
+        {(field) => (
+          <FormTextareaField
+            field={field}
+            label={t("player.form.biography")}
             disabled={isPending}
-          >
-            {t("actions.cancel")}
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? t("player.actions.saving") : t("actions.save")}
-          </Button>
-        </div>
-      </form>
-    </Form>
+            placeholder={t("player.form.biography")}
+            rows={5}
+            footer={
+              <div className="text-sm text-muted-foreground">
+                {t("player.form.biographyWordCount", {
+                  count: countWords(field.state.value || ""),
+                })}
+              </div>
+            }
+          />
+        )}
+      </form.Field>
+
+      <div className="flex justify-end gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isPending}
+        >
+          {t("actions.cancel")}
+        </Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? t("player.actions.saving") : t("actions.save")}
+        </Button>
+      </div>
+    </form>
   );
 }

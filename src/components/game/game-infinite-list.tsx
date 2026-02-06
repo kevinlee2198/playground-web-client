@@ -1,13 +1,16 @@
 "use client";
 
 import { loadMoreGames } from "@/app/[locale]/game/actions";
-import type { GameFilterParams, GameSortParams } from "@/lib/types/game";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
-import type { GameNode } from "@/lib/types/game";
+import type {
+  GameFilterParams,
+  GameNode,
+  GameSortParams,
+} from "@/lib/types/game";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { GameCard } from "./game-card";
-import { useTranslations } from "next-intl";
 
 interface GameInfiniteListProps {
   initialEdges: Edge<GameNode>[];
@@ -49,7 +52,7 @@ export function GameInfiniteList({
           loadMore();
         }
       },
-      { rootMargin: "100px" }
+      { rootMargin: "100px" },
     );
 
     if (loadMoreRef.current) {
@@ -76,8 +79,13 @@ export function GameInfiniteList({
       </div>
 
       {/* Infinite scroll trigger */}
-      <div ref={loadMoreRef} className="mt-8 flex h-10 items-center justify-center">
-        {isPending && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+      <div
+        ref={loadMoreRef}
+        className="mt-8 flex h-10 items-center justify-center"
+      >
+        {isPending && (
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        )}
         {!pageInfo.hasNextPage && edges.length > 0 && (
           <p className="text-sm text-muted-foreground">
             {t("game.noGamesDescription")}

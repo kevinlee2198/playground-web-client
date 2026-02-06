@@ -18,5 +18,9 @@ export function GameStatusBadge({ status }: GameStatusBadgeProps) {
   const variant = GameStatusBadgeVariant[status];
   const text = t(gameStatusI18nKey[status]);
 
-  return <Badge variant={variant as "default" | "secondary" | "outline"}>{text}</Badge>;
+  return (
+    <Badge variant={variant as "default" | "secondary" | "outline"}>
+      {text}
+    </Badge>
+  );
 }

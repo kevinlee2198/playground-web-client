@@ -1,7 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import type { Notification, MarkNotificationsAsReadResult } from "@/lib/types/notification";
+import type {
+  MarkNotificationsAsReadResult,
+  Notification,
+} from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import DOMPurify from "isomorphic-dompurify";
 import { Check, Loader2 } from "lucide-react";
@@ -24,14 +27,23 @@ export function NotificationItem({
 
   const sanitizedBody = DOMPurify.sanitize(notification.body, {
     ALLOWED_TAGS: [
-      "b", "i", "em", "strong", "a", "span", "p", "br",
-      "ul", "ol", "li",
+      "b",
+      "i",
+      "em",
+      "strong",
+      "a",
+      "span",
+      "p",
+      "br",
+      "ul",
+      "ol",
+      "li",
     ],
     ALLOWED_ATTR: ["href", "target", "rel", "class"],
   });
 
   const relativeTime = formatter.relativeTime(
-    new Date(notification.createdDate)
+    new Date(notification.createdDate),
   );
 
   async function handleMarkAsRead() {
@@ -48,7 +60,7 @@ export function NotificationItem({
     <div
       className={cn(
         "flex items-start gap-3 px-4 py-3 transition-colors",
-        !notification.isRead && "bg-accent/50"
+        !notification.isRead && "bg-accent/50",
       )}
     >
       {/* Unread dot indicator */}

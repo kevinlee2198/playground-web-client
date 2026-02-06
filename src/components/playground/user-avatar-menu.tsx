@@ -1,5 +1,6 @@
 "use client";
 
+import { getKeycloakLogoutUrl } from "@/components/auth/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getKeycloakLogoutUrl } from "@/components/auth/actions";
 import { LogOut, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -47,16 +47,18 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          <Avatar className="h-9 w-9 cursor-pointer">
-            <AvatarImage src={undefined} alt={user.name ?? "User"} />
-            <AvatarFallback>{getInitials()}</AvatarFallback>
-          </Avatar>
-        </button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+            <Avatar className="h-9 w-9 cursor-pointer">
+              <AvatarImage src={undefined} alt={user.name ?? "User"} />
+              <AvatarFallback>{getInitials()}</AvatarFallback>
+            </Avatar>
+          </button>
+        }
+      />
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem>
           <Link
             href={`/${locale}/user/${user.username}`}
             className="flex items-center"
@@ -65,7 +67,7 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
             {t("profile.viewProfile")}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem>
           <Link href={`/${locale}/settings`} className="flex items-center">
             <Settings className="mr-2 h-4 w-4" />
             {t("profile.settings")}

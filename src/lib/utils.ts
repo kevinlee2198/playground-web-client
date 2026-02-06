@@ -6,6 +6,22 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Converts `null` to `undefined`, passing through numbers unchanged.
+ * Useful for mapping nullable API response fields into form defaultValues.
+ */
+export function nullToUndefined(v: number | null): number | undefined {
+  return v ?? undefined;
+}
+
+/**
+ * Converts `undefined` to `null`, passing through numbers unchanged.
+ * Useful for mapping optional form values back to nullable API inputs.
+ */
+export function undefinedToNull(v: number | undefined): number | null {
+  return v ?? null;
+}
+
+/**
  * Converts a snake_case string (upper or lower) to camelCase
  * Examples:
  *  "snake_case" -> "snakeCase"

@@ -1,7 +1,7 @@
 import { PlayerProfileCard } from "@/components/player/player-profile-card";
+import { redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { authQuery } from "@/lib/graphql-request";
-import { redirect } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 

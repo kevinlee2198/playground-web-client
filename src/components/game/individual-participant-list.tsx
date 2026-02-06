@@ -6,10 +6,10 @@ import {
 } from "@/app/[locale]/game/participant-actions";
 import { Button } from "@/components/ui/button";
 import type { GameParticipantDetail } from "@/lib/types/game";
+import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { UserPlus, X } from "lucide-react";
 
 interface IndividualParticipantListProps {
   participants: GameParticipantDetail[];
@@ -29,11 +29,13 @@ export function IndividualParticipantList({
 
   // Extract individual participants
   const individualParticipants = participants.filter(
-    (p) => p.__typename === "IndividualParticipant"
+    (p) => p.__typename === "IndividualParticipant",
   );
 
   const isCurrentPlayerParticipant = individualParticipants.some(
-    (p) => p.__typename === "IndividualParticipant" && p.player.id === currentPlayerId
+    (p) =>
+      p.__typename === "IndividualParticipant" &&
+      p.player.id === currentPlayerId,
   );
 
   const handleJoinGame = () => {
@@ -94,16 +96,18 @@ export function IndividualParticipantList({
           >
             {t("game.participants.leaveGame")}
           </Button>
-        ) : !atParticipantLimit && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleJoinGame}
-            disabled={isPending}
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            {t("game.participants.joinGame")}
-          </Button>
+        ) : (
+          !atParticipantLimit && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleJoinGame}
+              disabled={isPending}
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              {t("game.participants.joinGame")}
+            </Button>
+          )
         )}
       </div>
 
@@ -133,7 +137,9 @@ export function IndividualParticipantList({
                   disabled={isPending}
                 >
                   <X className="h-4 w-4" />
-                  <span className="sr-only">{t("game.participants.removeParticipant")}</span>
+                  <span className="sr-only">
+                    {t("game.participants.removeParticipant")}
+                  </span>
                 </Button>
               </div>
             );

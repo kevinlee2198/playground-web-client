@@ -2,7 +2,7 @@ import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailHeader } from "@/components/game/game-detail-header";
 import { GameParticipants } from "@/components/game/game-participants";
 import { GameScoreboard } from "@/components/game/game-scoreboard";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { GameDetail } from "@/lib/types/game";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -90,9 +91,9 @@ export default async function GameDetailPage({ params }: PageProps) {
             {t("player.modal.description")}
           </p>
           <div className="mt-4">
-            <Button asChild>
-              <Link href="/player">{t("player.modal.create")}</Link>
-            </Button>
+            <Link href="/player" className={buttonVariants()}>
+              {t("player.modal.create")}
+            </Link>
           </div>
         </div>
       </main>
@@ -132,9 +133,12 @@ export default async function GameDetailPage({ params }: PageProps) {
           <p className="mt-2 text-muted-foreground">
             {t("game.notFoundDescription")}
           </p>
-          <Button variant="outline" asChild className="mt-6">
-            <Link href="/games">{t("game.title")}</Link>
-          </Button>
+          <Link
+            href="/games"
+            className={cn(buttonVariants({ variant: "outline" }), "mt-6")}
+          >
+            {t("game.title")}
+          </Link>
         </div>
       </main>
     );
@@ -161,9 +165,9 @@ export default async function GameDetailPage({ params }: PageProps) {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Back button */}
       <div className="mb-4">
-        <Button variant="ghost" asChild>
-          <Link href="/games">← {t("game.title")}</Link>
-        </Button>
+        <Link href="/games" className={buttonVariants({ variant: "ghost" })}>
+          ← {t("game.title")}
+        </Link>
       </div>
 
       {/* Header with actions */}

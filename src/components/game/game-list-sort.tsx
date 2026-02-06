@@ -2,10 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { GameSortField } from "@/lib/constants";
+import { GameSortField, SortDirection } from "@/lib/constants";
 import type { GameSortParams } from "@/lib/types/game";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -22,9 +28,13 @@ export function GameListSort({ currentSort, myGames }: GameListSortProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const updateParam = (key: string, value: string) => {
+  const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set(key, value);
+    if (value === null) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -75,10 +85,15 @@ export function GameListSort({ currentSort, myGames }: GameListSortProps) {
           variant="outline"
           size="icon"
           onClick={() =>
-            updateParam("sortDir", currentSort.direction === "ASC" ? "DESC" : "ASC")
+            updateParam(
+              "sortDir",
+              currentSort.direction === SortDirection.ASC
+                ? SortDirection.DESC
+                : SortDirection.ASC,
+            )
           }
           title={
-            currentSort.direction === "ASC"
+            currentSort.direction === SortDirection.ASC
               ? t("game.sort.ascending")
               : t("game.sort.descending")
           }

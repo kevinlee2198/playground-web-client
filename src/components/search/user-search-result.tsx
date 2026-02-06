@@ -8,14 +8,18 @@ interface UserSearchResultProps {
   onClick?: () => void;
 }
 
-export function UserSearchResult({ user, isHighlighted, onClick }: UserSearchResultProps) {
+export function UserSearchResult({
+  user,
+  isHighlighted,
+  onClick,
+}: UserSearchResultProps) {
   return (
     <Link
       href={`/user/${user.username}`}
       onClick={onClick}
       className={cn(
         "flex flex-col px-4 py-2.5 transition-colors hover:bg-muted",
-        isHighlighted && "bg-muted"
+        isHighlighted && "bg-muted",
       )}
     >
       <span className="text-sm font-medium">

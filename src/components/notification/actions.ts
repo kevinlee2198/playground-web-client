@@ -1,6 +1,6 @@
 "use server";
 
-import { authQuery, authMutate } from "@/lib/graphql-request";
+import { authMutate, authQuery } from "@/lib/graphql-request";
 import type {
   FetchNotificationsResult,
   MarkNotificationsAsReadResult,
@@ -38,7 +38,7 @@ function buildNotificationsQuery(first: number, after?: string) {
  */
 export async function fetchNotifications(
   first: number,
-  after?: string
+  after?: string,
 ): Promise<FetchNotificationsResult> {
   try {
     const queryObj = buildNotificationsQuery(first, after);
@@ -75,7 +75,7 @@ export async function fetchNotifications(
  * Mark one or more notifications as read.
  */
 export async function markNotificationsAsRead(
-  ids: string[]
+  ids: string[],
 ): Promise<MarkNotificationsAsReadResult> {
   try {
     const response = await authMutate({

@@ -157,20 +157,22 @@ export function GameListFilters({ currentFilters }: GameListFiltersProps) {
             {t("game.filters.from")}
           </Label>
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !startAfterDate && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startAfterDate
-                  ? format(startAfterDate, "PPP")
-                  : t("game.form.selectDate")}
-              </Button>
-            </PopoverTrigger>
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startAfterDate && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startAfterDate
+                    ? format(startAfterDate, "PPP")
+                    : t("game.form.selectDate")}
+                </Button>
+              }
+            ></PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
@@ -190,20 +192,22 @@ export function GameListFilters({ currentFilters }: GameListFiltersProps) {
             {t("game.filters.to")}
           </Label>
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !startBeforeDate && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startBeforeDate
-                  ? format(startBeforeDate, "PPP")
-                  : t("game.form.selectDate")}
-              </Button>
-            </PopoverTrigger>
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startBeforeDate && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startBeforeDate
+                    ? format(startBeforeDate, "PPP")
+                    : t("game.form.selectDate")}
+                </Button>
+              }
+            ></PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"

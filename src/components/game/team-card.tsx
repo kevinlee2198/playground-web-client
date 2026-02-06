@@ -1,13 +1,10 @@
 "use client";
 
-import { joinTeam, leaveTeam, removeTeamParticipant } from "@/app/[locale]/game/participant-actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GameStatus } from "@/lib/constants";
-import type { TeamInstanceDetail } from "@/lib/types/game";
-import { useTranslations } from "next-intl";
-import { useTransition, useState } from "react";
-import { toast } from "sonner";
+import {
+  joinTeam,
+  leaveTeam,
+  removeTeamParticipant,
+} from "@/app/[locale]/game/participant-actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +15,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GameStatus } from "@/lib/constants";
+import type { TeamInstanceDetail } from "@/lib/types/game";
+import { useTranslations } from "next-intl";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 interface TeamCardProps {
   team: TeamInstanceDetail;
@@ -27,14 +31,21 @@ interface TeamCardProps {
   isPlayerOnAnyTeam: boolean;
 }
 
-export function TeamCard({ team, gameId, gameStatus, currentPlayerId, isPlayerOnAnyTeam }: TeamCardProps) {
+export function TeamCard({
+  team,
+  gameId,
+  gameStatus,
+  currentPlayerId,
+  isPlayerOnAnyTeam,
+}: TeamCardProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   const isPlayerOnTeam = team.players.some((p) => p.id === currentPlayerId);
-  const gameHasStarted = gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
+  const gameHasStarted =
+    gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
   const handleJoinTeam = () => {
     startTransition(async () => {
@@ -99,20 +110,26 @@ export function TeamCard({ team, gameId, gameStatus, currentPlayerId, isPlayerOn
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={gameHasStarted ? () => setShowLeaveDialog(true) : handleLeaveTeam}
+                  onClick={
+                    gameHasStarted
+                      ? () => setShowLeaveDialog(true)
+                      : handleLeaveTeam
+                  }
                   disabled={isPending}
                 >
                   {t("game.participants.leaveTeam")}
                 </Button>
-              ) : !isPlayerOnAnyTeam && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleJoinTeam}
-                  disabled={isPending}
-                >
-                  {t("game.participants.joinTeam")}
-                </Button>
+              ) : (
+                !isPlayerOnAnyTeam && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleJoinTeam}
+                    disabled={isPending}
+                  >
+                    {t("game.participants.joinTeam")}
+                  </Button>
+                )
               )}
               <Button
                 variant="destructive"
@@ -151,7 +168,9 @@ export function TeamCard({ team, gameId, gameStatus, currentPlayerId, isPlayerOn
       <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("game.participants.leaveTeam")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("game.participants.leaveTeam")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {t("game.participants.leaveTeamStatsWarning")}
             </AlertDialogDescription>
@@ -167,7 +186,9 @@ export function TeamCard({ team, gameId, gameStatus, currentPlayerId, isPlayerOn
               }}
               disabled={isPending}
             >
-              {isPending ? t("game.actions.saving") : t("game.participants.leaveTeam")}
+              {isPending
+                ? t("game.actions.saving")
+                : t("game.participants.leaveTeam")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -177,9 +198,12 @@ export function TeamCard({ team, gameId, gameStatus, currentPlayerId, isPlayerOn
       <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("game.participants.removeTeam")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("game.participants.removeTeam")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove {team.name}? This action cannot be undone.
+              Are you sure you want to remove {team.name}? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -191,7 +215,9 @@ export function TeamCard({ team, gameId, gameStatus, currentPlayerId, isPlayerOn
               disabled={isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isPending ? t("game.actions.deleting") : t("game.participants.removeTeam")}
+              {isPending
+                ? t("game.actions.deleting")
+                : t("game.participants.removeTeam")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -2,12 +2,13 @@ import "@/app/globals.css";
 import Footer from "@/components/playground/footer";
 import { Navbar } from "@/components/playground/navbar";
 import { Toaster } from "@/components/ui/sonner";
-import { UnitPreferenceProvider } from "@/hooks/use-unit-preference";
 import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
-import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { Geist, Geist_Mono } from "next/font/google";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,23 +34,20 @@ export default async function RootLayout({
   children,
   params,
 }: RootLayoutProps) {
-  // Ensure that the incoming `locale` is valid
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
   return (
-    <html lang={locale}>
+    <html lang={locale} className={inter.variable}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <NextIntlClientProvider>
-          <UnitPreferenceProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <Toaster />
-          </UnitPreferenceProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <Toaster />
         </NextIntlClientProvider>
       </body>
     </html>

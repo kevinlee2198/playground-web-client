@@ -33,15 +33,6 @@ export default function AuthButton() {
     });
   };
 
-  const handleSignUp = async () => {
-    // Keycloak handles registration through the same OAuth flow
-    // Users can click "Register" on the Keycloak login page
-    await signIn.oauth2({
-      providerId: "keycloak",
-      callbackURL: window.location.href,
-    });
-  };
-
   if (session.isPending) {
     return (
       <div className="flex items-center gap-3">
@@ -69,16 +60,11 @@ export default function AuthButton() {
         locale={locale}
       />
     );
-  }
-
-  return (
-    <div className="flex items-center gap-3">
-      <Button variant="outline" onClick={handleSignUp}>
-        <TypographyP>{t("auth.signUp")}</TypographyP>
-      </Button>
+  } else {
+    return (
       <Button onClick={handleSignIn}>
         <TypographyP>{t("auth.signIn")}</TypographyP>
       </Button>
-    </div>
-  );
+    );
+  }
 }

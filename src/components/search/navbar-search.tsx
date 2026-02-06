@@ -4,8 +4,8 @@ import { searchUsers } from "@/components/search/actions";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
-  PopoverAnchor,
   PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { UserSearchEdge } from "@/lib/types/user";
@@ -83,22 +83,25 @@ export function NavbarSearch() {
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverAnchor asChild>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t("placeholder")}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => {
-              if (debouncedValue && (results.length > 0 || error))
-                setIsOpen(true);
-            }}
-            className="h-9 w-48 pl-8 lg:w-64"
-          />
-        </div>
-      </PopoverAnchor>
+      <PopoverTrigger
+        nativeButton={false}
+        render={
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t("placeholder")}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (debouncedValue && (results.length > 0 || error))
+                  setIsOpen(true);
+              }}
+              className="h-9 w-48 pl-8 lg:w-64"
+            />
+          </div>
+        }
+      />
       <PopoverContent align="start" className="w-80 p-0">
         {/* Loading */}
         {isPending && (
