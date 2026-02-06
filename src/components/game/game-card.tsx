@@ -1,5 +1,6 @@
 "use client";
 
+import { GameScore } from "@/components/game/score/game-score";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -9,7 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
-import { GameStatusBadgeVariant, getSportIconPath } from "@/lib/constants";
+import {
+  GameStatusBadgeVariant,
+  getSportIconPath,
+  getSubtypeFromMetadata,
+} from "@/lib/constants";
 import type {
   GameNode,
   IndividualParticipantNode,
@@ -35,10 +40,10 @@ export function GameCard({ game }: GameCardProps) {
     minute: "2-digit",
   });
 
+  const participants = game.participants.edges.map((e) => e.node);
+
   // Get participant display text
   const getParticipantsDisplay = () => {
-    const participants = game.participants.edges.map((e) => e.node);
-
     if (participants.length === 0) {
       return t("game.participants.noParticipants");
     }
@@ -96,7 +101,7 @@ export function GameCard({ game }: GameCardProps) {
                   {t(`sports.${game.sportType}`)}
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  {t(`sportSubtypes.${game.sportSubtype}`)}
+                  {t(`sportSubtypes.${getSubtypeFromMetadata(game.metadata)}`)}
                 </CardDescription>
               </div>
             </div>
@@ -118,6 +123,9 @@ export function GameCard({ game }: GameCardProps) {
             {formattedDate}
           </div>
           <div className="text-sm font-medium">{getParticipantsDisplay()}</div>
+          <div className="text-sm font-semibold text-primary">
+            <GameScore sportType={game.sportType} participants={participants} />
+          </div>
         </CardContent>
       </Card>
     </Link>

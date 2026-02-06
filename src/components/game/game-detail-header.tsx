@@ -1,17 +1,22 @@
 "use client";
 
-import { startGame, endGame } from "@/app/[locale]/game/actions";
+import { endGame, startGame } from "@/app/[locale]/game/actions";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { GameStatusBadge } from "./game-status-badge";
-import { DeleteGameDialog } from "./delete-game-dialog";
-import { UpdateGameForm } from "./update-game-form";
-import { GameStatus } from "@/lib/constants";
-import type { GameDetail } from "@/lib/types/game";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
+import type { GameDetail, GameMetadata } from "@/lib/types/game";
+import { Pencil, Play, StopCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Play, StopCircle, Pencil } from "lucide-react";
+import { DeleteGameDialog } from "./delete-game-dialog";
+import { GameStatusBadge } from "./game-status-badge";
+import { UpdateGameForm } from "./update-game-form";
 
 interface GameDetailHeaderProps {
   game: GameDetail;
@@ -25,7 +30,34 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
   const sportText = t(`sports.${game.sportType}`);
-  const subtypeText = t(`sportSubtypes.${game.sportSubtype}`);
+  const subtypeText = t(
+    `sportSubtypes.${getSubtypeFromMetadata(game.metadata)}`,
+  );
+
+  const getMetadataDescription = (metadata: GameMetadata): string | null => {
+    switch (metadata.__typename) {
+      case "BasketballGameMetadata":
+      case "FootballGameMetadata":
+        return metadata.periods
+          ? t("game.metadata.periods", { count: metadata.periods })
+          : null;
+      case "TennisGameMetadata": {
+        const parts: string[] = [
+          t("game.metadata.bestOf", { count: metadata.bestOf }),
+        ];
+        parts.push(
+          metadata.tiebreakFinalSet
+            ? t("game.metadata.tiebreakFinalSet")
+            : t("game.metadata.noTiebreakFinalSet"),
+        );
+        return parts.join(", ");
+      }
+      default:
+        return null;
+    }
+  };
+
+  const metadataDescription = getMetadataDescription(game.metadata);
 
   const handleStart = () => {
     startTransition(async () => {
@@ -59,6 +91,11 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
           <h1 className="text-3xl font-bold tracking-tight">
             {sportText} - {subtypeText}
           </h1>
+          {metadataDescription && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {metadataDescription}
+            </p>
+          )}
           <div className="mt-2">
             <GameStatusBadge status={game.gameStatus} />
           </div>
@@ -75,11 +112,7 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
             </Button>
           )}
           {canEnd && (
-            <Button
-              onClick={handleEnd}
-              disabled={isPending}
-              variant="default"
-            >
+            <Button onClick={handleEnd} disabled={isPending} variant="default">
               <StopCircle className="mr-2 h-4 w-4" />
               {isPending ? t("game.actions.ending") : t("game.actions.end")}
             </Button>
@@ -117,6 +150,8 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
           <UpdateGameForm
             gameId={game.id}
             currentStartDate={game.startDate}
+            metadata={game.metadata}
+            sportType={game.sportType}
             onSuccess={() => setShowUpdateDialog(false)}
           />
         </DialogContent>

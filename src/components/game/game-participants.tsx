@@ -1,36 +1,56 @@
 "use client";
 
-import { getMaxParticipants, getParticipationType, ParticipationType } from "@/lib/constants";
-import type { GameDetail, TeamInstanceDetail } from "@/lib/types/game";
-import { TeamCard } from "./team-card";
-import { IndividualParticipantList } from "./individual-participant-list";
-import { AddTeamForm } from "./add-team-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  getMaxParticipants,
+  getParticipationType,
+  getSubtypeFromMetadata,
+  ParticipationType,
+} from "@/lib/constants";
+import type { GameDetail, TeamInstanceDetail } from "@/lib/types/game";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AddTeamForm } from "./add-team-form";
+import { IndividualParticipantList } from "./individual-participant-list";
+import { TeamCard } from "./team-card";
 
 interface GameParticipantsProps {
   game: GameDetail;
   currentPlayerId: number;
 }
 
-export function GameParticipants({ game, currentPlayerId }: GameParticipantsProps) {
+export function GameParticipants({
+  game,
+  currentPlayerId,
+}: GameParticipantsProps) {
   const t = useTranslations();
   const [showAddTeamDialog, setShowAddTeamDialog] = useState(false);
 
-  const participationType = getParticipationType(game.sportSubtype);
+  const subtype = getSubtypeFromMetadata(game.metadata);
+  const participationType = getParticipationType(subtype);
   const isTeamBased = participationType === ParticipationType.TEAM;
   const hasParticipants = game.participants.edges.length > 0;
-  const maxParticipants = getMaxParticipants(game.sportSubtype);
+  const maxParticipants = getMaxParticipants(subtype);
   const atParticipantLimit = game.participants.edges.length >= maxParticipants;
 
-  const isPlayerOnAnyTeam = isTeamBased && game.participants.edges.some((edge) => {
-    const node = edge.node;
-    return node.__typename === "TeamInstance" &&
-      (node as TeamInstanceDetail).players.some((p) => p.id === currentPlayerId);
-  });
+  const isPlayerOnAnyTeam =
+    isTeamBased &&
+    game.participants.edges.some((edge) => {
+      const node = edge.node;
+      return (
+        node.__typename === "TeamInstance" &&
+        (node as TeamInstanceDetail).players.some(
+          (p) => p.id === currentPlayerId,
+        )
+      );
+    });
 
   return (
     <Card>

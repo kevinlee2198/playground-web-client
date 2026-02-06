@@ -19,9 +19,7 @@ export const countWords = (text: string): number => {
   return text.trim().split(/\s+/).length;
 };
 
-export const createPlayerFormSchema = (
-  t: ReturnType<typeof useTranslations>,
-) =>
+export const createPlayerFormSchema = (t: ReturnType<typeof useTranslations>) =>
   z.object({
     firstName: z.string().min(1).max(255),
     lastName: z.string().min(1).max(255),
@@ -52,7 +50,9 @@ export type PlayerFormInput = {
   biography?: string | null;
 };
 
-export type PlayerFormOutput = z.infer<ReturnType<typeof createPlayerFormSchema>>;
+export type PlayerFormOutput = z.infer<
+  ReturnType<typeof createPlayerFormSchema>
+>;
 
 interface PlayerFieldProps {
   control: Control<PlayerFormInput>;

@@ -1,9 +1,18 @@
 "use server";
 
+import {
+  gameMetadataFragment,
+  participantNodeFragment,
+} from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
-import { revalidatePath } from "next/cache";
+import type {
+  CreateGameInput,
+  GameFilterParams,
+  GameSortParams,
+  UpdateGameInput,
+} from "@/lib/types/game";
 import { EnumType } from "json-to-graphql-query";
-import type { CreateGameInput, UpdateGameInput, GameFilterParams, GameSortParams } from "@/lib/types/game";
+import { revalidatePath } from "next/cache";
 
 interface GameActionResult {
   success: boolean;
@@ -14,33 +23,37 @@ interface GameActionResult {
 /**
  * Create a new game with sport-specific input using @oneOf pattern
  */
-export async function createGame(input: CreateGameInput): Promise<GameActionResult> {
+export async function createGame(
+  input: CreateGameInput,
+): Promise<GameActionResult> {
   try {
-    // Build @oneOf input based on sport type
-    let mutationInput: object;
-
-    if (input.sportType === "BASKETBALL") {
-      mutationInput = {
-        basketball: {
-          startDate: input.startDate,
-          subtype: new EnumType(input.subtype),
-        },
-      };
-    } else if (input.sportType === "FOOTBALL") {
-      mutationInput = {
-        football: {
-          startDate: input.startDate,
-          subtype: new EnumType(input.subtype),
-        },
-      };
-    } else {
-      mutationInput = {
-        tennis: {
-          startDate: input.startDate,
-          subtype: new EnumType(input.subtype),
-        },
-      };
+    // Build @oneOf input based on sport type — the key must be the lowercase sport name
+    const sportKey = input.sportType.toLowerCase() as
+      | "basketball"
+      | "football"
+      | "tennis";
+    const metadata: Record<string, unknown> = {
+      subtype: new EnumType(input.metadata.subtype),
+    };
+    if ("periods" in input.metadata && input.metadata.periods !== undefined) {
+      metadata.periods = input.metadata.periods;
     }
+    if ("bestOf" in input.metadata && input.metadata.bestOf !== undefined) {
+      metadata.bestOf = input.metadata.bestOf;
+    }
+    if (
+      "tiebreakFinalSet" in input.metadata &&
+      input.metadata.tiebreakFinalSet !== undefined
+    ) {
+      metadata.tiebreakFinalSet = input.metadata.tiebreakFinalSet;
+    }
+
+    const mutationInput = {
+      [sportKey]: {
+        startDate: input.startDate,
+        metadata,
+      },
+    };
 
     const response = await authMutate({
       createGame: {
@@ -48,7 +61,7 @@ export async function createGame(input: CreateGameInput): Promise<GameActionResu
         game: {
           id: true,
           sportType: true,
-          sportSubtype: true,
+          metadata: gameMetadataFragment,
           gameStatus: true,
           startDate: true,
         },
@@ -71,10 +84,42 @@ export async function createGame(input: CreateGameInput): Promise<GameActionResu
 /**
  * Update game start date
  */
-export async function updateGame(input: UpdateGameInput): Promise<GameActionResult> {
+export async function updateGame(
+  input: UpdateGameInput,
+): Promise<GameActionResult> {
   try {
     const mutationInput: Record<string, unknown> = { id: input.id };
     if (input.startDate) mutationInput.startDate = input.startDate;
+
+    if (input.metadata) {
+      // Build @oneOf GameMetadataInput with EnumType for subtype values
+      const metadataInput: Record<string, unknown> = {};
+      if (input.metadata.basketball) {
+        const b: Record<string, unknown> = {};
+        if (input.metadata.basketball.subtype)
+          b.subtype = new EnumType(input.metadata.basketball.subtype);
+        if (input.metadata.basketball.periods !== undefined)
+          b.periods = input.metadata.basketball.periods;
+        metadataInput.basketball = b;
+      } else if (input.metadata.tennis) {
+        const t: Record<string, unknown> = {};
+        if (input.metadata.tennis.subtype)
+          t.subtype = new EnumType(input.metadata.tennis.subtype);
+        if (input.metadata.tennis.bestOf !== undefined)
+          t.bestOf = input.metadata.tennis.bestOf;
+        if (input.metadata.tennis.tiebreakFinalSet !== undefined)
+          t.tiebreakFinalSet = input.metadata.tennis.tiebreakFinalSet;
+        metadataInput.tennis = t;
+      } else if (input.metadata.football) {
+        const f: Record<string, unknown> = {};
+        if (input.metadata.football.subtype)
+          f.subtype = new EnumType(input.metadata.football.subtype);
+        if (input.metadata.football.periods !== undefined)
+          f.periods = input.metadata.football.periods;
+        metadataInput.football = f;
+      }
+      mutationInput.metadata = metadataInput;
+    }
 
     const response = await authMutate({
       updateGame: {
@@ -82,6 +127,7 @@ export async function updateGame(input: UpdateGameInput): Promise<GameActionResu
         game: {
           id: true,
           startDate: true,
+          metadata: gameMetadataFragment,
         },
       },
     });
@@ -125,7 +171,10 @@ export async function deleteGame(gameId: number): Promise<GameActionResult> {
 /**
  * Start a game (SCHEDULED -> IN_PROGRESS)
  */
-export async function startGame(gameId: number, startDate?: string): Promise<GameActionResult> {
+export async function startGame(
+  gameId: number,
+  startDate?: string,
+): Promise<GameActionResult> {
   try {
     const mutationInput: Record<string, unknown> = { id: gameId };
     if (startDate) mutationInput.startDate = startDate;
@@ -156,7 +205,10 @@ export async function startGame(gameId: number, startDate?: string): Promise<Gam
 /**
  * End a game (IN_PROGRESS -> COMPLETE)
  */
-export async function endGame(gameId: number, endDate?: string): Promise<GameActionResult> {
+export async function endGame(
+  gameId: number,
+  endDate?: string,
+): Promise<GameActionResult> {
   try {
     const mutationInput: Record<string, unknown> = { id: gameId };
     if (endDate) mutationInput.endDate = endDate;
@@ -190,7 +242,7 @@ export async function endGame(gameId: number, endDate?: string): Promise<GameAct
 export async function loadMoreGames(
   filters: GameFilterParams,
   sort: GameSortParams,
-  after: string
+  after: string,
 ) {
   try {
     const filterInput: Record<string, unknown> = {};
@@ -199,19 +251,23 @@ export async function loadMoreGames(
     if (filters.startBefore) filterInput.startBefore = filters.startBefore;
     if (filters.endAfter) filterInput.endAfter = filters.endAfter;
     if (filters.endBefore) filterInput.endBefore = filters.endBefore;
-    if (filters.sportType) filterInput.sportType = new EnumType(filters.sportType);
+    if (filters.sportType)
+      filterInput.sportType = new EnumType(filters.sportType);
     if (filters.playerId) filterInput.playerId = filters.playerId;
-    if (filters.gameStatus) filterInput.gameStatus = new EnumType(filters.gameStatus);
+    if (filters.gameStatus)
+      filterInput.gameStatus = new EnumType(filters.gameStatus);
     if (filters.createdBy) filterInput.createdBy = filters.createdBy;
 
     const response = await authQuery({
       games: {
         __args: {
           input: filterInput,
-          sort: [{
-            field: new EnumType(sort.field),
-            direction: new EnumType(sort.direction)
-          }],
+          sort: [
+            {
+              field: new EnumType(sort.field),
+              direction: new EnumType(sort.direction),
+            },
+          ],
           first: 20,
           after,
         },
@@ -222,27 +278,12 @@ export async function loadMoreGames(
             startDate: true,
             endDate: true,
             sportType: true,
-            sportSubtype: true,
+            metadata: gameMetadataFragment,
             gameStatus: true,
             participants: {
               __args: { first: 10 },
               edges: {
-                node: {
-                  __typename: true,
-                  __on: [
-                    {
-                      __typeName: "TeamInstance",
-                      id: true,
-                      name: true,
-                      players: { id: true, firstName: true, lastName: true },
-                    },
-                    {
-                      __typeName: "IndividualParticipant",
-                      id: true,
-                      player: { id: true, firstName: true, lastName: true },
-                    },
-                  ],
-                },
+                node: participantNodeFragment,
               },
             },
           },

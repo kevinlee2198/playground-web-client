@@ -47,12 +47,32 @@ export enum SportSubtype {
  * maxParticipants is the max number of teams (team sports) or individual players (individual sports).
  */
 export const SportSubtypeConfig = {
-  FIVE_ON_FIVE: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
-  THREE_ON_THREE: { participation: ParticipationType.TEAM, maxTeamSize: 6, maxParticipants: 2 },
-  FLAG_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 15, maxParticipants: 2 },
-  AMERICAN_FOOTBALL: { participation: ParticipationType.TEAM, maxTeamSize: 53, maxParticipants: 2 },
+  FIVE_ON_FIVE: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 15,
+    maxParticipants: 2,
+  },
+  THREE_ON_THREE: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 6,
+    maxParticipants: 2,
+  },
+  FLAG_FOOTBALL: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 15,
+    maxParticipants: 2,
+  },
+  AMERICAN_FOOTBALL: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 53,
+    maxParticipants: 2,
+  },
   SINGLES: { participation: ParticipationType.INDIVIDUAL, maxParticipants: 2 },
-  DOUBLES: { participation: ParticipationType.TEAM, maxTeamSize: 2, maxParticipants: 2 },
+  DOUBLES: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 2,
+    maxParticipants: 2,
+  },
 } as const;
 
 export const SportType = {
@@ -119,3 +139,23 @@ export const GameStatusBadgeVariant = {
   COMPLETE: "outline",
 } as const;
 
+/**
+ * Extract the SportSubtype value from a GameMetadata union member.
+ * Due to GraphQL field conflict resolution, each metadata type uses
+ * an aliased subtype field (basketballSubtype, tennisSubtype, footballSubtype).
+ */
+export function getSubtypeFromMetadata(
+  metadata:
+    | { __typename: "BasketballGameMetadata"; basketballSubtype: string }
+    | { __typename: "TennisGameMetadata"; tennisSubtype: string }
+    | { __typename: "FootballGameMetadata"; footballSubtype: string },
+): SportSubtype {
+  switch (metadata.__typename) {
+    case "BasketballGameMetadata":
+      return metadata.basketballSubtype as SportSubtype;
+    case "TennisGameMetadata":
+      return metadata.tennisSubtype as SportSubtype;
+    case "FootballGameMetadata":
+      return metadata.footballSubtype as SportSubtype;
+  }
+}

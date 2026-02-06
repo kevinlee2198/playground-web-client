@@ -1,929 +1,3 @@
-"""
-A Playground user
-"""
-type User implements Node {
-  id: ID!
-  username: String!
-  firstName: String!
-  lastName: String!
-  player: Player
-  friendship: Friendship
-}
-
-"""
-The current authenticated user with private fields
-"""
-type CurrentUser implements Node {
-  id: ID!
-  username: String!
-  firstName: String!
-  lastName: String!
-  email: String!
-  player: Player
-}
-
-"""
-Something that is related to a user
-"""
-interface HasUser {
-  user: User!
-}
-
-"""
-The Friendship status between two users
-"""
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  BLOCKED
-}
-
-"""
-Direction of a friendship relative to the current user
-"""
-enum FriendshipDirection {
-  """
-  Requests sent TO the current user
-  """
-  INCOMING
-  """
-  Requests sent BY the current user
-  """
-  OUTGOING
-}
-
-"""
-The Friendship between two users
-Can be bidirectional - ACCEPTED status
-Can be unidirectional - PENDING status
-"""
-type Friendship implements Node {
-  id: ID!
-  requester: User!
-  addressee: User!
-  status: FriendshipStatus!
-  createdDate: DateTime!
-}
-
-type FriendshipEdge implements Edge {
-  cursor: String!
-  node: Friendship!
-}
-
-type FriendshipConnection implements Connection {
-  edges: [FriendshipEdge!]!
-  pageInfo: PageInfo!
-}
-
-"""
-Filters for querying friendships
-"""
-input FriendshipFilterInput {
-  """
-  Filter by friendship status
-  """
-  status: FriendshipStatus
-  """
-  Filter by direction relative to current user.
-  INCOMING = other users requested me, OUTGOING = I requested them.
-  If null, returns both directions.
-  """
-  direction: FriendshipDirection
-}
-
-type UserEdge implements Edge {
-  cursor: String!
-  node: User!
-}
-
-type UserConnection implements Connection {
-  edges: [UserEdge!]!
-  pageInfo: PageInfo!
-}
-
-input SendFriendRequestInput {
-  userId: ID!
-}
-
-type SendFriendRequestResponse {
-  friendship: Friendship!
-}
-
-input AcceptFriendRequestInput {
-  requesterId: ID!
-}
-
-type AcceptFriendRequestResponse {
-  friendship: Friendship!
-}
-
-input DeclineFriendRequestInput {
-  requesterId: ID!
-}
-
-type DeclineFriendRequestResponse {
-  friendship: Friendship!
-}
-
-input UnfriendRequestInput {
-  userId: ID!
-}
-
-type UnfriendResponse {
-  friendship: Friendship
-}
-
-type Notification implements Node {
-  id: ID!
-  body: String!
-  isRead: Boolean!
-  createdDate: DateTime!
-}
-
-type NotificationEdge implements Edge {
-  cursor: String!
-  node: Notification!
-}
-
-type NotificationConnection implements Connection {
-  edges: [NotificationEdge!]!
-  pageInfo: PageInfo!
-}
-
-input ReadNotificationsInput {
-  ids: [ID!]!
-}
-
-type ReadNotificationsResponse {
-  notifications: [Notification!]!
-}
-
-type NotificationEvent {
-  notification: Notification!
-}
-
-input QueryUserInput @oneOf {
-  id: ID
-  username: String
-}
-
-input UserSearchInput {
-  query: String!
-  #    excludeFriends: Boolean
-  #    hasFriendshipStatus: FriendshipStatus
-  #    hasPlayer: Boolean
-}
-
-"""
-A player in a game. Persists across games
-"""
-type Player implements Node {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
-}
-
-"""
-Creates a new player
-"""
-input CreatePlayerInput {
-  firstName: String!
-  lastName: String!
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
-}
-
-"""
-Updates an existing player
-Fields not specified will not be updated
-"""
-input UpdatePlayerInput {
-  id: ID!
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here is not allowed
-  """
-  firstName: String
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here is not allowed
-  """
-  lastName: String
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  age: Int
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  height: Float
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  weight: Float
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  biography: String
-}
-
-"""
-Deletes a player
-"""
-input DeletePlayerInput {
-  id: ID!
-}
-
-type CreatePlayerResponse {
-  player: Player!
-}
-
-type UpdatePlayerResponse {
-  player: Player!
-}
-
-type DeletePlayerResponse implements DeleteResponse {
-  id: ID
-}
-
-"""
-What state a game is in.
-"""
-enum GameStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETE
-}
-
-"""
-Different sport types supported by Playground
-"""
-enum SportType {
-  BASKETBALL
-  FOOTBALL
-  TENNIS
-}
-
-"""
-Subtypes of the main sport type
-"""
-enum BasketballSubtype {
-  FIVE_ON_FIVE
-  THREE_ON_THREE
-}
-
-enum TennisSubtype {
-  SINGLES
-  DOUBLES
-}
-
-enum FootballSubtype {
-  FLAG_FOOTBALL
-  AMERICAN_FOOTBALL
-}
-
-"""
-Unified sport subtype enum for output types.
-The valid subtypes depend on the sportType field.
-"""
-enum SportSubtype {
-  # Basketball
-  FIVE_ON_FIVE
-  THREE_ON_THREE
-  # Football
-  FLAG_FOOTBALL
-  AMERICAN_FOOTBALL
-  # Tennis
-  SINGLES
-  DOUBLES
-}
-
-"""
-A grouping of players in a game. Is game-specific
-"""
-type TeamInstance implements Node & GameParticipant {
-  id: ID!
-  name: String!
-  description: String
-  players: [Player!]!
-  """
-  Map of attributes - flexible for different types of teams
-  """
-  attributes: JSON!
-}
-
-type IndividualParticipant implements Node & GameParticipant {
-  id: ID!
-  player: Player!
-}
-
-interface GameParticipant implements Node {
-  id: ID!
-}
-
-type GameParticipantEdge implements Edge {
-  cursor: String!
-  node: GameParticipant!
-}
-
-type GameParticipantConnection implements Connection {
-  edges: [GameParticipantEdge!]!
-  pageInfo: PageInfo!
-}
-
-"""
-A game for a sport.
-"""
-type Game implements Node {
-  id: ID!
-  startDate: DateTime!
-  endDate: DateTime
-  sportType: SportType!
-  sportSubtype: SportSubtype!
-  gameStatus: GameStatus!
-  """
-  Participants in a game. Relay / Connection pagination. Will either be teams or individuals
-  """
-  participants(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): GameParticipantConnection!
-  livestreams(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): LivestreamConnection!
-}
-
-type GameEdge implements Edge {
-  cursor: String!
-  node: Game!
-}
-
-type GameConnection implements Connection {
-  edges: [GameEdge!]!
-  pageInfo: PageInfo!
-}
-
-"""
-Fields to filter games by
-"""
-input GameFilterInput {
-  """
-  Inclusive
-  """
-  startAfter: DateTime
-  """
-  Inclusive
-  """
-  startBefore: DateTime
-  """
-  Equals
-  """
-  sportType: SportType
-  """
-  Equals - player is present in the game
-  """
-  playerId: ID
-  """
-  Equals
-  """
-  gameStatus: GameStatus
-  """
-  Equals - the user ID that created the game
-  """
-  createdBy: ID
-}
-
-"""
-Fields to sort a game by
-"""
-enum GameSortField {
-  START_DATE
-  GAME_STATUS
-}
-
-"""
-Input to sort games
-"""
-input GameSortInput {
-  field: GameSortField!
-  direction: SortDirection = ASC
-}
-
-# ============================================================================
-# Add Game Participant (Singular)
-# ============================================================================
-
-"""
-Add a team instance to a game.
-Use for team sports (5v5 basketball, doubles tennis, football).
-"""
-input AddTeamInstanceInput {
-  gameId: ID!
-  name: String!
-  description: String
-  playerIds: [ID!]
-  """
-  Map of flexible attributes.
-  If null will be set to empty map.
-  """
-  attributes: JSON
-}
-
-"""
-Add an individual participant to a game.
-Use for individual sports (singles tennis, 3v3 basketball).
-"""
-input AddIndividualParticipantInput {
-  gameId: ID!
-  playerId: ID!
-}
-
-"""
-Add a participant to a game.
-The participant type must match the game's sport subtype:
-- Team sports (5v5 basketball, doubles tennis, football): use teamInstance
-- Individual sports (singles tennis, 3v3 basketball): use individual
-"""
-input AddGameParticipantInput @oneOf {
-  teamInstance: AddTeamInstanceInput
-  individual: AddIndividualParticipantInput
-}
-
-type AddGameParticipantResponse {
-  participant: GameParticipant!
-}
-
-# ============================================================================
-# Add Game Participants (Bulk)
-# ============================================================================
-
-"""
-Team instance data for bulk add (gameId is at parent level).
-"""
-input AddTeamInstanceData {
-  name: String!
-  description: String
-  playerIds: [ID!]
-  """
-  Map of flexible attributes.
-  If null will be set to empty map.
-  """
-  attributes: JSON
-}
-
-"""
-Add multiple team instances to a game.
-"""
-input AddTeamInstancesInput {
-  gameId: ID!
-  teamInstances: [AddTeamInstanceData!]!
-}
-
-"""
-Add multiple individual participants to a game.
-"""
-input AddIndividualParticipantsInput {
-  gameId: ID!
-  playerIds: [ID!]!
-}
-
-"""
-Add multiple participants to a game.
-The participant type must match the game's sport subtype.
-Schema enforces that all participants in a batch are the same type.
-"""
-input AddGameParticipantsInput @oneOf {
-  teamInstances: AddTeamInstancesInput
-  individuals: AddIndividualParticipantsInput
-}
-
-type AddGameParticipantsResponse {
-  participants: [GameParticipant!]!
-}
-
-# ============================================================================
-# Update Game Participant (Singular)
-# ============================================================================
-
-"""
-Update a team instance.
-Fields not specified will not be updated.
-"""
-input UpdateTeamInstanceInput {
-  id: ID!
-  """
-  If null will not be updated
-  """
-  name: String
-  description: String
-  playerIds: [ID!]
-  """
-  Map of flexible attributes.
-  If null will not be updated.
-  """
-  attributes: JSON
-}
-
-"""
-Update a participant in a game.
-Currently only team instances have updatable fields.
-"""
-input UpdateGameParticipantInput @oneOf {
-  teamInstance: UpdateTeamInstanceInput
-}
-
-type UpdateGameParticipantResponse {
-  participant: GameParticipant!
-}
-
-# ============================================================================
-# Update Game Participants (Bulk)
-# ============================================================================
-
-"""
-Update multiple team instances.
-"""
-input UpdateTeamInstancesInput {
-  teamInstances: [UpdateTeamInstanceInput!]!
-}
-
-"""
-Update multiple participants in a game.
-Currently only team instances have updatable fields.
-Schema enforces that all participants in a batch are the same type.
-"""
-input UpdateGameParticipantsInput @oneOf {
-  teamInstances: UpdateTeamInstancesInput
-}
-
-type UpdateGameParticipantsResponse {
-  participants: [GameParticipant!]!
-}
-
-# ============================================================================
-# Remove Game Participant (Singular)
-# ============================================================================
-
-"""
-Remove a team instance from a game.
-"""
-input RemoveTeamInstanceInput {
-  id: ID!
-}
-
-"""
-Remove an individual participant from a game.
-"""
-input RemoveIndividualParticipantInput {
-  gameId: ID!
-  playerId: ID!
-}
-
-"""
-Remove a participant from a game.
-Must specify which type of participant is being removed.
-"""
-input RemoveGameParticipantInput @oneOf {
-  teamInstance: RemoveTeamInstanceInput
-  individual: RemoveIndividualParticipantInput
-}
-
-type RemoveGameParticipantResponse {
-  id: ID!
-}
-
-# ============================================================================
-# Remove Game Participants (Bulk)
-# ============================================================================
-
-"""
-Remove multiple team instances from a game.
-"""
-input RemoveTeamInstancesInput {
-  ids: [ID!]!
-}
-
-"""
-Remove multiple individual participants from a game.
-"""
-input RemoveIndividualParticipantsInput {
-  gameId: ID!
-  playerIds: [ID!]!
-}
-
-"""
-Remove multiple participants from a game.
-Schema enforces that all participants in a batch are the same type.
-"""
-input RemoveGameParticipantsInput @oneOf {
-  teamInstances: RemoveTeamInstancesInput
-  individuals: RemoveIndividualParticipantsInput
-}
-
-type RemoveGameParticipantsResponse {
-  ids: [ID!]!
-}
-
-# ============================================================================
-# Add Player to Team Instance (Singular)
-# ============================================================================
-
-"""
-Add a player to an existing team instance.
-"""
-input AddPlayerToTeamInstanceInput {
-  teamInstanceId: ID!
-  playerId: ID!
-}
-
-type AddPlayerToTeamInstanceResponse {
-  teamInstance: TeamInstance!
-}
-
-# ============================================================================
-# Add Players to Team Instance (Bulk)
-# ============================================================================
-
-"""
-Add multiple players to an existing team instance.
-"""
-input AddPlayersToTeamInstanceInput {
-  teamInstanceId: ID!
-  playerIds: [ID!]!
-}
-
-type AddPlayersToTeamInstanceResponse {
-  teamInstance: TeamInstance!
-}
-
-# ============================================================================
-# Remove Player from Team Instance (Singular)
-# ============================================================================
-
-"""
-Remove a player from a team instance.
-"""
-input RemovePlayerFromTeamInstanceInput {
-  teamInstanceId: ID!
-  playerId: ID!
-}
-
-type RemovePlayerFromTeamInstanceResponse {
-  teamInstance: TeamInstance!
-}
-
-# ============================================================================
-# Remove Players from Team Instance (Bulk)
-# ============================================================================
-
-"""
-Remove multiple players from a team instance.
-"""
-input RemovePlayersFromTeamInstanceInput {
-  teamInstanceId: ID!
-  playerIds: [ID!]!
-}
-
-type RemovePlayersFromTeamInstanceResponse {
-  teamInstance: TeamInstance!
-}
-
-"""
-Sport-specific game configuration. Exactly one must be provided.
-The main SportType is derived from the sport config chosen.
-"""
-input CreateGameInput @oneOf {
-  basketball: CreateBasketballGameInput
-  football: CreateFootballGameInput
-  tennis: CreateTennisGameInput
-}
-
-"""
-Create a basketball game
-"""
-input CreateBasketballGameInput {
-  startDate: DateTime!
-  subtype: BasketballSubtype!
-}
-
-"""
-Create a football game
-"""
-input CreateFootballGameInput {
-  startDate: DateTime!
-  subtype: FootballSubtype!
-}
-
-"""
-Create a tennis game
-"""
-input CreateTennisGameInput {
-  startDate: DateTime!
-  subtype: TennisSubtype!
-}
-
-input UpdateGameInput {
-  id: ID!
-  startDate: DateTime
-}
-
-input DeleteGameInput {
-  id: ID!
-}
-
-type CreateGameResponse {
-  game: Game!
-}
-
-type UpdateGameResponse {
-  game: Game!
-}
-
-type DeleteGameResponse implements DeleteResponse {
-  id: ID
-}
-
-"""
-Start a game. If startDate is not provided defaults to current time
-"""
-input StartGameInput {
-  id: ID!
-  startDate: DateTime
-}
-
-type StartGameResponse {
-  game: Game!
-}
-
-"""
-End a game. If endDate is not provided defaults to current time
-"""
-input EndGameInput {
-  id: ID!
-  endDate: DateTime
-}
-
-type EndGameResponse {
-  game: Game!
-}
-
-enum LivestreamProvider {
-  YOUTUBE
-  TWITCH
-}
-
-enum LivestreamStatus {
-  LIVE
-  COMPLETE
-}
-
-type Livestream implements HasUser & Node {
-  id: ID!
-  user: User!
-  provider: LivestreamProvider!
-  title: String!
-  description: String
-  streamUrl: String!
-  status: LivestreamStatus!
-}
-
-type LivestreamEdge implements Edge {
-  cursor: String!
-  node: Livestream!
-}
-
-type LivestreamConnection implements Connection {
-  edges: [LivestreamEdge!]!
-  pageInfo: PageInfo!
-}
-
-input StartLivestreamInput {
-  gameId: ID!
-  provider: LivestreamProvider!
-  title: String!
-  description: String
-  url: String!
-}
-
-type StartLivestreamResponse {
-  livestream: Livestream!
-}
-
-input EndLivestreamInput {
-  gameId: ID!
-}
-
-type EndLivestreamResponse {
-  livestream: Livestream!
-}
-
-"""
-Identifies a resource unique to a player in a game
-"""
-input GameIdsAndPlayerIdsInput {
-  gameIds: [ID!]
-  playerIds: [ID!]
-}
-
-"""
-Box scores for basketball
-"""
-type BasketballBoxScore implements Node {
-  id: ID!
-  player: Player!
-  game: Game!
-  defensiveRebounds: Int
-  offensiveRebounds: Int
-  totalRebounds: Int
-  assists: Int
-  steals: Int
-  blocks: Int
-  turnovers: Int
-  personalFouls: Int
-  points: Int
-  threePointersMade: Int
-  threePointersAttempted: Int
-  threePointerPercentage: Float
-  twoPointersMade: Int
-  twoPointersAttempted: Int
-  twoPointerPercentage: Float
-  freeThrowsMade: Int
-  freeThrowsAttempted: Int
-  freeThrowPercentage: Float
-  fieldGoalsMade: Int
-  fieldGoalsAttempted: Int
-  fieldGoalPercentage: Float
-}
-
-type BasketballBoxScoreEdge implements Edge {
-  node: BasketballBoxScore!
-  cursor: String!
-}
-
-type BasketballBoxScoreConnection implements Connection {
-  edges: [BasketballBoxScoreEdge!]!
-  pageInfo: PageInfo!
-}
-
-enum BoxScoreSortField {
-  POINTS
-  ASSISTS
-  TOTAL_REBOUNDS
-  STEALS
-  BLOCKS
-}
-
-input BoxScoreSortInput {
-  field: BoxScoreSortField!
-  direction: SortDirection = ASC
-}
-
-input SaveBasketballBoxScoresInput {
-  basketballBoxScores: [SaveBasketballBoxScoreInput!]!
-}
-
-input SaveBasketballBoxScoreInput {
-  playerId: ID!
-  gameId: ID!
-  defensiveRebounds: Int
-  offensiveRebounds: Int
-  assists: Int
-  steals: Int
-  blocks: Int
-  turnovers: Int
-  personalFouls: Int
-  threePointersMade: Int
-  threePointersAttempted: Int
-  twoPointersMade: Int
-  twoPointersAttempted: Int
-  freeThrowsMade: Int
-  freeThrowsAttempted: Int
-}
-
-type SaveBasketballBoxScoresResponse {
-  basketballBoxScores: [BasketballBoxScore!]!
-}
-
-type SaveBasketballBoxScoreResponse {
-  basketballBoxScore: BasketballBoxScore!
-}
-
 interface ChatMessage implements Node & HasUser {
   id: ID!
   chatRoom: ChatRoom!
@@ -1174,7 +248,820 @@ type ChatRoomMemberRemovedEvent implements ChatEvent {
   createdDate: DateTime!
   userId: ID!
 }
+"""
+What state a game is in.
+"""
+enum GameStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETE
+}
 
+"""
+Different sport types supported by Playground
+"""
+enum SportType {
+  BASKETBALL
+  FOOTBALL
+  TENNIS
+}
+
+"""
+Subtypes of the main sport type
+"""
+enum BasketballSubtype {
+  FIVE_ON_FIVE
+  THREE_ON_THREE
+}
+
+enum TennisSubtype {
+  SINGLES
+  DOUBLES
+}
+
+enum FootballSubtype {
+  FLAG_FOOTBALL
+  AMERICAN_FOOTBALL
+}
+
+# ============================================================================
+# Game Metadata
+# ============================================================================
+
+"""
+Sport-specific game configuration and rules.
+Clients branch on Game.sportType and use inline fragments for sport-specific fields.
+"""
+union GameMetadata =
+  | BasketballGameMetadata
+  | TennisGameMetadata
+  | FootballGameMetadata
+
+type BasketballGameMetadata {
+  subtype: BasketballSubtype!
+  """
+  Number of periods (e.g. 4 for quarters, 2 for halves)
+  """
+  periods: Int
+}
+
+type TennisGameMetadata {
+  subtype: TennisSubtype!
+  """
+  Number of sets to win the match (3 or 5)
+  """
+  bestOf: Int!
+  """
+  Whether a tiebreak is played in the final set
+  """
+  tiebreakFinalSet: Boolean!
+}
+
+type FootballGameMetadata {
+  subtype: FootballSubtype!
+  """
+  Number of periods (e.g. 4 for quarters, 2 for halves)
+  """
+  periods: Int
+}
+
+# ============================================================================
+# Participant Metadata
+# ============================================================================
+
+"""
+Sport-specific participant result data (scores, set wins, etc.).
+Clients branch on Game.sportType and use inline fragments for sport-specific fields.
+"""
+union ParticipantMetadata =
+  | BasketballParticipantMetadata
+  | TennisParticipantMetadata
+  | FootballParticipantMetadata
+
+type BasketballParticipantMetadata {
+  score: Int!
+}
+
+type TennisParticipantMetadata {
+  setsWon: Int!
+  sets: [TennisSetScore!]!
+}
+
+type TennisSetScore {
+  gamesWon: Int!
+  tiebreakPoints: Int
+}
+
+type FootballParticipantMetadata {
+  score: Int!
+}
+
+"""
+A grouping of players in a game. Is game-specific
+"""
+type TeamInstance implements Node & GameParticipant {
+  id: ID!
+  name: String!
+  description: String
+  players: [Player!]!
+  metadata: ParticipantMetadata
+}
+
+type IndividualParticipant implements Node & GameParticipant {
+  id: ID!
+  player: Player!
+  metadata: ParticipantMetadata
+}
+
+interface GameParticipant implements Node {
+  id: ID!
+  metadata: ParticipantMetadata
+}
+
+type GameParticipantEdge implements Edge {
+  cursor: String!
+  node: GameParticipant!
+}
+
+type GameParticipantConnection implements Connection {
+  edges: [GameParticipantEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+A game for a sport.
+"""
+type Game implements Node & HasLocation {
+  id: ID!
+  startDate: DateTime!
+  endDate: DateTime
+  sportType: SportType!
+  gameStatus: GameStatus!
+  metadata: GameMetadata!
+  location: Location
+  """
+  Participants in a game. Relay / Connection pagination. Will either be teams or individuals
+  """
+  participants(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GameParticipantConnection!
+  livestreams(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LivestreamConnection!
+}
+
+type GameEdge implements Edge {
+  cursor: String!
+  node: Game!
+}
+
+type GameConnection implements Connection {
+  edges: [GameEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Fields to filter games by
+"""
+input GameFilterInput {
+  """
+  Inclusive
+  """
+  startAfter: DateTime
+  """
+  Inclusive
+  """
+  startBefore: DateTime
+  """
+  Equals
+  """
+  sportType: SportType
+  """
+  Equals - player is present in the game
+  """
+  playerId: ID
+  """
+  Equals
+  """
+  gameStatus: GameStatus
+  """
+  Equals - the user ID that created the game
+  """
+  createdBy: ID
+}
+
+"""
+Fields to sort a game by
+"""
+enum GameSortField {
+  START_DATE
+  GAME_STATUS
+}
+
+"""
+Input to sort games
+"""
+input GameSortInput {
+  field: GameSortField!
+  direction: SortDirection = ASC
+}
+
+# ============================================================================
+# Add Game Participant (Singular)
+# ============================================================================
+
+"""
+Add a team instance to a game.
+Use for team sports (5v5 basketball, doubles tennis, football).
+"""
+input AddTeamInstanceInput {
+  gameId: ID!
+  name: String!
+  description: String
+  playerIds: [ID!]
+}
+
+"""
+Add an individual participant to a game.
+Use for individual sports (singles tennis, 3v3 basketball).
+"""
+input AddIndividualParticipantInput {
+  gameId: ID!
+  playerId: ID!
+}
+
+"""
+Add a participant to a game.
+The participant type must match the game's sport subtype:
+- Team sports (5v5 basketball, doubles tennis, football): use teamInstance
+- Individual sports (singles tennis, 3v3 basketball): use individual
+"""
+input AddGameParticipantInput @oneOf {
+  teamInstance: AddTeamInstanceInput
+  individual: AddIndividualParticipantInput
+}
+
+type AddGameParticipantResponse {
+  participant: GameParticipant!
+}
+
+# ============================================================================
+# Add Game Participants (Bulk)
+# ============================================================================
+
+"""
+Team instance data for bulk add (gameId is at parent level).
+"""
+input AddTeamInstanceData {
+  name: String!
+  description: String
+  playerIds: [ID!]
+}
+
+"""
+Add multiple team instances to a game.
+"""
+input AddTeamInstancesInput {
+  gameId: ID!
+  teamInstances: [AddTeamInstanceData!]!
+}
+
+"""
+Add multiple individual participants to a game.
+"""
+input AddIndividualParticipantsInput {
+  gameId: ID!
+  playerIds: [ID!]!
+}
+
+"""
+Add multiple participants to a game.
+The participant type must match the game's sport subtype.
+Schema enforces that all participants in a batch are the same type.
+"""
+input AddGameParticipantsInput @oneOf {
+  teamInstances: AddTeamInstancesInput
+  individuals: AddIndividualParticipantsInput
+}
+
+type AddGameParticipantsResponse {
+  participants: [GameParticipant!]!
+}
+
+# ============================================================================
+# Update Game Participant (Singular)
+# ============================================================================
+
+"""
+Update a team instance.
+Fields not specified will not be updated.
+"""
+input UpdateTeamInstanceInput {
+  id: ID!
+  """
+  If null will not be updated
+  """
+  name: String
+  description: String
+  playerIds: [ID!]
+  """
+  Sport-specific participant metadata (e.g. score).
+  If null will not be updated.
+  """
+  metadata: ParticipantMetadataInput
+}
+
+"""
+Update an individual participant.
+"""
+input UpdateIndividualParticipantInput {
+  id: ID!
+  """
+  Sport-specific participant metadata (e.g. score, sets won).
+  If null will not be updated.
+  """
+  metadata: ParticipantMetadataInput
+}
+
+"""
+Update a participant in a game.
+"""
+input UpdateGameParticipantInput @oneOf {
+  teamInstance: UpdateTeamInstanceInput
+  individual: UpdateIndividualParticipantInput
+}
+
+type UpdateGameParticipantResponse {
+  participant: GameParticipant!
+}
+
+# ============================================================================
+# Update Game Participants (Bulk)
+# ============================================================================
+
+"""
+Update multiple team instances.
+"""
+input UpdateTeamInstancesInput {
+  teamInstances: [UpdateTeamInstanceInput!]!
+}
+
+"""
+Update multiple individual participants.
+"""
+input UpdateIndividualParticipantsInput {
+  individuals: [UpdateIndividualParticipantInput!]!
+}
+
+"""
+Update multiple participants in a game.
+Schema enforces that all participants in a batch are the same type.
+"""
+input UpdateGameParticipantsInput @oneOf {
+  teamInstances: UpdateTeamInstancesInput
+  individuals: UpdateIndividualParticipantsInput
+}
+
+type UpdateGameParticipantsResponse {
+  participants: [GameParticipant!]!
+}
+
+# ============================================================================
+# Remove Game Participant (Singular)
+# ============================================================================
+
+"""
+Remove a team instance from a game.
+"""
+input RemoveTeamInstanceInput {
+  id: ID!
+}
+
+"""
+Remove an individual participant from a game.
+"""
+input RemoveIndividualParticipantInput {
+  gameId: ID!
+  playerId: ID!
+}
+
+"""
+Remove a participant from a game.
+Must specify which type of participant is being removed.
+"""
+input RemoveGameParticipantInput @oneOf {
+  teamInstance: RemoveTeamInstanceInput
+  individual: RemoveIndividualParticipantInput
+}
+
+type RemoveGameParticipantResponse {
+  id: ID!
+}
+
+# ============================================================================
+# Remove Game Participants (Bulk)
+# ============================================================================
+
+"""
+Remove multiple team instances from a game.
+"""
+input RemoveTeamInstancesInput {
+  ids: [ID!]!
+}
+
+"""
+Remove multiple individual participants from a game.
+"""
+input RemoveIndividualParticipantsInput {
+  gameId: ID!
+  playerIds: [ID!]!
+}
+
+"""
+Remove multiple participants from a game.
+Schema enforces that all participants in a batch are the same type.
+"""
+input RemoveGameParticipantsInput @oneOf {
+  teamInstances: RemoveTeamInstancesInput
+  individuals: RemoveIndividualParticipantsInput
+}
+
+type RemoveGameParticipantsResponse {
+  ids: [ID!]!
+}
+
+# ============================================================================
+# Add Player to Team Instance (Singular)
+# ============================================================================
+
+"""
+Add a player to an existing team instance.
+"""
+input AddPlayerToTeamInstanceInput {
+  teamInstanceId: ID!
+  playerId: ID!
+}
+
+type AddPlayerToTeamInstanceResponse {
+  teamInstance: TeamInstance!
+}
+
+# ============================================================================
+# Add Players to Team Instance (Bulk)
+# ============================================================================
+
+"""
+Add multiple players to an existing team instance.
+"""
+input AddPlayersToTeamInstanceInput {
+  teamInstanceId: ID!
+  playerIds: [ID!]!
+}
+
+type AddPlayersToTeamInstanceResponse {
+  teamInstance: TeamInstance!
+}
+
+# ============================================================================
+# Remove Player from Team Instance (Singular)
+# ============================================================================
+
+"""
+Remove a player from a team instance.
+"""
+input RemovePlayerFromTeamInstanceInput {
+  teamInstanceId: ID!
+  playerId: ID!
+}
+
+type RemovePlayerFromTeamInstanceResponse {
+  teamInstance: TeamInstance!
+}
+
+# ============================================================================
+# Remove Players from Team Instance (Bulk)
+# ============================================================================
+
+"""
+Remove multiple players from a team instance.
+"""
+input RemovePlayersFromTeamInstanceInput {
+  teamInstanceId: ID!
+  playerIds: [ID!]!
+}
+
+type RemovePlayersFromTeamInstanceResponse {
+  teamInstance: TeamInstance!
+}
+
+# ============================================================================
+# Game Metadata Inputs
+# ============================================================================
+
+"""
+Create inputs require subtype. Update inputs (below) make subtype optional.
+"""
+input CreateBasketballGameMetadataInput {
+  subtype: BasketballSubtype!
+  periods: Int
+}
+
+input CreateTennisGameMetadataInput {
+  subtype: TennisSubtype!
+  bestOf: Int
+  tiebreakFinalSet: Boolean
+}
+
+input CreateFootballGameMetadataInput {
+  subtype: FootballSubtype!
+  periods: Int
+}
+
+input BasketballGameMetadataInput {
+  subtype: BasketballSubtype
+  periods: Int
+}
+
+input TennisGameMetadataInput {
+  subtype: TennisSubtype
+  bestOf: Int
+  tiebreakFinalSet: Boolean
+}
+
+input FootballGameMetadataInput {
+  subtype: FootballSubtype
+  periods: Int
+}
+
+# ============================================================================
+# Participant Metadata Inputs
+# ============================================================================
+
+input BasketballParticipantMetadataInput {
+  score: Int!
+}
+
+input TennisParticipantMetadataInput {
+  setsWon: Int!
+  sets: [TennisSetScoreInput!]!
+}
+
+input TennisSetScoreInput {
+  gamesWon: Int!
+  tiebreakPoints: Int
+}
+
+input FootballParticipantMetadataInput {
+  score: Int!
+}
+
+"""
+Sport-specific participant metadata. Exactly one must be provided.
+Must match the game's sport type.
+"""
+input ParticipantMetadataInput @oneOf {
+  basketball: BasketballParticipantMetadataInput
+  tennis: TennisParticipantMetadataInput
+  football: FootballParticipantMetadataInput
+}
+
+# ============================================================================
+# Create Game
+# ============================================================================
+
+"""
+Sport-specific game configuration. Exactly one must be provided.
+The main SportType is derived from the sport config chosen.
+"""
+input CreateGameInput @oneOf {
+  basketball: CreateBasketballGameInput
+  football: CreateFootballGameInput
+  tennis: CreateTennisGameInput
+}
+
+"""
+Create a basketball game
+"""
+input CreateBasketballGameInput {
+  startDate: DateTime!
+  location: LocationInput
+  metadata: CreateBasketballGameMetadataInput!
+}
+
+"""
+Create a football game
+"""
+input CreateFootballGameInput {
+  startDate: DateTime!
+  location: LocationInput
+  metadata: CreateFootballGameMetadataInput!
+}
+
+"""
+Create a tennis game
+"""
+input CreateTennisGameInput {
+  startDate: DateTime!
+  location: LocationInput
+  metadata: CreateTennisGameMetadataInput!
+}
+
+input UpdateGameInput {
+  id: ID!
+  startDate: DateTime
+  location: LocationInput
+  """
+  Sport-specific game configuration. Must match the game's sport type.
+  If null will not be updated.
+  """
+  metadata: GameMetadataInput
+}
+
+"""
+Sport-specific game configuration for updates. Exactly one must be provided.
+Must match the game's sport type.
+"""
+input GameMetadataInput @oneOf {
+  basketball: BasketballGameMetadataInput
+  tennis: TennisGameMetadataInput
+  football: FootballGameMetadataInput
+}
+
+input DeleteGameInput {
+  id: ID!
+}
+
+type CreateGameResponse {
+  game: Game!
+}
+
+type UpdateGameResponse {
+  game: Game!
+}
+
+type DeleteGameResponse implements DeleteResponse {
+  id: ID
+}
+
+"""
+Start a game. If startDate is not provided defaults to current time
+"""
+input StartGameInput {
+  id: ID!
+  startDate: DateTime
+}
+
+type StartGameResponse {
+  game: Game!
+}
+
+"""
+End a game. If endDate is not provided defaults to current time
+"""
+input EndGameInput {
+  id: ID!
+  endDate: DateTime
+}
+
+type EndGameResponse {
+  game: Game!
+}
+enum LivestreamProvider {
+  YOUTUBE
+  TWITCH
+}
+
+enum LivestreamStatus {
+  LIVE
+  COMPLETE
+}
+
+type Livestream implements HasUser & Node {
+  id: ID!
+  user: User!
+  provider: LivestreamProvider!
+  title: String!
+  description: String
+  streamUrl: String!
+  status: LivestreamStatus!
+}
+
+type LivestreamEdge implements Edge {
+  cursor: String!
+  node: Livestream!
+}
+
+type LivestreamConnection implements Connection {
+  edges: [LivestreamEdge!]!
+  pageInfo: PageInfo!
+}
+
+input StartLivestreamInput {
+  gameId: ID!
+  provider: LivestreamProvider!
+  title: String!
+  description: String
+  url: String!
+}
+
+type StartLivestreamResponse {
+  livestream: Livestream!
+}
+
+input EndLivestreamInput {
+  gameId: ID!
+}
+
+type EndLivestreamResponse {
+  livestream: Livestream!
+}
+"""
+A player in a game. Persists across games
+"""
+type Player implements Node {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  age: Int
+  height: Float
+  weight: Float
+  biography: String
+}
+
+"""
+Creates a new player
+"""
+input CreatePlayerInput {
+  firstName: String!
+  lastName: String!
+  age: Int
+  height: Float
+  weight: Float
+  biography: String
+}
+
+"""
+Updates an existing player
+Fields not specified will not be updated
+"""
+input UpdatePlayerInput {
+  id: ID!
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here is not allowed
+  """
+  firstName: String
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here is not allowed
+  """
+  lastName: String
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  age: Int
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  height: Float
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  weight: Float
+  """
+  Omit a field to leave it unchanged.
+  Setting to null here will set it to null on the database
+  """
+  biography: String
+}
+
+"""
+Deletes a player
+"""
+input DeletePlayerInput {
+  id: ID!
+}
+
+type CreatePlayerResponse {
+  player: Player!
+}
+
+type UpdatePlayerResponse {
+  player: Player!
+}
+
+type DeletePlayerResponse implements DeleteResponse {
+  id: ID
+}
 scalar DateTime
 scalar JSON
 
@@ -1214,6 +1101,49 @@ interface DeleteResponse {
   id: ID
 }
 
+interface HasLocation {
+  location: Location
+}
+
+type Location {
+  id: ID!
+  name: String
+  address: Address!
+  coordinates: Coordinates
+}
+
+type Address {
+  street: String!
+  city: String!
+  state: String!
+  postalCode: String!
+  country: String!
+}
+
+type Coordinates {
+  latitude: Float!
+  longitude: Float!
+}
+
+input LocationInput {
+  name: String
+  address: AddressInput!
+  coordinates: CoordinatesInput
+}
+
+input AddressInput {
+  street: String
+  city: String
+  state: String
+  postalCode: String
+  country: String!
+}
+
+input CoordinatesInput {
+  latitude: Float!
+  longitude: Float!
+}
+
 type Query {
   """
   Get a user by ID or username
@@ -1226,7 +1156,6 @@ type Query {
   me: CurrentUser!
   """
   Search for users by name.
-  User must be authenticated.
   """
   searchUsers(
     input: UserSearchInput!
@@ -1488,4 +1417,270 @@ type Mutation {
 type Subscription {
   chatEvents(chatRoomId: ID!): ChatEvent!
   notificationEvents: NotificationEvent!
+}
+"""
+Identifies a resource unique to a player in a game
+"""
+input GameIdsAndPlayerIdsInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Box scores for basketball
+"""
+type BasketballBoxScore implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  defensiveRebounds: Int
+  offensiveRebounds: Int
+  totalRebounds: Int
+  assists: Int
+  steals: Int
+  blocks: Int
+  turnovers: Int
+  personalFouls: Int
+  points: Int
+  threePointersMade: Int
+  threePointersAttempted: Int
+  threePointerPercentage: Float
+  twoPointersMade: Int
+  twoPointersAttempted: Int
+  twoPointerPercentage: Float
+  freeThrowsMade: Int
+  freeThrowsAttempted: Int
+  freeThrowPercentage: Float
+  fieldGoalsMade: Int
+  fieldGoalsAttempted: Int
+  fieldGoalPercentage: Float
+}
+
+type BasketballBoxScoreEdge implements Edge {
+  node: BasketballBoxScore!
+  cursor: String!
+}
+
+type BasketballBoxScoreConnection implements Connection {
+  edges: [BasketballBoxScoreEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum BoxScoreSortField {
+  POINTS
+  ASSISTS
+  TOTAL_REBOUNDS
+  STEALS
+  BLOCKS
+}
+
+input BoxScoreSortInput {
+  field: BoxScoreSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveBasketballBoxScoresInput {
+  basketballBoxScores: [SaveBasketballBoxScoreInput!]!
+}
+
+input SaveBasketballBoxScoreInput {
+  playerId: ID!
+  gameId: ID!
+  defensiveRebounds: Int
+  offensiveRebounds: Int
+  assists: Int
+  steals: Int
+  blocks: Int
+  turnovers: Int
+  personalFouls: Int
+  threePointersMade: Int
+  threePointersAttempted: Int
+  twoPointersMade: Int
+  twoPointersAttempted: Int
+  freeThrowsMade: Int
+  freeThrowsAttempted: Int
+}
+
+type SaveBasketballBoxScoresResponse {
+  basketballBoxScores: [BasketballBoxScore!]!
+}
+
+type SaveBasketballBoxScoreResponse {
+  basketballBoxScore: BasketballBoxScore!
+}
+"""
+A Playground user
+"""
+type User implements Node {
+  id: ID!
+  username: String!
+  firstName: String!
+  lastName: String!
+  player: Player
+  friendship: Friendship
+}
+
+"""
+The current authenticated user with private fields
+"""
+type CurrentUser implements Node {
+  id: ID!
+  username: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  player: Player
+}
+
+"""
+Something that is related to a user
+"""
+interface HasUser {
+  user: User!
+}
+
+"""
+The Friendship status between two users
+"""
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+"""
+Direction of a friendship relative to the current user
+"""
+enum FriendshipDirection {
+  """
+  Requests sent TO the current user
+  """
+  INCOMING
+  """
+  Requests sent BY the current user
+  """
+  OUTGOING
+}
+
+"""
+The Friendship between two users
+Can be bidirectional - ACCEPTED status
+Can be unidirectional - PENDING status
+"""
+type Friendship implements Node {
+  id: ID!
+  requester: User!
+  addressee: User!
+  status: FriendshipStatus!
+  createdDate: DateTime!
+}
+
+type FriendshipEdge implements Edge {
+  cursor: String!
+  node: Friendship!
+}
+
+type FriendshipConnection implements Connection {
+  edges: [FriendshipEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Filters for querying friendships
+"""
+input FriendshipFilterInput {
+  """
+  Filter by friendship status
+  """
+  status: FriendshipStatus
+  """
+  Filter by direction relative to current user.
+  INCOMING = other users requested me, OUTGOING = I requested them.
+  If null, returns both directions.
+  """
+  direction: FriendshipDirection
+}
+
+type UserEdge implements Edge {
+  cursor: String!
+  node: User!
+}
+
+type UserConnection implements Connection {
+  edges: [UserEdge!]!
+  pageInfo: PageInfo!
+}
+
+input SendFriendRequestInput {
+  userId: ID!
+}
+
+type SendFriendRequestResponse {
+  friendship: Friendship!
+}
+
+input AcceptFriendRequestInput {
+  requesterId: ID!
+}
+
+type AcceptFriendRequestResponse {
+  friendship: Friendship!
+}
+
+input DeclineFriendRequestInput {
+  requesterId: ID!
+}
+
+type DeclineFriendRequestResponse {
+  friendship: Friendship!
+}
+
+input UnfriendRequestInput {
+  userId: ID!
+}
+
+type UnfriendResponse {
+  friendship: Friendship
+}
+
+type Notification implements Node {
+  id: ID!
+  body: String!
+  isRead: Boolean!
+  createdDate: DateTime!
+}
+
+type NotificationEdge implements Edge {
+  cursor: String!
+  node: Notification!
+}
+
+type NotificationConnection implements Connection {
+  edges: [NotificationEdge!]!
+  pageInfo: PageInfo!
+}
+
+input ReadNotificationsInput {
+  ids: [ID!]!
+}
+
+type ReadNotificationsResponse {
+  notifications: [Notification!]!
+}
+
+type NotificationEvent {
+  notification: Notification!
+}
+
+input QueryUserInput @oneOf {
+  id: ID
+  username: String
+}
+
+input UserSearchInput {
+  query: String!
+  #    excludeFriends: Boolean
+  #    hasFriendshipStatus: FriendshipStatus
+  #    hasPlayer: Boolean
 }

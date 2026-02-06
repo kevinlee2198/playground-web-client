@@ -102,7 +102,11 @@ export function UpdatePlayerForm({
     if (dirtyFields.age) {
       input.age = values.age ?? null;
     }
-    if (dirtyFields.heightCm || dirtyFields.heightFeet || dirtyFields.heightInches) {
+    if (
+      dirtyFields.heightCm ||
+      dirtyFields.heightFeet ||
+      dirtyFields.heightInches
+    ) {
       if (unitPreference === UnitPreference.METRIC) {
         input.height = values.heightCm ?? null;
       } else {
