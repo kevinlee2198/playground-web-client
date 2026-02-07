@@ -104,6 +104,7 @@ type ChatRoom implements Node {
   id: ID!
   name: String!
   createdDate: DateTime!
+  isDirectMessage: Boolean!
 
   """
   Members of the room
@@ -140,6 +141,7 @@ type ChatRoomConnection implements Connection {
 input CreateChatRoomInput {
   name: String!
   userIds: [ID!]!
+  isDirectMessage: Boolean!
 }
 
 type CreateChatRoomResponse {
@@ -1227,6 +1229,11 @@ type Query {
     last: Int
     before: String
   ): ChatRoomConnection!
+  """
+  Find the direct message chat room between the current user and another user.
+  Returns null if no DM exists.
+  """
+  directMessageChatRoom(userId: ID!): ChatRoom
   """
   Query and filter basketball box scores
   """
