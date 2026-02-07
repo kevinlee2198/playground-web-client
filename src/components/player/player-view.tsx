@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useUnitPreference } from "@/hooks/use-unit-preference";
 import { UnitPreference } from "@/lib/constants";
 import type { Player } from "@/lib/types/player";
 import {
@@ -15,11 +14,15 @@ import { useTranslations } from "next-intl";
 interface PlayerViewProps {
   player: Player;
   onEdit: () => void;
+  unitPreference?: UnitPreference;
 }
 
-export function PlayerView({ player, onEdit }: PlayerViewProps) {
+export function PlayerView({
+  player,
+  onEdit,
+  unitPreference = UnitPreference.METRIC,
+}: PlayerViewProps) {
   const t = useTranslations();
-  const { preference: unitPreference } = useUnitPreference();
 
   return (
     <div className="space-y-6">

@@ -77,7 +77,7 @@ export async function ProfileHeader({
           {/* Action Buttons */}
           <div className="flex gap-3">
             {isOwnProfile ? (
-              <Button variant="outline" asChild>
+              <Button variant="outline">
                 <Link href={`/${locale}/settings/profile`}>
                   <UserPen className="mr-2 h-4 w-4" />
                   {t("editProfile")}
@@ -98,7 +98,7 @@ export async function ProfileHeader({
                 {isAuthenticated && (
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger asChild>
+                      <TooltipTrigger>
                         <span>
                           <Button variant="outline" disabled={!isFriends}>
                             <MessageCircle className="mr-2 h-4 w-4" />

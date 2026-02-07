@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Notification } from "@/lib/types/notification";
-import type { MarkNotificationsAsReadResult } from "@/lib/types/notification";
+import type {
+  MarkNotificationsAsReadResult,
+  Notification,
+} from "@/lib/types/notification";
 import { Inbox, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NotificationItem } from "./notification-item";

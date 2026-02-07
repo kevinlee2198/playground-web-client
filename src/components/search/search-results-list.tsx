@@ -29,7 +29,9 @@ export function SearchResultsList({
 
   const [query, setQuery] = useState(initialQuery);
   const [edges, setEdges] = useState<UserSearchEdge[]>(initialEdges ?? []);
-  const [pageInfo, setPageInfo] = useState<SearchPageInfo | null>(initialPageInfo);
+  const [pageInfo, setPageInfo] = useState<SearchPageInfo | null>(
+    initialPageInfo,
+  );
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [hasSearched, setHasSearched] = useState(!!initialQuery);
   const [isSearching, startSearch] = useTransition();
@@ -84,7 +86,11 @@ export function SearchResultsList({
           />
         </div>
         <Button type="submit" disabled={isSearching}>
-          {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : t("submit")}
+          {isSearching ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            t("submit")
+          )}
         </Button>
       </form>
 
@@ -99,7 +105,10 @@ export function SearchResultsList({
       {isSearching && (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex flex-col space-y-2 rounded-lg border px-4 py-3">
+            <div
+              key={i}
+              className="flex flex-col space-y-2 rounded-lg border px-4 py-3"
+            >
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-3 w-24" />
             </div>
@@ -109,7 +118,9 @@ export function SearchResultsList({
 
       {/* No results */}
       {!isSearching && hasSearched && edges.length === 0 && !error && (
-        <p className="py-12 text-center text-muted-foreground">{t("noResults")}</p>
+        <p className="py-12 text-center text-muted-foreground">
+          {t("noResults")}
+        </p>
       )}
 
       {/* Results */}
@@ -124,7 +135,11 @@ export function SearchResultsList({
       {/* Load More */}
       {!isSearching && pageInfo?.hasNextPage && (
         <div className="mt-6 flex justify-center">
-          <Button variant="outline" onClick={handleLoadMore} disabled={isLoadingMore}>
+          <Button
+            variant="outline"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+          >
             {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
             {t("loadMore")}
           </Button>

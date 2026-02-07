@@ -1,11 +1,21 @@
 "use client";
 
-import { fetchNotifications, markNotificationsAsRead } from "@/components/notification/actions";
+import {
+  fetchNotifications,
+  markNotificationsAsRead,
+} from "@/components/notification/actions";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "@/lib/auth-client";
-import type { Notification, NotificationPageInfo } from "@/lib/types/notification";
+import type {
+  Notification,
+  NotificationPageInfo,
+} from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -75,14 +85,14 @@ export function NotificationBell() {
   async function handleMarkAsRead(id: string) {
     // Optimistic update
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
     );
 
     const result = await markNotificationsAsRead([id]);
     if (!result.success) {
       // Revert on failure
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n)),
       );
       // Error is surfaced per-item in NotificationItem
     }
@@ -93,22 +103,24 @@ export function NotificationBell() {
 
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span
-              className={cn(
-                "absolute -right-1 -top-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium",
-                unreadCount > 9 ? "h-5 min-w-5 px-1" : "h-4 w-4"
-              )}
-            >
-              {displayCount}
-            </span>
-          )}
-          <span className="sr-only">{t("title")}</span>
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span
+                className={cn(
+                  "absolute -right-1 -top-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium",
+                  unreadCount > 9 ? "h-5 min-w-5 px-1" : "h-4 w-4",
+                )}
+              >
+                {displayCount}
+              </span>
+            )}
+            <span className="sr-only">{t("title")}</span>
+          </Button>
+        }
+      />
       <PopoverContent align="end" className="w-[360px] p-0">
         <div className="border-b px-4 py-3">
           <h3 className="text-sm font-semibold">{t("title")}</h3>

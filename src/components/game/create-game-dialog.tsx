@@ -22,8 +22,8 @@ export function CreateGameDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>{t("game.actions.create")}</Button>
+      <DialogTrigger render={<Button />}>
+        {t("game.actions.create")}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

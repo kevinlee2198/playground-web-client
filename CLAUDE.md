@@ -10,7 +10,7 @@ npm run build    # Production build
 npm run lint     # Run ESLint
 ```
 
-No test runner is currently configured.
+Tests use Vitest with `@testing-library/react` and jsdom. Avoid installing additional test packages — use what's already available (e.g., `fireEvent` from `@testing-library/react` instead of `@testing-library/user-event`).
 
 ## Spec-Driven Development
 
@@ -68,7 +68,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 ### Directory Structure
 
 - `src/app/[locale]/` - Dynamic language routing (i18n). All pages are nested under a `[locale]` segment.
-- `src/components/ui/` - shadcn/ui components (new-york style with Lucide icons)
+- `src/components/ui/` - shadcn/ui components (default style with Lucide icons)
 - `src/components/playground/` - App-specific components (navbar, footer)
 - `src/components/auth/` - Authentication UI components
 - `src/lib/` - Utilities, auth config, GraphQL client, i18n helpers
@@ -132,4 +132,4 @@ Required variables (see `env.example`):
 npx shadcn@latest add <component-name>
 ```
 
-Components are configured with RSC support, new-york style, and Lucide icons.
+Components are configured with RSC support, default style, and Lucide icons. Components are built on top of BaseUI

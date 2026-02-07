@@ -61,7 +61,8 @@ export function BasketballBoxScoreTable({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
-  const canEdit = gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
+  const canEdit =
+    gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
   const existingPlayerIds = useMemo(
     () => new Set(boxScores.map((edge) => edge.node.player.id)),
@@ -279,7 +280,10 @@ export function BasketballBoxScoreTable({
 
   const addPlayerControls = canEdit && playersWithoutStats.length > 0 && (
     <div className="flex items-center gap-2">
-      <Select value={selectedPlayerId} onValueChange={setSelectedPlayerId}>
+      <Select
+        value={selectedPlayerId}
+        onValueChange={(val) => setSelectedPlayerId(val ?? "")}
+      >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder={boxScoreT("selectPlayer")} />
         </SelectTrigger>

@@ -31,7 +31,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
         initialQuery={q}
         initialEdges={initialResult?.edges ?? null}
         initialPageInfo={initialResult?.pageInfo ?? null}
-        initialError={initialResult?.success === false ? initialResult.error : null}
+        initialError={
+          initialResult?.success === false ? initialResult.error : null
+        }
       />
     </main>
   );

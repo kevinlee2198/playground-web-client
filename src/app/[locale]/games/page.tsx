@@ -2,7 +2,7 @@ import { CreateGameDialog } from "@/components/game/create-game-dialog";
 import { GameInfiniteList } from "@/components/game/game-infinite-list";
 import { GameListFilters } from "@/components/game/game-list-filters";
 import { GameListSort } from "@/components/game/game-list-sort";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { GameFilterParams } from "@/lib/types/game";
+import { cn } from "@/lib/utils";
 import { EnumType } from "json-to-graphql-query";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -71,9 +72,9 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
             {t("player.modal.description")}
           </p>
           <div className="mt-4">
-            <Button asChild>
-              <Link href="/player">{t("player.modal.create")}</Link>
-            </Button>
+            <Link href="/player" className={buttonVariants()}>
+              {t("player.modal.create")}
+            </Link>
           </div>
         </div>
       </main>
@@ -191,9 +192,12 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           <p className="text-lg font-semibold text-destructive">
             {t("game.errors.loadError")}
           </p>
-          <Button variant="outline" asChild className="mt-4">
-            <Link href="/games">{t("game.errors.retry")}</Link>
-          </Button>
+          <Link
+            href="/games"
+            className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
+          >
+            {t("game.errors.retry")}
+          </Link>
         </div>
       </main>
     );

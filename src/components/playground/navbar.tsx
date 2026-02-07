@@ -4,6 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import AuthButton from "../auth/auth-button";
+import { NotificationBell } from "../notification/notification-bell";
+import { NavbarSearch } from "../search/navbar-search";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -14,8 +16,6 @@ import {
 } from "../ui/navigation-menu";
 import { TypographyH1 } from "../ui/typography";
 import { NavbarAuthLinks } from "./navbar-auth-links";
-import { NavbarSearch } from "../search/navbar-search";
-import { NotificationBell } from "../notification/notification-bell";
 
 export function Navbar() {
   const t = useTranslations();
@@ -62,24 +62,28 @@ export function Navbar() {
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link
-                  href="/pricing"
-                  className="px-4 py-2 text-sm font-medium hover:text-primary"
-                >
-                  Pricing
-                </Link>
+              <NavigationMenuLink
+                render={
+                  <Link
+                    href="/pricing"
+                    className="px-4 py-2 text-sm font-medium hover:text-primary"
+                  />
+                }
+              >
+                Pricing
               </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link
-                  href="/resource/contact"
-                  className="px-4 py-2 text-sm font-medium hover:text-primary"
-                >
-                  Contact
-                </Link>
+              <NavigationMenuLink
+                render={
+                  <Link
+                    href="/resource/contact"
+                    className="px-4 py-2 text-sm font-medium hover:text-primary"
+                  />
+                }
+              >
+                Contact
               </NavigationMenuLink>
             </NavigationMenuItem>
 

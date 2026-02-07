@@ -1,5 +1,3 @@
-"use client";
-
 import { SimpleScore } from "@/components/game/score/simple-score";
 import { TennisScore } from "@/components/game/score/tennis-score";
 import { SportType } from "@/lib/constants";

@@ -48,7 +48,9 @@ export function DeleteGameDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("game.deleteConfirmation.title")}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t("game.deleteConfirmation.title")}
+          </AlertDialogTitle>
           <AlertDialogDescription>
             {t("game.deleteConfirmation.description")}
           </AlertDialogDescription>

@@ -5,7 +5,11 @@ import { authQuery, query } from "@/lib/graphql-request";
 import type { SearchUsersResult } from "@/lib/types/user";
 import { headers } from "next/headers";
 
-function buildSearchUsersQuery(searchQuery: string, first: number, after?: string) {
+function buildSearchUsersQuery(
+  searchQuery: string,
+  first: number,
+  after?: string,
+) {
   const args: Record<string, unknown> = {
     input: { query: searchQuery },
     first,
@@ -41,11 +45,16 @@ function buildSearchUsersQuery(searchQuery: string, first: number, after?: strin
 export async function searchUsers(
   searchQuery: string,
   first: number,
-  after?: string
+  after?: string,
 ): Promise<SearchUsersResult> {
   const trimmed = searchQuery.trim();
   if (!trimmed) {
-    return { success: true, edges: [], pageInfo: { hasNextPage: false, endCursor: null }, error: null };
+    return {
+      success: true,
+      edges: [],
+      pageInfo: { hasNextPage: false, endCursor: null },
+      error: null,
+    };
   }
 
   try {
@@ -61,7 +70,12 @@ export async function searchUsers(
       : await query(queryObj);
 
     if (response.errors?.length > 0) {
-      return { success: false, edges: null, pageInfo: null, error: response.errors[0].message };
+      return {
+        success: false,
+        edges: null,
+        pageInfo: null,
+        error: response.errors[0].message,
+      };
     }
 
     const data = response.data?.searchUsers;
@@ -72,6 +86,11 @@ export async function searchUsers(
       error: null,
     };
   } catch {
-    return { success: false, edges: null, pageInfo: null, error: "Failed to search. Please try again." };
+    return {
+      success: false,
+      edges: null,
+      pageInfo: null,
+      error: "Failed to search. Please try again.",
+    };
   }
 }

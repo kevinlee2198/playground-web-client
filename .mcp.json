@@ -33,6 +33,14 @@
     "better-auth": {
       "type": "http",
       "url": "https://mcp.inkeep.com/better-auth/mcp"
+    },
+    "tanstack": {
+      "command": "npx",
+      "args": ["@tanstack/cli", "mcp"]
+    },
+    "inkeepMcp": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.inkeep.com/zod/mcp"]
     }
   }
 }
