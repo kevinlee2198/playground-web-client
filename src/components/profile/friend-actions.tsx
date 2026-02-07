@@ -4,9 +4,23 @@ import {
   acceptFriendRequest,
   sendFriendRequest,
 } from "@/app/[locale]/user/[username]/actions";
+import { MessageButton } from "@/components/chat/message-button";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { TypographyP } from "@/components/ui/typography";
 import { FriendshipStatus } from "@/lib/constants";
-import { Clock, Loader2, UserCheck, UserPlus } from "lucide-react";
+import {
+  Clock,
+  Loader2,
+  MessageCircle,
+  UserCheck,
+  UserPlus,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -20,14 +34,17 @@ interface FriendActionsProps {
     addressee: { id: string };
   } | null;
   currentUserId: string;
+  showMessageButton?: boolean;
 }
 
 export function FriendActions({
   userId,
   friendship,
   currentUserId,
+  showMessageButton = false,
 }: FriendActionsProps) {
   const t = useTranslations("profile.friends");
+  const tProfile = useTranslations("profile");
   const [isPending, startTransition] = useTransition();
   const [localFriendship, setLocalFriendship] = useState(friendship);
   const [hasSentRequest, setHasSentRequest] = useState(false);
@@ -61,17 +78,44 @@ export function FriendActions({
     });
   };
 
+  const isFriends = status === FriendshipStatus.ACCEPTED;
+
+  const messageButton = showMessageButton ? (
+    isFriends ? (
+      <MessageButton userId={userId} />
+    ) : (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button variant="outline" disabled>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {tProfile("message")}
+              </Button>
+            }
+          />
+          <TooltipContent>
+            <TypographyP>{tProfile("messageFriendsOnly")}</TypographyP>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  ) : null;
+
   // No friendship or declined - show Add Friend
   if (!status || status === FriendshipStatus.DECLINED) {
     return (
-      <Button onClick={handleAddFriend} disabled={isPending}>
-        {isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <UserPlus className="mr-2 h-4 w-4" />
-        )}
-        {t("addFriend")}
-      </Button>
+      <>
+        <Button onClick={handleAddFriend} disabled={isPending}>
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <UserPlus className="mr-2 h-4 w-4" />
+          )}
+          {t("addFriend")}
+        </Button>
+        {messageButton}
+      </>
     );
   }
 
@@ -81,34 +125,43 @@ export function FriendActions({
     (hasSentRequest && status !== FriendshipStatus.ACCEPTED)
   ) {
     return (
-      <Button variant="secondary" disabled>
-        <Clock className="mr-2 h-4 w-4" />
-        {t("pending")}
-      </Button>
+      <>
+        <Button variant="secondary" disabled>
+          <Clock className="mr-2 h-4 w-4" />
+          {t("pending")}
+        </Button>
+        {messageButton}
+      </>
     );
   }
 
   // Pending - current user received the request
   if (status === FriendshipStatus.PENDING && isAddressee) {
     return (
-      <Button onClick={handleAcceptRequest} disabled={isPending}>
-        {isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <UserCheck className="mr-2 h-4 w-4" />
-        )}
-        {t("acceptRequest")}
-      </Button>
+      <>
+        <Button onClick={handleAcceptRequest} disabled={isPending}>
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <UserCheck className="mr-2 h-4 w-4" />
+          )}
+          {t("acceptRequest")}
+        </Button>
+        {messageButton}
+      </>
     );
   }
 
   // Accepted - show friends status
-  if (status === FriendshipStatus.ACCEPTED) {
+  if (isFriends) {
     return (
-      <Button variant="outline" disabled>
-        <UserCheck className="mr-2 h-4 w-4" />
-        {t("friends")}
-      </Button>
+      <>
+        <Button variant="outline" disabled>
+          <UserCheck className="mr-2 h-4 w-4" />
+          {t("friends")}
+        </Button>
+        {messageButton}
+      </>
     );
   }
 

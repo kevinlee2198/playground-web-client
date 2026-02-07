@@ -10,7 +10,8 @@
   "header": {
     "home": "Home",
     "player": "Player",
-    "games": "Games"
+    "games": "Games",
+    "chat": "Chat"
   },
   "footer": {
     "company": {
@@ -352,6 +353,68 @@
     "error": "Failed to load notifications",
     "markAsReadError": "Failed to mark as read",
     "retry": "Retry"
+  },
+
+  "chat": {
+    "title": "Chat",
+    "newChat": "New Chat",
+    "noConversation": "Select a conversation or start a new one",
+    "noRooms": "No conversations yet",
+    "createFirst": "Start a conversation with a friend",
+    "noFriends": "You need to add friends before you can start a conversation",
+    "groupName": "Group Name",
+    "groupNameRequired": "Group name is required",
+    "searchFriends": "Search friends...",
+    "noFriendsFound": "No friends found",
+    "selectedCount": "{count, plural, one {# friend} other {# friends}} selected",
+    "createRoom": "Create",
+    "back": "Back",
+    "message": {
+      "placeholder": "Type a message...",
+      "send": "Send",
+      "edit": "Edit",
+      "delete": "Delete",
+      "reply": "Reply",
+      "edited": "(edited)",
+      "deleted": "This message was deleted",
+      "editMessage": "Edit Message",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "members": {
+      "title": "Members",
+      "add": "Add Member",
+      "remove": "Remove",
+      "removeConfirm": "Are you sure you want to remove {name} from this chat?",
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "joined": "Joined {date}"
+    },
+    "deleteConfirm": {
+      "title": "Delete Message",
+      "description": "Are you sure you want to delete this message? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "loadRooms": "Failed to load conversations",
+      "loadMessages": "Failed to load messages",
+      "sendMessage": "Failed to send message",
+      "editMessage": "Failed to edit message",
+      "deleteMessage": "Failed to delete message",
+      "createRoom": "Failed to create conversation",
+      "addMember": "Failed to add member",
+      "removeMember": "Failed to remove member",
+      "roomNotFound": "Conversation not found"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "yesterday": "Yesterday",
+      "yesterdayWithTime": "Yesterday {time}"
+    }
   },
   "contact": {
     "title": "Contact Us",

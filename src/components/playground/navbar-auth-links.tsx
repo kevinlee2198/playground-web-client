@@ -38,6 +38,18 @@ export function NavbarAuthLinks() {
           <TypographyP>{t("header.player")}</TypographyP>
         </NavigationMenuLink>
       </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink
+          render={
+            <Link
+              href="/chat"
+              className="px-4 py-2 text-sm font-medium transition-colors hover:text-primary"
+            />
+          }
+        >
+          <TypographyP>{t("header.chat")}</TypographyP>
+        </NavigationMenuLink>
+      </NavigationMenuItem>
     </>
   );
 }
