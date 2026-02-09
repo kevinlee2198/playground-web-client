@@ -134,6 +134,21 @@ export enum GameSortField {
   GAME_STATUS = "GAME_STATUS",
 }
 
+export enum ChatRoomRole {
+  OWNER = "OWNER",
+  ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
+}
+
+/**
+ * Badge variant mapping for chat room role display
+ */
+export const ChatRoomRoleBadgeVariant = {
+  OWNER: "default",
+  ADMIN: "secondary",
+  MEMBER: "outline",
+} as const;
+
 /**
  * Badge variant mapping for game status display
  */

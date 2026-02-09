@@ -1,13 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { FriendshipStatus } from "@/lib/constants";
-import { MessageCircle, UserPen } from "lucide-react";
+import { UserPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { FriendActions } from "./friend-actions";
@@ -48,8 +42,6 @@ export async function ProfileHeader({
     `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   const fullName = `${user.firstName} ${user.lastName}`;
 
-  const isFriends = friendship?.status === "ACCEPTED";
-
   return (
     <section className="mb-8">
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
@@ -85,34 +77,14 @@ export async function ProfileHeader({
               </Button>
             ) : (
               <>
-                {/* Friend Actions - only show when authenticated */}
+                {/* Friend Actions + Message Button */}
                 {isAuthenticated && (
                   <FriendActions
                     userId={user.id}
                     friendship={friendship}
                     currentUserId={currentUserId!}
+                    showMessageButton
                   />
-                )}
-
-                {/* Message Button - requires friends */}
-                {isAuthenticated && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <span>
-                          <Button variant="outline" disabled={!isFriends}>
-                            <MessageCircle className="mr-2 h-4 w-4" />
-                            {t("message")}
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      {!isFriends && (
-                        <TooltipContent>
-                          <p>{t("messageFriendsOnly")}</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
                 )}
               </>
             )}

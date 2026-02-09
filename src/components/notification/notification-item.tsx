@@ -8,7 +8,7 @@ import type {
 import { cn } from "@/lib/utils";
 import DOMPurify from "isomorphic-dompurify";
 import { Check, Loader2 } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useState } from "react";
 
 interface NotificationItemProps {
@@ -24,6 +24,7 @@ export function NotificationItem({
   const formatter = useFormatter();
   const [isMarking, setIsMarking] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
+  const now = useNow();
 
   const sanitizedBody = DOMPurify.sanitize(notification.body, {
     ALLOWED_TAGS: [
@@ -44,6 +45,7 @@ export function NotificationItem({
 
   const relativeTime = formatter.relativeTime(
     new Date(notification.createdDate),
+    now,
   );
 
   async function handleMarkAsRead() {

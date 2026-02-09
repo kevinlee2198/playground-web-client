@@ -96,7 +96,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 
 **Routing**: next-intl wraps around these NextJS components for routing. Use these instead of the built-in NextJS ones: `Link, redirect, usePathname, useRouter, getPathname` should all be imported from `"@/i18n/navigation"`
 
-**Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`
+**Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`. All text should be wrapped in a `src/components/ui/typography.ts` component
 
 ### TypeScript Type Conventions
 

@@ -83,6 +83,8 @@ export async function saveBasketballBoxScore(
       },
     });
 
+    console.log(JSON.stringify(response));
+
     if (response.errors?.length > 0) {
       return { success: false, error: response.errors[0].message };
     }
