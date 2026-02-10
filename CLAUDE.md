@@ -96,7 +96,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 
 **Routing**: next-intl wraps around these NextJS components for routing. Use these instead of the built-in NextJS ones: `Link, redirect, usePathname, useRouter, getPathname` should all be imported from `"@/i18n/navigation"`
 
-**Forms**: We use TansTack forms as the form control in this project. Forms should be validated with zod.
+**Forms**: We use TansTack forms as the form control in this project. Forms should be validated with Zod v4 (not v3 — e.g., `z.number()` does not accept `invalid_type_error`; use `{ error: "..." }` or `{ message: "..." }` instead).
 
 **Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`. All text should be wrapped in a `src/components/ui/typography.ts` component
 
