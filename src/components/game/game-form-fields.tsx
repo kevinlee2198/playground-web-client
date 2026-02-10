@@ -3,8 +3,8 @@ import { z } from "zod";
 
 export const createGameFormSchema = z
   .object({
-    sportType: z.nativeEnum(SportType, { message: "Required" }),
-    subtype: z.nativeEnum(SportSubtype, { message: "Required" }),
+    sportType: z.enum(SportType, { message: "Required" }),
+    subtype: z.enum(SportSubtype, { message: "Required" }),
     startDate: z.date({ message: "Required" }),
     periods: z.number().int().positive("Must be positive").optional(),
     bestOf: z

@@ -15,13 +15,13 @@ export function GameScore({ sportType, participants }: GameScoreProps) {
   const [a, b] = participants;
   if (!a.metadata && !b.metadata) return null;
 
-  if (sportType === SportType.BASKETBALL || sportType === SportType.FOOTBALL) {
-    return <SimpleScore participantA={a} participantB={b} />;
+  switch (sportType) {
+    case SportType.BASKETBALL:
+    case SportType.FOOTBALL:
+      return <SimpleScore participantA={a} participantB={b} />;
+    case SportType.TENNIS:
+      return <TennisScore participantA={a} participantB={b} />;
+    default:
+      return null;
   }
-
-  if (sportType === SportType.TENNIS) {
-    return <TennisScore participantA={a} participantB={b} />;
-  }
-
-  return null;
 }
