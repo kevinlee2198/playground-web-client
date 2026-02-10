@@ -3,6 +3,12 @@ import { GameInfiniteList } from "@/components/game/game-infinite-list";
 import { GameListFilters } from "@/components/game/game-list-filters";
 import { GameListSort } from "@/components/game/game-list-sort";
 import { buttonVariants } from "@/components/ui/button-variants";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import {
@@ -224,12 +230,14 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           />
 
           {games.edges.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-12 text-center">
-              <h3 className="text-lg font-semibold">{t("game.noGames")}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("game.noGamesDescription")}
-              </p>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>{t("game.noGames")}</EmptyTitle>
+                <EmptyDescription>
+                  {t("game.noGamesDescription")}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <GameInfiniteList
               initialEdges={games.edges}

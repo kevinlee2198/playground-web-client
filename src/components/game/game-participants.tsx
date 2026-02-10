@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import {
   getMaxParticipants,
   getParticipationType,
@@ -66,9 +67,13 @@ export function GameParticipants({
       </CardHeader>
       <CardContent>
         {!hasParticipants && (
-          <p className="text-muted-foreground">
-            {t("game.participants.noParticipants")}
-          </p>
+          <Empty className="border-none">
+            <EmptyHeader>
+              <EmptyDescription>
+                {t("game.participants.noParticipants")}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
 
         {isTeamBased && hasParticipants && (

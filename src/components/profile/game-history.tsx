@@ -7,7 +7,8 @@ import { GameNode } from "@/lib/types/game";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { TypographyH2, TypographyP } from "../ui/typography";
+import { Empty, EmptyDescription, EmptyHeader } from "../ui/empty";
+import { TypographyH2 } from "../ui/typography";
 import { GameCard } from "./game-card";
 
 interface GameHistoryProps {
@@ -46,9 +47,11 @@ export function GameHistory({ playerId, initialGames }: GameHistoryProps) {
       </TypographyH2>
 
       {!playerId || games.length === 0 ? (
-        <TypographyP className="text-muted-foreground">
-          {t("noActivity")}
-        </TypographyP>
+        <Empty className="border-none">
+          <EmptyHeader>
+            <EmptyDescription>{t("noActivity")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
           <div className="grid gap-4">

@@ -3,6 +3,7 @@
 import { saveBasketballBoxScore } from "@/app/[locale]/game/box-score-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -313,7 +314,11 @@ export function BasketballBoxScoreTable({
           {addPlayerControls}
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">{boxScoreT("noBoxScores")}</p>
+          <Empty className="border-none">
+            <EmptyHeader>
+              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         </CardContent>
       </Card>
     );

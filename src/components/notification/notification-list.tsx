@@ -1,6 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   MarkNotificationsAsReadResult,
@@ -63,10 +69,14 @@ export function NotificationList({
   // Empty state
   if (notifications.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 px-4 py-8">
-        <Inbox className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
-      </div>
+      <Empty className="border-0 py-8">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Inbox />
+          </EmptyMedia>
+          <EmptyDescription>{t("empty")}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

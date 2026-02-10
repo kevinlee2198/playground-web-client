@@ -2,6 +2,7 @@
 
 import { searchUsers } from "@/components/search/actions";
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "@/i18n/navigation";
@@ -118,9 +119,11 @@ export function SearchResultsList({
 
       {/* No results */}
       {!isSearching && hasSearched && edges.length === 0 && !error && (
-        <p className="py-12 text-center text-muted-foreground">
-          {t("noResults")}
-        </p>
+        <Empty className="border-none py-12">
+          <EmptyHeader>
+            <EmptyDescription>{t("noResults")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
 
       {/* Results */}

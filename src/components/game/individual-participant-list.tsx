@@ -5,6 +5,7 @@ import {
   removeIndividualParticipant,
 } from "@/app/[locale]/game/participant-actions";
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import type { GameParticipantDetail } from "@/lib/types/game";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -113,9 +114,13 @@ export function IndividualParticipantList({
 
       {/* Participant List */}
       {individualParticipants.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {t("game.participants.noParticipants")}
-        </p>
+        <Empty className="border-none">
+          <EmptyHeader>
+            <EmptyDescription>
+              {t("game.participants.noParticipants")}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="space-y-2">
           {individualParticipants.map((participant) => {
