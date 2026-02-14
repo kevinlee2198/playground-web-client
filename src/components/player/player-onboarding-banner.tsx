@@ -33,9 +33,7 @@ export function PlayerOnboardingBanner() {
       <AlertDescription className="mt-2 flex items-center justify-between gap-4">
         <p className="flex-1">{t("description")}</p>
         <div className="flex items-center gap-2">
-          <Button asChild>
-            <Link href="/player">{t("cta")}</Link>
-          </Button>
+          <Button render={<Link href="/player" />}>{t("cta")}</Button>
           <Button
             variant="ghost"
             size="icon"

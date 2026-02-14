@@ -21,6 +21,11 @@ export interface NotificationConnection {
   pageInfo: NotificationPageInfo;
 }
 
+/** A real-time notification event from the GraphQL subscription */
+export interface NotificationEvent {
+  notification: Notification;
+}
+
 /** Result shape returned by the fetchNotifications server action */
 export interface FetchNotificationsResult {
   success: boolean;

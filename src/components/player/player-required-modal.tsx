@@ -34,9 +34,7 @@ export function PlayerRequiredModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("cancel")}
           </Button>
-          <Button asChild>
-            <Link href="/player">{t("create")}</Link>
-          </Button>
+          <Button render={<Link href="/player" />}>{t("create")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

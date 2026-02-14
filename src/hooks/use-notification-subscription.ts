@@ -6,6 +6,7 @@ import {
   getGraphQLWsClient,
 } from "@/lib/graphql-ws-client";
 import type { Notification, NotificationEvent } from "@/lib/types/notification";
+import { jsonToGraphQLQuery } from "json-to-graphql-query";
 import { useEffect, useRef } from "react";
 
 interface UseNotificationSubscriptionOptions {
@@ -14,7 +15,18 @@ interface UseNotificationSubscriptionOptions {
   onReconnect?: () => void;
 }
 
-const SUBSCRIPTION_QUERY = `subscription { notificationEvents { notification { id body isRead createdDate } } }`;
+const SUBSCRIPTION_QUERY = jsonToGraphQLQuery({
+  subscription: {
+    notificationEvents: {
+      notification: {
+        id: true,
+        body: true,
+        isRead: true,
+        createdDate: true,
+      },
+    },
+  },
+});
 
 export function useNotificationSubscription({
   enabled,
@@ -68,9 +80,7 @@ export function useNotificationSubscription({
           }
         },
         error: () => {},
-        complete: () => {
-          console.debug("[notification-subscription] Complete");
-        },
+        complete: () => {},
       },
     );
 

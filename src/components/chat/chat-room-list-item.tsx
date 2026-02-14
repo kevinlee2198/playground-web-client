@@ -27,6 +27,7 @@ export function ChatRoomListItem({
   const locale = useLocale();
   const timeLabels = {
     yesterday: tTime("yesterday"),
+    yesterdayWithTime: (time: string) => tTime("yesterdayWithTime", { time }),
     justNow: tTime("justNow"),
     minutesAgo: (count: number) => tTime("minutesAgo", { count }),
     hoursAgo: (count: number) => tTime("hoursAgo", { count }),

@@ -23,6 +23,7 @@ import type {
 import { snakeToCamel } from "@/lib/utils";
 import { Calendar } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import Image from "next/image";
 
 interface GameCardProps {
   game: GameNode;
@@ -90,7 +91,7 @@ export function GameCard({ game }: GameCardProps) {
             <div className="flex items-center gap-3">
               {/* Sport Icon */}
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <img
+                <Image
                   src={getSportIconPath(game.sportType)}
                   alt={game.sportType}
                   className="h-6 w-6"

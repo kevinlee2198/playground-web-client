@@ -11,6 +11,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNotificationSubscription } from "@/hooks/use-notification-subscription";
 import { useSession } from "@/lib/auth-client";
 import type {
   Notification,
@@ -52,6 +53,37 @@ export function NotificationBell() {
       loadNotifications();
     }
   }, [session?.user, loadNotifications]);
+
+  // Fallback polling every 5 minutes
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const POLL_INTERVAL = 5 * 60 * 1000;
+    const intervalId = setInterval(() => {
+      loadNotifications();
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [session?.user, loadNotifications]);
+
+  // Real-time WebSocket subscription
+  const handleIncomingNotification = useCallback(
+    (notification: Notification) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === notification.id)) {
+          return prev;
+        }
+        return [notification, ...prev];
+      });
+    },
+    [],
+  );
+
+  useNotificationSubscription({
+    enabled: !!session?.user,
+    onNotification: handleIncomingNotification,
+    onReconnect: loadNotifications,
+  });
 
   if (!session?.user) return null;
 

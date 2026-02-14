@@ -16,6 +16,7 @@ import type {
 } from "@/lib/types/game";
 import { Calendar } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import Image from "next/image";
 import { TypographyP } from "../ui/typography";
 
 interface GameCardProps {
@@ -66,7 +67,7 @@ export function GameCard({ game }: GameCardProps) {
         <CardContent className="flex items-center gap-4 p-4">
           {/* Sport Icon */}
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <img
+            <Image
               src={getSportIconPath(game.sportType)}
               alt={game.sportType}
               className="w-8 h-8"
