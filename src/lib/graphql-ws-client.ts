@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient, type Client } from "graphql-ws";
+import { GRAPHQL_PATH } from "./graphql-config";
 
 let client: Client | null = null;
 
@@ -9,7 +10,7 @@ function getWsUrl(): string {
   if (!httpUrl) {
     throw new Error("NEXT_PUBLIC_API_SERVER_URL is not defined");
   }
-  return `${httpUrl.replace(/^http/, "ws")}/graphql`;
+  return `${httpUrl.replace(/^http/, "ws")}${GRAPHQL_PATH}`;
 }
 
 export function getGraphQLWsClient(fetchToken: () => Promise<string>): Client {

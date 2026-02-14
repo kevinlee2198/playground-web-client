@@ -33,9 +33,7 @@ export async function getKeycloakLogoutUrl(): Promise<string> {
   // Revoke the Better Auth session server-side
   await auth.api.signOut({ headers: reqHeaders });
 
-  const logoutUrl = new URL(
-    `${keycloakIssuer}/protocol/openid-connect/logout`,
-  );
+  const logoutUrl = new URL(`${keycloakIssuer}/protocol/openid-connect/logout`);
   logoutUrl.searchParams.set("client_id", clientId);
   logoutUrl.searchParams.set("post_logout_redirect_uri", redirectUri);
   if (idToken) {
@@ -43,6 +41,31 @@ export async function getKeycloakLogoutUrl(): Promise<string> {
   }
 
   return logoutUrl.toString();
+}
+
+/**
+ * Fetch the Keycloak access token for the current session.
+ * Used by the WebSocket client to authenticate subscription connections.
+ */
+export async function getAccessToken(): Promise<string | null> {
+  try {
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+
+    if (!session?.user?.id) {
+      return null;
+    }
+
+    const tokenResponse = await auth.api.getAccessToken({
+      headers: reqHeaders,
+      body: { providerId: "keycloak" },
+    });
+
+    return tokenResponse?.accessToken ?? null;
+  } catch (error) {
+    console.error("Failed to fetch access token:", error);
+    return null;
+  }
 }
 
 export async function fetchCurrentUser(): Promise<CurrentUserInfo | null> {
