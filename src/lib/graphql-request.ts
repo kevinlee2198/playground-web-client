@@ -2,13 +2,13 @@ import { jsonToGraphQLQuery } from "json-to-graphql-query";
 import { headers } from "next/headers";
 import { auth } from "./auth";
 
-const GRAPHQL_URL = "/graphql";
+import { GRAPHQL_PATH } from "./graphql-config";
 
 function buildRequestObject(
   data: BodyInit,
   inputHeaders: object = {},
 ): Request {
-  const baseUrl = process.env.API_SERVER_URL + GRAPHQL_URL;
+  const baseUrl = process.env.API_SERVER_URL + GRAPHQL_PATH;
 
   return new Request(baseUrl, {
     method: "POST",

@@ -20,6 +20,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "graphql": "^16.12.0",
+    "graphql-ws": "^6.0.7",
     "isomorphic-dompurify": "^2.35.0",
     "json-to-graphql-query": "^2.3.0",
     "lucide-react": "^0.563.0",

@@ -1,0 +1,82 @@
+"use client";
+
+import { getAccessToken } from "@/components/auth/actions";
+import {
+  disposeGraphQLWsClient,
+  getGraphQLWsClient,
+} from "@/lib/graphql-ws-client";
+import type { Notification, NotificationEvent } from "@/lib/types/notification";
+import { useEffect, useRef } from "react";
+
+interface UseNotificationSubscriptionOptions {
+  enabled: boolean;
+  onNotification: (notification: Notification) => void;
+  onReconnect?: () => void;
+}
+
+const SUBSCRIPTION_QUERY = `subscription { notificationEvents { notification { id body isRead createdDate } } }`;
+
+export function useNotificationSubscription({
+  enabled,
+  onNotification,
+  onReconnect,
+}: UseNotificationSubscriptionOptions): void {
+  const onNotificationRef = useRef(onNotification);
+  const onReconnectRef = useRef(onReconnect);
+
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+    onReconnectRef.current = onReconnect;
+  });
+
+  // Dispose the WebSocket connection when the user logs out
+  useEffect(() => {
+    if (!enabled) {
+      disposeGraphQLWsClient();
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    let isFirstConnection = true;
+
+    const client = getGraphQLWsClient(async () => {
+      const token = await getAccessToken();
+      if (!token) throw new Error("No access token available");
+      return token;
+    });
+
+    const unsubscribeConnected = client.on("connected", () => {
+      if (isFirstConnection) {
+        isFirstConnection = false;
+      } else {
+        onReconnectRef.current?.();
+      }
+    });
+
+    const unsubscribe = client.subscribe<{
+      notificationEvents: NotificationEvent;
+    }>(
+      { query: SUBSCRIPTION_QUERY },
+      {
+        next: (result) => {
+          if (result.data?.notificationEvents?.notification) {
+            onNotificationRef.current(
+              result.data.notificationEvents.notification,
+            );
+          }
+        },
+        error: () => {},
+        complete: () => {
+          console.debug("[notification-subscription] Complete");
+        },
+      },
+    );
+
+    return () => {
+      unsubscribeConnected();
+      unsubscribe();
+    };
+  }, [enabled]);
+}
