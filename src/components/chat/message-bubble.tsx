@@ -3,8 +3,13 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { ChatMessageNode, ChatRoomRole } from "@/lib/types/chat";
+import type {
+  ChatMessageNode,
+  ChatMessageReplyTo,
+  ChatRoomRole,
+} from "@/lib/types/chat";
 import { cn } from "@/lib/utils";
+import { Download, FileIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { formatMessageTime } from "./chat-utils";
@@ -24,6 +29,26 @@ interface MessageBubbleProps {
   onCancelEdit: () => void;
   onDelete: () => void;
   onScrollToReply: (messageId: string) => void;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getReplyPreviewContent(
+  replyTo: ChatMessageReplyTo,
+  t: (key: string) => string,
+): string {
+  if (replyTo.__typename === "TextChatMessage") {
+    return replyTo.content ?? t("deleted");
+  }
+  // MediaChatMessage reply
+  if (replyTo.resource.__typename === "ImageResource") {
+    return replyTo.caption ?? t("imageAttachment");
+  }
+  return replyTo.caption ?? t("fileAttachment");
 }
 
 export function MessageBubble({
@@ -46,30 +71,33 @@ export function MessageBubble({
   const timeLabels = {
     yesterdayWithTime: (time: string) => tTime("yesterdayWithTime", { time }),
   };
-  const [editContent, setEditContent] = useState(message.content ?? "");
+  const [editContent, setEditContent] = useState(
+    message.__typename === "TextChatMessage" ? (message.content ?? "") : "",
+  );
 
   const isDeleted = message.deletedDate !== null;
   const isSystemMessage = message.isSystemMessage;
   const canDelete = currentUserRole === "OWNER" || currentUserRole === "ADMIN";
+  const isTextMessage = message.__typename === "TextChatMessage";
 
   // System messages: centered, muted, italic
   if (isSystemMessage) {
     return (
       <div className="flex justify-center py-2">
         <div className="text-muted-foreground italic text-sm">
-          {message.content}
+          {isTextMessage ? message.content : null}
         </div>
       </div>
     );
   }
 
-  const userName = `${message.user.firstName} ${message.user.lastName}`;
+  const userName = message.user.displayName;
   const initials =
     `${message.user.firstName[0]}${message.user.lastName[0]}`.toUpperCase();
 
   const handleSaveEdit = () => {
     const trimmedContent = editContent.trim();
-    if (trimmedContent && trimmedContent !== message.content) {
+    if (trimmedContent && isTextMessage && trimmedContent !== message.content) {
       onSaveEdit(trimmedContent);
     } else {
       onCancelEdit();
@@ -134,8 +162,8 @@ export function MessageBubble({
             {message.replyTo && (
               <div className="mb-2">
                 <ReplyPreview
-                  userName={`${message.replyTo.user.firstName} ${message.replyTo.user.lastName}`}
-                  content={message.replyTo.content}
+                  userName={message.replyTo.user.displayName}
+                  content={getReplyPreviewContent(message.replyTo, t)}
                   onClick={() => onScrollToReply(message.replyTo!.id)}
                 />
               </div>
@@ -143,7 +171,7 @@ export function MessageBubble({
 
             {isDeleted ? (
               <div className="text-sm">{t("deleted")}</div>
-            ) : isEditing ? (
+            ) : isEditing && isTextMessage ? (
               <div className="flex flex-col gap-2">
                 <Textarea
                   value={editContent}
@@ -161,7 +189,7 @@ export function MessageBubble({
                   </Button>
                 </div>
               </div>
-            ) : (
+            ) : isTextMessage ? (
               <>
                 <div className="whitespace-pre-wrap break-words text-sm">
                   {message.content}
@@ -170,6 +198,53 @@ export function MessageBubble({
                   <span className="ml-2 text-xs opacity-70">{t("edited")}</span>
                 )}
               </>
+            ) : (
+              // MediaChatMessage
+              <div className="space-y-2">
+                {message.resource.__typename === "ImageResource" ? (
+                  <a
+                    href={message.resource.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img
+                      src={
+                        message.resource.thumbnailUrl ??
+                        message.resource.downloadUrl
+                      }
+                      alt={message.resource.filename}
+                      className="max-h-64 rounded-md object-cover"
+                    />
+                  </a>
+                ) : (
+                  <a
+                    href={message.resource.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "flex items-center gap-3 rounded-md border p-3",
+                      isOwn ? "border-primary-foreground/20" : "border-border",
+                    )}
+                  >
+                    <FileIcon className="h-8 w-8 shrink-0 opacity-70" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {message.resource.filename}
+                      </div>
+                      <div className="text-xs opacity-70">
+                        {formatFileSize(message.resource.size)}
+                      </div>
+                    </div>
+                    <Download className="h-4 w-4 shrink-0 opacity-70" />
+                  </a>
+                )}
+                {message.caption && (
+                  <div className="whitespace-pre-wrap break-words text-sm">
+                    {message.caption}
+                  </div>
+                )}
+              </div>
             )}
 
             {!showSender && !isDeleted && (
@@ -184,7 +259,7 @@ export function MessageBubble({
               isOwn={isOwn}
               canDelete={canDelete}
               onReply={onReply}
-              onEdit={isOwn ? onStartEdit : undefined}
+              onEdit={isOwn && isTextMessage ? onStartEdit : undefined}
               onDelete={onDelete}
             />
           )}

@@ -144,6 +144,10 @@ export interface GameDetail {
     edges: Edge<GameParticipantDetail>[];
     pageInfo: PageInfo;
   };
+  media?: {
+    edges: Edge<import("@/lib/types/resource").Resource>[];
+    pageInfo: PageInfo;
+  };
 }
 
 /**

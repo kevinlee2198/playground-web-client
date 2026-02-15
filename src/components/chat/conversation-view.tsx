@@ -127,10 +127,13 @@ export function ConversationView({
       return;
     }
 
-    // Update the message in the list
+    // Update the message in the list (only text messages can be edited)
     setMessages((prev) =>
       prev.map((edge) => {
-        if (edge.node.id === messageId) {
+        if (
+          edge.node.id === messageId &&
+          edge.node.__typename === "TextChatMessage"
+        ) {
           return {
             ...edge,
             node: {
@@ -167,7 +170,6 @@ export function ConversationView({
             ...edge,
             node: {
               ...edge.node,
-              content: null,
               deletedDate: new Date().toISOString(),
             },
           };

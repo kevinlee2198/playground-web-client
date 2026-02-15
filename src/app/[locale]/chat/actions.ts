@@ -1,6 +1,11 @@
 "use server";
 
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import {
+  chatMessageInlineFragments,
+  chatRoomInlineFragments,
+  chatUserFragment,
+} from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import type {
   ChatMessageNode,
@@ -8,7 +13,6 @@ import type {
   ChatRoomListNode,
   ChatRoomMemberNode,
 } from "@/lib/types/chat";
-import { EnumType } from "json-to-graphql-query";
 import { z } from "zod";
 
 const sendMessageSchema = z.object({
@@ -22,11 +26,54 @@ const updateMessageSchema = z.object({
   content: z.string().min(1).max(5000),
 });
 
-const createChatRoomSchema = z.object({
+const createDirectMessageSchema = z.object({
+  userId: z.string().min(1),
+});
+
+const createGroupChatSchema = z.object({
   name: z.string().min(1).max(100),
   userIds: z.array(z.string().min(1)).min(1),
-  isDirectMessage: z.boolean(),
 });
+
+/** Reusable chat message node selection */
+const chatMessageNodeSelection = {
+  __typename: true,
+  id: true,
+  createdDate: true,
+  updatedDate: true,
+  deletedDate: true,
+  isSystemMessage: true,
+  user: chatUserFragment,
+  replyTo: {
+    __typename: true,
+    id: true,
+    user: chatUserFragment,
+    __on: chatMessageInlineFragments,
+  },
+  __on: chatMessageInlineFragments,
+};
+
+/** Reusable chat room list node selection */
+const chatRoomListNodeSelection = {
+  __typename: true,
+  id: true,
+  createdDate: true,
+  __on: chatRoomInlineFragments,
+  members: {
+    __args: { first: 10 },
+    edges: {
+      node: {
+        user: chatUserFragment,
+      },
+    },
+  },
+  chatMessages: {
+    __args: { last: 1 },
+    edges: {
+      node: chatMessageNodeSelection,
+    },
+  },
+};
 
 /**
  * Load chat rooms with last message preview
@@ -44,47 +91,7 @@ export async function loadChatRooms(
         },
         edges: {
           cursor: true,
-          node: {
-            id: true,
-            name: true,
-            isDirectMessage: true,
-            createdDate: true,
-            members: {
-              __args: { first: 10 },
-              edges: {
-                node: {
-                  user: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                  },
-                },
-              },
-            },
-            chatMessages: {
-              __args: { last: 1 },
-              edges: {
-                node: {
-                  id: true,
-                  createdDate: true,
-                  updatedDate: true,
-                  deletedDate: true,
-                  isSystemMessage: true,
-                  user: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                  },
-                  __on: [
-                    {
-                      __typeName: "TextChatMessage",
-                      content: true,
-                    },
-                  ],
-                },
-              },
-            },
-          },
+          node: chatRoomListNodeSelection,
         },
         pageInfo: {
           hasNextPage: true,
@@ -114,21 +121,17 @@ export async function loadChatRoom(
     const response = await authQuery({
       chatRoom: {
         __args: { id },
+        __typename: true,
         id: true,
-        name: true,
-        isDirectMessage: true,
         createdDate: true,
+        __on: chatRoomInlineFragments,
         members: {
           __args: { first: 50 },
           edges: {
             cursor: true,
             node: {
               id: true,
-              user: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
+              user: chatUserFragment,
               role: true,
               joinedDate: true,
             },
@@ -171,38 +174,7 @@ export async function loadMessages(
           },
           edges: {
             cursor: true,
-            node: {
-              id: true,
-              createdDate: true,
-              updatedDate: true,
-              deletedDate: true,
-              isSystemMessage: true,
-              user: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-              replyTo: {
-                id: true,
-                user: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                },
-                __on: [
-                  {
-                    __typeName: "TextChatMessage",
-                    content: true,
-                  },
-                ],
-              },
-              __on: [
-                {
-                  __typeName: "TextChatMessage",
-                  content: true,
-                },
-              ],
-            },
+            node: chatMessageNodeSelection,
           },
           pageInfo: {
             hasPreviousPage: true,
@@ -227,6 +199,7 @@ export async function loadMessages(
  * Load friendships for the friend selector
  */
 export async function loadFriendships(first: number, after?: string) {
+  const { EnumType } = await import("json-to-graphql-query");
   try {
     const response = await authQuery({
       friendships: {
@@ -239,16 +212,8 @@ export async function loadFriendships(first: number, after?: string) {
           cursor: true,
           node: {
             id: true,
-            requester: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-            addressee: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
+            requester: chatUserFragment,
+            addressee: chatUserFragment,
           },
         },
         pageInfo: {
@@ -279,45 +244,7 @@ export async function findDirectMessageRoom(
     const response = await authQuery({
       directMessageChatRoom: {
         __args: { userId },
-        id: true,
-        name: true,
-        isDirectMessage: true,
-        createdDate: true,
-        members: {
-          __args: { first: 10 },
-          edges: {
-            node: {
-              user: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-        chatMessages: {
-          __args: { last: 1 },
-          edges: {
-            node: {
-              id: true,
-              createdDate: true,
-              updatedDate: true,
-              deletedDate: true,
-              isSystemMessage: true,
-              user: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-              __on: [
-                {
-                  __typeName: "TextChatMessage",
-                  content: true,
-                },
-              ],
-            },
-          },
-        },
+        ...chatRoomListNodeSelection,
       },
     });
 
@@ -333,77 +260,26 @@ export async function findDirectMessageRoom(
 }
 
 /**
- * Create a new chat room
+ * Create a direct message conversation with another user.
+ * Idempotent: returns the existing DM if one already exists.
  */
-export async function createChatRoom(
-  name: string,
-  userIds: string[],
-  isDirectMessage: boolean,
-): Promise<{
+export async function createDirectMessage(userId: string): Promise<{
   success: boolean;
   chatRoom?: ChatRoomListNode;
   error?: string;
 }> {
-  const parsed = createChatRoomSchema.safeParse({
-    name,
-    userIds,
-    isDirectMessage,
-  });
+  const parsed = createDirectMessageSchema.safeParse({ userId });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
   try {
     const response = await authMutate({
-      createChatRoom: {
+      createDirectMessage: {
         __args: {
-          input: {
-            name: parsed.data.name,
-            userIds: parsed.data.userIds,
-            isDirectMessage: parsed.data.isDirectMessage,
-          },
+          input: { userId: parsed.data.userId },
         },
-        chatRoom: {
-          id: true,
-          name: true,
-          isDirectMessage: true,
-          createdDate: true,
-          members: {
-            __args: { first: 10 },
-            edges: {
-              node: {
-                user: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                },
-              },
-            },
-          },
-          chatMessages: {
-            __args: { last: 1 },
-            edges: {
-              node: {
-                id: true,
-                createdDate: true,
-                updatedDate: true,
-                deletedDate: true,
-                isSystemMessage: true,
-                user: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                },
-                __on: [
-                  {
-                    __typeName: "TextChatMessage",
-                    content: true,
-                  },
-                ],
-              },
-            },
-          },
-        },
+        chatRoom: chatRoomListNodeSelection,
       },
     });
 
@@ -413,11 +289,54 @@ export async function createChatRoom(
 
     return {
       success: true,
-      chatRoom: response.data.createChatRoom.chatRoom,
+      chatRoom: response.data.createDirectMessage.chatRoom,
     };
   } catch (error) {
-    console.error("Failed to create chat room:", error);
-    return { success: false, error: "Failed to create chat room" };
+    console.error("Failed to create direct message:", error);
+    return { success: false, error: "Failed to create direct message" };
+  }
+}
+
+/**
+ * Create a group chat with multiple users.
+ */
+export async function createGroupChat(
+  name: string,
+  userIds: string[],
+): Promise<{
+  success: boolean;
+  chatRoom?: ChatRoomListNode;
+  error?: string;
+}> {
+  const parsed = createGroupChatSchema.safeParse({ name, userIds });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  try {
+    const response = await authMutate({
+      createGroupChat: {
+        __args: {
+          input: {
+            name: parsed.data.name,
+            userIds: parsed.data.userIds,
+          },
+        },
+        chatRoom: chatRoomListNodeSelection,
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    return {
+      success: true,
+      chatRoom: response.data.createGroupChat.chatRoom,
+    };
+  } catch (error) {
+    console.error("Failed to create group chat:", error);
+    return { success: false, error: "Failed to create group chat" };
   }
 }
 
@@ -452,38 +371,7 @@ export async function sendMessage(
             },
           },
         },
-        chatMessage: {
-          id: true,
-          createdDate: true,
-          updatedDate: true,
-          deletedDate: true,
-          isSystemMessage: true,
-          user: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-          replyTo: {
-            id: true,
-            user: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-            __on: [
-              {
-                __typeName: "TextChatMessage",
-                content: true,
-              },
-            ],
-          },
-          __on: [
-            {
-              __typeName: "TextChatMessage",
-              content: true,
-            },
-          ],
-        },
+        chatMessage: chatMessageNodeSelection,
       },
     });
 
@@ -579,11 +467,7 @@ export async function addMember(chatRoomId: string, userId: string) {
         },
         member: {
           id: true,
-          user: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
+          user: chatUserFragment,
           role: true,
           joinedDate: true,
         },

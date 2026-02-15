@@ -9,6 +9,7 @@ interface CurrentUserInfo {
   username: string;
   firstName: string;
   lastName: string;
+  displayName: string;
   email: string;
 }
 
@@ -76,6 +77,7 @@ export async function fetchCurrentUser(): Promise<CurrentUserInfo | null> {
         username: true,
         firstName: true,
         lastName: true,
+        displayName: true,
         email: true,
       },
     });

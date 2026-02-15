@@ -36,22 +36,23 @@ type TextChatMessage implements ChatMessage & Node & HasUser {
   isSystemMessage: Boolean!
 }
 
-type FileChatMessage implements ChatMessage & Node & HasUser {
-  id: ID!
-  chatRoom: ChatRoom!
-  user: User!
-  createdDate: DateTime!
-  updatedDate: DateTime
-  deletedDate: DateTime
-  replyTo: ChatMessage
-  isSystemMessage: Boolean!
-  fileName: String!
-  fileUrl: String!
-  fileSize: Int!
-  mimeType: String!
-}
+"""
+A chat message with an attached file or image.
+The resource's concrete type (ImageResource vs FileResource) indicates
+the kind of media. Use inline fragments on the resource field:
 
-type ImageChatMessage implements ChatMessage & Node & HasUser {
+```graphql
+... on MediaChatMessage {
+  caption
+  resource {
+    filename
+    downloadUrl
+    ... on ImageResource { width height thumbnailUrl }
+  }
+}
+```
+"""
+type MediaChatMessage implements ChatMessage & Node & HasUser {
   id: ID!
   chatRoom: ChatRoom!
   user: User!
@@ -60,10 +61,13 @@ type ImageChatMessage implements ChatMessage & Node & HasUser {
   deletedDate: DateTime
   replyTo: ChatMessage
   isSystemMessage: Boolean!
-  imageUrl: String!
-  thumbnailUrl: String
-  width: Int
-  height: Int
+  """
+  The attached file or image resource.
+  """
+  resource: Resource!
+  """
+  Optional caption for the media.
+  """
   caption: String
 }
 
@@ -100,12 +104,9 @@ type ChatRoomMemberConnection implements Connection {
   pageInfo: PageInfo!
 }
 
-type ChatRoom implements Node {
+interface ChatRoom implements Node {
   id: ID!
-  name: String!
   createdDate: DateTime!
-  isDirectMessage: Boolean!
-
   """
   Members of the room
   """
@@ -128,6 +129,41 @@ type ChatRoom implements Node {
   ): ChatMessageConnection!
 }
 
+type DirectMessageChatRoom implements ChatRoom & Node {
+  id: ID!
+  createdDate: DateTime!
+  members(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): ChatRoomMemberConnection!
+  chatMessages(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): ChatMessageConnection!
+}
+
+type GroupChatRoom implements ChatRoom & Node {
+  id: ID!
+  name: String!
+  createdDate: DateTime!
+  members(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): ChatRoomMemberConnection!
+  chatMessages(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): ChatMessageConnection!
+}
+
 type ChatRoomEdge implements Edge {
   cursor: String!
   node: ChatRoom!
@@ -138,13 +174,20 @@ type ChatRoomConnection implements Connection {
   pageInfo: PageInfo!
 }
 
-input CreateChatRoomInput {
-  name: String!
-  userIds: [ID!]!
-  isDirectMessage: Boolean!
+input CreateDirectMessageInput {
+  userId: ID!
 }
 
-type CreateChatRoomResponse {
+type CreateDirectMessageResponse {
+  chatRoom: ChatRoom!
+}
+
+input CreateGroupChatInput {
+  name: String!
+  userIds: [ID!]!
+}
+
+type CreateGroupChatResponse {
   chatRoom: ChatRoom!
 }
 
@@ -178,11 +221,28 @@ input SendTextChatMessageInput {
 }
 
 """
+Send a media message. The resourceId must reference a resource that was
+uploaded via requestUpload with a chatMedia context.
+Sending the message also confirms the resource (transitions it to PERMANENT) —
+do NOT call confirmUpload separately for chat media.
+"""
+input SendMediaChatMessageInput {
+  chatRoomId: ID!
+  """
+  The resource ID returned from requestUpload.
+  """
+  resourceId: ID!
+  caption: String
+  replyToId: ID
+}
+
+"""
 Polymorphic input for sending different types of chat messages.
 Exactly one field must be provided.
 """
 input SendChatMessageInput @oneOf {
   textMessage: SendTextChatMessageInput
+  mediaMessage: SendMediaChatMessageInput
 }
 
 input UpdateTextChatMessageInput {
@@ -207,7 +267,7 @@ input DeleteChatMessageInput {
 }
 
 type DeleteChatMessageResponse implements DeleteResponse {
-  id: ID
+  id: ID!
 }
 
 interface ChatEvent {
@@ -416,6 +476,15 @@ type Game implements Node & HasLocation {
     last: Int
     before: String
   ): LivestreamConnection!
+  """
+  Media (photos, videos) attached to this game.
+  """
+  media(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): ResourceConnection!
 }
 
 type GameEdge implements Edge {
@@ -429,7 +498,8 @@ type GameConnection implements Connection {
 }
 
 """
-Fields to filter games by
+Fields to filter games by.
+At least one filter must be provided — querying all games without any filter is not allowed.
 """
 input GameFilterInput {
   """
@@ -908,7 +978,7 @@ type UpdateGameResponse {
 }
 
 type DeleteGameResponse implements DeleteResponse {
-  id: ID
+  id: ID!
 }
 
 """
@@ -1062,10 +1132,185 @@ type UpdatePlayerResponse {
 }
 
 type DeletePlayerResponse implements DeleteResponse {
-  id: ID
+  id: ID!
+} # ============================================================================
+# Resource / File Management (v2)
+#
+# Resources are files (images, documents, videos) stored in S3.
+# Clients interact with resources through fields on parent types
+# (User.profilePicture, Game.media, MediaChatMessage.resource)
+# rather than through generic polymorphic queries.
+#
+# Backend-only concerns (ownerType, storageType, resourceStatus) are not
+# exposed in the public schema.
+# ============================================================================
+
+# ============================================================================
+# Resource Types
+# ============================================================================
+
+"""
+A stored file. Concrete types carry format-specific metadata.
+"""
+interface Resource implements Node {
+  id: ID!
+  filename: String!
+  """
+  File size in bytes.
+  """
+  size: Long!
+  mimeType: String!
+  """
+  Presigned download URL. Ephemeral — generated on demand by the resolver.
+  """
+  downloadUrl: String!
+  createdDate: DateTime!
+}
+
+"""
+An image resource with dimension and thumbnail metadata.
+Dimensions and thumbnail are extracted server-side after upload and may
+not be immediately available (null until processing completes).
+"""
+type ImageResource implements Resource & Node {
+  id: ID!
+  filename: String!
+  size: Long!
+  mimeType: String!
+  downloadUrl: String!
+  createdDate: DateTime!
+  width: Int
+  height: Int
+  """
+  Presigned URL for a smaller thumbnail variant.
+  Null if no thumbnail has been generated yet.
+  """
+  thumbnailUrl: String
+}
+
+"""
+A generic file resource (documents, etc.).
+"""
+type FileResource implements Resource & Node {
+  id: ID!
+  filename: String!
+  size: Long!
+  mimeType: String!
+  downloadUrl: String!
+  createdDate: DateTime!
+}
+
+type ResourceEdge implements Edge {
+  cursor: String!
+  node: Resource!
+}
+
+type ResourceConnection implements Connection {
+  edges: [ResourceEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# Upload Flow — Phase 1: Request Upload
+#
+# Client calls requestUpload with file metadata and an upload context
+# that identifies what entity the resource will be attached to.
+# Server returns a presigned PUT URL for the client to upload directly to S3.
+# ============================================================================
+
+"""
+Identifies what entity the resource will be attached to.
+Enables per-context server-side validation (e.g., profile pictures must be images).
+"""
+input UploadContextInput @oneOf {
+  """
+  Upload a profile picture for the current user.
+  """
+  userProfilePicture: UserProfilePictureUploadContext
+  """
+  Upload media (photo/video) to a game.
+  """
+  gameMedia: GameMediaUploadContext
+  """
+  Upload a file/image to a chat room. The resource is linked to the
+  chat message when sendChatMessage is called with the resourceId.
+  For chat media, sendChatMessage is the confirmation step — do NOT
+  call confirmUpload separately.
+  """
+  chatMedia: ChatMediaUploadContext
+}
+
+input UserProfilePictureUploadContext {
+  """
+  If true, this is a placeholder upload (no resize support yet).
+  """
+  placeholder: Boolean
+}
+
+input GameMediaUploadContext {
+  gameId: ID!
+}
+
+input ChatMediaUploadContext {
+  chatRoomId: ID!
+}
+
+input RequestUploadInput {
+  filename: String!
+  mimeType: String!
+  size: Long!
+  context: UploadContextInput!
+}
+
+type RequestUploadResponse {
+  """
+  Presigned PUT URL. Client uploads file bytes directly to this URL.
+  Null when using LOCAL storage (dev environments only).
+  """
+  uploadUrl: String
+  """
+  Resource ID. Use this to confirm the upload (phase 2) or to
+  reference the resource when sending a chat message.
+  """
+  resourceId: ID!
+}
+
+# ============================================================================
+# Upload Flow — Phase 2: Confirm Upload
+#
+# After the client uploads the file to S3, it calls confirmUpload
+# to transition the resource from REQUESTED to PERMANENT.
+#
+# Exception: chat media resources are confirmed automatically when
+# sendChatMessage is called — no separate confirmUpload needed.
+# ============================================================================
+
+input ConfirmUploadInput {
+  resourceId: ID!
+}
+
+type ConfirmUploadResponse {
+  resource: Resource!
+}
+
+# ============================================================================
+# Delete Resource
+# ============================================================================
+
+input DeleteResourceInput {
+  resourceId: ID!
+}
+
+type DeleteResourceResponse implements DeleteResponse {
+  id: ID!
 }
 scalar DateTime
 scalar JSON
+"""
+A 64-bit signed integer. Represents values from -(2^63) to 2^63-1.
+Serialized as a JSON number when within safe integer range, otherwise as a string.
+"""
+scalar Long
 
 """
 The direction to sort results
@@ -1100,7 +1345,7 @@ type PageInfo {
 }
 
 interface DeleteResponse {
-  id: ID
+  id: ID!
 }
 
 interface HasLocation {
@@ -1218,7 +1463,7 @@ type Query {
   Get a chat room
   User must be authenticated.
   """
-  chatRoom(id: ID!): ChatRoom!
+  chatRoom(id: ID!): ChatRoom
   """
   Query for chat rooms for the current user
   User must be authenticated.
@@ -1380,9 +1625,16 @@ type Mutation {
   """
   readNotifications(input: ReadNotificationsInput!): ReadNotificationsResponse!
   """
-  Create a chat room
+  Create a direct message conversation with another user.
+  Idempotent: returns the existing DM if one already exists.
   """
-  createChatRoom(input: CreateChatRoomInput!): CreateChatRoomResponse!
+  createDirectMessage(
+    input: CreateDirectMessageInput!
+  ): CreateDirectMessageResponse!
+  """
+  Create a group chat with multiple users.
+  """
+  createGroupChat(input: CreateGroupChatInput!): CreateGroupChatResponse!
   """
   Add a user to the chat room
   """
@@ -1419,14 +1671,42 @@ type Mutation {
   saveBasketballBoxScores(
     input: SaveBasketballBoxScoresInput!
   ): SaveBasketballBoxScoresResponse!
+  """
+  Request a presigned upload URL. Phase 1 of the upload flow.
+  """
+  requestUpload(input: RequestUploadInput!): RequestUploadResponse!
+  """
+  Confirm that an upload is complete. Phase 2 of the upload flow.
+  Transitions resource status from REQUESTED to PERMANENT.
+  Not needed for chat media — sendChatMessage confirms chat resources automatically.
+  """
+  confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResponse!
+  """
+  Delete a resource and its backing file.
+  """
+  deleteResource(input: DeleteResourceInput!): DeleteResourceResponse!
 }
 
+"""
+All subscriptions require authentication via the WebSocket connection_init payload.
+The server validates that the authenticated user is authorized for the requested resource
+(e.g., must be a member of the chat room for chatEvents).
+"""
 type Subscription {
+  """
+  Subscribe to chat events (messages sent/updated/deleted, members added/removed) in a chat room.
+  User must be authenticated and a member of the specified chat room.
+  """
   chatEvents(chatRoomId: ID!): ChatEvent!
+  """
+  Subscribe to notification events for the current user.
+  User must be authenticated.
+  """
   notificationEvents: NotificationEvent!
 }
 """
-Identifies a resource unique to a player in a game
+Filter for box scores by game and/or player.
+At least one of gameIds or playerIds must be provided.
 """
 input GameIdsAndPlayerIdsInput {
   gameIds: [ID!]
@@ -1523,8 +1803,13 @@ type User implements Node {
   username: String!
   firstName: String!
   lastName: String!
+  displayName: String!
   player: Player
   friendship: Friendship
+  """
+  The user's profile picture. Null if no profile picture has been set.
+  """
+  profilePicture: Resource
 }
 
 """
@@ -1535,8 +1820,13 @@ type CurrentUser implements Node {
   username: String!
   firstName: String!
   lastName: String!
+  displayName: String!
   email: String!
   player: Player
+  """
+  The user's profile picture. Null if no profile picture has been set.
+  """
+  profilePicture: Resource
 }
 
 """

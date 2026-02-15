@@ -245,6 +245,10 @@
         "freeThrowPercentage": "FT%"
       }
     },
+    "media": {
+      "title": "Media",
+      "loadMore": "Load More"
+    },
     "filters": {
       "title": "Filters",
       "startDateRange": "Start Date Range",
@@ -379,7 +383,9 @@
       "deleted": "This message was deleted",
       "editMessage": "Edit Message",
       "save": "Save",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "imageAttachment": "[Image]",
+      "fileAttachment": "[File]"
     },
     "members": {
       "title": "Members",

@@ -94,6 +94,8 @@ export function GameCard({ game }: GameCardProps) {
                 <Image
                   src={getSportIconPath(game.sportType)}
                   alt={game.sportType}
+                  width={24}
+                  height={24}
                   className="h-6 w-6"
                 />
               </div>

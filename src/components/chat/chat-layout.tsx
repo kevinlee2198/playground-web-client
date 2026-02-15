@@ -179,7 +179,7 @@ export function ChatLayout({
           roomId={selectedRoomId}
           members={activeRoomMembers}
           currentUserId={currentUser.id}
-          isDirectMessage={activeRoom.isDirectMessage}
+          isDirectMessage={activeRoom.__typename === "DirectMessageChatRoom"}
           onMembersChange={handleMembersChange}
         />
       )}

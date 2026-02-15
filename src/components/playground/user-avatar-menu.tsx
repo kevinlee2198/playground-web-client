@@ -18,6 +18,7 @@ interface UserAvatarMenuProps {
     username: string;
     name?: string | null;
     email?: string | null;
+    profilePictureUrl?: string | null;
   };
   locale: string;
 }
@@ -51,7 +52,10 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
         render={
           <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <Avatar className="h-9 w-9 cursor-pointer">
-              <AvatarImage src={undefined} alt={user.name ?? "User"} />
+              <AvatarImage
+                src={user.profilePictureUrl ?? undefined}
+                alt={user.name ?? "User"}
+              />
               <AvatarFallback>{getInitials()}</AvatarFallback>
             </Avatar>
           </button>

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  createChatRoom,
-  findDirectMessageRoom,
-} from "@/app/[locale]/chat/actions";
+import { createDirectMessage } from "@/app/[locale]/chat/actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { Loader2, MessageCircle } from "lucide-react";
@@ -24,23 +21,13 @@ export function MessageButton({ userId }: MessageButtonProps) {
     setIsLoading(true);
 
     try {
-      // First, check if a DM room already exists
-      const existingRoom = await findDirectMessageRoom(userId);
+      // Idempotent: returns existing DM if one already exists
+      const result = await createDirectMessage(userId);
 
-      if (existingRoom) {
-        // Navigate to existing room
-        router.push(`/chat?room=${existingRoom.id}`);
+      if (result.success && result.chatRoom) {
+        router.push(`/chat?room=${result.chatRoom.id}`);
       } else {
-        // Create a new DM room
-        const displayName = "Direct Message"; // Placeholder
-        const result = await createChatRoom(displayName, [userId], true);
-
-        if (result.success && result.chatRoom) {
-          // Navigate to new room
-          router.push(`/chat?room=${result.chatRoom.id}`);
-        } else {
-          toast.error(result.error || "Failed to create conversation");
-        }
+        toast.error(result.error || "Failed to create conversation");
       }
     } catch (error) {
       console.error("Error creating/finding DM:", error);

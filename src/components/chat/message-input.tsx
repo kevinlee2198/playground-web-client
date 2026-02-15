@@ -6,6 +6,7 @@ import type { ChatMessageNode } from "@/lib/types/chat";
 import { SendHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { getMessagePreviewContent } from "./message-preview-utils";
 import { ReplyPreview } from "./reply-preview";
 
 interface MessageInputProps {
@@ -51,8 +52,8 @@ export function MessageInput({
       {replyTo && (
         <div className="mb-2">
           <ReplyPreview
-            userName={`${replyTo.user.firstName} ${replyTo.user.lastName}`}
-            content={replyTo.content}
+            userName={replyTo.user.displayName}
+            content={getMessagePreviewContent(replyTo, t)}
             onDismiss={onClearReply}
           />
         </div>

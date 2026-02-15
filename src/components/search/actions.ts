@@ -28,6 +28,7 @@ function buildSearchUsersQuery(
           username: true,
           firstName: true,
           lastName: true,
+          displayName: true,
         },
       },
       pageInfo: {

@@ -1,4 +1,8 @@
-import type { ChatUser } from "@/lib/types/chat";
+import type {
+  ChatRoomDetailNode,
+  ChatRoomListNode,
+  ChatUser,
+} from "@/lib/types/chat";
 
 export interface TimeLabels {
   yesterday: string;
@@ -121,24 +125,29 @@ export function formatRelativeTime(
 }
 
 /**
+ * Check if a chat room is a direct message room
+ */
+export function isDirectMessageRoom(
+  room: ChatRoomListNode | ChatRoomDetailNode,
+): boolean {
+  return room.__typename === "DirectMessageChatRoom";
+}
+
+/**
  * Get display name for a chat room
- * - Direct messages: other user's full name
+ * - Direct messages: other user's display name
  * - Group chats: room name
  */
 export function getChatRoomDisplayName(
-  room: {
-    name: string;
-    isDirectMessage: boolean;
-    members: { edges: { node: { user: ChatUser } }[] };
-  },
+  room: ChatRoomListNode | ChatRoomDetailNode,
   currentUserId: string,
 ): string {
-  if (!room.isDirectMessage) return room.name;
+  if (room.__typename === "GroupChatRoom") return room.name;
   const otherMember = room.members.edges.find(
     (e) => e.node.user.id !== currentUserId,
   );
-  if (!otherMember) return room.name;
-  return `${otherMember.node.user.firstName} ${otherMember.node.user.lastName}`;
+  if (!otherMember) return "Chat";
+  return otherMember.node.user.displayName;
 }
 
 /**

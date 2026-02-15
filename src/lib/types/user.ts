@@ -4,6 +4,7 @@ export interface UserSearchNode {
   username: string;
   firstName: string;
   lastName: string;
+  displayName: string;
 }
 
 /** Result shape returned by the searchUsers server action */

@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  createChatRoom,
-  findDirectMessageRoom,
+  createDirectMessage,
+  createGroupChat,
 } from "@/app/[locale]/chat/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,28 +44,17 @@ export function CreateChatRoomDialog({
     }
 
     if (selectedIds.length === 1) {
-      // DM behavior: check for existing room first
+      // DM: idempotent mutation handles existing room check
       startTransition(async () => {
         try {
-          const existingRoom = await findDirectMessageRoom(selectedIds[0]);
+          const result = await createDirectMessage(selectedIds[0]);
 
-          if (existingRoom) {
-            // Room exists, use it
-            onRoomCreated(existingRoom);
+          if (result.success && result.chatRoom) {
+            onRoomCreated(result.chatRoom);
             onOpenChange(false);
             resetForm();
           } else {
-            // Create new DM
-            const displayName = "Direct Message"; // Placeholder, server will handle
-            const result = await createChatRoom(displayName, selectedIds, true);
-
-            if (result.success && result.chatRoom) {
-              onRoomCreated(result.chatRoom);
-              onOpenChange(false);
-              resetForm();
-            } else {
-              toast.error(result.error || t("errors.createRoom"));
-            }
+            toast.error(result.error || t("errors.createRoom"));
           }
         } catch (error) {
           console.error("Error in DM creation:", error);
@@ -81,11 +70,7 @@ export function CreateChatRoomDialog({
 
       startTransition(async () => {
         try {
-          const result = await createChatRoom(
-            groupName.trim(),
-            selectedIds,
-            false,
-          );
+          const result = await createGroupChat(groupName.trim(), selectedIds);
 
           if (result.success && result.chatRoom) {
             onRoomCreated(result.chatRoom);

@@ -4,6 +4,72 @@
  */
 
 /**
+ * Inline fragments for the Resource interface.
+ * Use as: resource: resourceFragment
+ */
+export const resourceFragment = {
+  __typename: true,
+  id: true,
+  filename: true,
+  size: true,
+  mimeType: true,
+  downloadUrl: true,
+  createdDate: true,
+  __on: [
+    {
+      __typeName: "ImageResource",
+      width: true,
+      height: true,
+      thumbnailUrl: true,
+    },
+    {
+      __typeName: "FileResource",
+    },
+  ],
+};
+
+/**
+ * Chat user fields fragment.
+ * Use as: user: chatUserFragment
+ */
+export const chatUserFragment = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  displayName: true,
+};
+
+/**
+ * Inline fragments for ChatMessage types (TextChatMessage / MediaChatMessage).
+ * Use as: __on: chatMessageInlineFragments
+ */
+export const chatMessageInlineFragments = [
+  {
+    __typeName: "TextChatMessage",
+    content: true,
+  },
+  {
+    __typeName: "MediaChatMessage",
+    caption: true,
+    resource: resourceFragment,
+  },
+];
+
+/**
+ * Inline fragments for ChatRoom types (DirectMessageChatRoom / GroupChatRoom).
+ * Use as: __on: chatRoomInlineFragments
+ */
+export const chatRoomInlineFragments = [
+  {
+    __typeName: "DirectMessageChatRoom",
+  },
+  {
+    __typeName: "GroupChatRoom",
+    name: true,
+  },
+];
+
+/**
  * Inline fragments for the GameMetadata union type.
  * Use as: metadata: gameMetadataFragment
  */

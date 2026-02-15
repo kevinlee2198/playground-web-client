@@ -1,8 +1,10 @@
 "use server";
 
+import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import {
   gameMetadataFragment,
   participantNodeFragment,
+  resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import type {
@@ -11,6 +13,7 @@ import type {
   GameSortParams,
   UpdateGameInput,
 } from "@/lib/types/game";
+import type { Resource } from "@/lib/types/resource";
 import { EnumType } from "json-to-graphql-query";
 import { revalidatePath } from "next/cache";
 
@@ -298,6 +301,46 @@ export async function loadMoreGames(
     return response.data?.games;
   } catch (error) {
     console.error("Failed to load more games:", error);
+    return null;
+  }
+}
+
+/**
+ * Load media for a game (paginated)
+ */
+export async function loadGameMedia(
+  gameId: number,
+  first: number,
+  after?: string,
+): Promise<{ edges: Edge<Resource>[]; pageInfo: PageInfo } | null> {
+  try {
+    const response = await authQuery({
+      game: {
+        __args: { id: gameId },
+        media: {
+          __args: {
+            first,
+            ...(after ? { after } : {}),
+          },
+          edges: {
+            cursor: true,
+            node: resourceFragment,
+          },
+          pageInfo: {
+            hasNextPage: true,
+            endCursor: true,
+          },
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return null;
+    }
+
+    return response.data?.game?.media || null;
+  } catch (error) {
+    console.error("Failed to load game media:", error);
     return null;
   }
 }

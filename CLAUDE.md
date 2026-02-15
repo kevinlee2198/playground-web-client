@@ -74,9 +74,26 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 - `src/lib/` - Utilities, auth config, GraphQL client, i18n helpers
 - `messages/{locale}.json` - i18n JSON dictionary files (currently English only)
 
+**File Conventions**
+Always use these file names in the `app/` directory:
+
+- `page.tsx` - Route page component
+- `layout.tsx` - Shared layout wrapper
+- `loading.tsx` - Loading UI (Suspense fallback)
+- `error.tsx` - Error boundary (must be Client Component)
+- `not-found.tsx` - 404 page
+- `route.ts` - API route handler
+- `template.tsx` - Re-rendered layout
+- `default.tsx` - Parallel route fallback
+
 ### Key Patterns
 
-**Server vs Client Components**: Server components are the default. Client components are marked with `"use client"` and used for interactive elements (auth buttons, forms).
+**Server vs Client Components**:
+
+- Default to Server Components - Only use Client Components when you need interactivity
+- Client components are marked with `"use client"` and used for interactive elements (auth buttons, forms).
+- Zero client-side JavaScript for static content
+- Async components are supported and encouraged
 
 **Authentication**: Better Auth with Keycloak OAuth (PKCE flow, stateless/database-less). Session stored in JWE cookies.
 
@@ -88,7 +105,7 @@ This is a Next.js 16 application using the App Router with TypeScript strict mod
 - `query(q)` / `mutate(m)` - Unauthenticated requests
 - `authQuery(q)` / `authMutate(m)` - Automatically injects Bearer token from session
 - If authenticated - use the auth versions
-- Uses `json-to-graphql-query` to build queries from objects
+- Uses `json-to-graphql-query` to build queries from objects. Do not use plain strings
 - Error format follows Netflix DGS specification
 - Queries are sent to a spring-boot graphql server
 

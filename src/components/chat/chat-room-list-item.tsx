@@ -54,11 +54,18 @@ export function ChatRoomListItem({
 
     if (lastMessage.deletedDate) {
       lastMessagePreview = t("message.deleted");
-    } else if (lastMessage.content) {
-      // Truncate to approximately 50 characters
+    } else if (lastMessage.__typename === "TextChatMessage") {
       const content = lastMessage.content;
-      lastMessagePreview =
-        content.length > 50 ? content.substring(0, 50) + "..." : content;
+      if (content) {
+        lastMessagePreview =
+          content.length > 50 ? content.substring(0, 50) + "..." : content;
+      }
+    } else if (lastMessage.__typename === "MediaChatMessage") {
+      if (lastMessage.resource.__typename === "ImageResource") {
+        lastMessagePreview = t("message.imageAttachment");
+      } else {
+        lastMessagePreview = t("message.fileAttachment");
+      }
     }
   }
 

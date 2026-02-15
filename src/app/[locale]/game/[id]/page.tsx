@@ -1,5 +1,6 @@
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailHeader } from "@/components/game/game-detail-header";
+import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameParticipants } from "@/components/game/game-participants";
 import { GameScoreboard } from "@/components/game/game-scoreboard";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -10,6 +11,7 @@ import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
 import {
   gameMetadataFragment,
   participantDetailNodeFragment,
+  resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { GameDetail } from "@/lib/types/game";
@@ -118,6 +120,14 @@ export default async function GameDetailPage({ params }: PageProps) {
         },
         pageInfo: { hasNextPage: true, endCursor: true },
       },
+      media: {
+        __args: { first: 12 },
+        edges: {
+          cursor: true,
+          node: resourceFragment,
+        },
+        pageInfo: { hasNextPage: true, endCursor: true },
+      },
     },
   });
 
@@ -203,6 +213,15 @@ export default async function GameDetailPage({ params }: PageProps) {
       <div className="mb-8">
         <GameParticipants game={game} currentPlayerId={player.id} />
       </div>
+
+      {/* Media Gallery */}
+      {game.media && game.media.edges.length > 0 && (
+        <GameMediaGallery
+          gameId={game.id}
+          initialMedia={game.media.edges}
+          initialPageInfo={game.media.pageInfo}
+        />
+      )}
 
       {/* Box Scores */}
       <GameBoxScores game={game} />

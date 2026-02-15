@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FriendshipStatus } from "@/lib/constants";
+import type { Resource } from "@/lib/types/resource";
 import { UserPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -12,6 +13,8 @@ interface ProfileHeaderProps {
     username: string;
     firstName: string;
     lastName: string;
+    displayName: string;
+    profilePicture?: Resource | null;
     player?: {
       biography?: string | null;
     } | null;
@@ -40,14 +43,21 @@ export async function ProfileHeader({
 
   const initials =
     `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
-  const fullName = `${user.firstName} ${user.lastName}`;
+
+  const profilePictureUrl =
+    user.profilePicture?.__typename === "ImageResource"
+      ? (user.profilePicture.thumbnailUrl ?? user.profilePicture.downloadUrl)
+      : user.profilePicture?.downloadUrl;
 
   return (
     <section className="mb-8">
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         {/* Large Avatar */}
         <Avatar className="h-24 w-24 text-2xl sm:h-32 sm:w-32">
-          <AvatarImage src={undefined} alt={fullName} />
+          <AvatarImage
+            src={profilePictureUrl ?? undefined}
+            alt={user.displayName}
+          />
           <AvatarFallback className="text-2xl font-medium">
             {initials}
           </AvatarFallback>
@@ -56,7 +66,9 @@ export async function ProfileHeader({
         {/* User Info */}
         <div className="flex flex-1 flex-col items-center gap-4 text-center sm:items-start sm:text-left">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{fullName}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {user.displayName}
+            </h1>
             <p className="text-muted-foreground">@{user.username}</p>
           </div>
 

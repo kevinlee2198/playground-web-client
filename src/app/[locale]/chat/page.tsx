@@ -32,6 +32,7 @@ export default async function ChatPage({ params, searchParams }: PageProps) {
       id: true,
       firstName: true,
       lastName: true,
+      displayName: true,
     },
   });
 
@@ -82,6 +83,7 @@ export default async function ChatPage({ params, searchParams }: PageProps) {
           id: currentUser.id,
           firstName: currentUser.firstName,
           lastName: currentUser.lastName,
+          displayName: currentUser.displayName,
         }}
         initialRoomId={initialRoomId}
       />

@@ -10,6 +10,7 @@ import {
 import {
   gameMetadataFragment,
   participantNodeFragment,
+  resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery, query } from "@/lib/graphql-request";
 import { EnumType } from "json-to-graphql-query";
@@ -51,6 +52,8 @@ function buildUserQuery(username: string) {
       username: true,
       firstName: true,
       lastName: true,
+      displayName: true,
+      profilePicture: resourceFragment,
       player: {
         id: true,
         firstName: true,
