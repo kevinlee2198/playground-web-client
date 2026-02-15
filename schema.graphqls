@@ -1694,10 +1694,10 @@ The server validates that the authenticated user is authorized for the requested
 """
 type Subscription {
   """
-  Subscribe to chat events (messages sent/updated/deleted, members added/removed) in a chat room.
-  User must be authenticated and a member of the specified chat room.
+  Subscribe to chat events (messages sent/updated/deleted, members added/removed) for the current user.
+  User must be authenticated and will only receive notifications for chat rooms the are a part of
   """
-  chatEvents(chatRoomId: ID!): ChatEvent!
+  chatEvents: ChatEvent!
   """
   Subscribe to notification events for the current user.
   User must be authenticated.
