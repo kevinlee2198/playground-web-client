@@ -7,6 +7,7 @@ import {
   sendMessage,
   updateMessage,
 } from "@/app/[locale]/chat/actions";
+import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type {
   ChatMessageNode,
@@ -14,6 +15,7 @@ import type {
   ChatRoomRole,
   ChatUser,
 } from "@/lib/types/chat";
+import type { ChatEvent } from "@/lib/types/chat-event";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +31,9 @@ interface ConversationViewProps {
   onToggleMembers: () => void;
   onLastMessageUpdate: (roomId: string, message: ChatMessageNode) => void;
   onRoomLoaded: (room: ChatRoomDetailNode) => void;
+  incomingEventVersion: number;
+  getIncomingEvent: () => ChatEvent | null;
+  reconnectCounter: number;
 }
 
 export function ConversationView({
@@ -38,6 +43,9 @@ export function ConversationView({
   onToggleMembers,
   onLastMessageUpdate,
   onRoomLoaded,
+  incomingEventVersion,
+  getIncomingEvent,
+  reconnectCounter,
 }: ConversationViewProps) {
   const t = useTranslations("chat");
 
@@ -97,6 +105,107 @@ export function ConversationView({
     fetchData();
   }, [roomId, t, onRoomLoaded]);
 
+  // Handle incoming events from WebSocket
+  useEffect(() => {
+    if (incomingEventVersion === 0) return; // Skip initial render
+
+    const event = getIncomingEvent();
+    if (!event) return;
+
+    // Guard against stale events from a room switch race condition:
+    // If the user switches rooms while an event is in flight, the event
+    // could target the old room. Validate before processing.
+    if (event.chatRoom.id !== roomId) return;
+
+    switch (event.__typename) {
+      case "ChatMessageSentEvent":
+        handleIncomingMessage(event.chatMessage);
+        break;
+      case "ChatMessageUpdatedEvent":
+        handleIncomingUpdate(event.chatMessage);
+        break;
+      case "ChatMessageDeletedEvent":
+        handleIncomingDelete(event.chatMessage);
+        break;
+      // Member events are handled in ChatLayout
+    }
+  }, [incomingEventVersion, roomId, getIncomingEvent]);
+
+  // Handle reconnection: re-fetch messages
+  useEffect(() => {
+    if (reconnectCounter === 0) return; // Skip initial render
+
+    const refetch = async () => {
+      setIsLoading(true);
+      try {
+        const messagesData = await loadMessages(roomId, 25);
+        if (messagesData) {
+          setMessages(messagesData.edges);
+          setMessagesPageInfo(messagesData.pageInfo);
+        }
+      } catch (error) {
+        console.error("Failed to re-fetch messages on reconnect:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    refetch();
+  }, [reconnectCounter, roomId]);
+
+  const handleIncomingMessage = (message: ChatMessageNode) => {
+    setMessages((prev) => {
+      // Self-event deduplication: skip if message already exists
+      if (prev.some((edge) => edge.node.id === message.id)) {
+        return prev;
+      }
+
+      const newEdge: Edge<ChatMessageNode> = {
+        cursor: message.id,
+        node: message,
+      };
+
+      // Insert sorted by createdDate
+      const insertIndex = prev.findIndex(
+        (edge) =>
+          new Date(edge.node.createdDate).getTime() >
+          new Date(message.createdDate).getTime(),
+      );
+
+      if (insertIndex === -1) {
+        // Append to end (most common case)
+        return [...prev, newEdge];
+      }
+
+      // Insert at correct position
+      const next = [...prev];
+      next.splice(insertIndex, 0, newEdge);
+      return next;
+    });
+  };
+
+  const handleIncomingUpdate = (message: ChatMessageNode) => {
+    setMessages((prev) =>
+      prev.map((edge) => {
+        if (edge.node.id === message.id) {
+          return { ...edge, node: message };
+        }
+        return edge;
+      }),
+    );
+  };
+
+  const handleIncomingDelete = (message: ChatMessageNode) => {
+    setMessages((prev) =>
+      prev.map((edge) => {
+        if (edge.node.id === message.id) {
+          return { ...edge, node: message };
+        }
+        return edge;
+      }),
+    );
+  };
+
   const handleSend = async (content: string, replyToId?: string) => {
     const result = await sendMessage(roomId, content, replyToId);
 
@@ -105,12 +214,18 @@ export function ConversationView({
       throw new Error("Failed to send message");
     }
 
-    // Append the new message to the list
+    // Append the new message, but deduplicate in case the WebSocket event
+    // arrived before the mutation response
     const newEdge: Edge<ChatMessageNode> = {
       cursor: result.message.id,
       node: result.message,
     };
-    setMessages((prev) => [...prev, newEdge]);
+    setMessages((prev) => {
+      if (prev.some((edge) => edge.node.id === result.message!.id)) {
+        return prev;
+      }
+      return [...prev, newEdge];
+    });
 
     // Update last message in the room list
     onLastMessageUpdate(roomId, result.message);
@@ -216,7 +331,7 @@ export function ConversationView({
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <TypographyMuted>Loading...</TypographyMuted>
       </div>
     );
   }
@@ -224,7 +339,7 @@ export function ConversationView({
   if (!room) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2">
-        <div className="text-muted-foreground">{t("errors.roomNotFound")}</div>
+        <TypographyMuted>{t("errors.roomNotFound")}</TypographyMuted>
       </div>
     );
   }

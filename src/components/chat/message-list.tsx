@@ -1,9 +1,12 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge } from "@/lib/graphql-connection";
 import type { ChatMessageNode, ChatRoomRole } from "@/lib/types/chat";
-import { useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 import { shouldShowSender } from "./chat-utils";
 import { MessageBubble } from "./message-bubble";
 
@@ -36,12 +39,15 @@ export function MessageList({
   onSaveEdit,
   onCancelEdit,
 }: MessageListProps) {
+  const t = useTranslations("chat");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
   const previousMessageCount = useRef(messages.length);
   const scrollHeightBeforeLoad = useRef<number | null>(null);
+  const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
+  const isNearBottomRef = useRef(true);
 
   const getViewport = () =>
     scrollAreaRef.current?.querySelector<HTMLDivElement>(
@@ -61,6 +67,26 @@ export function MessageList({
     }
   }, [messages.length]);
 
+  // Scroll detection: track if user is near bottom and clear indicator when they scroll back
+  useEffect(() => {
+    const viewport = getViewport();
+    if (!viewport) return;
+
+    const handleScroll = () => {
+      const nearBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <
+        100;
+      isNearBottomRef.current = nearBottom;
+
+      if (nearBottom) {
+        setShowNewMessageIndicator(false);
+      }
+    };
+
+    viewport.addEventListener("scroll", handleScroll);
+    return () => viewport.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // Auto-scroll to bottom when new messages are added (not when loading older)
   useEffect(() => {
     if (
@@ -69,14 +95,15 @@ export function MessageList({
     ) {
       const viewport = getViewport();
       if (viewport) {
-        // Check if user is near the bottom
-        const isNearBottom =
-          viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <
-          100;
-
-        if (isNearBottom) {
+        if (isNearBottomRef.current) {
           requestAnimationFrame(() => {
             viewport.scrollTop = viewport.scrollHeight;
+          });
+        } else {
+          // User is scrolled up -- show indicator
+          // Use queueMicrotask to defer state update and avoid synchronous setState in effect
+          queueMicrotask(() => {
+            setShowNewMessageIndicator(true);
           });
         }
       }
@@ -151,7 +178,7 @@ export function MessageList({
           <div ref={sentinelRef} className="h-4 w-full">
             {isLoadingOlder && (
               <div className="flex justify-center py-2">
-                <div className="text-muted-foreground text-sm">Loading...</div>
+                <TypographyMuted>Loading...</TypographyMuted>
               </div>
             )}
           </div>
@@ -179,6 +206,31 @@ export function MessageList({
             />
           );
         })}
+
+        {/* New messages indicator */}
+        {showNewMessageIndicator && (
+          <div className="sticky bottom-2 flex justify-center px-4">
+            <button
+              onClick={() => {
+                const viewport = getViewport();
+                if (viewport) {
+                  viewport.scrollTo({
+                    top: viewport.scrollHeight,
+                    behavior: "smooth",
+                  });
+                }
+                setShowNewMessageIndicator(false);
+              }}
+              className={cn(
+                "rounded-full bg-primary px-4 py-1.5 text-primary-foreground",
+                "text-sm font-medium shadow-md",
+                "hover:bg-primary/90 transition-colors",
+              )}
+            >
+              {t("newMessages")}
+            </button>
+          </div>
+        )}
       </div>
     </ScrollArea>
   );

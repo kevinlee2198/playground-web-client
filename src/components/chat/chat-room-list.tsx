@@ -10,11 +10,18 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type { ChatMessageNode, ChatRoomListNode } from "@/lib/types/chat";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+/** Room list event types from ChatLayout */
+type RoomListEvent =
+  | { type: "upsert"; room: ChatRoomListNode }
+  | { type: "remove"; roomId: string }
+  | { type: "replace"; rooms: Edge<ChatRoomListNode>[]; pageInfo: PageInfo };
 
 interface ChatRoomListProps {
   initialRooms: Edge<ChatRoomListNode>[];
@@ -25,6 +32,8 @@ interface ChatRoomListProps {
   onNewChatClick: () => void;
   newRoom: ChatRoomListNode | null;
   lastMessageUpdate: { roomId: string; message: ChatMessageNode } | null;
+  roomListEvent: RoomListEvent | null;
+  unreadRoomIds: Set<string>;
 }
 
 export function ChatRoomList({
@@ -36,6 +45,8 @@ export function ChatRoomList({
   onNewChatClick,
   newRoom,
   lastMessageUpdate,
+  roomListEvent,
+  unreadRoomIds,
 }: ChatRoomListProps) {
   const t = useTranslations("chat");
   const [rooms, setRooms] = useState<Edge<ChatRoomListNode>[]>(initialRooms);
@@ -76,6 +87,39 @@ export function ChatRoomList({
       });
     });
   }, [lastMessageUpdate]);
+
+  // Process WebSocket room list events
+  useEffect(() => {
+    if (!roomListEvent) return;
+
+    switch (roomListEvent.type) {
+      case "upsert": {
+        setRooms((prev) => {
+          // Remove existing entry if present
+          const filtered = prev.filter(
+            (e) => e.node.id !== roomListEvent.room.id,
+          );
+          // Prepend to top
+          return [
+            { cursor: roomListEvent.room.id, node: roomListEvent.room },
+            ...filtered,
+          ];
+        });
+        break;
+      }
+      case "remove": {
+        setRooms((prev) =>
+          prev.filter((e) => e.node.id !== roomListEvent.roomId),
+        );
+        break;
+      }
+      case "replace": {
+        setRooms(roomListEvent.rooms);
+        setPageInfo(roomListEvent.pageInfo);
+        break;
+      }
+    }
+  }, [roomListEvent]);
 
   // Load more rooms when sentinel comes into view
   const loadMore = useCallback(async () => {
@@ -154,6 +198,7 @@ export function ChatRoomList({
               isSelected={selectedRoomId === edge.node.id}
               currentUserId={currentUserId}
               onClick={() => onSelectRoom(edge.node.id)}
+              hasUnread={unreadRoomIds.has(edge.node.id)}
             />
           ))}
 
@@ -161,8 +206,8 @@ export function ChatRoomList({
           <div ref={sentinelRef} className="h-px" />
 
           {isLoading && (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              Loading...
+            <div className="p-4 text-center">
+              <TypographyMuted>Loading...</TypographyMuted>
             </div>
           )}
         </div>
