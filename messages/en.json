@@ -373,6 +373,7 @@
     "selectedCount": "{count, plural, one {# friend} other {# friends}} selected",
     "createRoom": "Create",
     "back": "Back",
+    "newMessages": "New messages",
     "message": {
       "placeholder": "Type a message...",
       "send": "Send",

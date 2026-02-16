@@ -31,10 +31,11 @@ This project uses specialized subagents for structured feature development. Agen
 
 1. **requirements** (opus) - Product manager that interviews you about the feature and writes requirements
 2. **design** (opus) - Principal engineer that creates implementation design from requirements
-3. **implementation** (sonnet) - Frontend engineer that implements the design
-4. **qa** (sonnet) - Verifies implementation matches requirements, runs build/lint
-5. **code-reviewer** (haiku) - Reviews code quality and security
-6. **debugger** (opus) - Troubleshoots issues when they arise
+3. **adversarial-reviewer** (opus) - Antagonistic review of the design to find flaws, race conditions, and edge cases. Update the design with fixes before implementation
+4. **implementation** (sonnet) - Frontend engineer that implements the design
+5. **code-reviewer** (haiku) - Reviews code quality, bugs, and security after implementation
+6. **qa** (sonnet) - Verifies implementation matches requirements, runs build/lint
+7. **debugger** (opus) - Troubleshoots issues when they arise
 
 **Specifications directory:** `.claudedoc/<feature-name>/`
 

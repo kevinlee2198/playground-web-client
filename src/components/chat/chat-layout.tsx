@@ -1,11 +1,13 @@
 "use client";
 
+import { loadChatRooms } from "@/app/[locale]/chat/actions";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
 } from "@/components/ui/empty";
+import { useChatSubscription } from "@/hooks/use-chat-subscription";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type {
@@ -15,9 +17,10 @@ import type {
   ChatRoomMemberNode,
   ChatUser,
 } from "@/lib/types/chat";
+import type { ChatEvent } from "@/lib/types/chat-event";
 import { MessageSquarePlus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatRoomList } from "./chat-room-list";
 import { ConversationView } from "./conversation-view";
 import { CreateChatRoomDialog } from "./create-chat-room-dialog";
@@ -31,6 +34,12 @@ interface ChatLayoutProps {
 }
 
 type MobileView = "list" | "conversation";
+
+/** Room list event types for ChatRoomList */
+type RoomListEvent =
+  | { type: "upsert"; room: ChatRoomListNode }
+  | { type: "remove"; roomId: string }
+  | { type: "replace"; rooms: Edge<ChatRoomListNode>[]; pageInfo: PageInfo };
 
 export function ChatLayout({
   initialRooms,
@@ -66,6 +75,21 @@ export function ChatLayout({
     message: ChatMessageNode;
   } | null>(null);
 
+  // WebSocket event state
+  const [unreadRoomIds, setUnreadRoomIds] = useState<Set<string>>(new Set());
+  const [incomingEventVersion, setIncomingEventVersion] = useState(0);
+  const incomingEventRef = useRef<ChatEvent | null>(null);
+  const [reconnectCounter, setReconnectCounter] = useState(0);
+  const [roomListEvent, setRoomListEvent] = useState<RoomListEvent | null>(
+    null,
+  );
+
+  // Ref to track selectedRoomId for stable access in callbacks
+  const selectedRoomIdRef = useRef(selectedRoomId);
+  useEffect(() => {
+    selectedRoomIdRef.current = selectedRoomId;
+  }, [selectedRoomId]);
+
   // Sync selectedRoomId to URL (one-way sync: state -> URL)
   useEffect(() => {
     if (selectedRoomId) {
@@ -75,10 +99,119 @@ export function ChatLayout({
     }
   }, [selectedRoomId, router, pathname]);
 
+  // Dispatch event to ConversationView via version counter
+  const dispatchToConversation = useCallback((event: ChatEvent) => {
+    incomingEventRef.current = event;
+    setIncomingEventVersion((v) => v + 1);
+  }, []);
+
+  // Stable getter for the current incoming event
+  const getIncomingEvent = useCallback(() => incomingEventRef.current, []);
+
+  // Handle incoming chat events
+  const handleChatEvent = useCallback(
+    (event: ChatEvent) => {
+      const roomId = event.chatRoom.id;
+      const isActiveRoom = roomId === selectedRoomIdRef.current;
+
+      switch (event.__typename) {
+        case "ChatMessageSentEvent": {
+          // Update room list: move room to top, update last message
+          setRoomListEvent({ type: "upsert", room: event.chatRoom });
+
+          if (isActiveRoom) {
+            // Pass to ConversationView for message insertion
+            dispatchToConversation(event);
+          } else {
+            // Mark room as unread
+            setUnreadRoomIds((prev) => new Set(prev).add(roomId));
+          }
+          break;
+        }
+
+        case "ChatMessageUpdatedEvent":
+        case "ChatMessageDeletedEvent": {
+          // Update room list last message if it matches
+          setRoomListEvent({ type: "upsert", room: event.chatRoom });
+
+          if (isActiveRoom) {
+            dispatchToConversation(event);
+          }
+          break;
+        }
+
+        case "ChatRoomMemberAddedEvent": {
+          if (event.member.user.id === currentUser.id) {
+            // Current user was added to a new room
+            setRoomListEvent({ type: "upsert", room: event.chatRoom });
+            setUnreadRoomIds((prev) => new Set(prev).add(roomId));
+          } else if (isActiveRoom) {
+            // Someone else was added to the active room -- update member list
+            setActiveRoomMembers((prev) => {
+              // Re-check at update time: user may have switched rooms since dispatch
+              if (roomId !== selectedRoomIdRef.current) return prev;
+              if (prev.some((e) => e.node.id === event.member.id)) return prev;
+              return [...prev, { cursor: event.member.id, node: event.member }];
+            });
+          }
+          break;
+        }
+
+        case "ChatRoomMemberRemovedEvent": {
+          if (event.userId === currentUser.id) {
+            // Current user was removed
+            setRoomListEvent({ type: "remove", roomId });
+            if (isActiveRoom) {
+              setSelectedRoomId(null);
+              setMobileView("list");
+            }
+          } else if (isActiveRoom) {
+            // Someone else was removed from the active room -- update member list
+            setActiveRoomMembers((prev) => {
+              // Re-check at update time: user may have switched rooms since dispatch
+              if (roomId !== selectedRoomIdRef.current) return prev;
+              return prev.filter((e) => e.node.user.id !== event.userId);
+            });
+          }
+          break;
+        }
+      }
+    },
+    [currentUser.id, dispatchToConversation],
+  );
+
+  // Handle reconnection: re-fetch room list and signal ConversationView
+  const handleReconnect = useCallback(async () => {
+    const roomsResult = await loadChatRooms(20);
+    if (roomsResult) {
+      setRoomListEvent({
+        type: "replace",
+        rooms: roomsResult.edges,
+        pageInfo: roomsResult.pageInfo,
+      });
+    }
+
+    // Signal ConversationView to re-fetch
+    setReconnectCounter((c) => c + 1);
+  }, []);
+
+  // Subscribe to chat events
+  useChatSubscription({
+    enabled: true,
+    onEvent: handleChatEvent,
+    onReconnect: handleReconnect,
+  });
+
   const handleRoomSelect = (roomId: string) => {
     setSelectedRoomId(roomId);
     setMobileView("conversation");
     setMemberPanelOpen(false);
+    // Clear unread state for this room
+    setUnreadRoomIds((prev) => {
+      const next = new Set(prev);
+      next.delete(roomId);
+      return next;
+    });
   };
 
   const handleBack = () => {
@@ -133,6 +266,8 @@ export function ChatLayout({
           onNewChatClick={() => setCreateDialogOpen(true)}
           newRoom={newRoom}
           lastMessageUpdate={lastMessageUpdate}
+          roomListEvent={roomListEvent}
+          unreadRoomIds={unreadRoomIds}
         />
       </div>
 
@@ -150,6 +285,9 @@ export function ChatLayout({
             onToggleMembers={handleToggleMembers}
             onLastMessageUpdate={handleRoomLastMessageUpdate}
             onRoomLoaded={handleRoomLoaded}
+            incomingEventVersion={incomingEventVersion}
+            getIncomingEvent={getIncomingEvent}
+            reconnectCounter={reconnectCounter}
           />
         ) : (
           <Empty className="border-none">

@@ -5,6 +5,7 @@ import {
   getChatRoomDisplayName,
 } from "@/components/chat/chat-utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TypographyMuted } from "@/components/ui/typography";
 import type { ChatRoomListNode } from "@/lib/types/chat";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
@@ -14,6 +15,7 @@ interface ChatRoomListItemProps {
   isSelected: boolean;
   currentUserId: string;
   onClick: () => void;
+  hasUnread: boolean;
 }
 
 export function ChatRoomListItem({
@@ -21,6 +23,7 @@ export function ChatRoomListItem({
   isSelected,
   currentUserId,
   onClick,
+  hasUnread,
 }: ChatRoomListItemProps) {
   const t = useTranslations("chat");
   const tTime = useTranslations("chat.time");
@@ -84,24 +87,24 @@ export function ChatRoomListItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2 mb-1">
           <h3 className="font-semibold text-sm truncate">{displayName}</h3>
-          {lastMessageTime && (
-            <span className="text-xs text-muted-foreground shrink-0">
-              {lastMessageTime}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {lastMessageTime && (
+              <span className="text-xs text-muted-foreground">
+                {lastMessageTime}
+              </span>
+            )}
+            {hasUnread && (
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+            )}
+          </div>
         </div>
 
         {lastMessagePreview && (
-          <p
-            className={cn(
-              "text-sm truncate",
-              lastMessage?.deletedDate
-                ? "text-muted-foreground italic"
-                : "text-muted-foreground",
-            )}
+          <TypographyMuted
+            className={cn("truncate", lastMessage?.deletedDate && "italic")}
           >
             {lastMessagePreview}
-          </p>
+          </TypographyMuted>
         )}
       </div>
     </button>
