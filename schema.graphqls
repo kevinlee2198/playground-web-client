@@ -138,6 +138,10 @@ type DirectMessageChatRoom implements ChatRoom & Node {
     last: Int
     before: String
   ): ChatRoomMemberConnection!
+  """
+  Messages ordered by createdDate ASC.
+  Use `last` to fetch the most recent messages; `before` to load older messages.
+  """
   chatMessages(
     first: Int
     after: String
@@ -156,6 +160,10 @@ type GroupChatRoom implements ChatRoom & Node {
     last: Int
     before: String
   ): ChatRoomMemberConnection!
+  """
+  Messages ordered by createdDate ASC.
+  Use `last` to fetch the most recent messages; `before` to load older messages.
+  """
   chatMessages(
     first: Int
     after: String
@@ -485,6 +493,24 @@ type Game implements Node & HasLocation {
     last: Int
     before: String
   ): ResourceConnection!
+  """
+  The current user's friends who are players in this game.
+  Returns an empty wrapper if the viewer is unauthenticated or has no friends in the game.
+  Nodes are server-capped at 10 players; totalCount reflects the true number
+  so the UI can render "Sarah, Kevin, and 3 others played basketball".
+  """
+  viewerFriendPlayers: ViewerFriendPlayers!
+}
+
+type ViewerFriendPlayers {
+  """
+  First up to 10 friend players in this game.
+  """
+  nodes: [Player!]!
+  """
+  Total number of the viewer's friends who are players in this game.
+  """
+  totalCount: Int!
 }
 
 type GameEdge implements Edge {
@@ -1056,7 +1082,7 @@ type EndLivestreamResponse {
 """
 A player in a game. Persists across games
 """
-type Player implements Node {
+type Player implements Node & HasUser {
   id: ID!
   firstName: String!
   lastName: String!
@@ -1064,6 +1090,7 @@ type Player implements Node {
   height: Float
   weight: Float
   biography: String
+  user: User!
 }
 
 """
@@ -1449,8 +1476,9 @@ type Query {
     before: String
   ): GameConnection!
   """
-  Query for notifications for the current user
-  Notifications are sorted by created date
+  Query for notifications for the current user.
+  Ordered by createdDate DESC (most recent first).
+  Use `first` to fetch the most recent notifications; `after` to load older notifications.
   User must be authenticated.
   """
   notifications(
@@ -1465,7 +1493,9 @@ type Query {
   """
   chatRoom(id: ID!): ChatRoom
   """
-  Query for chat rooms for the current user
+  Query for chat rooms for the current user.
+  Ordered by lastModifiedDate DESC (most recently active first).
+  Use `first` to fetch the most recently active rooms; `after` to load older rooms.
   User must be authenticated.
   """
   chatRooms(
@@ -1479,6 +1509,18 @@ type Query {
   Returns null if no DM exists.
   """
   directMessageChatRoom(userId: ID!): ChatRoom
+  """
+  Activity feed showing games that the current user and their friends participate in.
+  Ordered by start date DESC (most recent first).
+  Use `first` to fetch the most recent games; `after` to load older games.
+  User must be authenticated.
+  """
+  friendsActivityFeed(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GameConnection!
   """
   Query and filter basketball box scores
   """
