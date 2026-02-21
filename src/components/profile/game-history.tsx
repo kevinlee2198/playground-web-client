@@ -1,6 +1,7 @@
 "use client";
 
 import { loadMoreGames } from "@/app/[locale]/user/[username]/actions";
+import { GameCard } from "@/components/game/game-card";
 import { Button } from "@/components/ui/button";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { GameNode } from "@/lib/types/game";
@@ -9,7 +10,6 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Empty, EmptyDescription, EmptyHeader } from "../ui/empty";
 import { TypographyH2 } from "../ui/typography";
-import { GameCard } from "./game-card";
 
 interface GameHistoryProps {
   playerId?: string | null;

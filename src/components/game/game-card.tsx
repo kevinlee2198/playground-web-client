@@ -1,32 +1,32 @@
 "use client";
 
+import { FriendAvatars } from "@/components/game/friend-avatars";
 import { GameScore } from "@/components/game/score/game-score";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import {
   GameStatusBadgeVariant,
   getSportIconPath,
   getSubtypeFromMetadata,
 } from "@/lib/constants";
+import type { FeedLocation, ViewerFriendPlayers } from "@/lib/types/feed";
 import type {
   GameNode,
   IndividualParticipantNode,
   TeamInstanceNode,
 } from "@/lib/types/game";
 import { snakeToCamel } from "@/lib/utils";
-import { Calendar } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
 
 interface GameCardProps {
-  game: GameNode;
+  game: GameNode & {
+    location?: FeedLocation | null;
+    viewerFriendPlayers?: ViewerFriendPlayers;
+  };
 }
 
 export function GameCard({ game }: GameCardProps) {
@@ -43,13 +43,11 @@ export function GameCard({ game }: GameCardProps) {
 
   const participants = game.participants.edges.map((e) => e.node);
 
-  // Get participant display text
   const getParticipantsDisplay = () => {
     if (participants.length === 0) {
       return t("game.participants.noParticipants");
     }
 
-    // Check if team-based or individual
     const firstParticipant = participants[0];
     if (firstParticipant.__typename === "TeamInstance") {
       const teamNames = participants
@@ -62,7 +60,6 @@ export function GameCard({ game }: GameCardProps) {
       }
       return teamNames.join(` ${t("profile.games.vs")} `);
     } else {
-      // Individual participants
       const playerNames = participants
         .filter(
           (p): p is IndividualParticipantNode =>
@@ -80,34 +77,38 @@ export function GameCard({ game }: GameCardProps) {
     }
   };
 
+  const locationText = game.location
+    ? (game.location.name ??
+      `${game.location.address.city}, ${game.location.address.state}`)
+    : null;
+
+  const subtype = getSubtypeFromMetadata(game.metadata);
+
   return (
-    <Link
-      href={`/game/${game.id}`}
-      className="block transition-transform hover:scale-[1.01]"
-    >
-      <Card className="h-full hover:bg-muted/50 transition-colors">
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              {/* Sport Icon */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <Image
-                  src={getSportIconPath(game.sportType)}
-                  alt={game.sportType}
-                  width={24}
-                  height={24}
-                  className="h-6 w-6"
-                />
-              </div>
-              <div>
-                <CardTitle className="text-base">
-                  {t(`sports.${game.sportType}`)}
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  {t(`sportSubtypes.${getSubtypeFromMetadata(game.metadata)}`)}
-                </CardDescription>
-              </div>
+    <Link href={`/game/${game.id}`} className="block">
+      <Card className="hover:bg-muted/50 transition-colors">
+        <CardContent className="space-y-3 p-4 sm:p-6">
+          {/* Friend context — only shown when data is present */}
+          {game.viewerFriendPlayers && (
+            <FriendAvatars
+              friends={game.viewerFriendPlayers.nodes}
+              totalCount={game.viewerFriendPlayers.totalCount}
+              sportType={game.sportType}
+            />
+          )}
+
+          {/* Sport info row */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+              <Image
+                src={getSportIconPath(game.sportType)}
+                alt={t(`sports.${game.sportType}`)}
+                width={20}
+                height={20}
+                className="h-5 w-5"
+              />
             </div>
+            <Badge variant="outline">{t(`sportSubtypes.${subtype}`)}</Badge>
             <Badge
               variant={
                 GameStatusBadgeVariant[game.gameStatus] as
@@ -119,15 +120,30 @@ export function GameCard({ game }: GameCardProps) {
               {t(`game.status.${snakeToCamel(game.gameStatus.toLowerCase())}`)}
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            {formattedDate}
+
+          {/* Participants & Score */}
+          <div className="space-y-1">
+            <TypographySmall>{getParticipantsDisplay()}</TypographySmall>
+            <div className="text-sm font-semibold text-primary">
+              <GameScore
+                sportType={game.sportType}
+                participants={participants}
+              />
+            </div>
           </div>
-          <div className="text-sm font-medium">{getParticipantsDisplay()}</div>
-          <div className="text-sm font-semibold text-primary">
-            <GameScore sportType={game.sportType} participants={participants} />
+
+          {/* Date & Location */}
+          <div className="flex flex-wrap items-center gap-4">
+            <TypographyMuted className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              {formattedDate}
+            </TypographyMuted>
+            {locationText && (
+              <TypographyMuted className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {locationText}
+              </TypographyMuted>
+            )}
           </div>
         </CardContent>
       </Card>

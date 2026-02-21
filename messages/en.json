@@ -423,6 +423,21 @@
       "yesterdayWithTime": "Yesterday {time}"
     }
   },
+  "feed": {
+    "title": "Activity Feed",
+    "played": "played",
+    "and": "and",
+    "other": "other",
+    "others": "others",
+    "youPlayed": "You played",
+    "endOfFeed": "You're all caught up!",
+    "error": "Failed to load activity feed",
+    "retry": "Try again",
+    "empty": {
+      "title": "No activity yet",
+      "description": "When you and your friends play games, they'll show up here."
+    }
+  },
   "contact": {
     "title": "Contact Us",
     "email": "Email: playgroundsocool@gmail.com",
