@@ -148,6 +148,32 @@ export const participantNodeFragment = {
 };
 
 /**
+ * Fragment for viewerFriendPlayers on feed game nodes.
+ * Fetches friend player names, user display name, and profile picture thumbnail.
+ */
+export const viewerFriendPlayersFragment = {
+  nodes: {
+    id: true,
+    firstName: true,
+    lastName: true,
+    user: {
+      id: true,
+      displayName: true,
+      profilePicture: {
+        __typename: true,
+        __on: [
+          {
+            __typeName: "ImageResource",
+            thumbnailUrl: true,
+          },
+        ],
+      },
+    },
+  },
+  totalCount: true,
+};
+
+/**
  * Participant node fragment for game detail queries (full info + metadata).
  * Includes description on TeamInstance.
  */
