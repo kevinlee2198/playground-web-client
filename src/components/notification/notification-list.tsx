@@ -8,10 +8,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import type {
-  MarkNotificationsAsReadResult,
-  Notification,
-} from "@/lib/types/notification";
+import type { Notification } from "@/lib/types/notification";
 import { Inbox, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NotificationItem } from "./notification-item";
@@ -23,7 +20,7 @@ interface NotificationListProps {
   error: string | null;
   hasNextPage: boolean;
   onLoadMore: () => void;
-  onMarkAsRead: (id: string) => Promise<MarkNotificationsAsReadResult>;
+  onMarkAsRead: (id: string) => Promise<void>;
   onRetry: () => void;
 }
 

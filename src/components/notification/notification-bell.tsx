@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotificationSubscription } from "@/hooks/use-notification-subscription";
+import { usePathname } from "@/i18n/navigation";
 import { useSession } from "@/lib/auth-client";
 import type {
   Notification,
@@ -20,12 +21,13 @@ import type {
 import { cn } from "@/lib/utils";
 import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { NotificationList } from "./notification-list";
 
 export function NotificationBell() {
   const { data: session } = useSession();
   const t = useTranslations("notifications");
+  const pathname = usePathname();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [pageInfo, setPageInfo] = useState<NotificationPageInfo | null>(null);
@@ -33,6 +35,20 @@ export function NotificationBell() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, startLoadTransition] = useTransition();
   const [isLoadingMore, startLoadMore] = useTransition();
+
+  // Close popover when pathname changes (FR-3.4)
+  // Using the "state during render" pattern (see navbar-search.tsx) to avoid
+  // triggering the react-hooks/set-state-in-effect lint rule.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (isOpen) {
+      setIsOpen(false);
+    }
+  }
+
+  // In-flight set for deduplication and race-safe rollback
+  const markingInFlightRef = useRef(new Set<string>());
 
   const loadNotifications = useCallback(() => {
     startLoadTransition(async () => {
@@ -85,6 +101,27 @@ export function NotificationBell() {
     onReconnect: loadNotifications,
   });
 
+  const handleMarkAsRead = useCallback(async (id: string): Promise<void> => {
+    // Skip if already in-flight for this id
+    if (markingInFlightRef.current.has(id)) return;
+    markingInFlightRef.current.add(id);
+
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+    );
+
+    const result = await markNotificationsAsRead([id]);
+    markingInFlightRef.current.delete(id);
+
+    if (!result.success && !markingInFlightRef.current.has(id)) {
+      // Silent rollback per ERR-1.1, only if no subsequent call is in-flight
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n)),
+      );
+    }
+  }, []);
+
   if (!session?.user) return null;
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -114,23 +151,6 @@ export function NotificationBell() {
     });
   }
 
-  async function handleMarkAsRead(id: string) {
-    // Optimistic update
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
-
-    const result = await markNotificationsAsRead([id]);
-    if (!result.success) {
-      // Revert on failure
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n)),
-      );
-      // Error is surfaced per-item in NotificationItem
-    }
-    return result;
-  }
-
   const displayCount = unreadCount > 99 ? "99+" : unreadCount.toString();
 
   return (
@@ -157,7 +177,7 @@ export function NotificationBell() {
         <div className="border-b px-4 py-3">
           <h3 className="text-sm font-semibold">{t("title")}</h3>
         </div>
-        <ScrollArea className="max-h-[400px]">
+        <ScrollArea className="max-h-[400px] overscroll-contain">
           <NotificationList
             notifications={notifications}
             isLoading={isLoading}

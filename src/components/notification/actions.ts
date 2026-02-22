@@ -1,10 +1,20 @@
 "use server";
 
+import { notificationInlineFragments } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import type {
   FetchNotificationsResult,
   MarkNotificationsAsReadResult,
 } from "@/lib/types/notification";
+
+/** Reusable notification node selection for all notification queries */
+const notificationNodeSelection = {
+  __typename: true,
+  id: true,
+  isRead: true,
+  createdDate: true,
+  __on: notificationInlineFragments,
+};
 
 function buildNotificationsQuery(first: number, after?: string) {
   const args: Record<string, unknown> = { first };
@@ -17,12 +27,7 @@ function buildNotificationsQuery(first: number, after?: string) {
       __args: args,
       edges: {
         cursor: true,
-        node: {
-          id: true,
-          body: true,
-          isRead: true,
-          createdDate: true,
-        },
+        node: notificationNodeSelection,
       },
       pageInfo: {
         hasNextPage: true,
@@ -83,12 +88,7 @@ export async function markNotificationsAsRead(
         __args: {
           input: { ids },
         },
-        notifications: {
-          id: true,
-          body: true,
-          isRead: true,
-          createdDate: true,
-        },
+        notifications: notificationNodeSelection,
       },
     });
 
