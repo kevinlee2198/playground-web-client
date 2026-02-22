@@ -83,6 +83,32 @@
       "requestAccepted": "Friend request accepted",
       "error": "Failed to process friend request"
     },
+    "picture": {
+      "changeLabel": "Change profile picture",
+      "upload": "Upload photo",
+      "remove": "Remove photo",
+      "removeConfirm": {
+        "title": "Remove Profile Picture",
+        "description": "Are you sure you want to remove your profile picture?",
+        "confirm": "Remove",
+        "cancel": "Cancel"
+      },
+      "uploading": "Uploading\u2026",
+      "preview": {
+        "title": "Upload Profile Picture",
+        "confirm": "Upload",
+        "cancel": "Cancel"
+      },
+      "success": "Profile picture updated",
+      "removed": "Profile picture removed",
+      "errors": {
+        "uploadFailed": "Failed to upload profile picture",
+        "saveFailed": "Failed to save profile picture",
+        "removeFailed": "Failed to remove profile picture",
+        "fileTooLarge": "Image must be less than 10 MB",
+        "invalidType": "Please select a JPEG, PNG, WebP, or GIF image"
+      }
+    },
     "errors": {
       "notFound": "User not found",
       "playerDataUnavailable": "Player information unavailable",
@@ -247,7 +273,26 @@
     },
     "media": {
       "title": "Media",
-      "loadMore": "Load More"
+      "loadMore": "Load More",
+      "upload": "Add Media",
+      "uploading": "Uploading\u2026",
+      "empty": "No media yet",
+      "emptyParticipant": "Share photos and videos from this game",
+      "delete": {
+        "title": "Delete Media",
+        "description": "Are you sure you want to delete this media? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "success": "Media uploaded",
+      "deleted": "Media deleted",
+      "errors": {
+        "uploadFailed": "Failed to upload {filename}",
+        "saveFailed": "Failed to save {filename}",
+        "deleteFailed": "Failed to delete media",
+        "fileTooLarge": "File must be less than {limit}",
+        "invalidType": "Please select an image or video file"
+      }
     },
     "filters": {
       "title": "Filters",
@@ -403,6 +448,17 @@
       "description": "Are you sure you want to delete this message? This action cannot be undone.",
       "confirm": "Delete",
       "cancel": "Cancel"
+    },
+    "media": {
+      "attachFile": "Attach file",
+      "removeAttachment": "Remove attachment",
+      "photoVideo": "Photo / Video",
+      "uploading": "Uploading\u2026",
+      "errors": {
+        "uploadFailed": "Failed to upload file",
+        "fileTooLarge": "File must be less than {limit}",
+        "invalidType": "Please select an image or video file"
+      }
     },
     "errors": {
       "loadRooms": "Failed to load conversations",

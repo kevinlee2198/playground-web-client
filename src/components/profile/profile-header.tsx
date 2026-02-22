@@ -6,6 +6,7 @@ import { UserPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { FriendActions } from "./friend-actions";
+import { ProfileAvatar } from "./profile-avatar";
 
 interface ProfileHeaderProps {
   user: {
@@ -53,15 +54,27 @@ export async function ProfileHeader({
     <section className="mb-8">
       <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         {/* Large Avatar */}
-        <Avatar className="h-24 w-24 text-2xl sm:h-32 sm:w-32">
-          <AvatarImage
-            src={profilePictureUrl ?? undefined}
-            alt={user.displayName}
+        {isOwnProfile ? (
+          <ProfileAvatar
+            user={{
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              displayName: user.displayName,
+              profilePicture: user.profilePicture ?? null,
+            }}
           />
-          <AvatarFallback className="text-2xl font-medium">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        ) : (
+          <Avatar className="h-24 w-24 text-2xl sm:h-32 sm:w-32">
+            <AvatarImage
+              src={profilePictureUrl ?? undefined}
+              alt={user.displayName}
+            />
+            <AvatarFallback className="text-2xl font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        )}
 
         {/* User Info */}
         <div className="flex flex-1 flex-col items-center gap-4 text-center sm:items-start sm:text-left">

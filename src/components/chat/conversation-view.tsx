@@ -4,11 +4,14 @@ import {
   deleteMessage,
   loadChatRoom,
   loadMessages,
+  sendMediaMessage,
   sendMessage,
   updateMessage,
 } from "@/app/[locale]/chat/actions";
+import { requestChatMediaUpload } from "@/app/[locale]/upload/actions";
 import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import { uploadToS3 } from "@/lib/s3-upload";
 import type {
   ChatMessageNode,
   ChatRoomDetailNode,
@@ -206,7 +209,7 @@ export function ConversationView({
     );
   };
 
-  const handleSend = async (content: string, replyToId?: string) => {
+  const handleSendText = async (content: string, replyToId?: string) => {
     const result = await sendMessage(roomId, content, replyToId);
 
     if (!result.success || !result.message) {
@@ -232,6 +235,50 @@ export function ConversationView({
 
     // Clear reply state
     setReplyTo(null);
+  };
+
+  const handleSendMedia = async (file: File) => {
+    // 1. Request upload
+    const uploadResult = await requestChatMediaUpload(
+      file.name,
+      file.type,
+      file.size,
+      roomId,
+    );
+    if (!uploadResult.success || !uploadResult.resourceId) {
+      toast.error(uploadResult.error || t("errors.sendMessage"));
+      throw new Error("Request upload failed");
+    }
+
+    // 2. Upload to S3 (skip if uploadUrl is null for LOCAL storage dev environments)
+    if (uploadResult.uploadUrl) {
+      const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
+      if (!s3Result.success) {
+        toast.error(t("errors.sendMessage"));
+        throw new Error("S3 upload failed");
+      }
+    }
+
+    // 3. Send media message (auto-confirms resource -- do NOT call confirmUpload)
+    const sendResult = await sendMediaMessage(roomId, uploadResult.resourceId);
+    if (!sendResult.success || !sendResult.message) {
+      toast.error(sendResult.error || t("errors.sendMessage"));
+      throw new Error("Send message failed");
+    }
+
+    // 4. Append message to list (same dedup logic as handleSendText)
+    const newEdge: Edge<ChatMessageNode> = {
+      cursor: sendResult.message.id,
+      node: sendResult.message,
+    };
+    setMessages((prev) => {
+      if (prev.some((edge) => edge.node.id === sendResult.message!.id)) {
+        return prev;
+      }
+      return [...prev, newEdge];
+    });
+
+    onLastMessageUpdate(roomId, sendResult.message);
   };
 
   const handleEdit = async (messageId: string, content: string) => {
@@ -369,7 +416,8 @@ export function ConversationView({
       />
 
       <MessageInput
-        onSend={handleSend}
+        onSendText={handleSendText}
+        onSendMedia={handleSendMedia}
         replyTo={replyTo}
         onClearReply={() => setReplyTo(null)}
       />
