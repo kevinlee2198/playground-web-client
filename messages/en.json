@@ -403,6 +403,23 @@
     "markAsReadError": "Failed to mark as read",
     "retry": "Retry"
   },
+  "notificationTemplates": {
+    "friendRequestReceived": {
+      "title": "Friend Request",
+      "body": "<link>{displayName}</link> sent you a friend request"
+    },
+    "friendRequestAccepted": {
+      "title": "Friend Request Accepted",
+      "body": "<link>{displayName}</link> accepted your friend request"
+    },
+    "gameStarted": {
+      "title": "Game Started",
+      "body": "A <link>{sportType}</link> game has started"
+    },
+    "unknown": {
+      "body": "You have a new notification"
+    }
+  },
 
   "chat": {
     "title": "Chat",

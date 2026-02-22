@@ -196,3 +196,33 @@ export const participantDetailNodeFragment = {
     },
   ],
 };
+
+/**
+ * Inline fragments for Notification types.
+ * Use as: __on: notificationInlineFragments
+ */
+export const notificationInlineFragments = [
+  {
+    __typeName: "FriendRequestReceivedNotification",
+    sender: {
+      id: true,
+      username: true,
+      displayName: true,
+    },
+  },
+  {
+    __typeName: "FriendRequestAcceptedNotification",
+    accepter: {
+      id: true,
+      username: true,
+      displayName: true,
+    },
+  },
+  {
+    __typeName: "GameStartedNotification",
+    game: {
+      id: true,
+      sportType: true,
+    },
+  },
+];

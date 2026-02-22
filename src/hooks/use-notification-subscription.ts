@@ -1,6 +1,7 @@
 "use client";
 
 import { getAccessToken } from "@/components/auth/actions";
+import { notificationInlineFragments } from "@/lib/graphql-fragments";
 import {
   disposeGraphQLWsClient,
   getGraphQLWsClient,
@@ -19,10 +20,11 @@ const SUBSCRIPTION_QUERY = jsonToGraphQLQuery({
   subscription: {
     notificationEvents: {
       notification: {
+        __typename: true,
         id: true,
-        body: true,
         isRead: true,
         createdDate: true,
+        __on: notificationInlineFragments,
       },
     },
   },
