@@ -1983,11 +1983,40 @@ type UnfriendResponse {
   friendship: Friendship
 }
 
-type Notification implements Node {
+interface Notification implements Node {
   id: ID!
-  body: String!
   isRead: Boolean!
   createdDate: DateTime!
+}
+
+type FriendRequestReceivedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The user who sent the friend request.
+  """
+  sender: User!
+}
+
+type FriendRequestAcceptedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The user who accepted your friend request.
+  """
+  accepter: User!
+}
+
+type GameStartedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game that started.
+  """
+  game: Game!
 }
 
 type NotificationEdge implements Edge {
