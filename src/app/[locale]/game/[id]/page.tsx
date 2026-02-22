@@ -154,6 +154,23 @@ export default async function GameDetailPage({ params }: PageProps) {
     );
   }
 
+  // Determine if current player is a participant
+  const isParticipant = game.participants.edges.some((edge) => {
+    const node = edge.node;
+    if (node.__typename === "TeamInstance") {
+      return node.players.some((p) => p.id === player.id);
+    }
+    if (node.__typename === "IndividualParticipant") {
+      return node.player.id === player.id;
+    }
+    return false;
+  });
+
+  const canUpload =
+    isParticipant &&
+    (game.gameStatus === GameStatus.IN_PROGRESS ||
+      game.gameStatus === GameStatus.COMPLETE);
+
   const startDate = new Date(game.startDate).toLocaleString(locale, {
     year: "numeric",
     month: "long",
@@ -215,13 +232,13 @@ export default async function GameDetailPage({ params }: PageProps) {
       </div>
 
       {/* Media Gallery */}
-      {game.media && game.media.edges.length > 0 && (
-        <GameMediaGallery
-          gameId={game.id}
-          initialMedia={game.media.edges}
-          initialPageInfo={game.media.pageInfo}
-        />
-      )}
+      <GameMediaGallery
+        gameId={game.id}
+        initialMedia={game.media.edges}
+        initialPageInfo={game.media.pageInfo}
+        canUpload={canUpload}
+        isParticipant={isParticipant}
+      />
 
       {/* Box Scores */}
       <GameBoxScores game={game} />

@@ -8,6 +8,7 @@ import type {
   ChatMessageReplyTo,
   ChatRoomRole,
 } from "@/lib/types/chat";
+import { formatFileSize, isVideoMimeType } from "@/lib/upload-validation";
 import { cn } from "@/lib/utils";
 import { Download, FileIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -29,12 +30,6 @@ interface MessageBubbleProps {
   onCancelEdit: () => void;
   onDelete: () => void;
   onScrollToReply: (messageId: string) => void;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getReplyPreviewContent(
@@ -217,6 +212,15 @@ export function MessageBubble({
                       className="max-h-64 rounded-md object-cover"
                     />
                   </a>
+                ) : isVideoMimeType(message.resource.mimeType) ? (
+                  <video
+                    controls
+                    preload="metadata"
+                    className="max-h-64 max-w-full rounded-md"
+                    src={message.resource.downloadUrl}
+                  >
+                    Your browser does not support the video element.
+                  </video>
                 ) : (
                   <a
                     href={message.resource.downloadUrl}

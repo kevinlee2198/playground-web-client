@@ -390,6 +390,46 @@ export async function sendMessage(
 }
 
 /**
+ * Send a media chat message. This auto-confirms the resource -- do NOT call confirmUpload.
+ */
+export async function sendMediaMessage(
+  chatRoomId: string,
+  resourceId: string,
+): Promise<{
+  success: boolean;
+  message?: ChatMessageNode;
+  error?: string;
+}> {
+  try {
+    const response = await authMutate({
+      sendChatMessage: {
+        __args: {
+          input: {
+            mediaMessage: {
+              chatRoomId,
+              resourceId,
+            },
+          },
+        },
+        chatMessage: chatMessageNodeSelection,
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, error: response.errors[0].message };
+    }
+
+    return {
+      success: true,
+      message: response.data.sendChatMessage.chatMessage,
+    };
+  } catch (error) {
+    console.error("Failed to send media message:", error);
+    return { success: false, error: "Failed to send message" };
+  }
+}
+
+/**
  * Update a chat message
  */
 export async function updateMessage(id: string, content: string) {
