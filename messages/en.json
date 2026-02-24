@@ -477,6 +477,10 @@
         "invalidType": "Please select an image or video file"
       }
     },
+    "systemMessage": {
+      "memberJoined": "{name} joined the chat",
+      "memberLeft": "{name} left the chat"
+    },
     "errors": {
       "loadRooms": "Failed to load conversations",
       "loadMessages": "Failed to load messages",

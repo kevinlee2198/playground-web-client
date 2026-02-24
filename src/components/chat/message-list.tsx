@@ -3,18 +3,24 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge } from "@/lib/graphql-connection";
-import type { ChatMessageNode, ChatRoomRole } from "@/lib/types/chat";
+import type {
+  ChatMessageNode,
+  ChatRoomRole,
+  UserChatMessageNode,
+} from "@/lib/types/chat";
+import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { shouldShowSender } from "./chat-utils";
 import { MessageBubble } from "./message-bubble";
+import { SystemMessageBubble } from "./system-message-bubble";
 
 interface MessageListProps {
   messages: Edge<ChatMessageNode>[];
   currentUserId: string;
   currentUserRole: ChatRoomRole | null;
-  onReply: (message: ChatMessageNode) => void;
+  onReply: (message: UserChatMessageNode) => void;
   onDelete: (messageId: string) => void;
   onLoadOlder: () => void;
   hasOlderMessages: boolean;
@@ -186,6 +192,12 @@ export function MessageList({
 
         {/* Message bubbles */}
         {messageNodes.map((message, index) => {
+          // System messages are rendered separately — must check BEFORE accessing .user
+          if (!isUserChatMessage(message)) {
+            return <SystemMessageBubble key={message.id} message={message} />;
+          }
+
+          // All .user accesses are safe below this point (narrowed to UserChatMessageNode)
           const isFirstInGroup = groupingInfo[index];
 
           return (

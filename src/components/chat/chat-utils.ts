@@ -1,8 +1,12 @@
 import type {
+  ChatMessageNode,
   ChatRoomDetailNode,
   ChatRoomListNode,
-  ChatUser,
 } from "@/lib/types/chat";
+import {
+  isSystemChatMessage,
+  isUserChatMessage,
+} from "@/lib/types/chat-guards";
 
 export interface TimeLabels {
   yesterday: string;
@@ -151,35 +155,36 @@ export function getChatRoomDisplayName(
 }
 
 /**
- * Determine if sender name/avatar should be shown for a message
+ * Determine if sender name/avatar should be shown for a message.
+ * System messages always break the grouping.
  * Messages are grouped when:
  * - Same user as previous message
  * - Not a system message
  * - Time gap is less than 5 minutes
  */
 export function shouldShowSender(
-  messages: Array<{
-    user: ChatUser;
-    isSystemMessage: boolean;
-    createdDate: string;
-  }>,
+  messages: ChatMessageNode[],
   index: number,
 ): boolean {
   if (index === 0) return true;
   const current = messages[index];
   const previous = messages[index - 1];
 
-  // Different sender
-  if (current.user.id !== previous.user.id) return true;
+  // System messages always show independently (they break grouping)
+  if (isSystemChatMessage(current) || isSystemChatMessage(previous))
+    return true;
 
-  // System messages always show independently
-  if (current.isSystemMessage || previous.isSystemMessage) return true;
+  // Both are user messages at this point
+  if (isUserChatMessage(current) && isUserChatMessage(previous)) {
+    // Different sender
+    if (current.user.id !== previous.user.id) return true;
 
-  // Time gap > 5 minutes breaks the group
-  const timeDiff =
-    new Date(current.createdDate).getTime() -
-    new Date(previous.createdDate).getTime();
-  if (timeDiff > 5 * 60 * 1000) return true;
+    // Time gap > 5 minutes breaks the group
+    const timeDiff =
+      new Date(current.createdDate).getTime() -
+      new Date(previous.createdDate).getTime();
+    if (timeDiff > 5 * 60 * 1000) return true;
+  }
 
   return false;
 }

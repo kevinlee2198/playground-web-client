@@ -2,7 +2,7 @@
 
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import {
-  chatMessageInlineFragments,
+  chatMessageNodeSelection,
   chatRoomInlineFragments,
   chatUserFragment,
 } from "@/lib/graphql-fragments";
@@ -34,24 +34,6 @@ const createGroupChatSchema = z.object({
   name: z.string().min(1).max(100),
   userIds: z.array(z.string().min(1)).min(1),
 });
-
-/** Reusable chat message node selection */
-const chatMessageNodeSelection = {
-  __typename: true,
-  id: true,
-  createdDate: true,
-  updatedDate: true,
-  deletedDate: true,
-  isSystemMessage: true,
-  user: chatUserFragment,
-  replyTo: {
-    __typename: true,
-    id: true,
-    user: chatUserFragment,
-    __on: chatMessageInlineFragments,
-  },
-  __on: chatMessageInlineFragments,
-};
 
 /** Reusable chat room list node selection */
 const chatRoomListNodeSelection = {
@@ -448,11 +430,11 @@ export async function updateMessage(id: string, content: string) {
         },
         chatMessage: {
           id: true,
-          updatedDate: true,
           __on: [
             {
               __typeName: "TextChatMessage",
               content: true,
+              updatedDate: true,
             },
           ],
         },

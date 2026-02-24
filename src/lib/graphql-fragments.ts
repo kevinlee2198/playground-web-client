@@ -40,20 +40,67 @@ export const chatUserFragment = {
 };
 
 /**
- * Inline fragments for ChatMessage types (TextChatMessage / MediaChatMessage).
+ * Shared fields for UserChatMessage types (user, updatedDate, deletedDate, replyTo).
+ * These fields are NOT on the base ChatMessage interface anymore.
+ */
+const userChatMessageFields = {
+  user: chatUserFragment,
+  updatedDate: true,
+  deletedDate: true,
+  replyTo: {
+    __typename: true,
+    id: true,
+    user: chatUserFragment,
+    __on: [
+      { __typeName: "TextChatMessage", content: true },
+      {
+        __typeName: "MediaChatMessage",
+        caption: true,
+        resource: resourceFragment,
+      },
+    ],
+  },
+};
+
+/**
+ * Inline fragments for all ChatMessage concrete types.
+ * Includes both user message types and system message types.
  * Use as: __on: chatMessageInlineFragments
  */
 export const chatMessageInlineFragments = [
   {
     __typeName: "TextChatMessage",
+    ...userChatMessageFields,
     content: true,
   },
   {
     __typeName: "MediaChatMessage",
+    ...userChatMessageFields,
     caption: true,
     resource: resourceFragment,
   },
+  {
+    __typeName: "MemberJoinedChatMessage",
+    member: chatUserFragment,
+  },
+  {
+    __typeName: "MemberLeftChatMessage",
+    member: chatUserFragment,
+  },
 ];
+
+/**
+ * Reusable chat message node selection.
+ * Base fields only (id, createdDate, __typename); user-specific fields
+ * are fetched via inline fragments.
+ * Use as: node: chatMessageNodeSelection
+ */
+export const chatMessageNodeSelection = {
+  __typename: true,
+  id: true,
+  createdDate: true,
+  __on: chatMessageInlineFragments,
+};
 
 /**
  * Inline fragments for ChatRoom types (DirectMessageChatRoom / GroupChatRoom).

@@ -2,7 +2,7 @@
 
 import { getAccessToken } from "@/components/auth/actions";
 import {
-  chatMessageInlineFragments,
+  chatMessageNodeSelection,
   chatRoomInlineFragments,
   chatUserFragment,
 } from "@/lib/graphql-fragments";
@@ -16,23 +16,6 @@ interface UseChatSubscriptionOptions {
   onEvent: (event: ChatEvent) => void;
   onReconnect?: () => void;
 }
-
-const chatMessageNodeSelection = {
-  __typename: true,
-  id: true,
-  createdDate: true,
-  updatedDate: true,
-  deletedDate: true,
-  isSystemMessage: true,
-  user: chatUserFragment,
-  replyTo: {
-    __typename: true,
-    id: true,
-    user: chatUserFragment,
-    __on: chatMessageInlineFragments,
-  },
-  __on: chatMessageInlineFragments,
-};
 
 const chatRoomListNodeSelection = {
   __typename: true,

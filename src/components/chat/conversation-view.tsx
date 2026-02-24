@@ -17,8 +17,10 @@ import type {
   ChatRoomDetailNode,
   ChatRoomRole,
   ChatUser,
+  UserChatMessageNode,
 } from "@/lib/types/chat";
 import type { ChatEvent } from "@/lib/types/chat-event";
+import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -57,7 +59,7 @@ export function ConversationView({
   const [messagesPageInfo, setMessagesPageInfo] = useState<PageInfo | null>(
     null,
   );
-  const [replyTo, setReplyTo] = useState<ChatMessageNode | null>(null);
+  const [replyTo, setReplyTo] = useState<UserChatMessageNode | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
@@ -327,7 +329,7 @@ export function ConversationView({
     // Mark the message as deleted in the list
     setMessages((prev) =>
       prev.map((edge) => {
-        if (edge.node.id === messageToDelete) {
+        if (edge.node.id === messageToDelete && isUserChatMessage(edge.node)) {
           return {
             ...edge,
             node: {
