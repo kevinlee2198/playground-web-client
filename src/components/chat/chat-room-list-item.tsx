@@ -7,6 +7,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TypographyMuted } from "@/components/ui/typography";
 import type { ChatRoomListNode } from "@/lib/types/chat";
+import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -55,20 +56,30 @@ export function ChatRoomListItem({
       timeLabels,
     );
 
-    if (lastMessage.deletedDate) {
-      lastMessagePreview = t("message.deleted");
-    } else if (lastMessage.__typename === "TextChatMessage") {
-      const content = lastMessage.content;
-      if (content) {
-        lastMessagePreview =
-          content.length > 50 ? content.substring(0, 50) + "..." : content;
+    if (isUserChatMessage(lastMessage)) {
+      if (lastMessage.deletedDate) {
+        lastMessagePreview = t("message.deleted");
+      } else if (lastMessage.__typename === "TextChatMessage") {
+        const content = lastMessage.content;
+        if (content) {
+          lastMessagePreview =
+            content.length > 50 ? content.substring(0, 50) + "..." : content;
+        }
+      } else if (lastMessage.__typename === "MediaChatMessage") {
+        if (lastMessage.resource.__typename === "ImageResource") {
+          lastMessagePreview = t("message.imageAttachment");
+        } else {
+          lastMessagePreview = t("message.fileAttachment");
+        }
       }
-    } else if (lastMessage.__typename === "MediaChatMessage") {
-      if (lastMessage.resource.__typename === "ImageResource") {
-        lastMessagePreview = t("message.imageAttachment");
-      } else {
-        lastMessagePreview = t("message.fileAttachment");
-      }
+    } else if (lastMessage.__typename === "MemberJoinedChatMessage") {
+      lastMessagePreview = t("systemMessage.memberJoined", {
+        name: lastMessage.member.displayName,
+      });
+    } else if (lastMessage.__typename === "MemberLeftChatMessage") {
+      lastMessagePreview = t("systemMessage.memberLeft", {
+        name: lastMessage.member.displayName,
+      });
     }
   }
 
@@ -101,7 +112,13 @@ export function ChatRoomListItem({
 
         {lastMessagePreview && (
           <TypographyMuted
-            className={cn("truncate", lastMessage?.deletedDate && "italic")}
+            className={cn(
+              "truncate",
+              lastMessage &&
+                isUserChatMessage(lastMessage) &&
+                lastMessage.deletedDate &&
+                "italic",
+            )}
           >
             {lastMessagePreview}
           </TypographyMuted>

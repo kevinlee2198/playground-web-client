@@ -1,4 +1,10 @@
-interface ChatMessage implements Node & HasUser {
+interface ChatMessage implements Node {
+  id: ID!
+  chatRoom: ChatRoom!
+  createdDate: DateTime!
+}
+
+interface UserChatMessage implements ChatMessage & Node & HasUser {
   id: ID!
   chatRoom: ChatRoom!
   user: User!
@@ -14,14 +20,10 @@ interface ChatMessage implements Node & HasUser {
   """
   For threaded conversations
   """
-  replyTo: ChatMessage
-  """
-  If a message is sent by the system - i.e. person was removed
-  """
-  isSystemMessage: Boolean!
+  replyTo: UserChatMessage
 }
 
-type TextChatMessage implements ChatMessage & Node & HasUser {
+type TextChatMessage implements UserChatMessage & ChatMessage & Node & HasUser {
   id: ID!
   chatRoom: ChatRoom!
   user: User!
@@ -30,10 +32,18 @@ type TextChatMessage implements ChatMessage & Node & HasUser {
   """
   content: String
   createdDate: DateTime!
+  """
+  if a user has edited their message this field will be present. It will not be present for deletion
+  """
   updatedDate: DateTime
+  """
+  If a user has deleted their message this field will be present
+  """
   deletedDate: DateTime
-  replyTo: ChatMessage
-  isSystemMessage: Boolean!
+  """
+  For threaded conversations
+  """
+  replyTo: UserChatMessage
 }
 
 """
@@ -52,15 +62,23 @@ the kind of media. Use inline fragments on the resource field:
 }
 ```
 """
-type MediaChatMessage implements ChatMessage & Node & HasUser {
+type MediaChatMessage implements UserChatMessage & ChatMessage & Node & HasUser {
   id: ID!
   chatRoom: ChatRoom!
   user: User!
   createdDate: DateTime!
+  """
+  if a user has edited their message this field will be present. It will not be present for deletion
+  """
   updatedDate: DateTime
+  """
+  If a user has deleted their message this field will be present
+  """
   deletedDate: DateTime
-  replyTo: ChatMessage
-  isSystemMessage: Boolean!
+  """
+  For threaded conversations
+  """
+  replyTo: UserChatMessage
   """
   The attached file or image resource.
   """
@@ -69,6 +87,26 @@ type MediaChatMessage implements ChatMessage & Node & HasUser {
   Optional caption for the media.
   """
   caption: String
+}
+
+interface SystemChatMessage implements ChatMessage & Node {
+  id: ID!
+  chatRoom: ChatRoom!
+  createdDate: DateTime!
+}
+
+type MemberJoinedChatMessage implements SystemChatMessage & ChatMessage & Node {
+  id: ID!
+  chatRoom: ChatRoom!
+  createdDate: DateTime!
+  member: User!
+}
+
+type MemberLeftChatMessage implements SystemChatMessage & ChatMessage & Node {
+  id: ID!
+  chatRoom: ChatRoom!
+  createdDate: DateTime!
+  member: User!
 }
 
 type ChatMessageEdge implements Edge {

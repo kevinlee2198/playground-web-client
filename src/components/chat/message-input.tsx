@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { ChatMessageNode } from "@/lib/types/chat";
+import type { UserChatMessageNode } from "@/lib/types/chat";
 import {
   getMaxSizeLabel,
   isImageMimeType,
@@ -19,7 +19,7 @@ import { ReplyPreview } from "./reply-preview";
 interface MessageInputProps {
   onSendText: (content: string, replyToId?: string) => void;
   onSendMedia: (file: File) => Promise<void>;
-  replyTo: ChatMessageNode | null;
+  replyTo: UserChatMessageNode | null;
   onClearReply: () => void;
   disabled?: boolean;
 }

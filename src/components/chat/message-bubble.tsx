@@ -4,9 +4,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type {
-  ChatMessageNode,
   ChatMessageReplyTo,
   ChatRoomRole,
+  UserChatMessageNode,
 } from "@/lib/types/chat";
 import { formatFileSize, isVideoMimeType } from "@/lib/upload-validation";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ import { MessageActionsMenu } from "./message-actions-menu";
 import { ReplyPreview } from "./reply-preview";
 
 interface MessageBubbleProps {
-  message: ChatMessageNode;
+  message: UserChatMessageNode;
   isOwn: boolean;
   showSender: boolean;
   isFirstInGroup: boolean;
@@ -71,20 +71,8 @@ export function MessageBubble({
   );
 
   const isDeleted = message.deletedDate !== null;
-  const isSystemMessage = message.isSystemMessage;
   const canDelete = currentUserRole === "OWNER" || currentUserRole === "ADMIN";
   const isTextMessage = message.__typename === "TextChatMessage";
-
-  // System messages: centered, muted, italic
-  if (isSystemMessage) {
-    return (
-      <div className="flex justify-center py-2">
-        <div className="text-muted-foreground italic text-sm">
-          {isTextMessage ? message.content : null}
-        </div>
-      </div>
-    );
-  }
 
   const userName = message.user.displayName;
   const initials =

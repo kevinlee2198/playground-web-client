@@ -8,32 +8,57 @@ export interface ChatUser {
   displayName: string;
 }
 
-/** Base fields shared by all chat message types */
+/** Base fields shared by ALL chat message types (interface: ChatMessage) */
 interface ChatMessageBase {
   id: string;
-  user: ChatUser;
   createdDate: string;
+}
+
+/** Fields shared by user-authored messages (interface: UserChatMessage) */
+interface UserChatMessageBase extends ChatMessageBase {
+  user: ChatUser;
   updatedDate: string | null;
   deletedDate: string | null;
-  isSystemMessage: boolean;
   replyTo: ChatMessageReplyTo | null;
 }
 
 /** A text chat message */
-export interface TextChatMessageNode extends ChatMessageBase {
+export interface TextChatMessageNode extends UserChatMessageBase {
   __typename: "TextChatMessage";
   content: string | null; // null when deleted
 }
 
 /** A media chat message (image or file) */
-export interface MediaChatMessageNode extends ChatMessageBase {
+export interface MediaChatMessageNode extends UserChatMessageBase {
   __typename: "MediaChatMessage";
   resource: Resource;
   caption: string | null;
 }
 
-/** Discriminated union for chat messages */
-export type ChatMessageNode = TextChatMessageNode | MediaChatMessageNode;
+/** Discriminated union for user-authored chat messages */
+export type UserChatMessageNode = TextChatMessageNode | MediaChatMessageNode;
+
+/** A system message: member joined */
+export interface MemberJoinedChatMessageNode extends ChatMessageBase {
+  __typename: "MemberJoinedChatMessage";
+  member: ChatUser;
+}
+
+/** A system message: member left */
+export interface MemberLeftChatMessageNode extends ChatMessageBase {
+  __typename: "MemberLeftChatMessage";
+  member: ChatUser;
+}
+
+/** Discriminated union for system chat messages */
+export type SystemChatMessageNode =
+  | MemberJoinedChatMessageNode
+  | MemberLeftChatMessageNode;
+
+/** Discriminated union for ALL chat message types */
+export type ChatMessageNode = UserChatMessageNode | SystemChatMessageNode;
+
+// --- Reply-to types remain unchanged (they only reference UserChatMessage) ---
 
 /** Base fields for reply-to references */
 interface ChatMessageReplyToBase {
