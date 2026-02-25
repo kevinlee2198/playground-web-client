@@ -45,6 +45,7 @@ export async function loadFeedGames(
               address: {
                 city: true,
                 state: true,
+                country: true,
               },
             },
             participants: {
