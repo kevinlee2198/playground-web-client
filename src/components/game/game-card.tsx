@@ -11,7 +11,7 @@ import {
   getSportIconPath,
   getSubtypeFromMetadata,
 } from "@/lib/constants";
-import type { FeedLocation, ViewerFriendPlayers } from "@/lib/types/feed";
+import type { ViewerFriendPlayers } from "@/lib/types/feed";
 import type {
   GameNode,
   IndividualParticipantNode,
@@ -34,7 +34,6 @@ function getLocationText(location: {
 
 interface GameCardProps {
   game: GameNode & {
-    location?: FeedLocation | null;
     viewerFriendPlayers?: ViewerFriendPlayers;
   };
 }

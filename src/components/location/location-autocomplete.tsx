@@ -58,8 +58,14 @@ export function LocationAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const { suggestions, isLoading, error, search, clearSuggestions } =
-    useLocationSearch();
+  const {
+    suggestions,
+    isLoading,
+    error,
+    hasSearched,
+    search,
+    clearSuggestions,
+  } = useLocationSearch();
 
   // The visible input value: show the search text while the user is typing;
   // otherwise show the selected value's display name (or empty for no selection).
@@ -157,7 +163,8 @@ export function LocationAutocomplete({
   );
 
   const showDropdown =
-    isOpen && (suggestions.length > 0 || isLoading || error !== null);
+    isOpen &&
+    (suggestions.length > 0 || isLoading || error !== null || hasSearched);
 
   const activeOptionId =
     activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;

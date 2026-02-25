@@ -163,6 +163,7 @@ export function UpdateGameForm({
         const result = await updateGame(input);
 
         if (result.success) {
+          locationDirtyRef.current = false;
           toast.success(t("game.success.updated"));
           onSuccess?.();
         } else {

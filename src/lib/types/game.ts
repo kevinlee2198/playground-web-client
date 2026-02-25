@@ -126,6 +126,14 @@ export interface GameNode {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  location: {
+    name: string | null;
+    address: {
+      city: string;
+      state: string;
+      country: string;
+    };
+  } | null;
   participants: {
     edges: Edge<GameParticipant>[];
   };

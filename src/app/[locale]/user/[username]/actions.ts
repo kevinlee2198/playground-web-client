@@ -85,6 +85,14 @@ export async function loadMoreGames(playerId: string, after: string) {
           sportType: true,
           metadata: gameMetadataFragment,
           gameStatus: true,
+          location: {
+            name: true,
+            address: {
+              city: true,
+              state: true,
+              country: true,
+            },
+          },
           participants: {
             __args: { first: 10 },
             edges: {

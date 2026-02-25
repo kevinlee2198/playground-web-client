@@ -14,6 +14,8 @@ interface UseLocationSearchResult {
   isLoading: boolean;
   /** Error key string ("error") or null. The caller maps this to a translated message. */
   error: string | null;
+  /** True after a search request has completed (success or error). Reset on clear. */
+  hasSearched: boolean;
   search: (query: string) => void;
   clearSuggestions: () => void;
 }
@@ -22,12 +24,14 @@ export function useLocationSearch(): UseLocationSearchResult {
   const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const clearSuggestions = useCallback(() => {
     setSuggestions([]);
     setError(null);
+    setHasSearched(false);
   }, []);
 
   const search = useCallback((query: string) => {
@@ -40,15 +44,16 @@ export function useLocationSearch(): UseLocationSearchResult {
       setSuggestions([]);
       setIsLoading(false);
       setError(null);
+      setHasSearched(false);
       return;
     }
 
-    setIsLoading(true);
     setError(null);
 
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
+      setIsLoading(true);
 
       try {
         const params = new URLSearchParams({ q: query });
@@ -63,7 +68,7 @@ export function useLocationSearch(): UseLocationSearchResult {
         }
 
         const data: GeocodeSearchResponse = await response.json();
-        setSuggestions(data.suggestions);
+        setSuggestions(data.suggestions ?? []);
         setError(null);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -76,6 +81,7 @@ export function useLocationSearch(): UseLocationSearchResult {
         // cause the spinner to flicker off during the debounce wait.
         if (!controller.signal.aborted) {
           setIsLoading(false);
+          setHasSearched(true);
         }
       }
     }, DEBOUNCE_MS);
@@ -89,5 +95,12 @@ export function useLocationSearch(): UseLocationSearchResult {
     };
   }, []);
 
-  return { suggestions, isLoading, error, search, clearSuggestions };
+  return {
+    suggestions,
+    isLoading,
+    error,
+    hasSearched,
+    search,
+    clearSuggestions,
+  };
 }
