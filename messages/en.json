@@ -172,6 +172,14 @@
     "save": "Save",
     "cancel": "Cancel"
   },
+  "location": {
+    "searchPlaceholder": "Search for an address\u2026",
+    "noResults": "No results found",
+    "error": "Could not load suggestions. Check your connection and try again.",
+    "clear": "Clear location",
+    "label": "Location",
+    "loading": "Searching\u2026"
+  },
   "game": {
     "title": "Games",
     "myGames": "My Games",
@@ -198,7 +206,8 @@
       "periodsPlaceholder": "Default: {default}",
       "bestOf": "Best Of",
       "bestOfPlaceholder": "Default: 3",
-      "tiebreakFinalSet": "Tiebreak in Final Set"
+      "tiebreakFinalSet": "Tiebreak in Final Set",
+      "location": "Location"
     },
     "status": {
       "scheduled": "Scheduled",
@@ -350,6 +359,9 @@
       "tiebreakPoints": "TB",
       "setsWon": "Sets Won",
       "points": "Points"
+    },
+    "detail": {
+      "location": "Location"
     },
     "success": {
       "created": "Game created successfully",

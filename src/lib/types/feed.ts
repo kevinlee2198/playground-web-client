@@ -48,6 +48,7 @@ export interface FeedLocation {
   address: {
     city: string;
     state: string;
+    country: string;
   };
 }
 

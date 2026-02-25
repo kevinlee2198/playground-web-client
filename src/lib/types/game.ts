@@ -6,6 +6,7 @@ import {
   SportType,
 } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import type { Location } from "@/lib/types/location";
 
 /**
  * Player reference used in game participants
@@ -140,6 +141,7 @@ export interface GameDetail {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  location: Location | null;
   participants: {
     edges: Edge<GameParticipantDetail>[];
     pageInfo: PageInfo;
@@ -156,6 +158,19 @@ export interface GameDetail {
 export interface CreateBasketballGameInput {
   sportType: SportType.BASKETBALL;
   startDate: string;
+  location?: {
+    address: {
+      street?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
   metadata: {
     subtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
     periods?: number;
@@ -168,6 +183,19 @@ export interface CreateBasketballGameInput {
 export interface CreateTennisGameInput {
   sportType: SportType.TENNIS;
   startDate: string;
+  location?: {
+    address: {
+      street?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
   metadata: {
     subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
     bestOf?: number;
@@ -181,6 +209,19 @@ export interface CreateTennisGameInput {
 export interface CreateFootballGameInput {
   sportType: SportType.FOOTBALL;
   startDate: string;
+  location?: {
+    address: {
+      street?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
   metadata: {
     subtype: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
     periods?: number;
@@ -201,6 +242,25 @@ export type CreateGameInput =
 export interface UpdateGameInput {
   id: number;
   startDate?: string;
+  /**
+   * PATCH semantics for location:
+   * - undefined (omit): no change
+   * - null: clear the location
+   * - object: set/update the location
+   */
+  location?: {
+    address: {
+      street?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  } | null;
   metadata?: {
     basketball?: {
       subtype?: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
