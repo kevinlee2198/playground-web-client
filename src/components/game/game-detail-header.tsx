@@ -152,6 +152,7 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
             currentStartDate={game.startDate}
             metadata={game.metadata}
             sportType={game.sportType}
+            currentLocation={game.location ?? null}
             onSuccess={() => setShowUpdateDialog(false)}
           />
         </DialogContent>

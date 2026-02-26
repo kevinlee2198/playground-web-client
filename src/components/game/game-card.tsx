@@ -11,7 +11,7 @@ import {
   getSportIconPath,
   getSubtypeFromMetadata,
 } from "@/lib/constants";
-import type { FeedLocation, ViewerFriendPlayers } from "@/lib/types/feed";
+import type { ViewerFriendPlayers } from "@/lib/types/feed";
 import type {
   GameNode,
   IndividualParticipantNode,
@@ -22,9 +22,18 @@ import { Calendar, MapPin } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
 
+function getLocationText(location: {
+  name: string | null;
+  address: { city: string; state: string; country: string };
+}): string {
+  const { city, state, country } = location.address;
+  if (city) return state ? `${city}, ${state}` : city;
+  if (state) return `${state}, ${country}`;
+  return country;
+}
+
 interface GameCardProps {
   game: GameNode & {
-    location?: FeedLocation | null;
     viewerFriendPlayers?: ViewerFriendPlayers;
   };
 }
@@ -77,10 +86,7 @@ export function GameCard({ game }: GameCardProps) {
     }
   };
 
-  const locationText = game.location
-    ? (game.location.name ??
-      `${game.location.address.city}, ${game.location.address.state}`)
-    : null;
+  const locationText = game.location ? getLocationText(game.location) : null;
 
   const subtype = getSubtypeFromMetadata(game.metadata);
 
@@ -139,9 +145,9 @@ export function GameCard({ game }: GameCardProps) {
               {formattedDate}
             </TypographyMuted>
             {locationText && (
-              <TypographyMuted className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {locationText}
+              <TypographyMuted className="flex items-center gap-1 min-w-0">
+                <MapPin className="h-4 w-4 shrink-0" />
+                <span className="truncate">{locationText}</span>
               </TypographyMuted>
             )}
           </div>

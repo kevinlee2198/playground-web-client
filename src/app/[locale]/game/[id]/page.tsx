@@ -10,12 +10,15 @@ import { auth } from "@/lib/auth";
 import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
 import {
   gameMetadataFragment,
+  locationFragment,
   participantDetailNodeFragment,
   resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
+import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
+import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -112,6 +115,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       sportType: true,
       metadata: gameMetadataFragment,
       gameStatus: true,
+      location: locationFragment,
       participants: {
         __args: { first: 50 },
         edges: {
@@ -221,6 +225,17 @@ export default async function GameDetailPage({ params }: PageProps) {
             <div>
               <span className="font-medium">{t("game.endDate")}:</span>{" "}
               <span className="text-muted-foreground">{endDate}</span>
+            </div>
+          )}
+          {game.location && (
+            <div
+              className="flex items-start gap-2"
+              aria-label={t("game.detail.location")}
+            >
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground break-words">
+                {formatAddress(game.location.address)}
+              </p>
             </div>
           )}
         </CardContent>

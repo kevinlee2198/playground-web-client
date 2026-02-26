@@ -245,6 +245,26 @@ export const participantDetailNodeFragment = {
 };
 
 /**
+ * Location fields fragment for Game queries.
+ * Use as: location: locationFragment
+ */
+export const locationFragment = {
+  id: true,
+  name: true,
+  address: {
+    street: true,
+    city: true,
+    state: true,
+    postalCode: true,
+    country: true,
+  },
+  coordinates: {
+    latitude: true,
+    longitude: true,
+  },
+};
+
+/**
  * Inline fragments for Notification types.
  * Use as: __on: notificationInlineFragments
  */

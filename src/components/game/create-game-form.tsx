@@ -1,6 +1,7 @@
 "use client";
 
 import { createGame } from "@/app/[locale]/game/actions";
+import { LocationAutocomplete } from "@/components/location/location-autocomplete";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -25,6 +26,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { getSubtypes, SportSubtype, SportType } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
+import type { LocationValue } from "@/lib/types/location";
 import { useForm, useStore } from "@tanstack/react-form";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -52,6 +54,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       periods: undefined as number | undefined,
       bestOf: undefined as number | undefined,
       tiebreakFinalSet: undefined as boolean | undefined,
+      location: undefined as LocationValue | undefined,
     },
     validators: {
       onBlur: ({ value }) => {
@@ -104,6 +107,18 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
               ...(value.bestOf !== undefined && { bestOf: value.bestOf }),
               ...(value.tiebreakFinalSet !== undefined && {
                 tiebreakFinalSet: value.tiebreakFinalSet,
+              }),
+            },
+          };
+        }
+
+        if (value.location) {
+          input = {
+            ...input,
+            location: {
+              address: value.location.address,
+              ...(value.location.coordinates && {
+                coordinates: value.location.coordinates,
               }),
             },
           };
@@ -186,6 +201,22 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             disabled={isPending}
             placeholder={t("game.form.selectDate")}
           />
+        )}
+      </form.Field>
+
+      <form.Field name="location">
+        {(field) => (
+          <Field>
+            <FieldLabel htmlFor="location">
+              {t("game.form.location")}
+            </FieldLabel>
+            <LocationAutocomplete
+              value={field.state.value ?? null}
+              onSelect={(loc) => field.handleChange(loc)}
+              onClear={() => field.handleChange(undefined)}
+              disabled={isPending}
+            />
+          </Field>
         )}
       </form.Field>
 

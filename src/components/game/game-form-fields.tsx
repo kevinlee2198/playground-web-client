@@ -1,5 +1,25 @@
 import { getSubtypes, SportSubtype, SportType } from "@/lib/constants";
+import type { LocationValue } from "@/lib/types/location";
 import { z } from "zod";
+
+const locationSchema = z
+  .object({
+    address: z.object({
+      street: z.string().optional(),
+      city: z.string().optional(),
+      state: z.string().optional(),
+      postalCode: z.string().optional(),
+      country: z.string(),
+    }),
+    coordinates: z
+      .object({
+        latitude: z.number(),
+        longitude: z.number(),
+      })
+      .optional(),
+    displayName: z.string(),
+  })
+  .optional();
 
 export const createGameFormSchema = z
   .object({
@@ -12,6 +32,7 @@ export const createGameFormSchema = z
       .refine((v) => v === 3 || v === 5, "Must be 3 or 5")
       .optional(),
     tiebreakFinalSet: z.boolean().optional(),
+    location: locationSchema,
   })
   .refine(
     (data) => {
@@ -32,6 +53,7 @@ export interface CreateGameFormValues {
   periods?: number;
   bestOf?: number;
   tiebreakFinalSet?: boolean;
+  location?: LocationValue;
 }
 
 export const updateGameFormSchema = z.object({
@@ -42,6 +64,7 @@ export const updateGameFormSchema = z.object({
     .refine((v) => v === 3 || v === 5, "Must be 3 or 5")
     .optional(),
   tiebreakFinalSet: z.boolean().optional(),
+  location: locationSchema.nullable(),
 });
 
 export interface UpdateGameFormValues {
@@ -49,4 +72,5 @@ export interface UpdateGameFormValues {
   periods?: number;
   bestOf?: number;
   tiebreakFinalSet?: boolean;
+  location?: LocationValue | null;
 }

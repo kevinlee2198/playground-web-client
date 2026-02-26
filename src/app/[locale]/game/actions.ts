@@ -51,12 +51,21 @@ export async function createGame(
       metadata.tiebreakFinalSet = input.metadata.tiebreakFinalSet;
     }
 
-    const mutationInput = {
-      [sportKey]: {
-        startDate: input.startDate,
-        metadata,
-      },
+    const sportInput: Record<string, unknown> = {
+      startDate: input.startDate,
+      metadata,
     };
+
+    if (input.location) {
+      sportInput.location = {
+        address: input.location.address,
+        ...(input.location.coordinates && {
+          coordinates: input.location.coordinates,
+        }),
+      };
+    }
+
+    const mutationInput = { [sportKey]: sportInput };
 
     const response = await authMutate({
       createGame: {
@@ -122,6 +131,10 @@ export async function updateGame(
         metadataInput.football = f;
       }
       mutationInput.metadata = metadataInput;
+    }
+
+    if (input.location !== undefined) {
+      mutationInput.location = input.location;
     }
 
     const response = await authMutate({
@@ -283,6 +296,14 @@ export async function loadMoreGames(
             sportType: true,
             metadata: gameMetadataFragment,
             gameStatus: true,
+            location: {
+              name: true,
+              address: {
+                city: true,
+                state: true,
+                country: true,
+              },
+            },
             participants: {
               __args: { first: 10 },
               edges: {

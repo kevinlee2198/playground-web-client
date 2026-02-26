@@ -1,6 +1,7 @@
 "use client";
 
 import { updateGame } from "@/app/[locale]/game/actions";
+import { LocationAutocomplete } from "@/components/location/location-autocomplete";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -22,11 +23,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SportType } from "@/lib/constants";
+import { locationToValue } from "@/lib/location-utils";
 import type { GameMetadata, UpdateGameInput } from "@/lib/types/game";
+import type { Location, LocationValue } from "@/lib/types/location";
 import { useForm } from "@tanstack/react-form";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateGameFormSchema } from "./game-form-fields";
 
@@ -35,10 +38,15 @@ interface UpdateGameFormProps {
   currentStartDate: string;
   metadata: GameMetadata;
   sportType: SportType;
+  currentLocation?: Location | null;
   onSuccess?: () => void;
 }
 
-function buildDefaultValues(currentStartDate: string, metadata: GameMetadata) {
+function buildDefaultValues(
+  currentStartDate: string,
+  metadata: GameMetadata,
+  currentLocation?: Location | null,
+) {
   return {
     startDate: new Date(currentStartDate),
     periods:
@@ -54,6 +62,9 @@ function buildDefaultValues(currentStartDate: string, metadata: GameMetadata) {
       metadata.__typename === "TennisGameMetadata"
         ? (metadata.tiebreakFinalSet as boolean | undefined)
         : (undefined as boolean | undefined),
+    location: (currentLocation
+      ? locationToValue(currentLocation)
+      : undefined) as LocationValue | null | undefined,
   };
 }
 
@@ -62,14 +73,20 @@ export function UpdateGameForm({
   currentStartDate,
   metadata,
   sportType,
+  currentLocation,
   onSuccess,
 }: UpdateGameFormProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const locationDirtyRef = useRef(false);
 
   const form = useForm({
-    defaultValues: buildDefaultValues(currentStartDate, metadata),
+    defaultValues: buildDefaultValues(
+      currentStartDate,
+      metadata,
+      currentLocation,
+    ),
     validators: {
       onBlur: ({ value }) => {
         const result = updateGameFormSchema.safeParse(value);
@@ -95,9 +112,7 @@ export function UpdateGameForm({
             ? metadata.periods
             : null;
         const originalBestOf =
-          metadata.__typename === "TennisGameMetadata"
-            ? metadata.bestOf
-            : null;
+          metadata.__typename === "TennisGameMetadata" ? metadata.bestOf : null;
         const originalTiebreakFinalSet =
           metadata.__typename === "TennisGameMetadata"
             ? metadata.tiebreakFinalSet
@@ -132,9 +147,23 @@ export function UpdateGameForm({
           }
         }
 
+        if (locationDirtyRef.current) {
+          if (value.location === null || value.location === undefined) {
+            input.location = null;
+          } else {
+            input.location = {
+              address: value.location.address,
+              ...(value.location.coordinates && {
+                coordinates: value.location.coordinates,
+              }),
+            };
+          }
+        }
+
         const result = await updateGame(input);
 
         if (result.success) {
+          locationDirtyRef.current = false;
           toast.success(t("game.success.updated"));
           onSuccess?.();
         } else {
@@ -162,6 +191,28 @@ export function UpdateGameForm({
             disabled={isPending}
             placeholder={t("game.form.selectDate")}
           />
+        )}
+      </form.Field>
+
+      <form.Field name="location">
+        {(field) => (
+          <Field>
+            <FieldLabel htmlFor="location">
+              {t("game.form.location")}
+            </FieldLabel>
+            <LocationAutocomplete
+              value={field.state.value ?? null}
+              onSelect={(loc) => {
+                field.handleChange(loc);
+                locationDirtyRef.current = true;
+              }}
+              onClear={() => {
+                field.handleChange(null);
+                locationDirtyRef.current = true;
+              }}
+              disabled={isPending}
+            />
+          </Field>
         )}
       </form.Field>
 
