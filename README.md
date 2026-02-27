@@ -39,6 +39,18 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 This project uses [better-auth](https://www.better-auth.com/) to handle authentication. It uses keycloak as the IDP and better auth as a stateless management system.
 
+### Keycloak Client Setup (Local Development)
+
+Create a **public** client in Keycloak (Client authentication: **Off**, Standard flow: **Enabled**) with the following settings:
+
+| Setting                            | Value                                              |
+| ---------------------------------- | -------------------------------------------------- |
+| Root URL                           | `http://localhost:3000`                             |
+| Home URL                           | `http://localhost:3000`                             |
+| Valid redirect URIs                | `http://localhost:3000/api/auth/oauth2/callback/keycloak` |
+| Valid post logout redirect URIs    | `http://localhost:3000`                             |
+| Web origins                        | `http://localhost:3000`                             |
+
 ## Features
 
 This project is a NextJS webapp that makes playing sports with friends easier. It contains aspects of Facebook, Twitch, and Strava.
