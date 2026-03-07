@@ -43,13 +43,13 @@ This project uses [better-auth](https://www.better-auth.com/) to handle authenti
 
 Create a **public** client in Keycloak (Client authentication: **Off**, Standard flow: **Enabled**) with the following settings:
 
-| Setting                            | Value                                              |
-| ---------------------------------- | -------------------------------------------------- |
-| Root URL                           | `http://localhost:3000`                             |
-| Home URL                           | `http://localhost:3000`                             |
-| Valid redirect URIs                | `http://localhost:3000/api/auth/oauth2/callback/keycloak` |
-| Valid post logout redirect URIs    | `http://localhost:3000`                             |
-| Web origins                        | `http://localhost:3000`                             |
+| Setting                         | Value                                                     |
+| ------------------------------- | --------------------------------------------------------- |
+| Root URL                        | `http://localhost:3000`                                   |
+| Home URL                        | `http://localhost:3000`                                   |
+| Valid redirect URIs             | `http://localhost:3000/api/auth/oauth2/callback/keycloak` |
+| Valid post logout redirect URIs | `http://localhost:3000`                                   |
+| Web origins                     | `http://localhost:3000`                                   |
 
 ## Features
 
@@ -64,6 +64,25 @@ This webapp communicates with a spring boot server using GraphQL. Use the `graph
 ## Development with Claude Code
 
 This project uses [Claude Code](https://claude.ai/code) with specialized subagents for spec-driven development.
+
+### Plugins
+
+Recommended global plugins for Claude:
+
+- claude-code-setup
+- claude-md-management
+- code-review
+- context7
+- feature-dev
+- github
+- jdtls-lsp
+- pr-review-toolkit
+- security-guidance
+- skill-creator
+- superpowers
+- typescript-lsp
+- git commands
+- pyright-lsp
 
 ### Subagent Workflow
 
@@ -86,3 +105,10 @@ Skills can be found at:
 
 - https://github.com/VoltAgent/awesome-claude-skills
 - https://github.com/vercel-labs/agent-skills
+
+### MCP
+
+MCPs to add
+
+- https://stitch.withgoogle.com/docs/mcp/setup
+-

@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Start development server at localhost:3000
 npm run build    # Production build
 npm run lint     # Run ESLint
+npm test         # Run Vitest tests
 ```
 
 Tests use Vitest with `@testing-library/react` and jsdom. Avoid installing additional test packages — use what's already available (e.g., `fireEvent` from `@testing-library/react` instead of `@testing-library/user-event`).
@@ -34,9 +35,10 @@ This project uses specialized subagents for structured feature development. Agen
 3. **design** (opus) - Principal engineer that creates implementation design from requirements
 4. **adversarial-reviewer** (opus) - Antagonistic review of the design to find flaws, race conditions, and edge cases. Update the design with fixes before implementation
 5. **implementation** (sonnet) - Frontend engineer that implements the design
-6. **code-reviewer** (haiku) - Reviews code quality, bugs, and security after implementation
-7. **qa** (sonnet) - Verifies implementation matches requirements, runs build/lint
-8. **debugger** (opus) - Troubleshoots issues when they arise
+6. **qa** (sonnet) - Verifies implementation matches requirements, runs build/lint
+7. **debugger** (opus) - Troubleshoots issues when they arise
+
+For code review, use the plugin agents: `pr-review-toolkit:code-reviewer`, `pr-review-toolkit:code-simplifier`, etc.
 
 **Specifications directory:** `.claudedoc/<feature-name>/`
 
@@ -62,8 +64,7 @@ This project uses specialized subagents for structured feature development. Agen
 # Verify
 /qa
 
-# Review code
-/code-reviewer
+# Code review uses plugin agents (pr-review-toolkit)
 ```
 
 ## Architecture
@@ -118,9 +119,9 @@ Always use these file names in the `app/` directory:
 
 **Routing**: next-intl wraps around these NextJS components for routing. Use these instead of the built-in NextJS ones: `Link, redirect, usePathname, useRouter, getPathname` should all be imported from `"@/i18n/navigation"`
 
-**Forms**: We use TansTack forms as the form control in this project. Forms should be validated with Zod v4 (not v3 — e.g., `z.number()` does not accept `invalid_type_error`; use `{ error: "..." }` or `{ message: "..." }` instead).
+**Forms**: We use TanStack Form as the form control in this project. Forms should be validated with Zod v4 (not v3 — e.g., `z.number()` does not accept `invalid_type_error`; use `{ error: "..." }` or `{ message: "..." }` instead).
 
-**Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`. All text should be wrapped in a `src/components/ui/typography.ts` component
+**Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`. All text should be wrapped in a `src/components/ui/typography.tsx` component
 
 ### TypeScript Type Conventions
 
@@ -148,7 +149,7 @@ Required variables (see `env.example`):
 
 - `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` - Auth configuration
 - `KEYCLOAK_CLIENT_ID` / `KEYCLOAK_URL` / `KEYCLOAK_REALM` - OAuth provider
-- `NEXT_PUBLIC_SERVER_URL` - GraphQL backend endpoint
+- `NEXT_PUBLIC_API_SERVER_URL` - GraphQL backend endpoint (also used for WebSocket subscriptions)
 
 ## Adding shadcn/ui Components
 

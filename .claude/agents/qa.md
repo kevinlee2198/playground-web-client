@@ -22,9 +22,9 @@ Verification checklist:
 
 - All functional requirements implemented
 - Component hierarchy matches design
-- GraphQL queries/mutations match design spec
-- i18n keys added to `src/dictionaries/en.json` for all user-facing strings
-- Server/client component separation follows design
+- API queries/mutations match design spec
+- i18n keys added for all user-facing strings
+- Conventions from CLAUDE.md are followed
 - No TypeScript errors (`npm run build` passes)
 - No lint errors (`npm run lint` passes)
 

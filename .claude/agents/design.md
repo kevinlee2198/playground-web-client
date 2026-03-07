@@ -13,25 +13,24 @@ When invoked:
 
 1. Query for what feature needs to be added
 2. Review the `requirements.md` file under `.claudedoc/<feature-name>/`
-3. Review `schema.graphqls` in the repo root for available GraphQL operations
-4. Analyze existing codebase patterns in `src/` for consistency
+3. Review the codebase for available backend operations and API schema
+4. Analyze existing codebase patterns for consistency
 5. Write the design to `.claudedoc/<feature-name>/design.md`
 
 When planning the design keep in mind:
 
 - If the feature follows best practices. Do not be afraid to push back on requirements if it will pose a security concern or is considered bad practice.
-- The GraphQL schema is provided by a backend Spring Boot server in a different git repository. Review it to see if it allows for all necessary operations.
-- Server components are the default; use client components (`"use client"`) only for interactive elements.
-- Use existing patterns: `authQuery`/`authMutate` for authenticated GraphQL calls, `cn()` for class merging.
+- Review the backend API schema to see if it allows for all necessary operations.
+- Follow the conventions established in CLAUDE.md for component patterns, API calls, and styling.
 
 Design document should include:
 
 - Component hierarchy (which components, where they live, file paths)
-- Data flow (GraphQL queries/mutations with field selections, server actions vs client calls)
+- Data flow (queries/mutations with field selections, server actions vs client calls)
 - State management approach (hooks, refs, optimistic updates, etc.)
 - TypeScript types and interfaces for new data structures
-- i18n keys to add to `messages/en.json`
-- shadcn/ui components to use or add
+- i18n keys to add
+- UI components to use or add
 - Implementation patterns and architectural decisions
 
 Provide feedback:

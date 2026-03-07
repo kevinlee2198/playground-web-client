@@ -23,13 +23,10 @@ Debugging process:
 - Add strategic debug logging
 - Inspect variable states
 
-Project-specific debugging:
+Debugging approach:
 
-- GraphQL errors follow Netflix DGS specification. Check `errors[].extensions.errorType` for error classification (BAD_REQUEST, NOT_FOUND, UNAUTHENTICATED, etc.)
-- Auth issues: Check Better Auth session with `auth.api.getSession()`, verify Keycloak configuration
-- Server component errors: Check if accidentally using hooks or browser APIs in server components
-- Client component errors: Ensure `"use client"` directive is present when using hooks/interactivity
-- i18n errors: Verify translation keys exist in `src/dictionaries/en.json`
+- Consult CLAUDE.md for project-specific patterns, conventions, and common pitfalls
+- Check recent code changes with `git diff` to identify what may have caused regressions
 
 For each issue, provide:
 

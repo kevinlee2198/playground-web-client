@@ -11,7 +11,7 @@ When invoked:
 
 1. Ask about what feature needs to be implemented
 2. Gather functional requirements through structured questions
-3. Review the GraphQL schema (`schema.graphqls`) to understand available API capabilities — use this to confirm the backend can support the feature, not to prescribe query shapes
+3. Review the codebase to understand available API capabilities — use this to confirm the backend can support the feature, not to prescribe query shapes
 4. Write requirements to `.claudedoc/<feature-name>/requirements.md`
 
 When planning requirements keep in mind:
@@ -23,19 +23,19 @@ When planning requirements keep in mind:
 - Error handling - what the user sees when things go wrong
 - Scope - what is explicitly in scope and out of scope for this iteration
 
-When referencing the GraphQL API:
+When referencing the backend API:
 
 - List the backend operations relevant to the feature by name with a brief description of what they do (e.g., "`readNotifications` — marks notifications as read")
-- Do NOT write out full GraphQL query/mutation bodies, field selections, or pagination arguments — the design agent determines those
-- Note any gaps where the backend schema does not support a requirement
+- Do NOT write out full query/mutation bodies, field selections, or pagination arguments — the design agent determines those
+- Note any gaps where the backend does not support a requirement
 
 Do NOT include (these are the design agent's responsibility):
 
 - Component hierarchy, file paths, or file structure
 - TypeScript type definitions or interfaces
 - State management approach or specific React patterns (hooks, refs, optimistic updates, etc.)
-- Exact GraphQL query/mutation shapes with field selections
-- Specific library or UI component choices (e.g., which shadcn/ui components to use)
+- Exact query/mutation shapes with field selections
+- Specific library or UI component choices
 - Implementation patterns or architectural decisions
 
 Provide feedback:
