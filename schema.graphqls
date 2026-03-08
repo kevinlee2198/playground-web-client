@@ -1,49 +1,49 @@
 interface ChatMessage implements Node {
-  id: ID!
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
+    id: ID!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
 }
 
 interface UserChatMessage implements ChatMessage & Node & HasUser {
-  id: ID!
-  chatRoom: ChatRoom!
-  user: User!
-  createdDate: DateTime!
-  """
-  if a user has edited their message this field will be present. It will not be present for deletion
-  """
-  updatedDate: DateTime
-  """
-  If a user has deleted their message this field will be present
-  """
-  deletedDate: DateTime
-  """
-  For threaded conversations
-  """
-  replyTo: UserChatMessage
+    id: ID!
+    chatRoom: ChatRoom!
+    user: User!
+    createdDate: DateTime!
+    """
+    if a user has edited their message this field will be present. It will not be present for deletion
+    """
+    updatedDate: DateTime
+    """
+    If a user has deleted their message this field will be present
+    """
+    deletedDate: DateTime
+    """
+    For threaded conversations
+    """
+    replyTo: UserChatMessage
 }
 
 type TextChatMessage implements UserChatMessage & ChatMessage & Node & HasUser {
-  id: ID!
-  chatRoom: ChatRoom!
-  user: User!
-  """
-  Can be null if the message has been deleted
-  """
-  content: String
-  createdDate: DateTime!
-  """
-  if a user has edited their message this field will be present. It will not be present for deletion
-  """
-  updatedDate: DateTime
-  """
-  If a user has deleted their message this field will be present
-  """
-  deletedDate: DateTime
-  """
-  For threaded conversations
-  """
-  replyTo: UserChatMessage
+    id: ID!
+    chatRoom: ChatRoom!
+    user: User!
+    """
+    Can be null if the message has been deleted
+    """
+    content: String
+    createdDate: DateTime!
+    """
+    if a user has edited their message this field will be present. It will not be present for deletion
+    """
+    updatedDate: DateTime
+    """
+    If a user has deleted their message this field will be present
+    """
+    deletedDate: DateTime
+    """
+    For threaded conversations
+    """
+    replyTo: UserChatMessage
 }
 
 """
@@ -63,207 +63,207 @@ the kind of media. Use inline fragments on the resource field:
 ```
 """
 type MediaChatMessage implements UserChatMessage & ChatMessage & Node & HasUser {
-  id: ID!
-  chatRoom: ChatRoom!
-  user: User!
-  createdDate: DateTime!
-  """
-  if a user has edited their message this field will be present. It will not be present for deletion
-  """
-  updatedDate: DateTime
-  """
-  If a user has deleted their message this field will be present
-  """
-  deletedDate: DateTime
-  """
-  For threaded conversations
-  """
-  replyTo: UserChatMessage
-  """
-  The attached file or image resource.
-  """
-  resource: Resource!
-  """
-  Optional caption for the media.
-  """
-  caption: String
+    id: ID!
+    chatRoom: ChatRoom!
+    user: User!
+    createdDate: DateTime!
+    """
+    if a user has edited their message this field will be present. It will not be present for deletion
+    """
+    updatedDate: DateTime
+    """
+    If a user has deleted their message this field will be present
+    """
+    deletedDate: DateTime
+    """
+    For threaded conversations
+    """
+    replyTo: UserChatMessage
+    """
+    The attached file or image resource.
+    """
+    resource: Resource!
+    """
+    Optional caption for the media.
+    """
+    caption: String
 }
 
 interface SystemChatMessage implements ChatMessage & Node {
-  id: ID!
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
+    id: ID!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
 }
 
 type MemberJoinedChatMessage implements SystemChatMessage & ChatMessage & Node {
-  id: ID!
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  member: User!
+    id: ID!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    member: User!
 }
 
 type MemberLeftChatMessage implements SystemChatMessage & ChatMessage & Node {
-  id: ID!
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  member: User!
+    id: ID!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    member: User!
 }
 
 type ChatMessageEdge implements Edge {
-  cursor: String!
-  node: ChatMessage!
+    cursor: String!
+    node: ChatMessage!
 }
 
 type ChatMessageConnection implements Connection {
-  edges: [ChatMessageEdge!]!
-  pageInfo: PageInfo!
+    edges: [ChatMessageEdge!]!
+    pageInfo: PageInfo!
 }
 
 enum ChatRoomRole {
-  OWNER
-  ADMIN
-  MEMBER
+    OWNER
+    ADMIN
+    MEMBER
 }
 
 type ChatRoomMember implements HasUser & Node {
-  id: ID!
-  user: User!
-  role: ChatRoomRole!
-  joinedDate: DateTime!
+    id: ID!
+    user: User!
+    role: ChatRoomRole!
+    joinedDate: DateTime!
 }
 
-type ChatRoomMemberEdge implements Edge {
-  cursor: String!
-  node: ChatRoomMember!
+type ChatRoomMemberEdge implements Edge{
+    cursor: String!
+    node: ChatRoomMember!
 }
 
 type ChatRoomMemberConnection implements Connection {
-  edges: [ChatRoomMemberEdge!]!
-  pageInfo: PageInfo!
+    edges: [ChatRoomMemberEdge!]!
+    pageInfo: PageInfo!
 }
 
 interface ChatRoom implements Node {
-  id: ID!
-  createdDate: DateTime!
-  """
-  Members of the room
-  """
-  members(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): ChatRoomMemberConnection!
+    id: ID!
+    createdDate: DateTime!
+    """
+    Members of the room
+    """
+    members(
+        first: Int
+        after: String
+        last: Int
+        before: String
+    ): ChatRoomMemberConnection!
 
-  """
-  Messages ordered by createdDate ASC.
-  Use `last` to fetch the most recent chatMessages.
-  """
-  chatMessages(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): ChatMessageConnection!
+    """
+    Messages ordered by createdDate ASC.
+    Use `last` to fetch the most recent chatMessages.
+    """
+    chatMessages(
+        first: Int
+        after: String
+        last: Int
+        before: String
+    ): ChatMessageConnection!
 }
 
 type DirectMessageChatRoom implements ChatRoom & Node {
-  id: ID!
-  createdDate: DateTime!
-  members(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): ChatRoomMemberConnection!
-  """
-  Messages ordered by createdDate ASC.
-  Use `last` to fetch the most recent messages; `before` to load older messages.
-  """
-  chatMessages(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): ChatMessageConnection!
+    id: ID!
+    createdDate: DateTime!
+    members(
+        first: Int
+        after: String
+        last: Int
+        before: String
+    ): ChatRoomMemberConnection!
+    """
+    Messages ordered by createdDate ASC.
+    Use `last` to fetch the most recent messages; `before` to load older messages.
+    """
+    chatMessages(
+        first: Int
+        after: String
+        last: Int
+        before: String
+    ): ChatMessageConnection!
 }
 
 type GroupChatRoom implements ChatRoom & Node {
-  id: ID!
-  name: String!
-  createdDate: DateTime!
-  members(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): ChatRoomMemberConnection!
-  """
-  Messages ordered by createdDate ASC.
-  Use `last` to fetch the most recent messages; `before` to load older messages.
-  """
-  chatMessages(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): ChatMessageConnection!
+    id: ID!
+    name: String!
+    createdDate: DateTime!
+    members(
+        first: Int
+        after: String
+        last: Int
+        before: String
+    ): ChatRoomMemberConnection!
+    """
+    Messages ordered by createdDate ASC.
+    Use `last` to fetch the most recent messages; `before` to load older messages.
+    """
+    chatMessages(
+        first: Int
+        after: String
+        last: Int
+        before: String
+    ): ChatMessageConnection!
 }
 
 type ChatRoomEdge implements Edge {
-  cursor: String!
-  node: ChatRoom!
+    cursor: String!
+    node: ChatRoom!
 }
 
 type ChatRoomConnection implements Connection {
-  edges: [ChatRoomEdge!]!
-  pageInfo: PageInfo!
+    edges: [ChatRoomEdge!]!
+    pageInfo: PageInfo!
 }
 
 input CreateDirectMessageInput {
-  userId: ID!
+    userId: ID!
 }
 
 type CreateDirectMessageResponse {
-  chatRoom: ChatRoom!
+    chatRoom: ChatRoom!
 }
 
 input CreateGroupChatInput {
-  name: String!
-  userIds: [ID!]!
+    name: String!
+    userIds: [ID!]!
 }
 
 type CreateGroupChatResponse {
-  chatRoom: ChatRoom!
+    chatRoom: ChatRoom!
 }
 
 input AddChatRoomMemberInput {
-  chatRoomId: ID!
-  userId: ID!
+    chatRoomId: ID!
+    userId: ID!
 }
 
 type AddChatRoomMemberResponse {
-  member: ChatRoomMember!
+    member: ChatRoomMember!
 }
 
 input RemoveChatRoomMemberInput {
-  chatRoomId: ID!
-  userId: ID!
+    chatRoomId: ID!
+    userId: ID!
 }
 
 type RemoveChatRoomMemberResponse {
-  chatRoomId: ID!
-  userId: ID!
+    chatRoomId: ID!
+    userId: ID!
 }
 
 type SendChatMessageResponse {
-  chatMessage: ChatMessage!
+    chatMessage: ChatMessage!
 }
 
 input SendTextChatMessageInput {
-  chatRoomId: ID!
-  content: String!
-  replyToId: ID
+    chatRoomId: ID!
+    content: String!
+    replyToId: ID
 }
 
 """
@@ -273,13 +273,13 @@ Sending the message also confirms the resource (transitions it to PERMANENT) —
 do NOT call confirmUpload separately for chat media.
 """
 input SendMediaChatMessageInput {
-  chatRoomId: ID!
-  """
-  The resource ID returned from requestUpload.
-  """
-  resourceId: ID!
-  caption: String
-  replyToId: ID
+    chatRoomId: ID!
+    """
+    The resource ID returned from requestUpload.
+    """
+    resourceId: ID!
+    caption: String
+    replyToId: ID
 }
 
 """
@@ -287,13 +287,13 @@ Polymorphic input for sending different types of chat messages.
 Exactly one field must be provided.
 """
 input SendChatMessageInput @oneOf {
-  textMessage: SendTextChatMessageInput
-  mediaMessage: SendMediaChatMessageInput
+    textMessage: SendTextChatMessageInput
+    mediaMessage: SendMediaChatMessageInput
 }
 
 input UpdateTextChatMessageInput {
-  id: ID!
-  content: String!
+    id: ID!
+    content: String!
 }
 
 """
@@ -301,60 +301,283 @@ Polymorphic input for updating different types of chat messages.
 Exactly one field must be provided.
 """
 input UpdateChatMessageInput @oneOf {
-  textMessage: UpdateTextChatMessageInput
+    textMessage: UpdateTextChatMessageInput
 }
 
 type UpdateChatMessageResponse {
-  chatMessage: ChatMessage!
+    chatMessage: ChatMessage!
 }
 
 input DeleteChatMessageInput {
-  id: ID!
+    id: ID!
 }
 
 type DeleteChatMessageResponse implements DeleteResponse {
-  id: ID!
+    id: ID!
 }
 
 interface ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
 }
 
 interface ChatMessageEvent implements ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  chatMessage: ChatMessage!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    chatMessage: ChatMessage!
 }
 
 type ChatMessageSentEvent implements ChatMessageEvent & ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  chatMessage: ChatMessage!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    chatMessage: ChatMessage!
 }
 
 type ChatMessageUpdatedEvent implements ChatMessageEvent & ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  chatMessage: ChatMessage!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    chatMessage: ChatMessage!
 }
 
 type ChatMessageDeletedEvent implements ChatMessageEvent & ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  chatMessage: ChatMessage!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    chatMessage: ChatMessage!
 }
 
 type ChatRoomMemberAddedEvent implements ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
-  member: ChatRoomMember!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    member: ChatRoomMember!
 }
 
 type ChatRoomMemberRemovedEvent implements ChatEvent {
-  chatRoom: ChatRoom!
-  createdDate: DateTime!
+    chatRoom: ChatRoom!
+    createdDate: DateTime!
+    userId: ID!
+}
+
+input RenameChatRoomInput {
+    chatRoomId: ID!
+    name: String!
+}
+
+type RenameChatRoomResponse {
+    chatRoom: ChatRoom!
+}
+
+input LeaveChatRoomInput {
+    chatRoomId: ID!
+}
+
+type LeaveChatRoomResponse {
+    chatRoomId: ID!
+}
+
+input UpdateChatRoomMemberRoleInput {
+    chatRoomId: ID!
+    userId: ID!
+    role: ChatRoomRole!
+}
+
+type UpdateChatRoomMemberRoleResponse {
+    """The updated ChatRoomMember record."""
+    member: ChatRoomMember!
+    """Only populated when transferring ownership — the previous owner's updated record (now a Member)."""
+    previousOwner: ChatRoomMember
+}
+
+# ============================================================================
+# Chat Result Unions
+# ============================================================================
+
+union CreateDirectMessageResult = CreateDirectMessageResponse | UserBlockedError
+union CreateGroupChatResult = CreateGroupChatResponse | EmptyChatRoomError
+union AddChatRoomMemberResult = AddChatRoomMemberResponse | ChatRoomNotFoundError | DirectMessageNotAllowedError
+union RemoveChatRoomMemberResult = RemoveChatRoomMemberResponse | ChatRoomNotFoundError | DirectMessageNotAllowedError | CannotRemoveOwnerError | InsufficientRoleError
+union RenameChatRoomResult = RenameChatRoomResponse | ChatRoomNotFoundError | DirectMessageNotAllowedError
+union UpdateChatRoomMemberRoleResult = UpdateChatRoomMemberRoleResponse | ChatRoomNotFoundError | DirectMessageNotAllowedError | InvalidRoleTransitionError
+union LeaveChatRoomResult = LeaveChatRoomResponse | ChatRoomNotFoundError | DirectMessageNotAllowedError | OwnerCannotLeaveError
+union SendChatMessageResult = SendChatMessageResponse | ChatRoomNotFoundError
+union UpdateChatMessageResult = UpdateChatMessageResponse | ChatMessageNotFoundError | MessageNotEditableError
+union DeleteChatMessageResult = DeleteChatMessageResponse | ChatMessageNotFoundError"""
+Common interface for all domain errors returned as part of result unions.
+Clients can use `... on Error { message }` as a catch-all.
+Infrastructure errors (UNAUTHORIZED, FORBIDDEN) remain in the GraphQL errors array.
+"""
+interface Error {
+  message: String!
+}
+
+# ============================================================================
+# Game Errors
+# ============================================================================
+
+type GameNotFoundError implements Error {
+  message: String!
+  gameId: ID!
+}
+
+type InvalidSportConfigError implements Error {
+  message: String!
+}
+
+type InvalidDateRangeError implements Error {
+  message: String!
+}
+
+type InvalidGameStatusTransitionError implements Error {
+  message: String!
+  currentStatus: GameStatus!
+}
+
+type PlayerNotFoundError implements Error {
+  message: String!
+  playerId: ID
+  playerIds: [ID!]
+}
+
+type ParticipantNotFoundError implements Error {
+  message: String!
+  participantId: ID!
+}
+
+type TeamInstanceNotFoundError implements Error {
+  message: String!
+  teamInstanceId: ID!
+}
+
+type InvalidParticipantTypeError implements Error {
+  message: String!
+}
+
+# ============================================================================
+# Player Errors
+# ============================================================================
+
+type PlayerAlreadyExistsError implements Error {
+  message: String!
+}
+
+# ============================================================================
+# Livestream Errors
+# ============================================================================
+
+type LivestreamNotFoundError implements Error {
+  message: String!
+  livestreamId: ID!
+}
+
+# ============================================================================
+# User / Friendship Errors
+# ============================================================================
+
+type UserNotFoundError implements Error {
+  message: String!
   userId: ID!
+}
+
+type SelfActionError implements Error {
+  message: String!
+}
+
+type FriendshipAlreadyExistsError implements Error {
+  message: String!
+  currentStatus: FriendshipStatus!
+}
+
+type FriendRequestNotFoundError implements Error {
+  message: String!
+}
+
+type InvalidFriendshipStateError implements Error {
+  message: String!
+  currentStatus: FriendshipStatus!
+}
+
+type UserBlockedYouError implements Error {
+  message: String!
+}
+
+type BlockNotFoundError implements Error {
+  message: String!
+}
+
+# ============================================================================
+# Chat Errors
+# ============================================================================
+
+type ChatRoomNotFoundError implements Error {
+  message: String!
+  chatRoomId: ID!
+}
+
+type ChatMessageNotFoundError implements Error {
+  message: String!
+}
+
+type DirectMessageNotAllowedError implements Error {
+  message: String!
+}
+
+type UserBlockedError implements Error {
+  message: String!
+}
+
+type EmptyChatRoomError implements Error {
+  message: String!
+}
+
+type CannotRemoveOwnerError implements Error {
+  message: String!
+}
+
+type InsufficientRoleError implements Error {
+  message: String!
+}
+
+type InvalidRoleTransitionError implements Error {
+  message: String!
+  currentRole: ChatRoomRole!
+  requestedRole: ChatRoomRole!
+}
+
+type OwnerCannotLeaveError implements Error {
+  message: String!
+}
+
+type MessageNotEditableError implements Error {
+  message: String!
+}
+
+# ============================================================================
+# Notification Errors
+# ============================================================================
+
+type NotificationNotFoundError implements Error {
+  message: String!
+}
+
+# ============================================================================
+# Statistic Errors
+# ============================================================================
+
+type InvalidSportTypeError implements Error {
+  message: String!
+  expectedSportType: SportType!
+  actualSportType: SportType!
+}
+
+# ============================================================================
+# Resource Errors
+# ============================================================================
+
+type ResourceNotFoundError implements Error {
+  message: String!
+}
+
+type InvalidUploadContextError implements Error {
+  message: String!
 }
 """
 What state a game is in.
@@ -363,6 +586,22 @@ enum GameStatus {
   SCHEDULED
   IN_PROGRESS
   COMPLETE
+}
+
+"""
+Whether a game is open for self-joining or invite-only.
+"""
+enum GameVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+"""
+Who can enter statistics for a game.
+"""
+enum StatEntryMode {
+  OPEN
+  SELF_REPORT
 }
 
 """
@@ -400,10 +639,7 @@ enum FootballSubtype {
 Sport-specific game configuration and rules.
 Clients branch on Game.sportType and use inline fragments for sport-specific fields.
 """
-union GameMetadata =
-  | BasketballGameMetadata
-  | TennisGameMetadata
-  | FootballGameMetadata
+union GameMetadata = BasketballGameMetadata | TennisGameMetadata | FootballGameMetadata
 
 type BasketballGameMetadata {
   subtype: BasketballSubtype!
@@ -441,10 +677,7 @@ type FootballGameMetadata {
 Sport-specific participant result data (scores, set wins, etc.).
 Clients branch on Game.sportType and use inline fragments for sport-specific fields.
 """
-union ParticipantMetadata =
-  | BasketballParticipantMetadata
-  | TennisParticipantMetadata
-  | FootballParticipantMetadata
+union ParticipantMetadata = BasketballParticipantMetadata | TennisParticipantMetadata | FootballParticipantMetadata
 
 type BasketballParticipantMetadata {
   score: Int!
@@ -508,6 +741,18 @@ type Game implements Node & HasLocation {
   metadata: GameMetadata!
   location: Location
   """
+  Whether this game is open for anyone with a player profile to join, or invite-only.
+  """
+  visibility: GameVisibility!
+  """
+  Whether the game organizer has locked scores and statistics from further edits by participants.
+  """
+  resultsFinalized: Boolean!
+  """
+  Who can enter statistics for this game.
+  """
+  statEntryMode: StatEntryMode!
+  """
   Participants in a game. Relay / Connection pagination. Will either be teams or individuals
   """
   participants(
@@ -541,13 +786,9 @@ type Game implements Node & HasLocation {
 }
 
 type ViewerFriendPlayers {
-  """
-  First up to 10 friend players in this game.
-  """
+  """First up to 10 friend players in this game."""
   nodes: [Player!]!
-  """
-  Total number of the viewer's friends who are players in this game.
-  """
+  """Total number of the viewer's friends who are players in this game."""
   totalCount: Int!
 }
 
@@ -988,6 +1229,14 @@ input CreateBasketballGameInput {
   startDate: DateTime!
   location: LocationInput
   metadata: CreateBasketballGameMetadataInput!
+  """
+  Defaults to PUBLIC if not provided.
+  """
+  visibility: GameVisibility
+  """
+  Defaults to OPEN if not provided.
+  """
+  statEntryMode: StatEntryMode
 }
 
 """
@@ -997,6 +1246,8 @@ input CreateFootballGameInput {
   startDate: DateTime!
   location: LocationInput
   metadata: CreateFootballGameMetadataInput!
+  visibility: GameVisibility
+  statEntryMode: StatEntryMode
 }
 
 """
@@ -1006,6 +1257,8 @@ input CreateTennisGameInput {
   startDate: DateTime!
   location: LocationInput
   metadata: CreateTennisGameMetadataInput!
+  visibility: GameVisibility
+  statEntryMode: StatEntryMode
 }
 
 input UpdateGameInput {
@@ -1017,6 +1270,14 @@ input UpdateGameInput {
   If null will not be updated.
   """
   metadata: GameMetadataInput
+  """
+  If null will not be updated.
+  """
+  visibility: GameVisibility
+  """
+  If null will not be updated.
+  """
+  statEntryMode: StatEntryMode
 }
 
 """
@@ -1068,79 +1329,150 @@ input EndGameInput {
 type EndGameResponse {
   game: Game!
 }
-enum LivestreamProvider {
-  YOUTUBE
-  TWITCH
+
+"""
+Finalize game results. After finalization, only the organizer can modify scores and statistics.
+The organizer can undo this with unfinalizeGameResults.
+"""
+input FinalizeGameResultsInput {
+  id: ID!
+}
+
+type FinalizeGameResultsResponse {
+  game: Game!
+}
+
+"""
+Reverse finalization, allowing participants to edit scores and statistics again.
+"""
+input UnfinalizeGameResultsInput {
+  id: ID!
+}
+
+type UnfinalizeGameResultsResponse {
+  game: Game!
+}
+
+# ============================================================================
+# Result Unions
+# ============================================================================
+
+union CreateGameResult = CreateGameResponse | InvalidSportConfigError
+union UpdateGameResult = UpdateGameResponse | GameNotFoundError | InvalidSportConfigError | InvalidDateRangeError
+union DeleteGameResult = DeleteGameResponse | GameNotFoundError
+union StartGameResult = StartGameResponse | GameNotFoundError | InvalidGameStatusTransitionError
+union EndGameResult = EndGameResponse | GameNotFoundError | InvalidGameStatusTransitionError
+union FinalizeGameResultsResult = FinalizeGameResultsResponse | GameNotFoundError
+union UnfinalizeGameResultsResult = UnfinalizeGameResultsResponse | GameNotFoundError
+union AddGameParticipantResult = AddGameParticipantResponse | GameNotFoundError | PlayerNotFoundError | InvalidParticipantTypeError
+union AddGameParticipantsResult = AddGameParticipantsResponse | GameNotFoundError | PlayerNotFoundError | InvalidParticipantTypeError
+union UpdateGameParticipantResult = UpdateGameParticipantResponse | GameNotFoundError | ParticipantNotFoundError
+union UpdateGameParticipantsResult = UpdateGameParticipantsResponse | GameNotFoundError | ParticipantNotFoundError
+union RemoveGameParticipantResult = RemoveGameParticipantResponse | GameNotFoundError | ParticipantNotFoundError
+union RemoveGameParticipantsResult = RemoveGameParticipantsResponse | GameNotFoundError | ParticipantNotFoundError
+union AddPlayerToTeamInstanceResult = AddPlayerToTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
+union AddPlayersToTeamInstanceResult = AddPlayersToTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
+union RemovePlayerFromTeamInstanceResult = RemovePlayerFromTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
+union RemovePlayersFromTeamInstanceResult = RemovePlayersFromTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundErrorenum LivestreamProvider {
+    YOUTUBE,
+    TWITCH
 }
 
 enum LivestreamStatus {
-  LIVE
-  COMPLETE
+    LIVE,
+    COMPLETE
 }
 
 type Livestream implements HasUser & Node {
-  id: ID!
-  user: User!
-  provider: LivestreamProvider!
-  title: String!
-  description: String
-  streamUrl: String!
-  status: LivestreamStatus!
+    id: ID!
+    user: User!
+    provider: LivestreamProvider!
+    title: String!
+    description: String
+    streamUrl: String!
+    status: LivestreamStatus!
 }
 
 type LivestreamEdge implements Edge {
-  cursor: String!
-  node: Livestream!
+    cursor: String!
+    node: Livestream!
 }
 
 type LivestreamConnection implements Connection {
-  edges: [LivestreamEdge!]!
-  pageInfo: PageInfo!
+    edges: [LivestreamEdge!]!
+    pageInfo: PageInfo!
 }
 
 input StartLivestreamInput {
-  gameId: ID!
-  provider: LivestreamProvider!
-  title: String!
-  description: String
-  url: String!
+    gameId: ID!
+    provider: LivestreamProvider!
+    title: String!
+    description: String
+    url: String!
 }
 
 type StartLivestreamResponse {
-  livestream: Livestream!
+    livestream: Livestream!
 }
 
+"""
+End a specific livestream. The caller must be the streamer or the game organizer.
+"""
 input EndLivestreamInput {
-  gameId: ID!
+    id: ID!
 }
 
 type EndLivestreamResponse {
-  livestream: Livestream!
+    livestream: Livestream!
 }
+
 """
-A player in a game. Persists across games
+Update a livestream's title or description. Only the streamer can do this.
 """
-type Player implements Node & HasUser {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
-  user: User!
+input UpdateLivestreamInput {
+    id: ID!
+    title: String
+    description: String
+}
+
+type UpdateLivestreamResponse {
+    livestream: Livestream!
+}
+
+union StartLivestreamResult = StartLivestreamResponse | GameNotFoundError
+union EndLivestreamResult = EndLivestreamResponse | LivestreamNotFoundError
+union UpdateLivestreamResult = UpdateLivestreamResponse | LivestreamNotFoundError"""
+A player in a game. Persists across games.
+Identifying fields (firstName, lastName, age, height, weight, biography, user)
+may be null if the viewer has a blocking relationship with this player's user.
+"""
+type Player implements Node {
+    id: ID!
+    """Null when the viewer has a blocking relationship with this player's user."""
+    firstName: String
+    """Null when the viewer has a blocking relationship with this player's user."""
+    lastName: String
+    """Null when the viewer has a blocking relationship with this player's user."""
+    age: Int
+    """Null when the viewer has a blocking relationship with this player's user."""
+    height: Float
+    """Null when the viewer has a blocking relationship with this player's user."""
+    weight: Float
+    biography: String
+    """Null when the viewer has a blocking relationship with this player's user."""
+    user: User
 }
 
 """
 Creates a new player
 """
 input CreatePlayerInput {
-  firstName: String!
-  lastName: String!
-  age: Int
-  height: Float
-  weight: Float
-  biography: String
+    firstName: String!
+    lastName: String!
+    age: Int
+    height: Float
+    weight: Float
+    biography: String
 }
 
 """
@@ -1148,57 +1480,61 @@ Updates an existing player
 Fields not specified will not be updated
 """
 input UpdatePlayerInput {
-  id: ID!
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here is not allowed
-  """
-  firstName: String
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here is not allowed
-  """
-  lastName: String
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  age: Int
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  height: Float
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  weight: Float
-  """
-  Omit a field to leave it unchanged.
-  Setting to null here will set it to null on the database
-  """
-  biography: String
+    id: ID!
+    """
+    Omit a field to leave it unchanged.
+    Setting to null here is not allowed
+    """
+    firstName: String
+    """
+    Omit a field to leave it unchanged.
+    Setting to null here is not allowed
+    """
+    lastName: String
+    """
+    Omit a field to leave it unchanged.
+    Setting to null here will set it to null on the database
+    """
+    age: Int
+    """
+    Omit a field to leave it unchanged.
+    Setting to null here will set it to null on the database
+    """
+    height: Float
+    """
+    Omit a field to leave it unchanged.
+    Setting to null here will set it to null on the database
+    """
+    weight: Float
+    """
+    Omit a field to leave it unchanged.
+    Setting to null here will set it to null on the database
+    """
+    biography: String
 }
 
 """
 Deletes a player
 """
 input DeletePlayerInput {
-  id: ID!
+    id: ID!
 }
 
 type CreatePlayerResponse {
-  player: Player!
+    player: Player!
 }
 
 type UpdatePlayerResponse {
-  player: Player!
+    player: Player!
 }
 
-type DeletePlayerResponse implements DeleteResponse {
-  id: ID!
-} # ============================================================================
+type DeletePlayerResponse implements DeleteResponse{
+    id: ID!
+}
+
+union CreatePlayerResult = CreatePlayerResponse | PlayerAlreadyExistsError
+union UpdatePlayerResult = UpdatePlayerResponse | PlayerNotFoundError
+union DeletePlayerResult = DeletePlayerResponse | PlayerNotFoundError# ============================================================================
 # Resource / File Management (v2)
 #
 # Resources are files (images, documents, videos) stored in S3.
@@ -1369,6 +1705,14 @@ input DeleteResourceInput {
 type DeleteResourceResponse implements DeleteResponse {
   id: ID!
 }
+
+# ============================================================================
+# Resource Result Unions
+# ============================================================================
+
+union RequestUploadResult = RequestUploadResponse | InvalidUploadContextError
+union ConfirmUploadResult = ConfirmUploadResponse | ResourceNotFoundError
+union DeleteResourceResult = DeleteResourceResponse | ResourceNotFoundError
 scalar DateTime
 scalar JSON
 """
@@ -1511,8 +1855,7 @@ type Query {
     first: Int
     after: String
     last: Int
-    before: String
-  ): GameConnection!
+    before: String): GameConnection!
   """
   Query for notifications for the current user.
   Ordered by createdDate DESC (most recent first).
@@ -1580,191 +1923,207 @@ type Mutation {
   """
   Create a new player.
   """
-  createPlayer(input: CreatePlayerInput!): CreatePlayerResponse!
+  createPlayer(input: CreatePlayerInput!): CreatePlayerResult!
   """
   Update an existing player.
   """
-  updatePlayer(input: UpdatePlayerInput!): UpdatePlayerResponse!
+  updatePlayer(input: UpdatePlayerInput!): UpdatePlayerResult!
   """
   Delete a player.
   """
-  deletePlayer(input: DeletePlayerInput!): DeletePlayerResponse!
+  deletePlayer(input: DeletePlayerInput!): DeletePlayerResult!
   """
   Create a game.
   """
-  createGame(input: CreateGameInput!): CreateGameResponse!
+  createGame(input: CreateGameInput!): CreateGameResult!
   """
   Update a game.
   """
-  updateGame(input: UpdateGameInput!): UpdateGameResponse!
+  updateGame(input: UpdateGameInput!): UpdateGameResult!
   """
   Delete a game.
   """
-  deleteGame(input: DeleteGameInput!): DeleteGameResponse!
+  deleteGame(input: DeleteGameInput!): DeleteGameResult!
   """
   Add a participant to a game.
   Use teamInstance for team sports, individual for individual competition formats.
   """
-  addGameParticipant(
-    input: AddGameParticipantInput!
-  ): AddGameParticipantResponse!
+  addGameParticipant(input: AddGameParticipantInput!): AddGameParticipantResult!
   """
   Add multiple participants to a game.
   """
-  addGameParticipants(
-    input: AddGameParticipantsInput!
-  ): AddGameParticipantsResponse!
+  addGameParticipants(input: AddGameParticipantsInput!): AddGameParticipantsResult!
   """
   Update a participant in a game.
   Currently only team instances have updatable fields.
   """
-  updateGameParticipant(
-    input: UpdateGameParticipantInput!
-  ): UpdateGameParticipantResponse!
+  updateGameParticipant(input: UpdateGameParticipantInput!): UpdateGameParticipantResult!
   """
   Update multiple participants in a game.
   """
-  updateGameParticipants(
-    input: UpdateGameParticipantsInput!
-  ): UpdateGameParticipantsResponse!
+  updateGameParticipants(input: UpdateGameParticipantsInput!): UpdateGameParticipantsResult!
   """
   Remove a participant from a game.
   """
-  removeGameParticipant(
-    input: RemoveGameParticipantInput!
-  ): RemoveGameParticipantResponse!
+  removeGameParticipant(input: RemoveGameParticipantInput!): RemoveGameParticipantResult!
   """
   Remove multiple participants from a game.
   """
-  removeGameParticipants(
-    input: RemoveGameParticipantsInput!
-  ): RemoveGameParticipantsResponse!
+  removeGameParticipants(input: RemoveGameParticipantsInput!): RemoveGameParticipantsResult!
   """
   Add a player to an existing team instance.
   """
-  addPlayerToTeamInstance(
-    input: AddPlayerToTeamInstanceInput!
-  ): AddPlayerToTeamInstanceResponse!
+  addPlayerToTeamInstance(input: AddPlayerToTeamInstanceInput!): AddPlayerToTeamInstanceResult!
   """
   Add multiple players to an existing team instance.
   """
-  addPlayersToTeamInstance(
-    input: AddPlayersToTeamInstanceInput!
-  ): AddPlayersToTeamInstanceResponse!
+  addPlayersToTeamInstance(input: AddPlayersToTeamInstanceInput!): AddPlayersToTeamInstanceResult!
   """
   Remove a player from a team instance.
   """
-  removePlayerFromTeamInstance(
-    input: RemovePlayerFromTeamInstanceInput!
-  ): RemovePlayerFromTeamInstanceResponse!
+  removePlayerFromTeamInstance(input: RemovePlayerFromTeamInstanceInput!): RemovePlayerFromTeamInstanceResult!
   """
   Remove multiple players from a team instance.
   """
-  removePlayersFromTeamInstance(
-    input: RemovePlayersFromTeamInstanceInput!
-  ): RemovePlayersFromTeamInstanceResponse!
+  removePlayersFromTeamInstance(input: RemovePlayersFromTeamInstanceInput!): RemovePlayersFromTeamInstanceResult!
   """
   Start a game.
   Enables saving of statistics to the game.
   """
-  startGame(input: StartGameInput!): StartGameResponse!
+  startGame(input: StartGameInput!): StartGameResult!
   """
   End a game.
   """
-  endGame(input: EndGameInput!): EndGameResponse!
+  endGame(input: EndGameInput!): EndGameResult!
+  """
+  Finalize game results. After finalization, only the organizer can modify scores and statistics.
+  """
+  finalizeGameResults(input: FinalizeGameResultsInput!): FinalizeGameResultsResult!
+  """
+  Reverse finalization, allowing participants to edit scores and statistics again.
+  """
+  unfinalizeGameResults(input: UnfinalizeGameResultsInput!): UnfinalizeGameResultsResult!
   """
   Start a livestream on a game
   """
-  startLivestream(input: StartLivestreamInput!): StartLivestreamResponse!
+  startLivestream(input: StartLivestreamInput!): StartLivestreamResult!
   """
   End a livestream on a game
   """
-  endLivestream(input: EndLivestreamInput!): EndLivestreamResponse!
+  endLivestream(input: EndLivestreamInput!): EndLivestreamResult!
+  """
+  Update a livestream's title or description. Only the streamer can do this.
+  """
+  updateLivestream(input: UpdateLivestreamInput!): UpdateLivestreamResult!
   """
   Add a friend.
   """
-  sendFriendRequest(input: SendFriendRequestInput!): SendFriendRequestResponse!
+  sendFriendRequest(input: SendFriendRequestInput!): SendFriendRequestResult!
   """
   Accept a friend request.
   """
-  acceptFriendRequest(
-    input: AcceptFriendRequestInput!
-  ): AcceptFriendRequestResponse!
+  acceptFriendRequest(input: AcceptFriendRequestInput!): AcceptFriendRequestResult!
   """
   Decline a friend request.
   """
-  declineFriendRequest(
-    input: DeclineFriendRequestInput!
-  ): DeclineFriendRequestResponse!
+  declineFriendRequest(input: DeclineFriendRequestInput!): DeclineFriendRequestResult!
   """
   Unfriend a user.
   """
-  unfriend(input: UnfriendRequestInput!): UnfriendResponse!
+  unfriend(input: UnfriendRequestInput!): UnfriendResult!
+  """
+  Cancel a pending friend request you sent.
+  Only the requester can cancel; only works on PENDING requests.
+  """
+  cancelFriendRequest(input: CancelFriendRequestInput!): CancelFriendRequestResult!
+  """
+  Block a user.
+  Any logged-in user can block anyone. Works regardless of current
+  friendship status (friends, pending, no relationship).
+  The blocked record is stored with the caller as requester.
+  """
+  blockUser(input: BlockUserInput!): BlockUserResult!
+  """
+  Unblock a user you previously blocked.
+  Only the person who initiated the block can unblock.
+  The other person is not notified.
+  """
+  unblockUser(input: UnblockUserInput!): UnblockUserResult!
   """
   Read notifications for the current user
   """
-  readNotifications(input: ReadNotificationsInput!): ReadNotificationsResponse!
+  readNotifications(input: ReadNotificationsInput!): ReadNotificationsResult!
   """
   Create a direct message conversation with another user.
   Idempotent: returns the existing DM if one already exists.
   """
-  createDirectMessage(
-    input: CreateDirectMessageInput!
-  ): CreateDirectMessageResponse!
+  createDirectMessage(input: CreateDirectMessageInput!): CreateDirectMessageResult!
   """
   Create a group chat with multiple users.
   """
-  createGroupChat(input: CreateGroupChatInput!): CreateGroupChatResponse!
+  createGroupChat(input: CreateGroupChatInput!): CreateGroupChatResult!
   """
   Add a user to the chat room
   """
-  addChatRoomMember(input: AddChatRoomMemberInput!): AddChatRoomMemberResponse!
+  addChatRoomMember(input: AddChatRoomMemberInput!): AddChatRoomMemberResult!
   """
   Remove a user from the chat room
   """
-  removeChatRoomMember(
-    input: RemoveChatRoomMemberInput!
-  ): RemoveChatRoomMemberResponse!
+  removeChatRoomMember(input: RemoveChatRoomMemberInput !): RemoveChatRoomMemberResult!
+  """
+  Rename a group chat room. Only the Owner or Admin may rename.
+  """
+  renameChatRoom(input: RenameChatRoomInput!): RenameChatRoomResult!
+  """
+  Update a chat room member's role. Covers promote (MEMBER→ADMIN), demote (ADMIN→MEMBER),
+  and ownership transfer (X→OWNER, which also demotes the current Owner to MEMBER).
+  Only the Owner can change roles. Not applicable to direct message chat rooms.
+  """
+  updateChatRoomMemberRole(input: UpdateChatRoomMemberRoleInput!): UpdateChatRoomMemberRoleResult!
+  """
+  Leave a group chat room. The Owner must transfer ownership before leaving.
+  """
+  leaveChatRoom(input: LeaveChatRoomInput!): LeaveChatRoomResult!
   """
   Send a chat message
   """
-  sendChatMessage(input: SendChatMessageInput!): SendChatMessageResponse!
+  sendChatMessage(input: SendChatMessageInput!): SendChatMessageResult!
   """
   Update a chat message
   """
-  updateChatMessage(input: UpdateChatMessageInput!): UpdateChatMessageResponse!
+  updateChatMessage(input: UpdateChatMessageInput!): UpdateChatMessageResult!
   """
   Delete a message
   """
-  deleteChatMessage(input: DeleteChatMessageInput!): DeleteChatMessageResponse!
+  deleteChatMessage(input: DeleteChatMessageInput!): DeleteChatMessageResult!
   """
   Save a box score for a basketball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveBasketballBoxScore(
     input: SaveBasketballBoxScoreInput!
-  ): SaveBasketballBoxScoreResponse!
+  ): SaveBasketballBoxScoreResult!
   """
   Save box scores for a basketball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveBasketballBoxScores(
     input: SaveBasketballBoxScoresInput!
-  ): SaveBasketballBoxScoresResponse!
+  ): SaveBasketballBoxScoresResult!
   """
   Request a presigned upload URL. Phase 1 of the upload flow.
   """
-  requestUpload(input: RequestUploadInput!): RequestUploadResponse!
+  requestUpload(input: RequestUploadInput!): RequestUploadResult!
   """
   Confirm that an upload is complete. Phase 2 of the upload flow.
   Transitions resource status from REQUESTED to PERMANENT.
   Not needed for chat media — sendChatMessage confirms chat resources automatically.
   """
-  confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResponse!
+  confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResult!
   """
   Delete a resource and its backing file.
   """
-  deleteResource(input: DeleteResourceInput!): DeleteResourceResponse!
+  deleteResource(input: DeleteResourceInput!): DeleteResourceResult!
 }
 
 """
@@ -1783,161 +2142,167 @@ type Subscription {
   User must be authenticated.
   """
   notificationEvents: NotificationEvent!
-}
-"""
+}"""
 Filter for box scores by game and/or player.
 At least one of gameIds or playerIds must be provided.
 """
 input GameIdsAndPlayerIdsInput {
-  gameIds: [ID!]
-  playerIds: [ID!]
+    gameIds: [ID!]
+    playerIds: [ID!]
 }
 
 """
 Box scores for basketball
 """
 type BasketballBoxScore implements Node {
-  id: ID!
-  player: Player!
-  game: Game!
-  defensiveRebounds: Int
-  offensiveRebounds: Int
-  totalRebounds: Int
-  assists: Int
-  steals: Int
-  blocks: Int
-  turnovers: Int
-  personalFouls: Int
-  points: Int
-  threePointersMade: Int
-  threePointersAttempted: Int
-  threePointerPercentage: Float
-  twoPointersMade: Int
-  twoPointersAttempted: Int
-  twoPointerPercentage: Float
-  freeThrowsMade: Int
-  freeThrowsAttempted: Int
-  freeThrowPercentage: Float
-  fieldGoalsMade: Int
-  fieldGoalsAttempted: Int
-  fieldGoalPercentage: Float
+    id: ID!
+    player: Player!
+    game: Game!
+    defensiveRebounds: Int
+    offensiveRebounds: Int
+    totalRebounds: Int
+    assists: Int
+    steals: Int
+    blocks: Int
+    turnovers: Int
+    personalFouls: Int
+    points: Int
+    threePointersMade: Int
+    threePointersAttempted: Int
+    threePointerPercentage: Float
+    twoPointersMade: Int
+    twoPointersAttempted: Int
+    twoPointerPercentage: Float
+    freeThrowsMade: Int
+    freeThrowsAttempted: Int
+    freeThrowPercentage: Float
+    fieldGoalsMade: Int
+    fieldGoalsAttempted: Int
+    fieldGoalPercentage: Float
 }
 
-type BasketballBoxScoreEdge implements Edge {
-  node: BasketballBoxScore!
-  cursor: String!
+type BasketballBoxScoreEdge implements Edge{
+    node: BasketballBoxScore!
+    cursor: String!
 }
 
-type BasketballBoxScoreConnection implements Connection {
-  edges: [BasketballBoxScoreEdge!]!
-  pageInfo: PageInfo!
+type BasketballBoxScoreConnection implements Connection{
+    edges: [BasketballBoxScoreEdge!]!
+    pageInfo: PageInfo!
 }
 
 enum BoxScoreSortField {
-  POINTS
-  ASSISTS
-  TOTAL_REBOUNDS
-  STEALS
-  BLOCKS
+    POINTS
+    ASSISTS
+    TOTAL_REBOUNDS
+    STEALS
+    BLOCKS
 }
 
 input BoxScoreSortInput {
-  field: BoxScoreSortField!
-  direction: SortDirection = ASC
+    field: BoxScoreSortField!
+    direction: SortDirection = ASC
 }
 
 input SaveBasketballBoxScoresInput {
-  basketballBoxScores: [SaveBasketballBoxScoreInput!]!
+    basketballBoxScores: [SaveBasketballBoxScoreInput!]!
 }
 
 input SaveBasketballBoxScoreInput {
-  playerId: ID!
-  gameId: ID!
-  defensiveRebounds: Int
-  offensiveRebounds: Int
-  assists: Int
-  steals: Int
-  blocks: Int
-  turnovers: Int
-  personalFouls: Int
-  threePointersMade: Int
-  threePointersAttempted: Int
-  twoPointersMade: Int
-  twoPointersAttempted: Int
-  freeThrowsMade: Int
-  freeThrowsAttempted: Int
+    playerId: ID!
+    gameId: ID!
+    defensiveRebounds: Int
+    offensiveRebounds: Int
+    assists: Int
+    steals: Int
+    blocks: Int
+    turnovers: Int
+    personalFouls: Int
+    threePointersMade: Int
+    threePointersAttempted: Int
+    twoPointersMade: Int
+    twoPointersAttempted: Int
+    freeThrowsMade: Int
+    freeThrowsAttempted: Int
 }
 
 type SaveBasketballBoxScoresResponse {
-  basketballBoxScores: [BasketballBoxScore!]!
+    basketballBoxScores: [BasketballBoxScore!]!
 }
 
 type SaveBasketballBoxScoreResponse {
-  basketballBoxScore: BasketballBoxScore!
+    basketballBoxScore: BasketballBoxScore!
 }
+
+# ============================================================================
+# Statistic Result Unions
+# ============================================================================
+
+union SaveBasketballBoxScoreResult = SaveBasketballBoxScoreResponse | GameNotFoundError | InvalidSportTypeError
+union SaveBasketballBoxScoresResult = SaveBasketballBoxScoresResponse | GameNotFoundError | InvalidSportTypeError
 """
 A Playground user
 """
 type User implements Node {
-  id: ID!
-  username: String!
-  firstName: String!
-  lastName: String!
-  displayName: String!
-  player: Player
-  friendship: Friendship
-  """
-  The user's profile picture. Null if no profile picture has been set.
-  """
-  profilePicture: Resource
+    id: ID!
+    username: String!
+    firstName: String!
+    lastName: String!
+    displayName: String!
+    player: Player
+    friendship: Friendship
+    """
+    The user's profile picture. Null if no profile picture has been set.
+    """
+    profilePicture: Resource
 }
 
 """
 The current authenticated user with private fields
 """
 type CurrentUser implements Node {
-  id: ID!
-  username: String!
-  firstName: String!
-  lastName: String!
-  displayName: String!
-  email: String!
-  player: Player
-  """
-  The user's profile picture. Null if no profile picture has been set.
-  """
-  profilePicture: Resource
+    id: ID!
+    username: String!
+    firstName: String!
+    lastName: String!
+    displayName: String!
+    email: String!
+    player: Player
+    """
+    The user's profile picture. Null if no profile picture has been set.
+    """
+    profilePicture: Resource
 }
 
 """
 Something that is related to a user
 """
 interface HasUser {
-  user: User!
+    user: User!
 }
 
 """
 The Friendship status between two users
 """
 enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  BLOCKED
+    PENDING,
+    ACCEPTED,
+    DECLINED,
+    BLOCKED
 }
 
 """
 Direction of a friendship relative to the current user
 """
 enum FriendshipDirection {
-  """
-  Requests sent TO the current user
-  """
-  INCOMING
-  """
-  Requests sent BY the current user
-  """
-  OUTGOING
+    """
+    Requests sent TO the current user
+    """
+    INCOMING
+    """
+    Requests sent BY the current user
+    """
+    OUTGOING
 }
 
 """
@@ -1946,147 +2311,188 @@ Can be bidirectional - ACCEPTED status
 Can be unidirectional - PENDING status
 """
 type Friendship implements Node {
-  id: ID!
-  requester: User!
-  addressee: User!
-  status: FriendshipStatus!
-  createdDate: DateTime!
+    id: ID!
+    requester: User!
+    addressee: User!
+    status: FriendshipStatus!
+    createdDate: DateTime!
 }
 
 type FriendshipEdge implements Edge {
-  cursor: String!
-  node: Friendship!
+    cursor: String!
+    node: Friendship!
 }
 
 type FriendshipConnection implements Connection {
-  edges: [FriendshipEdge!]!
-  pageInfo: PageInfo!
+    edges: [FriendshipEdge!]!
+    pageInfo: PageInfo!
 }
 
 """
 Filters for querying friendships
 """
 input FriendshipFilterInput {
-  """
-  Filter by friendship status
-  """
-  status: FriendshipStatus
-  """
-  Filter by direction relative to current user.
-  INCOMING = other users requested me, OUTGOING = I requested them.
-  If null, returns both directions.
-  """
-  direction: FriendshipDirection
+    """
+    Filter by friendship status
+    """
+    status: FriendshipStatus
+    """
+    Filter by direction relative to current user.
+    INCOMING = other users requested me, OUTGOING = I requested them.
+    If null, returns both directions.
+    """
+    direction: FriendshipDirection
 }
 
 type UserEdge implements Edge {
-  cursor: String!
-  node: User!
+    cursor: String!
+    node: User!
 }
 
 type UserConnection implements Connection {
-  edges: [UserEdge!]!
-  pageInfo: PageInfo!
+    edges: [UserEdge!]!
+    pageInfo: PageInfo!
 }
 
 input SendFriendRequestInput {
-  userId: ID!
+    userId: ID!
 }
 
 type SendFriendRequestResponse {
-  friendship: Friendship!
+    friendship: Friendship!
 }
 
 input AcceptFriendRequestInput {
-  requesterId: ID!
+    requesterId: ID!
 }
 
 type AcceptFriendRequestResponse {
-  friendship: Friendship!
+    friendship: Friendship!
 }
 
 input DeclineFriendRequestInput {
-  requesterId: ID!
+    requesterId: ID!
 }
 
 type DeclineFriendRequestResponse {
-  friendship: Friendship!
+    friendship: Friendship!
 }
 
 input UnfriendRequestInput {
-  userId: ID!
+    userId: ID!
 }
 
 type UnfriendResponse {
-  friendship: Friendship
+    friendship: Friendship
+}
+
+input CancelFriendRequestInput {
+    """The user to whom the pending friend request was sent."""
+    addresseeId: ID!
+}
+
+type CancelFriendRequestResponse {
+    friendship: Friendship!
+}
+
+input BlockUserInput {
+    userId: ID!
+}
+
+type BlockUserResponse {
+    friendship: Friendship!
+}
+
+input UnblockUserInput {
+    userId: ID!
+}
+
+type UnblockUserResponse {
+    """
+    The friendship relationship after unblocking, or null if there was no
+    relationship to restore (e.g., there was no prior friendship).
+    """
+    friendship: Friendship
 }
 
 interface Notification implements Node {
-  id: ID!
-  isRead: Boolean!
-  createdDate: DateTime!
+    id: ID!
+    isRead: Boolean!
+    createdDate: DateTime!
 }
 
 type FriendRequestReceivedNotification implements Notification & Node {
-  id: ID!
-  isRead: Boolean!
-  createdDate: DateTime!
-  """
-  The user who sent the friend request.
-  """
-  sender: User!
+    id: ID!
+    isRead: Boolean!
+    createdDate: DateTime!
+    """The user who sent the friend request."""
+    sender: User!
 }
 
 type FriendRequestAcceptedNotification implements Notification & Node {
-  id: ID!
-  isRead: Boolean!
-  createdDate: DateTime!
-  """
-  The user who accepted your friend request.
-  """
-  accepter: User!
+    id: ID!
+    isRead: Boolean!
+    createdDate: DateTime!
+    """The user who accepted your friend request."""
+    accepter: User!
 }
 
 type GameStartedNotification implements Notification & Node {
-  id: ID!
-  isRead: Boolean!
-  createdDate: DateTime!
-  """
-  The game that started.
-  """
-  game: Game!
+    id: ID!
+    isRead: Boolean!
+    createdDate: DateTime!
+    """The game that started."""
+    game: Game!
 }
 
 type NotificationEdge implements Edge {
-  cursor: String!
-  node: Notification!
+    cursor: String!
+    node: Notification!
 }
 
 type NotificationConnection implements Connection {
-  edges: [NotificationEdge!]!
-  pageInfo: PageInfo!
+    edges: [NotificationEdge!]!
+    pageInfo: PageInfo!
 }
 
 input ReadNotificationsInput {
-  ids: [ID!]!
+    ids: [ID!]!
 }
 
 type ReadNotificationsResponse {
-  notifications: [Notification!]!
+    notifications: [Notification!]!
 }
 
 type NotificationEvent {
-  notification: Notification!
+    notification: Notification!
 }
 
 input QueryUserInput @oneOf {
-  id: ID
-  username: String
+    id: ID
+    username: String
 }
 
 input UserSearchInput {
-  query: String!
-  #    excludeFriends: Boolean
-  #    hasFriendshipStatus: FriendshipStatus
-  #    hasPlayer: Boolean
+    query: String!
+#    excludeFriends: Boolean
+#    hasFriendshipStatus: FriendshipStatus
+#    hasPlayer: Boolean
 }
+
+# ============================================================================
+# Friendship Result Unions
+# ============================================================================
+
+union SendFriendRequestResult = SendFriendRequestResponse | UserNotFoundError | SelfActionError | FriendshipAlreadyExistsError
+union AcceptFriendRequestResult = AcceptFriendRequestResponse | FriendRequestNotFoundError | InvalidFriendshipStateError
+union DeclineFriendRequestResult = DeclineFriendRequestResponse | FriendRequestNotFoundError | InvalidFriendshipStateError
+union UnfriendResult = UnfriendResponse | SelfActionError
+union CancelFriendRequestResult = CancelFriendRequestResponse | FriendRequestNotFoundError | InvalidFriendshipStateError
+union BlockUserResult = BlockUserResponse | SelfActionError | UserBlockedYouError
+union UnblockUserResult = UnblockUserResponse | BlockNotFoundError | UserBlockedYouError
+
+# ============================================================================
+# Notification Result Unions
+# ============================================================================
+
+union ReadNotificationsResult = ReadNotificationsResponse | NotificationNotFoundError

@@ -39,7 +39,7 @@ export function PlayerProfileCard({
         setMode(FormMode.VIEW);
         toast.success(t("player.success.created"));
       } else {
-        toast.error(result.error || t("player.errors.createError"));
+        toast.error(result.message || t("player.errors.createError"));
       }
     });
   };
@@ -52,7 +52,7 @@ export function PlayerProfileCard({
         setMode(FormMode.VIEW);
         toast.success(t("player.success.updated"));
       } else {
-        toast.error(result.error || t("player.errors.updateError"));
+        toast.error(result.message || t("player.errors.updateError"));
       }
     });
   };

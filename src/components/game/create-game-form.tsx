@@ -131,8 +131,8 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
           router.push(`/game/${result.gameId}`);
           onSuccess?.();
         } else {
-          setError(result.error || t("game.errors.createError"));
-          toast.error(result.error || t("game.errors.createError"));
+          setError(result.message || t("game.errors.createError"));
+          toast.error(result.message || t("game.errors.createError"));
         }
       });
     },

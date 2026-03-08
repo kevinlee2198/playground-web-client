@@ -1,6 +1,8 @@
 "use server";
 
+import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
+import { extractMutationResult } from "@/lib/graphql-result";
 import type { Player } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
@@ -26,7 +28,8 @@ interface UpdatePlayerInput {
 interface PlayerActionResult {
   success: boolean;
   player?: Player;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }
 
 export async function createPlayer(
@@ -36,30 +39,48 @@ export async function createPlayer(
     const response = await authMutate({
       createPlayer: {
         __args: { input },
-        player: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          age: true,
-          height: true,
-          weight: true,
-          biography: true,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "CreatePlayerResponse",
+            player: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              age: true,
+              height: true,
+              weight: true,
+              biography: true,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return {
+        success: false,
+        errorType: "GRAPHQL_ERROR",
+        message: response.errors[0].message,
+      };
     }
 
+    const result = extractMutationResult(
+      response.data.createPlayer,
+      "CreatePlayerResponse",
+    );
+    if (!result.success) return result;
+
     revalidatePath("/[locale]/player", "page");
-    return {
-      success: true,
-      player: response.data.createPlayer.player,
-    };
+    return { success: true, player: result.data.player };
   } catch (error) {
     console.error("Failed to create player:", error);
-    return { success: false, error: "Failed to create player" };
+    return {
+      success: false,
+      errorType: "UNEXPECTED_ERROR",
+      message: "Failed to create player",
+    };
   }
 }
 
@@ -82,29 +103,47 @@ export async function updatePlayer(
     const response = await authMutate({
       updatePlayer: {
         __args: { input: mutationInput },
-        player: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          age: true,
-          height: true,
-          weight: true,
-          biography: true,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UpdatePlayerResponse",
+            player: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              age: true,
+              height: true,
+              weight: true,
+              biography: true,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return {
+        success: false,
+        errorType: "GRAPHQL_ERROR",
+        message: response.errors[0].message,
+      };
     }
 
+    const result = extractMutationResult(
+      response.data.updatePlayer,
+      "UpdatePlayerResponse",
+    );
+    if (!result.success) return result;
+
     revalidatePath("/[locale]/player", "page");
-    return {
-      success: true,
-      player: response.data.updatePlayer.player,
-    };
+    return { success: true, player: result.data.player };
   } catch (error) {
     console.error("Failed to update player:", error);
-    return { success: false, error: "Failed to update player" };
+    return {
+      success: false,
+      errorType: "UNEXPECTED_ERROR",
+      message: "Failed to update player",
+    };
   }
 }

@@ -293,3 +293,11 @@ export const notificationInlineFragments = [
     },
   },
 ];
+
+/**
+ * Catch-all fragment for the Error interface in union result types.
+ * Every error type implements this interface, so this matches all errors.
+ * The __typename at the union level still gives the specific error type.
+ * Use as: __on: [{ __typeName: "SuccessResponse", ...fields }, errorFragment]
+ */
+export const errorFragment = { __typeName: "Error", message: true };

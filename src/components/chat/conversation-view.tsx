@@ -248,7 +248,7 @@ export function ConversationView({
       roomId,
     );
     if (!uploadResult.success || !uploadResult.resourceId) {
-      toast.error(uploadResult.error || t("errors.sendMessage"));
+      toast.error(uploadResult.message || t("errors.sendMessage"));
       throw new Error("Request upload failed");
     }
 

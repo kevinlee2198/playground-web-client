@@ -38,7 +38,7 @@ export function DeleteGameDialog({
         toast.success(t("game.success.deleted"));
         router.push("/games");
       } else {
-        toast.error(result.error || t("game.errors.deleteError"));
+        toast.error(result.message || t("game.errors.deleteError"));
         onOpenChange(false);
       }
     });
