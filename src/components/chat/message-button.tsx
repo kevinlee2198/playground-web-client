@@ -27,7 +27,7 @@ export function MessageButton({ userId }: MessageButtonProps) {
       if (result.success && result.chatRoom) {
         router.push(`/chat?room=${result.chatRoom.id}`);
       } else {
-        toast.error(result.error || "Failed to create conversation");
+        toast.error(result.message || "Failed to create conversation");
       }
     } catch (error) {
       console.error("Error creating/finding DM:", error);

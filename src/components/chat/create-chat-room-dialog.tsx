@@ -54,7 +54,7 @@ export function CreateChatRoomDialog({
             onOpenChange(false);
             resetForm();
           } else {
-            toast.error(result.error || t("errors.createRoom"));
+            toast.error(result.message || t("errors.createRoom"));
           }
         } catch (error) {
           console.error("Error in DM creation:", error);
@@ -77,7 +77,7 @@ export function CreateChatRoomDialog({
             onOpenChange(false);
             resetForm();
           } else {
-            toast.error(result.error || t("errors.createRoom"));
+            toast.error(result.message || t("errors.createRoom"));
           }
         } catch (error) {
           console.error("Error in group creation:", error);

@@ -214,26 +214,26 @@ export function ConversationView({
   const handleSendText = async (content: string, replyToId?: string) => {
     const result = await sendMessage(roomId, content, replyToId);
 
-    if (!result.success || !result.message) {
-      toast.error(result.error || t("errors.sendMessage"));
+    if (!result.success || !result.chatMessage) {
+      toast.error(result.message || t("errors.sendMessage"));
       throw new Error("Failed to send message");
     }
 
     // Append the new message, but deduplicate in case the WebSocket event
     // arrived before the mutation response
     const newEdge: Edge<ChatMessageNode> = {
-      cursor: result.message.id,
-      node: result.message,
+      cursor: result.chatMessage.id,
+      node: result.chatMessage,
     };
     setMessages((prev) => {
-      if (prev.some((edge) => edge.node.id === result.message!.id)) {
+      if (prev.some((edge) => edge.node.id === result.chatMessage!.id)) {
         return prev;
       }
       return [...prev, newEdge];
     });
 
     // Update last message in the room list
-    onLastMessageUpdate(roomId, result.message);
+    onLastMessageUpdate(roomId, result.chatMessage);
 
     // Clear reply state
     setReplyTo(null);
@@ -263,31 +263,31 @@ export function ConversationView({
 
     // 3. Send media message (auto-confirms resource -- do NOT call confirmUpload)
     const sendResult = await sendMediaMessage(roomId, uploadResult.resourceId);
-    if (!sendResult.success || !sendResult.message) {
-      toast.error(sendResult.error || t("errors.sendMessage"));
+    if (!sendResult.success || !sendResult.chatMessage) {
+      toast.error(sendResult.message || t("errors.sendMessage"));
       throw new Error("Send message failed");
     }
 
     // 4. Append message to list (same dedup logic as handleSendText)
     const newEdge: Edge<ChatMessageNode> = {
-      cursor: sendResult.message.id,
-      node: sendResult.message,
+      cursor: sendResult.chatMessage.id,
+      node: sendResult.chatMessage,
     };
     setMessages((prev) => {
-      if (prev.some((edge) => edge.node.id === sendResult.message!.id)) {
+      if (prev.some((edge) => edge.node.id === sendResult.chatMessage!.id)) {
         return prev;
       }
       return [...prev, newEdge];
     });
 
-    onLastMessageUpdate(roomId, sendResult.message);
+    onLastMessageUpdate(roomId, sendResult.chatMessage);
   };
 
   const handleEdit = async (messageId: string, content: string) => {
     const result = await updateMessage(messageId, content);
 
     if (!result.success) {
-      toast.error(result.error || t("errors.editMessage"));
+      toast.error(result.message || t("errors.editMessage"));
       return;
     }
 
@@ -321,7 +321,7 @@ export function ConversationView({
     const result = await deleteMessage(messageToDelete);
 
     if (!result.success) {
-      toast.error(result.error || t("errors.deleteMessage"));
+      toast.error(result.message || t("errors.deleteMessage"));
       setIsDeleting(false);
       return;
     }

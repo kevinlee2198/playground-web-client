@@ -5,8 +5,10 @@ import {
   chatMessageNodeSelection,
   chatRoomInlineFragments,
   chatUserFragment,
+  errorFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
+import { extractMutationResult } from "@/lib/graphql-result";
 import type {
   ChatMessageNode,
   ChatRoomDetailNode,
@@ -248,11 +250,12 @@ export async function findDirectMessageRoom(
 export async function createDirectMessage(userId: string): Promise<{
   success: boolean;
   chatRoom?: ChatRoomListNode;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }> {
   const parsed = createDirectMessageSchema.safeParse({ userId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
+    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
   }
 
   try {
@@ -261,21 +264,25 @@ export async function createDirectMessage(userId: string): Promise<{
         __args: {
           input: { userId: parsed.data.userId },
         },
-        chatRoom: chatRoomListNodeSelection,
+        __typename: true,
+        __on: [
+          { __typeName: "CreateDirectMessageResponse", chatRoom: chatRoomListNodeSelection },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    return {
-      success: true,
-      chatRoom: response.data.createDirectMessage.chatRoom,
-    };
+    const result = extractMutationResult(response.data.createDirectMessage, "CreateDirectMessageResponse");
+    if (!result.success) return result;
+
+    return { success: true, chatRoom: result.data.chatRoom };
   } catch (error) {
     console.error("Failed to create direct message:", error);
-    return { success: false, error: "Failed to create direct message" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to create direct message" };
   }
 }
 
@@ -288,11 +295,12 @@ export async function createGroupChat(
 ): Promise<{
   success: boolean;
   chatRoom?: ChatRoomListNode;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }> {
   const parsed = createGroupChatSchema.safeParse({ name, userIds });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
+    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
   }
 
   try {
@@ -304,21 +312,25 @@ export async function createGroupChat(
             userIds: parsed.data.userIds,
           },
         },
-        chatRoom: chatRoomListNodeSelection,
+        __typename: true,
+        __on: [
+          { __typeName: "CreateGroupChatResponse", chatRoom: chatRoomListNodeSelection },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    return {
-      success: true,
-      chatRoom: response.data.createGroupChat.chatRoom,
-    };
+    const result = extractMutationResult(response.data.createGroupChat, "CreateGroupChatResponse");
+    if (!result.success) return result;
+
+    return { success: true, chatRoom: result.data.chatRoom };
   } catch (error) {
     console.error("Failed to create group chat:", error);
-    return { success: false, error: "Failed to create group chat" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to create group chat" };
   }
 }
 
@@ -329,14 +341,19 @@ export async function sendMessage(
   chatRoomId: string,
   content: string,
   replyToId?: string,
-) {
+): Promise<{
+  success: boolean;
+  chatMessage?: ChatMessageNode;
+  errorType?: string;
+  message?: string;
+}> {
   const parsed = sendMessageSchema.safeParse({
     chatRoomId,
     content,
     replyToId,
   });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
+    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
   }
 
   try {
@@ -353,21 +370,25 @@ export async function sendMessage(
             },
           },
         },
-        chatMessage: chatMessageNodeSelection,
+        __typename: true,
+        __on: [
+          { __typeName: "SendChatMessageResponse", chatMessage: chatMessageNodeSelection },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    return {
-      success: true,
-      message: response.data.sendChatMessage.chatMessage,
-    };
+    const result = extractMutationResult(response.data.sendChatMessage, "SendChatMessageResponse");
+    if (!result.success) return result;
+
+    return { success: true, chatMessage: result.data.chatMessage };
   } catch (error) {
     console.error("Failed to send message:", error);
-    return { success: false, error: "Failed to send message" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to send message" };
   }
 }
 
@@ -379,8 +400,9 @@ export async function sendMediaMessage(
   resourceId: string,
 ): Promise<{
   success: boolean;
-  message?: ChatMessageNode;
-  error?: string;
+  chatMessage?: ChatMessageNode;
+  errorType?: string;
+  message?: string;
 }> {
   try {
     const response = await authMutate({
@@ -393,31 +415,39 @@ export async function sendMediaMessage(
             },
           },
         },
-        chatMessage: chatMessageNodeSelection,
+        __typename: true,
+        __on: [
+          { __typeName: "SendChatMessageResponse", chatMessage: chatMessageNodeSelection },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    return {
-      success: true,
-      message: response.data.sendChatMessage.chatMessage,
-    };
+    const result = extractMutationResult(response.data.sendChatMessage, "SendChatMessageResponse");
+    if (!result.success) return result;
+
+    return { success: true, chatMessage: result.data.chatMessage };
   } catch (error) {
     console.error("Failed to send media message:", error);
-    return { success: false, error: "Failed to send message" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to send message" };
   }
 }
 
 /**
  * Update a chat message
  */
-export async function updateMessage(id: string, content: string) {
+export async function updateMessage(id: string, content: string): Promise<{
+  success: boolean;
+  errorType?: string;
+  message?: string;
+}> {
   const parsed = updateMessageSchema.safeParse({ id, content });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
+    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
   }
 
   try {
@@ -428,110 +458,147 @@ export async function updateMessage(id: string, content: string) {
             textMessage: { id: parsed.data.id, content: parsed.data.content },
           },
         },
-        chatMessage: {
-          id: true,
-          __on: [
-            {
-              __typeName: "TextChatMessage",
-              content: true,
-              updatedDate: true,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UpdateChatMessageResponse",
+            chatMessage: {
+              id: true,
+              __on: [{ __typeName: "TextChatMessage", content: true, updatedDate: true }],
             },
-          ],
-        },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.updateChatMessage, "UpdateChatMessageResponse");
+    if (!result.success) return result;
 
     return { success: true };
   } catch (error) {
     console.error("Failed to update message:", error);
-    return { success: false, error: "Failed to update message" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update message" };
   }
 }
 
 /**
  * Delete a chat message
  */
-export async function deleteMessage(id: string) {
+export async function deleteMessage(id: string): Promise<{
+  success: boolean;
+  errorType?: string;
+  message?: string;
+}> {
   try {
     const response = await authMutate({
       deleteChatMessage: {
         __args: {
           input: { id },
         },
-        id: true,
+        __typename: true,
+        __on: [
+          { __typeName: "DeleteChatMessageResponse", id: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.deleteChatMessage, "DeleteChatMessageResponse");
+    if (!result.success) return result;
 
     return { success: true };
   } catch (error) {
     console.error("Failed to delete message:", error);
-    return { success: false, error: "Failed to delete message" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to delete message" };
   }
 }
 
 /**
  * Add a member to a chat room
  */
-export async function addMember(chatRoomId: string, userId: string) {
+export async function addMember(chatRoomId: string, userId: string): Promise<{
+  success: boolean;
+  member?: ChatRoomMemberNode;
+  errorType?: string;
+  message?: string;
+}> {
   try {
     const response = await authMutate({
       addChatRoomMember: {
         __args: {
           input: { chatRoomId, userId },
         },
-        member: {
-          id: true,
-          user: chatUserFragment,
-          role: true,
-          joinedDate: true,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "AddChatRoomMemberResponse",
+            member: {
+              id: true,
+              user: chatUserFragment,
+              role: true,
+              joinedDate: true,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    return {
-      success: true,
-      member: response.data.addChatRoomMember.member as ChatRoomMemberNode,
-    };
+    const result = extractMutationResult(response.data.addChatRoomMember, "AddChatRoomMemberResponse");
+    if (!result.success) return result;
+
+    return { success: true, member: result.data.member as ChatRoomMemberNode };
   } catch (error) {
     console.error("Failed to add member:", error);
-    return { success: false, error: "Failed to add member" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to add member" };
   }
 }
 
 /**
  * Remove a member from a chat room
  */
-export async function removeMember(chatRoomId: string, userId: string) {
+export async function removeMember(chatRoomId: string, userId: string): Promise<{
+  success: boolean;
+  errorType?: string;
+  message?: string;
+}> {
   try {
     const response = await authMutate({
       removeChatRoomMember: {
         __args: {
           input: { chatRoomId, userId },
         },
-        chatRoomId: true,
-        userId: true,
+        __typename: true,
+        __on: [
+          { __typeName: "RemoveChatRoomMemberResponse", chatRoomId: true, userId: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.removeChatRoomMember, "RemoveChatRoomMemberResponse");
+    if (!result.success) return result;
 
     return { success: true };
   } catch (error) {
     console.error("Failed to remove member:", error);
-    return { success: false, error: "Failed to remove member" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to remove member" };
   }
 }
