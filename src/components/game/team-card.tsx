@@ -57,7 +57,7 @@ export function TeamCard({
       if (result.success) {
         toast.success(t("game.success.participantAdded"));
       } else {
-        toast.error(result.error || t("game.errors.participantError"));
+        toast.error(result.message || t("game.errors.participantError"));
       }
     });
   };
@@ -72,7 +72,7 @@ export function TeamCard({
       if (result.success) {
         toast.success(t("game.success.participantRemoved"));
       } else {
-        toast.error(result.error || t("game.errors.participantError"));
+        toast.error(result.message || t("game.errors.participantError"));
       }
     });
   };
@@ -87,7 +87,7 @@ export function TeamCard({
         toast.success(t("game.success.participantRemoved"));
         setShowRemoveDialog(false);
       } else {
-        toast.error(result.error || t("game.errors.participantError"));
+        toast.error(result.message || t("game.errors.participantError"));
       }
     });
   };

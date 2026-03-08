@@ -102,7 +102,7 @@ export function FootballScoreForm({
           onSuccess();
         } else {
           const errorMsg =
-            result.error || t("game.scoreboard.scoreUpdateError");
+            result.message || t("game.scoreboard.scoreUpdateError");
           setError(errorMsg);
           toast.error(errorMsg);
         }

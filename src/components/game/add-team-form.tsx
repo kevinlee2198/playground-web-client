@@ -55,8 +55,8 @@ export function AddTeamForm({ gameId, onSuccess }: AddTeamFormProps) {
           form.reset();
           onSuccess?.();
         } else {
-          setError(result.error || t("game.errors.participantError"));
-          toast.error(result.error || t("game.errors.participantError"));
+          setError(result.message || t("game.errors.participantError"));
+          toast.error(result.message || t("game.errors.participantError"));
         }
       });
     },
