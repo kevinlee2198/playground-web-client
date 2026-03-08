@@ -2,7 +2,7 @@
 
 import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { Player } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
@@ -61,7 +61,7 @@ export async function createPlayer(
     if (response.errors?.length > 0) {
       return {
         success: false,
-        errorType: "GRAPHQL_ERROR",
+        errorType: MutationErrorType.GRAPHQL_ERROR,
         message: response.errors[0].message,
       };
     }
@@ -78,7 +78,7 @@ export async function createPlayer(
     console.error("Failed to create player:", error);
     return {
       success: false,
-      errorType: "UNEXPECTED_ERROR",
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to create player",
     };
   }
@@ -125,7 +125,7 @@ export async function updatePlayer(
     if (response.errors?.length > 0) {
       return {
         success: false,
-        errorType: "GRAPHQL_ERROR",
+        errorType: MutationErrorType.GRAPHQL_ERROR,
         message: response.errors[0].message,
       };
     }
@@ -142,7 +142,7 @@ export async function updatePlayer(
     console.error("Failed to update player:", error);
     return {
       success: false,
-      errorType: "UNEXPECTED_ERROR",
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to update player",
     };
   }

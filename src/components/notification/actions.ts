@@ -2,7 +2,7 @@
 
 import { errorFragment, notificationInlineFragments } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   FetchNotificationsResult,
   MarkNotificationsAsReadResult,
@@ -104,7 +104,7 @@ export async function markNotificationsAsRead(
       return {
         success: false,
         notifications: null,
-        errorType: "GRAPHQL_ERROR",
+        errorType: MutationErrorType.GRAPHQL_ERROR,
         message: response.errors[0].message,
       };
     }
@@ -131,7 +131,7 @@ export async function markNotificationsAsRead(
     return {
       success: false,
       notifications: null,
-      errorType: "UNEXPECTED_ERROR",
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to mark as read",
     };
   }

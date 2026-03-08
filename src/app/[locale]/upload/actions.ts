@@ -2,7 +2,7 @@
 
 import { errorFragment, resourceFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { Resource } from "@/lib/types/resource";
 
 interface RequestUploadResult {
@@ -53,7 +53,7 @@ export async function requestProfilePictureUpload(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
@@ -67,7 +67,7 @@ export async function requestProfilePictureUpload(
       resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to request upload" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to request upload" };
   }
 }
 
@@ -99,7 +99,7 @@ export async function requestGameMediaUpload(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
@@ -113,7 +113,7 @@ export async function requestGameMediaUpload(
       resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to request upload" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to request upload" };
   }
 }
 
@@ -145,7 +145,7 @@ export async function requestChatMediaUpload(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
@@ -159,7 +159,7 @@ export async function requestChatMediaUpload(
       resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to request upload" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to request upload" };
   }
 }
 
@@ -179,7 +179,7 @@ export async function confirmUpload(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.confirmUpload, "ConfirmUploadResponse");
@@ -192,7 +192,7 @@ export async function confirmUpload(
       resource: result.data.resource,
     };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to confirm upload" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to confirm upload" };
   }
 }
 
@@ -212,7 +212,7 @@ export async function deleteResource(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.deleteResource, "DeleteResourceResponse");
@@ -222,6 +222,6 @@ export async function deleteResource(
 
     return { success: true };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to delete resource" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to delete resource" };
   }
 }

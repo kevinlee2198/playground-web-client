@@ -2,7 +2,7 @@
 
 import { errorFragment, participantMetadataFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   AddIndividualParticipantInput,
   AddTeamInput,
@@ -65,7 +65,7 @@ export async function addTeamParticipant(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.addGameParticipant, "AddGameParticipantResponse");
@@ -75,7 +75,7 @@ export async function addTeamParticipant(
     return { success: true, participantId: result.data.participant.id };
   } catch (error) {
     console.error("Failed to add team participant:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to add team participant" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to add team participant" };
   }
 }
 
@@ -119,7 +119,7 @@ export async function addIndividualParticipant(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.addGameParticipant, "AddGameParticipantResponse");
@@ -129,7 +129,7 @@ export async function addIndividualParticipant(
     return { success: true, participantId: result.data.participant.id };
   } catch (error) {
     console.error("Failed to add individual participant:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to add individual participant" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to add individual participant" };
   }
 }
 
@@ -183,7 +183,7 @@ export async function updateTeamParticipant(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.updateGameParticipant, "UpdateGameParticipantResponse");
@@ -195,7 +195,7 @@ export async function updateTeamParticipant(
     return { success: true, participantId: result.data.participant.id };
   } catch (error) {
     console.error("Failed to update team participant:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update team participant" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to update team participant" };
   }
 }
 
@@ -236,7 +236,7 @@ export async function joinTeam(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.addPlayerToTeamInstance, "AddPlayerToTeamInstanceResponse");
@@ -246,7 +246,7 @@ export async function joinTeam(
     return { success: true };
   } catch (error) {
     console.error("Failed to join team:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to join team" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to join team" };
   }
 }
 
@@ -287,7 +287,7 @@ export async function leaveTeam(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.removePlayerFromTeamInstance, "RemovePlayerFromTeamInstanceResponse");
@@ -297,7 +297,7 @@ export async function leaveTeam(
     return { success: true };
   } catch (error) {
     console.error("Failed to leave team:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to leave team" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to leave team" };
   }
 }
 
@@ -326,7 +326,7 @@ export async function removeTeamParticipant(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.removeGameParticipant, "RemoveGameParticipantResponse");
@@ -336,7 +336,7 @@ export async function removeTeamParticipant(
     return { success: true };
   } catch (error) {
     console.error("Failed to remove team participant:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to remove team participant" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to remove team participant" };
   }
 }
 
@@ -366,7 +366,7 @@ export async function removeIndividualParticipant(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.removeGameParticipant, "RemoveGameParticipantResponse");
@@ -376,7 +376,7 @@ export async function removeIndividualParticipant(
     return { success: true };
   } catch (error) {
     console.error("Failed to remove individual participant:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to remove individual participant" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to remove individual participant" };
   }
 }
 
@@ -441,7 +441,7 @@ export async function updateParticipantScores(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.updateGameParticipants, "UpdateGameParticipantsResponse");
@@ -451,6 +451,6 @@ export async function updateParticipantScores(
     return { success: true };
   } catch (error) {
     console.error("Failed to update participant scores:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update scores" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to update scores" };
   }
 }
