@@ -134,6 +134,16 @@ export enum GameSortField {
   GAME_STATUS = "GAME_STATUS",
 }
 
+export enum GameRole {
+  OWNER = "OWNER",
+  EDITOR = "EDITOR",
+}
+
+export enum GameVisibility {
+  PUBLIC = "PUBLIC",
+  PRIVATE = "PRIVATE",
+}
+
 export enum ChatRoomRole {
   OWNER = "OWNER",
   ADMIN = "ADMIN",
