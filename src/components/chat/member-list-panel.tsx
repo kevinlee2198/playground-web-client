@@ -119,7 +119,7 @@ export function MemberListPanel({
         setRemoveDialogOpen(false);
         setMemberToRemove(null);
       } else {
-        toast.error(result.error || tChat("errors.removeMember"));
+        toast.error(result.message || tChat("errors.removeMember"));
       }
     } catch (error) {
       console.error("Error removing member:", error);
