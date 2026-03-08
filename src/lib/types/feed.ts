@@ -1,4 +1,4 @@
-import type { GameStatus, SportType } from "@/lib/constants";
+import type { GameRole, GameStatus, GameVisibility, SportType } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type { GameMetadata, GameParticipant } from "@/lib/types/game";
 
@@ -63,6 +63,8 @@ export interface FeedGameNode {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  viewerGameRole: GameRole | null;
+  visibility: GameVisibility;
   location: FeedLocation | null;
   participants: {
     edges: Edge<GameParticipant>[];
