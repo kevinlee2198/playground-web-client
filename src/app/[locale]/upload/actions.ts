@@ -1,25 +1,29 @@
 "use server";
 
-import { resourceFragment } from "@/lib/graphql-fragments";
+import { errorFragment, resourceFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
+import { extractMutationResult } from "@/lib/graphql-result";
 import type { Resource } from "@/lib/types/resource";
 
 interface RequestUploadResult {
   success: boolean;
   uploadUrl?: string | null;
   resourceId?: string;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }
 
 interface ConfirmUploadResult {
   success: boolean;
   resource?: Resource;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }
 
 interface DeleteResourceResult {
   success: boolean;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }
 
 export async function requestProfilePictureUpload(
@@ -40,22 +44,30 @@ export async function requestProfilePictureUpload(
             },
           },
         },
-        uploadUrl: true,
-        resourceId: true,
+        __typename: true,
+        __on: [
+          { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
+    if (!result.success) {
+      return { success: false, errorType: result.errorType, message: result.message };
     }
 
     return {
       success: true,
-      uploadUrl: response.data.requestUpload.uploadUrl,
-      resourceId: response.data.requestUpload.resourceId,
+      uploadUrl: result.data.uploadUrl,
+      resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, error: "Failed to request upload" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to request upload" };
   }
 }
 
@@ -78,22 +90,30 @@ export async function requestGameMediaUpload(
             },
           },
         },
-        uploadUrl: true,
-        resourceId: true,
+        __typename: true,
+        __on: [
+          { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
+    if (!result.success) {
+      return { success: false, errorType: result.errorType, message: result.message };
     }
 
     return {
       success: true,
-      uploadUrl: response.data.requestUpload.uploadUrl,
-      resourceId: response.data.requestUpload.resourceId,
+      uploadUrl: result.data.uploadUrl,
+      resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, error: "Failed to request upload" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to request upload" };
   }
 }
 
@@ -116,22 +136,30 @@ export async function requestChatMediaUpload(
             },
           },
         },
-        uploadUrl: true,
-        resourceId: true,
+        __typename: true,
+        __on: [
+          { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
+    if (!result.success) {
+      return { success: false, errorType: result.errorType, message: result.message };
     }
 
     return {
       success: true,
-      uploadUrl: response.data.requestUpload.uploadUrl,
-      resourceId: response.data.requestUpload.resourceId,
+      uploadUrl: result.data.uploadUrl,
+      resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, error: "Failed to request upload" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to request upload" };
   }
 }
 
@@ -142,20 +170,29 @@ export async function confirmUpload(
     const response = await authMutate({
       confirmUpload: {
         __args: { input: { resourceId } },
-        resource: resourceFragment,
+        __typename: true,
+        __on: [
+          { __typeName: "ConfirmUploadResponse", resource: resourceFragment },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.confirmUpload, "ConfirmUploadResponse");
+    if (!result.success) {
+      return { success: false, errorType: result.errorType, message: result.message };
     }
 
     return {
       success: true,
-      resource: response.data.confirmUpload.resource,
+      resource: result.data.resource,
     };
   } catch {
-    return { success: false, error: "Failed to confirm upload" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to confirm upload" };
   }
 }
 
@@ -166,16 +203,25 @@ export async function deleteResource(
     const response = await authMutate({
       deleteResource: {
         __args: { input: { resourceId } },
-        id: true,
+        __typename: true,
+        __on: [
+          { __typeName: "DeleteResourceResponse", id: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.deleteResource, "DeleteResourceResponse");
+    if (!result.success) {
+      return { success: false, errorType: result.errorType, message: result.message };
     }
 
     return { success: true };
   } catch {
-    return { success: false, error: "Failed to delete resource" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to delete resource" };
   }
 }

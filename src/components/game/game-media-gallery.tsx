@@ -93,7 +93,7 @@ export function GameMediaGallery({
         );
         if (!requestResult.success || !requestResult.resourceId) {
           toast.error(
-            requestResult.error ||
+            requestResult.message ||
               t("media.errors.uploadFailed", { filename: file.name }),
           );
           setUploadingFiles((prev) => {
@@ -213,7 +213,7 @@ export function GameMediaGallery({
     const result = await deleteResource(resourceToDelete);
 
     if (!result.success) {
-      toast.error(result.error || t("media.errors.deleteFailed"));
+      toast.error(result.message || t("media.errors.deleteFailed"));
       setIsDeleting(false);
       return;
     }

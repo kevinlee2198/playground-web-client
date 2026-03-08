@@ -97,7 +97,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
         selectedFile.size,
       );
       if (!requestResult.success || !requestResult.resourceId) {
-        toast.error(requestResult.error || t("errors.uploadFailed"));
+        toast.error(requestResult.message || t("errors.uploadFailed"));
         return;
       }
 
@@ -125,7 +125,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
       if (oldResource) {
         deleteResource(oldResource.id).then((result) => {
           if (!result.success) {
-            console.warn("Failed to delete old profile picture:", result.error);
+            console.warn("Failed to delete old profile picture:", result.message);
           }
         });
       }
@@ -151,7 +151,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
     try {
       const result = await deleteResource(profilePicture.id);
       if (!result.success) {
-        toast.error(result.error || t("errors.removeFailed"));
+        toast.error(result.message || t("errors.removeFailed"));
         return;
       }
 
