@@ -399,7 +399,6 @@ export interface GameFilterParams {
   sportType?: SportType;
   playerId?: number;
   gameStatus?: GameStatus;
-  createdBy?: string;
   organizedByMe?: boolean;
 }
 

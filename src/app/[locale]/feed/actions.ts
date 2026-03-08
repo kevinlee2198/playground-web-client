@@ -39,6 +39,8 @@ export async function loadFeedGames(
             endDate: true,
             sportType: true,
             gameStatus: true,
+            viewerGameRole: true,
+            visibility: true,
             metadata: gameMetadataFragment,
             location: {
               name: true,

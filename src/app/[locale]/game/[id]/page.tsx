@@ -115,6 +115,8 @@ export default async function GameDetailPage({ params }: PageProps) {
       sportType: true,
       metadata: gameMetadataFragment,
       gameStatus: true,
+      viewerGameRole: true,
+      visibility: true,
       location: locationFragment,
       participants: {
         __args: { first: 50 },
