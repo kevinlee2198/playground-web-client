@@ -2,11 +2,13 @@
 
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import {
+  errorFragment,
   gameMetadataFragment,
   participantNodeFragment,
   resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
+import { extractMutationResult } from "@/lib/graphql-result";
 import type {
   CreateGameInput,
   GameFilterParams,
@@ -20,7 +22,8 @@ import { revalidatePath } from "next/cache";
 interface GameActionResult {
   success: boolean;
   gameId?: number;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }
 
 /**
@@ -70,26 +73,36 @@ export async function createGame(
     const response = await authMutate({
       createGame: {
         __args: { input: mutationInput },
-        game: {
-          id: true,
-          sportType: true,
-          metadata: gameMetadataFragment,
-          gameStatus: true,
-          startDate: true,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "CreateGameResponse",
+            game: {
+              id: true,
+              sportType: true,
+              metadata: gameMetadataFragment,
+              gameStatus: true,
+              startDate: true,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    const gameId = response.data.createGame.game.id;
+    const result = extractMutationResult(response.data.createGame, "CreateGameResponse");
+    if (!result.success) return result;
+
+    const gameId = result.data.game.id;
     revalidatePath("/[locale]/games", "page");
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to create game:", error);
-    return { success: false, error: "Failed to create game" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to create game" };
   }
 }
 
@@ -140,23 +153,33 @@ export async function updateGame(
     const response = await authMutate({
       updateGame: {
         __args: { input: mutationInput },
-        game: {
-          id: true,
-          startDate: true,
-          metadata: gameMetadataFragment,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UpdateGameResponse",
+            game: {
+              id: true,
+              startDate: true,
+              metadata: gameMetadataFragment,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.updateGame, "UpdateGameResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, gameId: input.id };
   } catch (error) {
     console.error("Failed to update game:", error);
-    return { success: false, error: "Failed to update game" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update game" };
   }
 }
 
@@ -168,19 +191,26 @@ export async function deleteGame(gameId: number): Promise<GameActionResult> {
     const response = await authMutate({
       deleteGame: {
         __args: { input: { id: gameId } },
-        id: true,
+        __typename: true,
+        __on: [
+          { __typeName: "DeleteGameResponse", id: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.deleteGame, "DeleteGameResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/games", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete game:", error);
-    return { success: false, error: "Failed to delete game" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to delete game" };
   }
 }
 
@@ -198,23 +228,33 @@ export async function startGame(
     const response = await authMutate({
       startGame: {
         __args: { input: mutationInput },
-        game: {
-          id: true,
-          gameStatus: true,
-          startDate: true,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "StartGameResponse",
+            game: {
+              id: true,
+              gameStatus: true,
+              startDate: true,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.startGame, "StartGameResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to start game:", error);
-    return { success: false, error: "Failed to start game" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to start game" };
   }
 }
 
@@ -232,23 +272,33 @@ export async function endGame(
     const response = await authMutate({
       endGame: {
         __args: { input: mutationInput },
-        game: {
-          id: true,
-          gameStatus: true,
-          endDate: true,
-        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "EndGameResponse",
+            game: {
+              id: true,
+              gameStatus: true,
+              endDate: true,
+            },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.endGame, "EndGameResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to end game:", error);
-    return { success: false, error: "Failed to end game" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to end game" };
   }
 }
 

@@ -65,7 +65,7 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
       if (result.success) {
         toast.success(t("game.success.started"));
       } else {
-        toast.error(result.error || t("game.errors.startError"));
+        toast.error(result.message || t("game.errors.startError"));
       }
     });
   };
@@ -76,7 +76,7 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
       if (result.success) {
         toast.success(t("game.success.ended"));
       } else {
-        toast.error(result.error || t("game.errors.endError"));
+        toast.error(result.message || t("game.errors.endError"));
       }
     });
   };

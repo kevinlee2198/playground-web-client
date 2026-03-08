@@ -167,8 +167,8 @@ export function UpdateGameForm({
           toast.success(t("game.success.updated"));
           onSuccess?.();
         } else {
-          setError(result.error || t("game.errors.updateError"));
-          toast.error(result.error || t("game.errors.updateError"));
+          setError(result.message || t("game.errors.updateError"));
+          toast.error(result.message || t("game.errors.updateError"));
         }
       });
     },
