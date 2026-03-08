@@ -204,7 +204,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       </div>
 
       {/* Header with actions */}
-      <GameDetailHeader game={game} currentPlayerId={player.id} />
+      <GameDetailHeader game={game} viewerGameRole={game.viewerGameRole} />
 
       {/* Scoreboard - only show once game has started */}
       {game.gameStatus !== GameStatus.SCHEDULED && (

@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
+import { GameRole, GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
 import type { GameDetail, GameMetadata } from "@/lib/types/game";
 import { Pencil, Play, StopCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -20,10 +20,10 @@ import { UpdateGameForm } from "./update-game-form";
 
 interface GameDetailHeaderProps {
   game: GameDetail;
-  currentPlayerId: number;
+  viewerGameRole: GameRole | null;
 }
 
-export function GameDetailHeader({ game }: GameDetailHeaderProps) {
+export function GameDetailHeader({ game, viewerGameRole }: GameDetailHeaderProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -100,39 +100,49 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
             <GameStatusBadge status={game.gameStatus} />
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {canStart && (
+        {viewerGameRole != null && (
+          <div className="flex flex-wrap gap-2">
+            {canStart && (
+              <Button
+                onClick={handleStart}
+                disabled={isPending}
+                variant="default"
+              >
+                <Play className="mr-2 h-4 w-4" />
+                {isPending
+                  ? t("game.actions.starting")
+                  : t("game.actions.start")}
+              </Button>
+            )}
+            {canEnd && (
+              <Button
+                onClick={handleEnd}
+                disabled={isPending}
+                variant="default"
+              >
+                <StopCircle className="mr-2 h-4 w-4" />
+                {isPending ? t("game.actions.ending") : t("game.actions.end")}
+              </Button>
+            )}
             <Button
-              onClick={handleStart}
+              variant="outline"
+              onClick={() => setShowUpdateDialog(true)}
               disabled={isPending}
-              variant="default"
             >
-              <Play className="mr-2 h-4 w-4" />
-              {isPending ? t("game.actions.starting") : t("game.actions.start")}
+              <Pencil className="mr-2 h-4 w-4" />
+              {t("game.actions.edit")}
             </Button>
-          )}
-          {canEnd && (
-            <Button onClick={handleEnd} disabled={isPending} variant="default">
-              <StopCircle className="mr-2 h-4 w-4" />
-              {isPending ? t("game.actions.ending") : t("game.actions.end")}
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => setShowUpdateDialog(true)}
-            disabled={isPending}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            {t("game.actions.edit")}
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => setShowDeleteDialog(true)}
-            disabled={isPending}
-          >
-            {t("game.actions.delete")}
-          </Button>
-        </div>
+            {viewerGameRole === GameRole.OWNER && (
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={isPending}
+              >
+                {t("game.actions.delete")}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <DeleteGameDialog
