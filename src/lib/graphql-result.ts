@@ -7,6 +7,12 @@
  * 3. Check `.success` to discriminate
  */
 
+export enum MutationErrorType {
+  GRAPHQL_ERROR = "GRAPHQL_ERROR",
+  UNEXPECTED_ERROR = "UNEXPECTED_ERROR",
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+}
+
 export type MutationSuccess<T> = { success: true; data: T };
 export type MutationError = {
   success: false;

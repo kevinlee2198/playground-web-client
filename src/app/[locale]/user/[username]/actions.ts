@@ -7,7 +7,7 @@ import {
   participantNodeFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, query } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 
 export async function sendFriendRequest(userId: string) {
@@ -32,7 +32,7 @@ export async function sendFriendRequest(userId: string) {
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.sendFriendRequest, "SendFriendRequestResponse");
@@ -40,7 +40,7 @@ export async function sendFriendRequest(userId: string) {
 
     return { success: true, friendship: result.data.friendship };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to send friend request" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to send friend request" };
   }
 }
 
@@ -66,7 +66,7 @@ export async function acceptFriendRequest(requesterId: string) {
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.acceptFriendRequest, "AcceptFriendRequestResponse");
@@ -74,7 +74,7 @@ export async function acceptFriendRequest(requesterId: string) {
 
     return { success: true, friendship: result.data.friendship };
   } catch {
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to accept friend request" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to accept friend request" };
   }
 }
 

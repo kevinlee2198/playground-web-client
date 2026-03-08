@@ -2,7 +2,7 @@
 
 import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { SaveBasketballBoxScoreInput } from "@/lib/types/stats/basketball";
 import { revalidatePath } from "next/cache";
 
@@ -90,7 +90,7 @@ export async function saveBasketballBoxScore(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.saveBasketballBoxScore, "SaveBasketballBoxScoreResponse");
@@ -100,7 +100,7 @@ export async function saveBasketballBoxScore(
     return { success: true, boxScoreId: result.data.basketballBoxScore.id };
   } catch (error) {
     console.error("Failed to save basketball box score:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to save basketball box score" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save basketball box score" };
   }
 }
 
@@ -112,7 +112,7 @@ export async function saveBasketballBoxScores(
 ): Promise<BoxScoreActionResult> {
   try {
     if (scores.length === 0) {
-      return { success: false, errorType: "VALIDATION_ERROR", message: "No box scores provided" };
+      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No box scores provided" };
     }
 
     // Build the input array
@@ -189,7 +189,7 @@ export async function saveBasketballBoxScores(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.saveBasketballBoxScores, "SaveBasketballBoxScoresResponse");
@@ -203,6 +203,6 @@ export async function saveBasketballBoxScores(
     return { success: true, boxScoreIds };
   } catch (error) {
     console.error("Failed to save basketball box scores:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to save basketball box scores" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save basketball box scores" };
   }
 }

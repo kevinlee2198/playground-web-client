@@ -8,7 +8,7 @@ import {
   errorFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   ChatMessageNode,
   ChatRoomDetailNode,
@@ -255,7 +255,7 @@ export async function createDirectMessage(userId: string): Promise<{
 }> {
   const parsed = createDirectMessageSchema.safeParse({ userId });
   if (!parsed.success) {
-    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
+    return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: parsed.error.issues[0].message };
   }
 
   try {
@@ -273,7 +273,7 @@ export async function createDirectMessage(userId: string): Promise<{
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.createDirectMessage, "CreateDirectMessageResponse");
@@ -282,7 +282,7 @@ export async function createDirectMessage(userId: string): Promise<{
     return { success: true, chatRoom: result.data.chatRoom };
   } catch (error) {
     console.error("Failed to create direct message:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to create direct message" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to create direct message" };
   }
 }
 
@@ -300,7 +300,7 @@ export async function createGroupChat(
 }> {
   const parsed = createGroupChatSchema.safeParse({ name, userIds });
   if (!parsed.success) {
-    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
+    return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: parsed.error.issues[0].message };
   }
 
   try {
@@ -321,7 +321,7 @@ export async function createGroupChat(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.createGroupChat, "CreateGroupChatResponse");
@@ -330,7 +330,7 @@ export async function createGroupChat(
     return { success: true, chatRoom: result.data.chatRoom };
   } catch (error) {
     console.error("Failed to create group chat:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to create group chat" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to create group chat" };
   }
 }
 
@@ -353,7 +353,7 @@ export async function sendMessage(
     replyToId,
   });
   if (!parsed.success) {
-    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
+    return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: parsed.error.issues[0].message };
   }
 
   try {
@@ -379,7 +379,7 @@ export async function sendMessage(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.sendChatMessage, "SendChatMessageResponse");
@@ -388,7 +388,7 @@ export async function sendMessage(
     return { success: true, chatMessage: result.data.chatMessage };
   } catch (error) {
     console.error("Failed to send message:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to send message" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to send message" };
   }
 }
 
@@ -424,7 +424,7 @@ export async function sendMediaMessage(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.sendChatMessage, "SendChatMessageResponse");
@@ -433,7 +433,7 @@ export async function sendMediaMessage(
     return { success: true, chatMessage: result.data.chatMessage };
   } catch (error) {
     console.error("Failed to send media message:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to send message" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to send message" };
   }
 }
 
@@ -447,7 +447,7 @@ export async function updateMessage(id: string, content: string): Promise<{
 }> {
   const parsed = updateMessageSchema.safeParse({ id, content });
   if (!parsed.success) {
-    return { success: false, errorType: "VALIDATION_ERROR", message: parsed.error.issues[0].message };
+    return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: parsed.error.issues[0].message };
   }
 
   try {
@@ -473,7 +473,7 @@ export async function updateMessage(id: string, content: string): Promise<{
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.updateChatMessage, "UpdateChatMessageResponse");
@@ -482,7 +482,7 @@ export async function updateMessage(id: string, content: string): Promise<{
     return { success: true };
   } catch (error) {
     console.error("Failed to update message:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update message" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to update message" };
   }
 }
 
@@ -509,7 +509,7 @@ export async function deleteMessage(id: string): Promise<{
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.deleteChatMessage, "DeleteChatMessageResponse");
@@ -518,7 +518,7 @@ export async function deleteMessage(id: string): Promise<{
     return { success: true };
   } catch (error) {
     console.error("Failed to delete message:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to delete message" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to delete message" };
   }
 }
 
@@ -554,7 +554,7 @@ export async function addMember(chatRoomId: string, userId: string): Promise<{
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.addChatRoomMember, "AddChatRoomMemberResponse");
@@ -563,7 +563,7 @@ export async function addMember(chatRoomId: string, userId: string): Promise<{
     return { success: true, member: result.data.member as ChatRoomMemberNode };
   } catch (error) {
     console.error("Failed to add member:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to add member" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to add member" };
   }
 }
 
@@ -590,7 +590,7 @@ export async function removeMember(chatRoomId: string, userId: string): Promise<
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.removeChatRoomMember, "RemoveChatRoomMemberResponse");
@@ -599,6 +599,6 @@ export async function removeMember(chatRoomId: string, userId: string): Promise<
     return { success: true };
   } catch (error) {
     console.error("Failed to remove member:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to remove member" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to remove member" };
   }
 }

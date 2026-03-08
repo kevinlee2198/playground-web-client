@@ -8,7 +8,7 @@ import {
   resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
-import { extractMutationResult } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   CreateGameInput,
   GameFilterParams,
@@ -91,7 +91,7 @@ export async function createGame(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.createGame, "CreateGameResponse");
@@ -102,7 +102,7 @@ export async function createGame(
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to create game:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to create game" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to create game" };
   }
 }
 
@@ -169,7 +169,7 @@ export async function updateGame(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.updateGame, "UpdateGameResponse");
@@ -179,7 +179,7 @@ export async function updateGame(
     return { success: true, gameId: input.id };
   } catch (error) {
     console.error("Failed to update game:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update game" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to update game" };
   }
 }
 
@@ -200,7 +200,7 @@ export async function deleteGame(gameId: number): Promise<GameActionResult> {
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.deleteGame, "DeleteGameResponse");
@@ -210,7 +210,7 @@ export async function deleteGame(gameId: number): Promise<GameActionResult> {
     return { success: true };
   } catch (error) {
     console.error("Failed to delete game:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to delete game" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to delete game" };
   }
 }
 
@@ -244,7 +244,7 @@ export async function startGame(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.startGame, "StartGameResponse");
@@ -254,7 +254,7 @@ export async function startGame(
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to start game:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to start game" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to start game" };
   }
 }
 
@@ -288,7 +288,7 @@ export async function endGame(
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
     const result = extractMutationResult(response.data.endGame, "EndGameResponse");
@@ -298,7 +298,7 @@ export async function endGame(
     return { success: true, gameId };
   } catch (error) {
     console.error("Failed to end game:", error);
-    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to end game" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to end game" };
   }
 }
 
