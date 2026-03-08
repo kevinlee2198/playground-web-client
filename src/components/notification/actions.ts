@@ -1,7 +1,8 @@
 "use server";
 
-import { notificationInlineFragments } from "@/lib/graphql-fragments";
+import { errorFragment, notificationInlineFragments } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
+import { extractMutationResult } from "@/lib/graphql-result";
 import type {
   FetchNotificationsResult,
   MarkNotificationsAsReadResult,
@@ -88,7 +89,14 @@ export async function markNotificationsAsRead(
         __args: {
           input: { ids },
         },
-        notifications: notificationNodeSelection,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "ReadNotificationsResponse",
+            notifications: notificationNodeSelection,
+          },
+          errorFragment,
+        ],
       },
     });
 
@@ -96,21 +104,35 @@ export async function markNotificationsAsRead(
       return {
         success: false,
         notifications: null,
-        error: response.errors[0].message,
+        errorType: "GRAPHQL_ERROR",
+        message: response.errors[0].message,
+      };
+    }
+
+    const result = extractMutationResult(
+      response.data.readNotifications,
+      "ReadNotificationsResponse",
+    );
+    if (!result.success) {
+      return {
+        success: false,
+        notifications: null,
+        errorType: result.errorType,
+        message: result.message,
       };
     }
 
     return {
       success: true,
-      notifications: response.data?.readNotifications?.notifications ?? [],
-      error: null,
+      notifications: result.data.notifications ?? [],
     };
   } catch (error) {
     console.error("Failed to mark notifications as read:", error);
     return {
       success: false,
       notifications: null,
-      error: "Failed to mark as read",
+      errorType: "UNEXPECTED_ERROR",
+      message: "Failed to mark as read",
     };
   }
 }

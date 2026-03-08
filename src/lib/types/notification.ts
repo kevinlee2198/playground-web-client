@@ -94,5 +94,6 @@ export interface FetchNotificationsResult {
 export interface MarkNotificationsAsReadResult {
   success: boolean;
   notifications: Notification[] | null;
-  error: string | null;
+  errorType?: string;
+  message?: string;
 }
