@@ -86,7 +86,7 @@ export function BasketballBoxScoreTable({
         toast.success(boxScoreT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.error ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? boxScoreT("playerStatsError"));
       }
     });
   }

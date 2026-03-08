@@ -109,8 +109,8 @@ export function BasketballBoxScoreForm({
           toast.success(t("game.success.boxScoresSaved"));
           onOpenChange(false);
         } else {
-          setError(result.error || t("game.errors.boxScoreError"));
-          toast.error(result.error || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.boxScoreError"));
+          toast.error(result.message || t("game.errors.boxScoreError"));
         }
       });
     },

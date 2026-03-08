@@ -378,7 +378,8 @@ export interface LeaveTeamInput {
 export interface ParticipantActionResult {
   success: boolean;
   participantId?: number;
-  error?: string;
+  errorType?: string;
+  message?: string;
 }
 
 /**

@@ -1,7 +1,8 @@
 "use server";
 
-import { participantMetadataFragment } from "@/lib/graphql-fragments";
+import { errorFragment, participantMetadataFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
+import { extractMutationResult } from "@/lib/graphql-result";
 import type {
   AddIndividualParticipantInput,
   AddTeamInput,
@@ -39,33 +40,42 @@ export async function addTeamParticipant(
             teamInstance: mutationInput,
           },
         },
-        participant: {
-          __on: {
-            __typeName: "TeamInstance",
-            id: true,
-            name: true,
-            description: true,
-            players: {
-              id: true,
-              firstName: true,
-              lastName: true,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "AddGameParticipantResponse",
+            participant: {
+              __on: {
+                __typeName: "TeamInstance",
+                id: true,
+                name: true,
+                description: true,
+                players: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+                metadata: participantMetadataFragment,
+              },
             },
-            metadata: participantMetadataFragment,
           },
-        },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    const participantId = response.data.addGameParticipant.participant.id;
+    const result = extractMutationResult(response.data.addGameParticipant, "AddGameParticipantResponse");
+    if (!result.success) return result;
+
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, participantId };
+    return { success: true, participantId: result.data.participant.id };
   } catch (error) {
     console.error("Failed to add team participant:", error);
-    return { success: false, error: "Failed to add team participant" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to add team participant" };
   }
 }
 
@@ -86,31 +96,40 @@ export async function addIndividualParticipant(
             },
           },
         },
-        participant: {
-          __on: {
-            __typeName: "IndividualParticipant",
-            id: true,
-            player: {
-              id: true,
-              firstName: true,
-              lastName: true,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "AddGameParticipantResponse",
+            participant: {
+              __on: {
+                __typeName: "IndividualParticipant",
+                id: true,
+                player: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+                metadata: participantMetadataFragment,
+              },
             },
-            metadata: participantMetadataFragment,
           },
-        },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    const participantId = response.data.addGameParticipant.participant.id;
+    const result = extractMutationResult(response.data.addGameParticipant, "AddGameParticipantResponse");
+    if (!result.success) return result;
+
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, participantId };
+    return { success: true, participantId: result.data.participant.id };
   } catch (error) {
     console.error("Failed to add individual participant:", error);
-    return { success: false, error: "Failed to add individual participant" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to add individual participant" };
   }
 }
 
@@ -139,35 +158,44 @@ export async function updateTeamParticipant(
             teamInstance: mutationInput,
           },
         },
-        participant: {
-          __on: {
-            __typeName: "TeamInstance",
-            id: true,
-            name: true,
-            description: true,
-            players: {
-              id: true,
-              firstName: true,
-              lastName: true,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UpdateGameParticipantResponse",
+            participant: {
+              __on: {
+                __typeName: "TeamInstance",
+                id: true,
+                name: true,
+                description: true,
+                players: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+                metadata: participantMetadataFragment,
+              },
             },
-            metadata: participantMetadataFragment,
           },
-        },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
 
-    const participantId = response.data.updateGameParticipant.participant.id;
+    const result = extractMutationResult(response.data.updateGameParticipant, "UpdateGameParticipantResponse");
+    if (!result.success) return result;
+
     // Note: We need to know the gameId to revalidate the path. This might need to be passed in.
     // For now, we'll use a wildcard revalidation
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, participantId };
+    return { success: true, participantId: result.data.participant.id };
   } catch (error) {
     console.error("Failed to update team participant:", error);
-    return { success: false, error: "Failed to update team participant" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update team participant" };
   }
 }
 
@@ -188,27 +216,37 @@ export async function joinTeam(
             playerId: input.playerId,
           },
         },
-        teamInstance: {
-          id: true,
-          name: true,
-          players: {
-            id: true,
-            firstName: true,
-            lastName: true,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "AddPlayerToTeamInstanceResponse",
+            teamInstance: {
+              id: true,
+              name: true,
+              players: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
-        },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.addPlayerToTeamInstance, "AddPlayerToTeamInstanceResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to join team:", error);
-    return { success: false, error: "Failed to join team" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to join team" };
   }
 }
 
@@ -229,27 +267,37 @@ export async function leaveTeam(
             playerId: input.playerId,
           },
         },
-        teamInstance: {
-          id: true,
-          name: true,
-          players: {
-            id: true,
-            firstName: true,
-            lastName: true,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "RemovePlayerFromTeamInstanceResponse",
+            teamInstance: {
+              id: true,
+              name: true,
+              players: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
-        },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.removePlayerFromTeamInstance, "RemovePlayerFromTeamInstanceResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to leave team:", error);
-    return { success: false, error: "Failed to leave team" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to leave team" };
   }
 }
 
@@ -269,19 +317,26 @@ export async function removeTeamParticipant(
             },
           },
         },
-        id: true,
+        __typename: true,
+        __on: [
+          { __typeName: "RemoveGameParticipantResponse", id: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.removeGameParticipant, "RemoveGameParticipantResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to remove team participant:", error);
-    return { success: false, error: "Failed to remove team participant" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to remove team participant" };
   }
 }
 
@@ -302,19 +357,26 @@ export async function removeIndividualParticipant(
             },
           },
         },
-        id: true,
+        __typename: true,
+        __on: [
+          { __typeName: "RemoveGameParticipantResponse", id: true },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.removeGameParticipant, "RemoveGameParticipantResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to remove individual participant:", error);
-    return { success: false, error: "Failed to remove individual participant" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to remove individual participant" };
   }
 }
 
@@ -354,31 +416,41 @@ export async function updateParticipantScores(
     const response = await authMutate({
       updateGameParticipants: {
         __args: { input: mutationInput },
-        participants: {
-          __on: [
-            {
-              __typeName: "TeamInstance",
-              id: true,
-              metadata: participantMetadataFragment,
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UpdateGameParticipantsResponse",
+            participants: {
+              __on: [
+                {
+                  __typeName: "TeamInstance",
+                  id: true,
+                  metadata: participantMetadataFragment,
+                },
+                {
+                  __typeName: "IndividualParticipant",
+                  id: true,
+                  metadata: participantMetadataFragment,
+                },
+              ],
             },
-            {
-              __typeName: "IndividualParticipant",
-              id: true,
-              metadata: participantMetadataFragment,
-            },
-          ],
-        },
+          },
+          errorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, error: response.errors[0].message };
+      return { success: false, errorType: "GRAPHQL_ERROR", message: response.errors[0].message };
     }
+
+    const result = extractMutationResult(response.data.updateGameParticipants, "UpdateGameParticipantsResponse");
+    if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to update participant scores:", error);
-    return { success: false, error: "Failed to update scores" };
+    return { success: false, errorType: "UNEXPECTED_ERROR", message: "Failed to update scores" };
   }
 }
