@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameStatus, SportType } from "@/lib/constants";
+import type { GameRole } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 import { Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,16 +17,18 @@ import { TennisScoreForm } from "./scoreboard/tennis-score-form";
 
 interface GameScoreboardProps {
   game: GameDetail;
+  viewerGameRole: GameRole | null;
 }
 
-export function GameScoreboard({ game }: GameScoreboardProps) {
+export function GameScoreboard({ game, viewerGameRole }: GameScoreboardProps) {
   const t = useTranslations();
   const [isEditing, setIsEditing] = useState(false);
 
   const participants = game.participants.edges.map((e) => e.node);
   const canEdit =
-    game.gameStatus === GameStatus.IN_PROGRESS ||
-    game.gameStatus === GameStatus.COMPLETE;
+    viewerGameRole != null &&
+    (game.gameStatus === GameStatus.IN_PROGRESS ||
+      game.gameStatus === GameStatus.COMPLETE);
 
   if (game.gameStatus === GameStatus.SCHEDULED) {
     return null;

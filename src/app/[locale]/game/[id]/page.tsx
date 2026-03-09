@@ -209,7 +209,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       {/* Scoreboard - only show once game has started */}
       {game.gameStatus !== GameStatus.SCHEDULED && (
         <div className="mb-8">
-          <GameScoreboard game={game} />
+          <GameScoreboard game={game} viewerGameRole={game.viewerGameRole} />
         </div>
       )}
 
@@ -258,7 +258,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       />
 
       {/* Box Scores */}
-      <GameBoxScores game={game} />
+      <GameBoxScores game={game} viewerGameRole={game.viewerGameRole} />
     </main>
   );
 }
