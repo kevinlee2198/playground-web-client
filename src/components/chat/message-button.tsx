@@ -26,6 +26,8 @@ export function MessageButton({ userId }: MessageButtonProps) {
 
       if (result.success && result.chatRoom) {
         router.push(`/chat?room=${result.chatRoom.id}`);
+      } else if (result.errorType === "UserBlockedError") {
+        toast.error(t("cannotMessageBlocked"));
       } else {
         toast.error(result.message || "Failed to create conversation");
       }

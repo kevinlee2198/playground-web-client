@@ -55,6 +55,7 @@
     "editProfile": "Edit Profile",
     "message": "Message",
     "messageFriendsOnly": "You must be friends to send messages",
+    "cannotMessageBlocked": "Cannot message this user",
     "stats": {
       "title": "Player Stats",
       "age": "Age",
