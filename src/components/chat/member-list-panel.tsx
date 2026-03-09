@@ -1,6 +1,16 @@
 "use client";
 
-import { addMember, removeMember } from "@/app/[locale]/chat/actions";
+import { addMember, leaveChat, removeMember, updateMemberRole } from "@/app/[locale]/chat/actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,15 +27,22 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { ChatRoomRoleBadgeVariant } from "@/lib/constants";
+import { useRouter } from "@/i18n/navigation";
+import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
-import type { ChatRoomMemberNode } from "@/lib/types/chat";
-import { UserPlus } from "lucide-react";
+import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
+import { LogOut, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { FriendSelector } from "./friend-selector";
 import { RemoveMemberDialog } from "./remove-member-dialog";
+
+function canRemoveMember(currentUserRole: ChatRoomRoleType | null, targetRole: ChatRoomRoleType): boolean {
+  if (currentUserRole === ChatRoomRole.OWNER && targetRole !== ChatRoomRole.OWNER) return true;
+  if (currentUserRole === ChatRoomRole.ADMIN && targetRole === ChatRoomRole.MEMBER) return true;
+  return false;
+}
 
 interface MemberListPanelProps {
   open: boolean;
@@ -35,6 +52,7 @@ interface MemberListPanelProps {
   currentUserId: string;
   isDirectMessage: boolean;
   onMembersChange: (members: Edge<ChatRoomMemberNode>[]) => void;
+  currentUserRole: ChatRoomRoleType | null;
 }
 
 export function MemberListPanel({
@@ -45,7 +63,9 @@ export function MemberListPanel({
   currentUserId,
   isDirectMessage,
   onMembersChange,
+  currentUserRole,
 }: MemberListPanelProps) {
+  const router = useRouter();
   const t = useTranslations("chat.members");
   const tChat = useTranslations("chat");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -58,6 +78,9 @@ export function MemberListPanel({
     name: string;
   } | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  const [transferTarget, setTransferTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   const memberUserIds = members.map((edge) => edge.node.user.id);
 
@@ -129,12 +152,84 @@ export function MemberListPanel({
     }
   };
 
+  const handleRoleChange = (userId: string, name: string, newRole: ChatRoomRole, successKey: "promoteSuccess" | "demoteSuccess") => {
+    startTransition(async () => {
+      const result = await updateMemberRole(roomId, userId, newRole);
+      if (result.success) {
+        onMembersChange(
+          members.map((edge) =>
+            edge.node.user.id === userId
+              ? { ...edge, node: { ...edge.node, role: newRole } }
+              : edge,
+          ),
+        );
+        toast.success(t(successKey, { name }));
+      } else {
+        toast.error(result.message || tChat("errors.updateRole"));
+      }
+    });
+  };
+
+  const handleConfirmTransfer = () => {
+    if (!transferTarget) return;
+    startTransition(async () => {
+      const result = await updateMemberRole(roomId, transferTarget.userId, ChatRoomRole.OWNER);
+      if (result.success) {
+        // Update both users' roles locally
+        onMembersChange(
+          members.map((edge) => {
+            if (edge.node.user.id === transferTarget.userId) {
+              return { ...edge, node: { ...edge.node, role: ChatRoomRole.OWNER } };
+            }
+            if (edge.node.user.id === currentUserId) {
+              return { ...edge, node: { ...edge.node, role: ChatRoomRole.MEMBER } };
+            }
+            return edge;
+          }),
+        );
+        toast.success(t("transferSuccess"));
+        setTransferTarget(null);
+      } else {
+        toast.error(result.message || tChat("errors.updateRole"));
+      }
+    });
+  };
+
+  const handleLeaveChat = () => {
+    startTransition(async () => {
+      const result = await leaveChat(roomId);
+      if (result.success) {
+        toast.success(t("leaveSuccess"));
+        setLeaveDialogOpen(false);
+        onOpenChange(false);
+        router.push("/chat");
+        return;
+      }
+
+      const errorMessage = result.errorType === "OwnerCannotLeaveError"
+        ? t("cannotLeaveAsOwner")
+        : result.message || tChat("errors.leaveChat");
+      toast.error(errorMessage);
+    });
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right">
           <SheetHeader>
             <SheetTitle>{t("title")}</SheetTitle>
+            {!isDirectMessage && currentUserRole !== ChatRoomRole.OWNER && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLeaveDialogOpen(true)}
+                disabled={isPending}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                {t("leaveChat")}
+              </Button>
+            )}
           </SheetHeader>
 
           <div className="mt-4 space-y-4">
@@ -188,15 +283,48 @@ export function MemberListPanel({
                       </div>
 
                       {!isDirectMessage && !isCurrentUser && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleRemoveClick(member.user.id, memberName)
-                          }
-                        >
-                          {t("remove")}
-                        </Button>
+                        <div className="flex gap-1">
+                          {currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.MEMBER && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleChange(member.user.id, memberName, ChatRoomRole.ADMIN, "promoteSuccess")}
+                              disabled={isPending}
+                            >
+                              {t("promoteToAdmin")}
+                            </Button>
+                          )}
+                          {currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.ADMIN && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRoleChange(member.user.id, memberName, ChatRoomRole.MEMBER, "demoteSuccess")}
+                                disabled={isPending}
+                              >
+                                {t("demoteToMember")}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTransferTarget({ userId: member.user.id, name: memberName })}
+                                disabled={isPending}
+                              >
+                                {t("transferOwnership")}
+                              </Button>
+                            </>
+                          )}
+                          {canRemoveMember(currentUserRole, member.role) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveClick(member.user.id, memberName)}
+                              disabled={isPending}
+                            >
+                              {t("remove")}
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
                   );
@@ -252,6 +380,42 @@ export function MemberListPanel({
           isRemoving={isRemoving}
         />
       )}
+
+      {/* Transfer Ownership Confirmation */}
+      <AlertDialog open={!!transferTarget} onOpenChange={(open) => !open && setTransferTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("transferConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("transferConfirmDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>{tChat("message.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTransfer} disabled={isPending}>
+              {t("transferOwnership")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Leave Chat Confirmation */}
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("leaveConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("leaveConfirmDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>{tChat("message.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLeaveChat} disabled={isPending}>
+              {t("leaveChat")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
