@@ -580,6 +580,33 @@ type InvalidUploadContextError implements Error {
   message: String!
 }
 """
+Management roles for a game, independent from being a participant.
+"""
+enum GameRole {
+  OWNER
+  EDITOR
+}
+
+"""
+A user with a management role in a game.
+"""
+type GameMember implements Node {
+  id: ID!
+  user: User!
+  role: GameRole!
+}
+
+type GameMemberEdge implements Edge {
+  cursor: String!
+  node: GameMember!
+}
+
+type GameMemberConnection implements Connection {
+  edges: [GameMemberEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
 What state a game is in.
 """
 enum GameStatus {
@@ -783,6 +810,21 @@ type Game implements Node & HasLocation {
   so the UI can render "Sarah, Kevin, and 3 others played basketball".
   """
   viewerFriendPlayers: ViewerFriendPlayers!
+  """
+  The current viewer's management role in this game, if any. Null if the viewer
+  has no management role (or is unauthenticated). Independent from being a
+  participant.
+  """
+  viewerGameRole: GameRole
+  """
+  Management members of this game (owner + editors). For the editor management screen.
+  """
+  members(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GameMemberConnection!
 }
 
 type ViewerFriendPlayers {
@@ -828,9 +870,9 @@ input GameFilterInput {
   """
   gameStatus: GameStatus
   """
-  Equals - the user ID that created the game
+  When true, only returns games where the current viewer is an OWNER or EDITOR.
   """
-  createdBy: ID
+  organizedByMe: Boolean
 }
 
 """
@@ -1373,7 +1415,52 @@ union RemoveGameParticipantsResult = RemoveGameParticipantsResponse | GameNotFou
 union AddPlayerToTeamInstanceResult = AddPlayerToTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
 union AddPlayersToTeamInstanceResult = AddPlayersToTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
 union RemovePlayerFromTeamInstanceResult = RemovePlayerFromTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
-union RemovePlayersFromTeamInstanceResult = RemovePlayersFromTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundErrorenum LivestreamProvider {
+union RemovePlayersFromTeamInstanceResult = RemovePlayersFromTeamInstanceResponse | TeamInstanceNotFoundError | PlayerNotFoundError
+
+# ============================================================================
+# Game Editor Management
+# ============================================================================
+
+"""
+Add a user as an editor to a game.
+"""
+input AddGameEditorInput {
+  gameId: ID!
+  userId: ID!
+}
+
+type AddGameEditorResponse {
+  gameMember: GameMember!
+}
+
+"""
+Remove an editor from a game.
+"""
+input RemoveGameEditorInput {
+  gameId: ID!
+  userId: ID!
+}
+
+type RemoveGameEditorResponse {
+  id: ID!
+}
+
+"""
+Transfer game ownership to another user.
+The current owner becomes an editor.
+"""
+input TransferGameOwnershipInput {
+  gameId: ID!
+  userId: ID!
+}
+
+type TransferGameOwnershipResponse {
+  gameMember: GameMember!
+}
+
+union AddGameEditorResult = AddGameEditorResponse | GameNotFoundError | UserNotFoundError
+union RemoveGameEditorResult = RemoveGameEditorResponse | GameNotFoundError | UserNotFoundError
+union TransferGameOwnershipResult = TransferGameOwnershipResponse | GameNotFoundError | UserNotFoundErrorenum LivestreamProvider {
     YOUTUBE,
     TWITCH
 }
@@ -2003,6 +2090,19 @@ type Mutation {
   Reverse finalization, allowing participants to edit scores and statistics again.
   """
   unfinalizeGameResults(input: UnfinalizeGameResultsInput!): UnfinalizeGameResultsResult!
+  """
+  Add a user as an editor to a game. Only the game owner can do this.
+  """
+  addGameEditor(input: AddGameEditorInput!): AddGameEditorResult!
+  """
+  Remove an editor from a game. Only the game owner can do this.
+  """
+  removeGameEditor(input: RemoveGameEditorInput!): RemoveGameEditorResult!
+  """
+  Transfer game ownership to another user. The current owner becomes an editor.
+  Only the game owner can do this.
+  """
+  transferGameOwnership(input: TransferGameOwnershipInput!): TransferGameOwnershipResult!
   """
   Start a livestream on a game
   """
