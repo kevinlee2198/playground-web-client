@@ -109,6 +109,7 @@ export async function ProfileHeader({
                     friendship={friendship}
                     currentUserId={currentUserId!}
                     showMessageButton
+                    displayName={user.displayName}
                   />
                 )}
               </>

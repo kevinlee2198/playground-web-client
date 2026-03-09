@@ -10,6 +10,13 @@ import { authMutate, query } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 
+const friendshipSelection = {
+  id: true,
+  status: true,
+  requester: { id: true },
+  addressee: { id: true },
+};
+
 export async function sendFriendRequest(userId: string) {
   try {
     const response = await authMutate({
@@ -19,12 +26,7 @@ export async function sendFriendRequest(userId: string) {
         __on: [
           {
             __typeName: "SendFriendRequestResponse",
-            friendship: {
-              id: true,
-              status: true,
-              requester: { id: true },
-              addressee: { id: true },
-            },
+            friendship: friendshipSelection,
           },
           errorFragment,
         ],
@@ -53,12 +55,7 @@ export async function acceptFriendRequest(requesterId: string) {
         __on: [
           {
             __typeName: "AcceptFriendRequestResponse",
-            friendship: {
-              id: true,
-              status: true,
-              requester: { id: true },
-              addressee: { id: true },
-            },
+            friendship: friendshipSelection,
           },
           errorFragment,
         ],
@@ -75,6 +72,64 @@ export async function acceptFriendRequest(requesterId: string) {
     return { success: true, friendship: result.data.friendship };
   } catch {
     return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to accept friend request" };
+  }
+}
+
+export async function blockUser(userId: string) {
+  try {
+    const response = await authMutate({
+      blockUser: {
+        __args: { input: { userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "BlockUserResponse",
+            friendship: friendshipSelection,
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.blockUser, "BlockUserResponse");
+    if (!result.success) return result;
+
+    return { success: true, friendship: result.data.friendship };
+  } catch {
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to block user" };
+  }
+}
+
+export async function unblockUser(userId: string) {
+  try {
+    const response = await authMutate({
+      unblockUser: {
+        __args: { input: { userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UnblockUserResponse",
+            friendship: friendshipSelection,
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.unblockUser, "UnblockUserResponse");
+    if (!result.success) return result;
+
+    return { success: true };
+  } catch {
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to unblock user" };
   }
 }
 

@@ -2,10 +2,28 @@
 
 import {
   acceptFriendRequest,
+  blockUser,
   sendFriendRequest,
+  unblockUser,
 } from "@/app/[locale]/user/[username]/actions";
 import { MessageButton } from "@/components/chat/message-button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -15,9 +33,12 @@ import {
 import { TypographyP } from "@/components/ui/typography";
 import { FriendshipStatus } from "@/lib/constants";
 import {
+  Ban,
   Clock,
   Loader2,
   MessageCircle,
+  MoreVertical,
+  ShieldOff,
   UserCheck,
   UserPlus,
 } from "lucide-react";
@@ -35,6 +56,7 @@ interface FriendActionsProps {
   } | null;
   currentUserId: string;
   showMessageButton?: boolean;
+  displayName: string;
 }
 
 export function FriendActions({
@@ -42,12 +64,15 @@ export function FriendActions({
   friendship,
   currentUserId,
   showMessageButton = false,
+  displayName,
 }: FriendActionsProps) {
   const t = useTranslations("profile.friends");
   const tProfile = useTranslations("profile");
+  const tBlock = useTranslations("profile.block");
   const [isPending, startTransition] = useTransition();
   const [localFriendship, setLocalFriendship] = useState(friendship);
   const [hasSentRequest, setHasSentRequest] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
 
   const status = localFriendship?.status;
   const isRequester = localFriendship?.requester.id === currentUserId;
@@ -60,6 +85,8 @@ export function FriendActions({
         setLocalFriendship(result.friendship);
         setHasSentRequest(true);
         toast.success(t("requestSent"));
+      } else if (result.errorType === "FriendshipAlreadyExistsError") {
+        toast.error(t("cannotAddBlocked"));
       } else {
         toast.error(t("error"));
       }
@@ -74,6 +101,35 @@ export function FriendActions({
         toast.success(t("requestAccepted"));
       } else {
         toast.error(t("error"));
+      }
+    });
+  };
+
+  const handleBlock = () => {
+    startTransition(async () => {
+      const result = await blockUser(userId);
+      if (result.success) {
+        setLocalFriendship(result.friendship);
+        toast.success(tBlock("success"));
+        setBlockDialogOpen(false);
+      } else if (result.errorType === "UserBlockedYouError") {
+        toast.error(tBlock("alreadyBlockedYou"));
+      } else if (result.errorType === "SelfActionError") {
+        toast.error(tBlock("cannotBlockSelf"));
+      } else {
+        toast.error(tBlock("error"));
+      }
+    });
+  };
+
+  const handleUnblock = () => {
+    startTransition(async () => {
+      const result = await unblockUser(userId);
+      if (result.success) {
+        setLocalFriendship(null);
+        toast.success(tBlock("unblockSuccess"));
+      } else {
+        toast.error(tBlock("error"));
       }
     });
   };
@@ -102,6 +158,61 @@ export function FriendActions({
     )
   ) : null;
 
+  const blockMenu = (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+          <MoreVertical className="h-4 w-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => setBlockDialogOpen(true)}>
+            <Ban className="mr-2 h-4 w-4" />
+            {tBlock("blockUser")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {tBlock("confirmTitle", { name: displayName })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {tBlock("confirmDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>
+              {tProfile("cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleBlock} disabled={isPending}>
+              {tBlock("blockUser")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+
+  if (status === FriendshipStatus.BLOCKED && isRequester) {
+    return (
+      <Button variant="outline" onClick={handleUnblock} disabled={isPending}>
+        {isPending ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <ShieldOff className="mr-2 h-4 w-4" />
+        )}
+        {tBlock("unblockUser")}
+      </Button>
+    );
+  }
+
+  // Blocked by other user - show nothing actionable
+  if (status === FriendshipStatus.BLOCKED) {
+    return null;
+  }
+
   // No friendship or declined - show Add Friend
   if (!status || status === FriendshipStatus.DECLINED) {
     return (
@@ -115,6 +226,7 @@ export function FriendActions({
           {t("addFriend")}
         </Button>
         {messageButton}
+        {blockMenu}
       </>
     );
   }
@@ -131,6 +243,7 @@ export function FriendActions({
           {t("pending")}
         </Button>
         {messageButton}
+        {blockMenu}
       </>
     );
   }
@@ -148,6 +261,7 @@ export function FriendActions({
           {t("acceptRequest")}
         </Button>
         {messageButton}
+        {blockMenu}
       </>
     );
   }
@@ -161,6 +275,7 @@ export function FriendActions({
           {t("friends")}
         </Button>
         {messageButton}
+        {blockMenu}
       </>
     );
   }
