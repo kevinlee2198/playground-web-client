@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground — Direction C: Sports Editorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0f1a;
+    --bg-surface: #0f1628;
+    --bg-card: #141d32;
+    --bg-elevated: #1a2540;
+    --bg-cream: #f5f0e8;
+    --bg-cream-warm: #ede5d8;
+    --accent: #d4a853;
+    --accent-dim: #d4a85325;
+    --accent-bright: #f0c96e;
+    --text-primary: #f0ece4;
+    --text-secondary: #8a8a9a;
+    --text-dark: #1a1a1a;
+    --text-dark-secondary: #5a5a5a;
+    --border: #ffffff0a;
+    --border-cream: #d4cfc4;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* === DIRECTION LABEL === */
+  .direction-label {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: var(--accent);
+    color: var(--bg-deep);
+    text-align: center;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px;
+    z-index: 100;
+  }
+
+  /* === NAV === */
+  nav {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+  }
+  .nav-brand em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .nav-links {
+    display: flex; gap: 36px; list-style: none;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .nav-links li { cursor: pointer; transition: color 0.2s; }
+  .nav-links li:hover { color: var(--text-primary); }
+  .nav-links li.active { color: var(--accent); }
+  .nav-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+  }
+
+  /* === EDITORIAL HERO === */
+  .editorial-hero {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 80px 48px 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-eyebrow {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .hero-headline {
+    font-family: var(--serif);
+    font-weight: 800;
+    font-size: 56px;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-deck {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* === SCORE FEATURE === */
+  .score-feature {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 48px;
+  }
+  .score-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .score-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-sport {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .score-status {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .score-body {
+    padding: 40px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+  }
+  .score-team { text-align: center; min-width: 180px; }
+  .score-team-label {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .score-team-num {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: 80px;
+    line-height: 1;
+    color: var(--text-primary);
+  }
+  .score-team-num.winner { color: var(--accent); }
+  .score-dash {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--text-secondary);
+  }
+  .score-footer {
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* === CREAM SECTION: GAME RECAP === */
+  .cream-section {
+    background: var(--bg-cream);
+    color: var(--text-dark);
+    padding: 80px 48px;
+  }
+  .cream-inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .recap-eyebrow {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .recap-headline {
+    font-family: var(--serif);
+    font-weight: 800;
+    font-size: 36px;
+    line-height: 1.2;
+    color: var(--text-dark);
+    margin-bottom: 24px;
+  }
+  .recap-body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--text-dark-secondary);
+    margin-bottom: 32px;
+  }
+  .recap-pullquote {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text-dark);
+    border-left: 3px solid var(--accent);
+    padding-left: 24px;
+    margin: 40px 0;
+  }
+  .recap-stat-row {
+    display: flex;
+    gap: 32px;
+    margin-top: 40px;
+  }
+  .recap-stat {
+    flex: 1;
+    border-top: 2px solid var(--accent);
+    padding-top: 12px;
+  }
+  .recap-stat-num {
+    font-family: var(--serif);
+    font-weight: 800;
+    font-size: 36px;
+    color: var(--text-dark);
+  }
+  .recap-stat-label {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-dark-secondary);
+    margin-top: 2px;
+  }
+
+  /* === GAME CARDS (dark) === */
+  .cards-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 48px;
+  }
+  .cards-section-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .editorial-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .editorial-card:hover { opacity: 0.8; }
+  .editorial-card-date {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 80px;
+    text-align: right;
+  }
+  .editorial-card-divider {
+    width: 1px;
+    height: 48px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .editorial-card-body { flex: 1; }
+  .editorial-card-sport {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2px;
+  }
+  .editorial-card-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .editorial-card-sub {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .editorial-card-score {
+    font-family: var(--serif);
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--accent);
+    min-width: 90px;
+    text-align: right;
+  }
+
+  /* === TYPOGRAPHY === */
+  .type-showcase {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 48px;
+    border-top: 1px solid var(--border);
+  }
+  .type-section-title {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .type-row { margin-bottom: 32px; }
+  .type-label {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .type-h1 {
+    font-family: var(--serif);
+    font-weight: 800;
+    font-size: 52px;
+    line-height: 1.1;
+  }
+  .type-h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1.2;
+  }
+  .type-h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+  }
+  .type-body {
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    max-width: 560px;
+  }
+  .type-serif-body {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 560px;
+  }
+
+  /* === PALETTE === */
+  .palette-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 48px 40px;
+  }
+  .swatch {
+    flex: 1; min-width: 70px; height: 72px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    font-size: 10px;
+    font-family: var(--sans);
+    font-weight: 500;
+  }
+  .swatch-label {
+    font-size: 9px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .footer-note {
+    text-align: center;
+    padding: 40px 48px 80px;
+    font-family: var(--sans);
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<div class="direction-label">Direction C — Sports Editorial</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Play<em>ground</em></div>
+  <ul class="nav-links">
+    <li class="active">Home</li>
+    <li>Games</li>
+    <li>Live</li>
+    <li>Highlights</li>
+    <li>Profile</li>
+  </ul>
+  <div class="nav-avatar"></div>
+</nav>
+
+<!-- EDITORIAL HERO -->
+<div class="editorial-hero">
+  <div class="hero-eyebrow">Featured Match &bull; Basketball</div>
+  <div class="hero-headline">Warriors Edge Lakers<br>in Overtime <em>Thriller</em></div>
+  <div class="hero-deck">A back-and-forth battle at Rucker Park ends with a buzzer-beating three. Full recap, box score, and highlights inside.</div>
+</div>
+
+<!-- SCORE FEATURE -->
+<div class="score-feature">
+  <div class="score-card">
+    <div class="score-card-header">
+      <span class="score-sport">Basketball &bull; 5v5</span>
+      <span class="score-status">Final &bull; OT</span>
+    </div>
+    <div class="score-body">
+      <div class="score-team">
+        <div class="score-team-label">Warriors</div>
+        <div class="score-team-num winner">112</div>
+      </div>
+      <div class="score-dash">&mdash;</div>
+      <div class="score-team">
+        <div class="score-team-label">Lakers</div>
+        <div class="score-team-num">108</div>
+      </div>
+    </div>
+    <div class="score-footer">
+      <span>Rucker Park, New York</span>
+      <span>March 7, 2026</span>
+      <span>Duration: 2h 15m</span>
+    </div>
+  </div>
+</div>
+
+<!-- CREAM EDITORIAL RECAP -->
+<div class="cream-section">
+  <div class="cream-inner">
+    <div class="recap-eyebrow">Game Recap</div>
+    <div class="recap-headline">Marcus Johnson's 34 Points Lead Warriors to Victory</div>
+    <div class="recap-body">
+      The Warriors overcame a 12-point fourth-quarter deficit to force overtime, where Marcus Johnson's three-pointer with 4.2 seconds remaining sealed one of the most memorable games at Rucker Park this season.
+    </div>
+    <div class="recap-pullquote">
+      "You dream about moments like this. The crowd, the lights, the shot — everything aligned."
+    </div>
+    <div class="recap-stat-row">
+      <div class="recap-stat">
+        <div class="recap-stat-num">34</div>
+        <div class="recap-stat-label">Points (Johnson)</div>
+      </div>
+      <div class="recap-stat">
+        <div class="recap-stat-num">12</div>
+        <div class="recap-stat-label">Assists (Team)</div>
+      </div>
+      <div class="recap-stat">
+        <div class="recap-stat-num">52%</div>
+        <div class="recap-stat-label">Field Goal %</div>
+      </div>
+      <div class="recap-stat">
+        <div class="recap-stat-num">2.1k</div>
+        <div class="recap-stat-label">Viewers</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME CARDS -->
+<div class="cards-section">
+  <div class="cards-section-title">Recent Matches</div>
+  <div class="editorial-card">
+    <div class="editorial-card-date">Mar 7</div>
+    <div class="editorial-card-divider"></div>
+    <div class="editorial-card-body">
+      <div class="editorial-card-sport">Basketball</div>
+      <div class="editorial-card-title">Warriors vs Lakers</div>
+      <div class="editorial-card-sub">Rucker Park &bull; Overtime</div>
+    </div>
+    <div class="editorial-card-score">112–108</div>
+  </div>
+  <div class="editorial-card">
+    <div class="editorial-card-date">Mar 6</div>
+    <div class="editorial-card-divider"></div>
+    <div class="editorial-card-body">
+      <div class="editorial-card-sport">Tennis</div>
+      <div class="editorial-card-title">Nadal def. Djokovic</div>
+      <div class="editorial-card-sub">Central Park Courts &bull; Singles</div>
+    </div>
+    <div class="editorial-card-score">6-4 7-5</div>
+  </div>
+  <div class="editorial-card">
+    <div class="editorial-card-date">Mar 5</div>
+    <div class="editorial-card-divider"></div>
+    <div class="editorial-card-body">
+      <div class="editorial-card-sport">Football</div>
+      <div class="editorial-card-title">Eagles vs Ravens</div>
+      <div class="editorial-card-sub">Riverside Field &bull; Flag</div>
+    </div>
+    <div class="editorial-card-score">28–21</div>
+  </div>
+</div>
+
+<!-- TYPOGRAPHY -->
+<div class="type-showcase">
+  <div class="type-section-title">Typography — Playfair Display + DM Sans</div>
+  <div class="type-row">
+    <div class="type-label">Display / H1 (Serif)</div>
+    <div class="type-h1">The Beautiful<br><em style="color: var(--accent)">Game</em></div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Heading / H2 (Serif)</div>
+    <div class="type-h2">Season Highlights & Statistics</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Subheading / H3 (Sans)</div>
+    <div class="type-h3">Player Performance &bull; Box Score</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Body (Sans)</div>
+    <div class="type-body">Every game tells a story. Playground captures the drama, the stats, and the moments that matter — presented with the depth and quality of sports journalism.</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Editorial Body (Serif Italic)</div>
+    <div class="type-serif-body">"The finest sports moments deserve to be remembered with the care and craft of great storytelling."</div>
+  </div>
+</div>
+
+<!-- PALETTE -->
+<div class="palette-row">
+  <div class="swatch" style="background: #0a0f1a; border: 1px solid #ffffff15; color: #888;">
+    <span class="swatch-label">Deep</span>#0A0F1A
+  </div>
+  <div class="swatch" style="background: #141d32; border: 1px solid #ffffff15; color: #888;">
+    <span class="swatch-label">Card</span>#141D32
+  </div>
+  <div class="swatch" style="background: #f5f0e8; color: #666;">
+    <span class="swatch-label">Cream</span>#F5F0E8
+  </div>
+  <div class="swatch" style="background: #d4a853; color: #000;">
+    <span class="swatch-label">Gold</span>#D4A853
+  </div>
+  <div class="swatch" style="background: #f0ece4; color: #666;">
+    <span class="swatch-label">Text Lt</span>#F0ECE4
+  </div>
+  <div class="swatch" style="background: #1a1a1a; color: #999;">
+    <span class="swatch-label">Text Dk</span>#1A1A1A
+  </div>
+  <div class="swatch" style="background: #8a8a9a; color: #fff;">
+    <span class="swatch-label">Muted</span>#8A8A9A
+  </div>
+</div>
+
+<div class="footer-note">
+  Direction C — Sophisticated, editorial depth. Games are stories. Stats are data journalism. Dark + cream duality.
+</div>
+
+</body>
+</html>
