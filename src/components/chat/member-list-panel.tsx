@@ -27,6 +27,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useRouter } from "@/i18n/navigation";
 import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
 import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
@@ -36,6 +37,12 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { FriendSelector } from "./friend-selector";
 import { RemoveMemberDialog } from "./remove-member-dialog";
+
+function canRemoveMember(currentUserRole: ChatRoomRoleType | null, targetRole: ChatRoomRoleType): boolean {
+  if (currentUserRole === ChatRoomRole.OWNER && targetRole !== ChatRoomRole.OWNER) return true;
+  if (currentUserRole === ChatRoomRole.ADMIN && targetRole === ChatRoomRole.MEMBER) return true;
+  return false;
+}
 
 interface MemberListPanelProps {
   open: boolean;
@@ -58,8 +65,7 @@ export function MemberListPanel({
   onMembersChange,
   currentUserRole,
 }: MemberListPanelProps) {
-  // Cast to the enum type for comparisons — the string values are identical
-  const userRole = currentUserRole as ChatRoomRole | null;
+  const router = useRouter();
   const t = useTranslations("chat.members");
   const tChat = useTranslations("chat");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -146,36 +152,18 @@ export function MemberListPanel({
     }
   };
 
-  const handlePromote = (userId: string, name: string) => {
+  const handleRoleChange = (userId: string, name: string, newRole: ChatRoomRole, successKey: "promoteSuccess" | "demoteSuccess") => {
     startTransition(async () => {
-      const result = await updateMemberRole(roomId, userId, ChatRoomRole.ADMIN);
+      const result = await updateMemberRole(roomId, userId, newRole);
       if (result.success) {
         onMembersChange(
           members.map((edge) =>
             edge.node.user.id === userId
-              ? { ...edge, node: { ...edge.node, role: ChatRoomRole.ADMIN } }
+              ? { ...edge, node: { ...edge.node, role: newRole } }
               : edge,
           ),
         );
-        toast.success(t("promoteSuccess", { name }));
-      } else {
-        toast.error(result.message || tChat("errors.updateRole"));
-      }
-    });
-  };
-
-  const handleDemote = (userId: string, name: string) => {
-    startTransition(async () => {
-      const result = await updateMemberRole(roomId, userId, ChatRoomRole.MEMBER);
-      if (result.success) {
-        onMembersChange(
-          members.map((edge) =>
-            edge.node.user.id === userId
-              ? { ...edge, node: { ...edge.node, role: ChatRoomRole.MEMBER } }
-              : edge,
-          ),
-        );
-        toast.success(t("demoteSuccess", { name }));
+        toast.success(t(successKey, { name }));
       } else {
         toast.error(result.message || tChat("errors.updateRole"));
       }
@@ -214,15 +202,14 @@ export function MemberListPanel({
         toast.success(t("leaveSuccess"));
         setLeaveDialogOpen(false);
         onOpenChange(false);
-        // The chat layout will handle the UI update when the member disappears
-        window.location.reload();
-      } else {
-        if (result.errorType === "OWNER_CANNOT_LEAVE_ERROR") {
-          toast.error(t("cannotLeaveAsOwner"));
-        } else {
-          toast.error(result.message || tChat("errors.leaveChat"));
-        }
+        router.push("/chat");
+        return;
       }
+
+      const errorMessage = result.errorType === "OwnerCannotLeaveError"
+        ? t("cannotLeaveAsOwner")
+        : result.message || tChat("errors.leaveChat");
+      toast.error(errorMessage);
     });
   };
 
@@ -232,7 +219,7 @@ export function MemberListPanel({
         <SheetContent side="right">
           <SheetHeader>
             <SheetTitle>{t("title")}</SheetTitle>
-            {!isDirectMessage && userRole !== ChatRoomRole.OWNER && (
+            {!isDirectMessage && currentUserRole !== ChatRoomRole.OWNER && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -297,49 +284,37 @@ export function MemberListPanel({
 
                       {!isDirectMessage && !isCurrentUser && (
                         <div className="flex gap-1">
-                          {userRole === ChatRoomRole.OWNER && (
+                          {currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.MEMBER && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleChange(member.user.id, memberName, ChatRoomRole.ADMIN, "promoteSuccess")}
+                              disabled={isPending}
+                            >
+                              {t("promoteToAdmin")}
+                            </Button>
+                          )}
+                          {currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.ADMIN && (
                             <>
-                              {member.role === ChatRoomRole.MEMBER && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handlePromote(member.user.id, memberName)}
-                                  disabled={isPending}
-                                >
-                                  {t("promoteToAdmin")}
-                                </Button>
-                              )}
-                              {member.role === ChatRoomRole.ADMIN && (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDemote(member.user.id, memberName)}
-                                    disabled={isPending}
-                                  >
-                                    {t("demoteToMember")}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setTransferTarget({ userId: member.user.id, name: memberName })}
-                                    disabled={isPending}
-                                  >
-                                    {t("transferOwnership")}
-                                  </Button>
-                                </>
-                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleRemoveClick(member.user.id, memberName)}
+                                onClick={() => handleRoleChange(member.user.id, memberName, ChatRoomRole.MEMBER, "demoteSuccess")}
                                 disabled={isPending}
                               >
-                                {t("remove")}
+                                {t("demoteToMember")}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTransferTarget({ userId: member.user.id, name: memberName })}
+                                disabled={isPending}
+                              >
+                                {t("transferOwnership")}
                               </Button>
                             </>
                           )}
-                          {userRole === ChatRoomRole.ADMIN && member.role === ChatRoomRole.MEMBER && (
+                          {canRemoveMember(currentUserRole, member.role) && (
                             <Button
                               variant="ghost"
                               size="sm"
