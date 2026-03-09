@@ -106,6 +106,7 @@ export async function GameBoxScores({ game }: GameBoxScoresProps) {
           boxScores={group.boxScores}
           gameStatus={game.gameStatus}
           availablePlayers={group.players}
+          viewerGameRole={game.viewerGameRole}
         />
       ))}
     </div>

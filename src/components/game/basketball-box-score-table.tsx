@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GameStatus } from "@/lib/constants";
+import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 import {
@@ -42,6 +42,7 @@ interface BasketballBoxScoreTableProps {
   boxScores: { node: BasketballBoxScoreNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
+  viewerGameRole: GameRole | null;
 }
 
 export function BasketballBoxScoreTable({
@@ -50,6 +51,7 @@ export function BasketballBoxScoreTable({
   boxScores,
   gameStatus,
   availablePlayers = [],
+  viewerGameRole,
 }: BasketballBoxScoreTableProps) {
   const t = useTranslations("game.boxScore.basketball");
   const boxScoreT = useTranslations("game.boxScore");
@@ -63,7 +65,8 @@ export function BasketballBoxScoreTable({
   const [isPending, startTransition] = useTransition();
 
   const canEdit =
-    gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
+    viewerGameRole != null &&
+    (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
     () => new Set(boxScores.map((edge) => edge.node.player.id)),

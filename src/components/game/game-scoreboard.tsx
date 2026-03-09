@@ -24,8 +24,9 @@ export function GameScoreboard({ game }: GameScoreboardProps) {
 
   const participants = game.participants.edges.map((e) => e.node);
   const canEdit =
-    game.gameStatus === GameStatus.IN_PROGRESS ||
-    game.gameStatus === GameStatus.COMPLETE;
+    game.viewerGameRole != null &&
+    (game.gameStatus === GameStatus.IN_PROGRESS ||
+      game.gameStatus === GameStatus.COMPLETE);
 
   if (game.gameStatus === GameStatus.SCHEDULED) {
     return null;

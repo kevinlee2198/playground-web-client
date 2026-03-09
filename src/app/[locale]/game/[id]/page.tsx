@@ -115,6 +115,8 @@ export default async function GameDetailPage({ params }: PageProps) {
       sportType: true,
       metadata: gameMetadataFragment,
       gameStatus: true,
+      viewerGameRole: true,
+      visibility: true,
       location: locationFragment,
       participants: {
         __args: { first: 50 },
@@ -202,7 +204,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       </div>
 
       {/* Header with actions */}
-      <GameDetailHeader game={game} currentPlayerId={player.id} />
+      <GameDetailHeader game={game} />
 
       {/* Scoreboard - only show once game has started */}
       {game.gameStatus !== GameStatus.SCHEDULED && (

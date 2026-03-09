@@ -1,6 +1,8 @@
 import {
+  type GameRole,
   type GameSortField,
   type GameStatus,
+  type GameVisibility,
   type SortDirection,
   SportSubtype,
   SportType,
@@ -126,6 +128,8 @@ export interface GameNode {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  viewerGameRole: GameRole | null;
+  visibility: GameVisibility;
   location: {
     name: string | null;
     address: {
@@ -149,6 +153,8 @@ export interface GameDetail {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  viewerGameRole: GameRole | null;
+  visibility: GameVisibility;
   location: Location | null;
   participants: {
     edges: Edge<GameParticipantDetail>[];
@@ -393,7 +399,7 @@ export interface GameFilterParams {
   sportType?: SportType;
   playerId?: number;
   gameStatus?: GameStatus;
-  createdBy?: string; // Use createdBy instead of ownerId per backend schema
+  organizedByMe?: boolean;
 }
 
 /**

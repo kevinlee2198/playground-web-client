@@ -214,6 +214,11 @@
       "inProgress": "In Progress",
       "complete": "Complete"
     },
+    "role": {
+      "owner": "Owner",
+      "editor": "Editor"
+    },
+    "manageEditors": "Manage Editors",
     "actions": {
       "create": "Create Game",
       "edit": "Edit Game",

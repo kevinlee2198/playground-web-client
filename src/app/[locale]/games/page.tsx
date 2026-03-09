@@ -63,7 +63,6 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     },
   });
 
-  const currentUserId = playerResponse.data?.me?.id;
   const player = playerResponse.data?.me?.player;
 
   // Show message if no player profile
@@ -126,7 +125,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     gameStatus: isValidGameStatus(gameStatusParam)
       ? gameStatusParam
       : undefined,
-    createdBy: queryParams.myGames === "true" ? currentUserId : undefined,
+    organizedByMe: queryParams.myGames === "true" ? true : undefined,
   };
 
   // Parse sort from URL
@@ -149,7 +148,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     filterInput.sportType = new EnumType(filters.sportType);
   if (filters.gameStatus)
     filterInput.gameStatus = new EnumType(filters.gameStatus);
-  if (filters.createdBy) filterInput.createdBy = filters.createdBy;
+  if (filters.organizedByMe) filterInput.organizedByMe = filters.organizedByMe;
 
   // Fetch games
   const gamesResponse = await authQuery({
@@ -173,6 +172,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           sportType: true,
           metadata: gameMetadataFragment,
           gameStatus: true,
+          viewerGameRole: true,
+          visibility: true,
           location: {
             name: true,
             address: {
@@ -234,7 +235,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         <div className="flex-1">
           <GameListSort
             currentSort={{ field: sortField, direction: sortDirection }}
-            myGames={filters.createdBy === currentUserId}
+            myGames={filters.organizedByMe === true}
           />
 
           {games.edges.length === 0 ? (

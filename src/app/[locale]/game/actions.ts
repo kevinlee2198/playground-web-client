@@ -322,7 +322,7 @@ export async function loadMoreGames(
     if (filters.playerId) filterInput.playerId = filters.playerId;
     if (filters.gameStatus)
       filterInput.gameStatus = new EnumType(filters.gameStatus);
-    if (filters.createdBy) filterInput.createdBy = filters.createdBy;
+    if (filters.organizedByMe) filterInput.organizedByMe = filters.organizedByMe;
 
     const response = await authQuery({
       games: {
@@ -346,6 +346,8 @@ export async function loadMoreGames(
             sportType: true,
             metadata: gameMetadataFragment,
             gameStatus: true,
+            viewerGameRole: true,
+            visibility: true,
             location: {
               name: true,
               address: {
