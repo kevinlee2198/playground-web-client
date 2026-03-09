@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GameStatus } from "@/lib/constants";
+import { GameRole, GameStatus, GameVisibility } from "@/lib/constants";
 import type { TeamInstanceDetail } from "@/lib/types/game";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -29,6 +29,8 @@ interface TeamCardProps {
   gameStatus: GameStatus;
   currentPlayerId: number;
   isPlayerOnAnyTeam: boolean;
+  viewerGameRole: GameRole | null;
+  visibility: GameVisibility;
 }
 
 export function TeamCard({
@@ -37,6 +39,8 @@ export function TeamCard({
   gameStatus,
   currentPlayerId,
   isPlayerOnAnyTeam,
+  viewerGameRole,
+  visibility,
 }: TeamCardProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
@@ -120,7 +124,7 @@ export function TeamCard({
                   {t("game.participants.leaveTeam")}
                 </Button>
               ) : (
-                !isPlayerOnAnyTeam && (
+                !isPlayerOnAnyTeam && (viewerGameRole != null || visibility === GameVisibility.PUBLIC) && (
                   <Button
                     variant="default"
                     size="sm"
@@ -131,14 +135,16 @@ export function TeamCard({
                   </Button>
                 )
               )}
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowRemoveDialog(true)}
-                disabled={isPending}
-              >
-                {t("game.participants.removeTeam")}
-              </Button>
+              {viewerGameRole != null && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowRemoveDialog(true)}
+                  disabled={isPending}
+                >
+                  {t("game.participants.removeTeam")}
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
