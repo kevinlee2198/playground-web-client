@@ -12,6 +12,7 @@ import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   CreateGameInput,
   GameFilterParams,
+  GameMember,
   GameSortParams,
   UpdateGameInput,
 } from "@/lib/types/game";
@@ -375,6 +376,158 @@ export async function loadMoreGames(
   } catch (error) {
     console.error("Failed to load more games:", error);
     return null;
+  }
+}
+
+/**
+ * Load game members (owners and editors) for a game
+ */
+export async function loadGameMembers(gameId: number): Promise<{
+  members: Edge<GameMember>[];
+} | null> {
+  try {
+    const response = await authQuery({
+      game: {
+        __args: { id: gameId },
+        members: {
+          __args: { first: 50 },
+          edges: {
+            cursor: true,
+            node: {
+              id: true,
+              user: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                username: true,
+              },
+              role: true,
+            },
+          },
+        },
+      },
+    });
+
+    return { members: response.data?.game?.members?.edges ?? [] };
+  } catch (error) {
+    console.error("Failed to load game members:", error);
+    return null;
+  }
+}
+
+/**
+ * Add a user as an editor of a game
+ */
+export async function addGameEditor(
+  gameId: number,
+  userId: string,
+): Promise<{ success: boolean; gameMember?: GameMember; errorType?: string; message?: string }> {
+  try {
+    const response = await authMutate({
+      addGameEditor: {
+        __args: { input: { gameId, userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "AddGameEditorResponse",
+            gameMember: {
+              id: true,
+              user: { id: true, firstName: true, lastName: true, username: true },
+              role: true,
+            },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.addGameEditor, "AddGameEditorResponse");
+    if (!result.success) return result;
+
+    revalidatePath("/[locale]/game/[id]", "page");
+    return { success: true, gameMember: result.data.gameMember };
+  } catch (error) {
+    console.error("Failed to add game editor:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to add editor" };
+  }
+}
+
+/**
+ * Remove a user as an editor of a game
+ */
+export async function removeGameEditor(
+  gameId: number,
+  userId: string,
+): Promise<GameActionResult> {
+  try {
+    const response = await authMutate({
+      removeGameEditor: {
+        __args: { input: { gameId, userId } },
+        __typename: true,
+        __on: [
+          { __typeName: "RemoveGameEditorResponse", id: true },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.removeGameEditor, "RemoveGameEditorResponse");
+    if (!result.success) return result;
+
+    revalidatePath("/[locale]/game/[id]", "page");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to remove game editor:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to remove editor" };
+  }
+}
+
+/**
+ * Transfer game ownership to another user
+ */
+export async function transferGameOwnership(
+  gameId: number,
+  userId: string,
+): Promise<{ success: boolean; gameMember?: GameMember; errorType?: string; message?: string }> {
+  try {
+    const response = await authMutate({
+      transferGameOwnership: {
+        __args: { input: { gameId, userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "TransferGameOwnershipResponse",
+            gameMember: {
+              id: true,
+              user: { id: true, firstName: true, lastName: true, username: true },
+              role: true,
+            },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.transferGameOwnership, "TransferGameOwnershipResponse");
+    if (!result.success) return result;
+
+    revalidatePath("/[locale]/game/[id]", "page");
+    return { success: true, gameMember: result.data.gameMember };
+  } catch (error) {
+    console.error("Failed to transfer game ownership:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to transfer ownership" };
   }
 }
 

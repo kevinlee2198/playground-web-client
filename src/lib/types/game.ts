@@ -119,6 +119,25 @@ export type GameParticipantDetail =
   | IndividualParticipantNode;
 
 /**
+ * User reference within a game member
+ */
+export interface GameMemberUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+}
+
+/**
+ * Game member (owner or editor) returned from the members connection
+ */
+export interface GameMember {
+  id: string;
+  user: GameMemberUser;
+  role: GameRole;
+}
+
+/**
  * Game node returned from GraphQL queries
  */
 export interface GameNode {
