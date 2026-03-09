@@ -49,6 +49,7 @@
   },
   "profile": {
     "title": "Profile",
+    "cancel": "Cancel",
     "viewProfile": "View Profile",
     "settings": "Settings",
     "editProfile": "Edit Profile",
@@ -81,7 +82,8 @@
       "friends": "Friends",
       "requestSent": "Friend request sent",
       "requestAccepted": "Friend request accepted",
-      "error": "Failed to process friend request"
+      "error": "Failed to process friend request",
+      "cannotAddBlocked": "Cannot send friend request to this user"
     },
     "picture": {
       "changeLabel": "Change profile picture",
@@ -113,6 +115,17 @@
       "notFound": "User not found",
       "playerDataUnavailable": "Player information unavailable",
       "loadError": "Failed to load profile"
+    },
+    "block": {
+      "blockUser": "Block User",
+      "unblockUser": "Unblock",
+      "confirmTitle": "Block {name}?",
+      "confirmDescription": "Blocking this user will prevent them from seeing your profile or contacting you.",
+      "success": "User blocked",
+      "unblockSuccess": "User unblocked",
+      "error": "Failed to process request",
+      "alreadyBlockedYou": "This user has already blocked you",
+      "cannotBlockSelf": "You cannot block yourself"
     }
   },
   "player": {
