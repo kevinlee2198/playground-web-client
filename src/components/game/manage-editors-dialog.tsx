@@ -52,16 +52,13 @@ export function ManageEditorsDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserSearchNode[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Confirmation dialogs
   const [removeTarget, setRemoveTarget] = useState<GameMember | null>(null);
   const [transferTarget, setTransferTarget] = useState<GameMember | null>(null);
 
-  // Load members when dialog opens
   const loadMembers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -82,7 +79,6 @@ export function ManageEditorsDialog({
     }
   }, [open, loadMembers]);
 
-  // Debounced search
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -152,9 +148,9 @@ export function ManageEditorsDialog({
     });
   };
 
-  const memberUserIds = members.map((e) => e.node.user.id);
+  const memberUserIds = new Set(members.map((e) => e.node.user.id));
   const filteredSearchResults = searchResults.filter(
-    (u) => !memberUserIds.includes(u.id),
+    (u) => !memberUserIds.has(u.id),
   );
 
   return (
@@ -171,7 +167,6 @@ export function ManageEditorsDialog({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Member list */}
               <ScrollArea className="max-h-[300px]">
                 <div className="space-y-2">
                   {members.map((edge) => {
@@ -220,8 +215,8 @@ export function ManageEditorsDialog({
                       </div>
                     );
                   })}
-                  {members.every(
-                    (e) => e.node.role === GameRole.OWNER,
+                  {!members.some(
+                    (e) => e.node.role === GameRole.EDITOR,
                   ) && (
                     <p className="py-2 text-center text-sm text-muted-foreground">
                       {t("noEditors")}
@@ -230,7 +225,6 @@ export function ManageEditorsDialog({
                 </div>
               </ScrollArea>
 
-              {/* Add editor search */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
@@ -281,7 +275,6 @@ export function ManageEditorsDialog({
         </DialogContent>
       </Dialog>
 
-      {/* Remove confirmation */}
       <AlertDialog
         open={!!removeTarget}
         onOpenChange={(open) => !open && setRemoveTarget(null)}
@@ -311,7 +304,6 @@ export function ManageEditorsDialog({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Transfer confirmation */}
       <AlertDialog
         open={!!transferTarget}
         onOpenChange={(open) => !open && setTransferTarget(null)}

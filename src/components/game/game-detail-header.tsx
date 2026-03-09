@@ -134,23 +134,23 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
               {t("game.actions.edit")}
             </Button>
             {game.viewerGameRole === GameRole.OWNER && (
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteDialog(true)}
-                disabled={isPending}
-              >
-                {t("game.actions.delete")}
-              </Button>
-            )}
-            {game.viewerGameRole === GameRole.OWNER && (
-              <Button
-                variant="outline"
-                onClick={() => setShowEditorsDialog(true)}
-                disabled={isPending}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                {t("game.manageEditors")}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEditorsDialog(true)}
+                  disabled={isPending}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  {t("game.manageEditors")}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isPending}
+                >
+                  {t("game.actions.delete")}
+                </Button>
+              </>
             )}
           </div>
         )}
@@ -168,7 +168,6 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
         onOpenChange={setShowEditorsDialog}
       />
 
-      {/* Update Game Dialog */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
         <DialogContent>
           <DialogHeader>

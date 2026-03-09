@@ -27,6 +27,19 @@ interface GameActionResult {
   message?: string;
 }
 
+interface GameMemberActionResult {
+  success: boolean;
+  gameMember?: GameMember;
+  errorType?: string;
+  message?: string;
+}
+
+const gameMemberSelection = {
+  id: true,
+  user: { id: true, firstName: true, lastName: true, username: true },
+  role: true,
+} as const;
+
 /**
  * Create a new game with sport-specific input using @oneOf pattern
  */
@@ -421,7 +434,7 @@ export async function loadGameMembers(gameId: number): Promise<{
 export async function addGameEditor(
   gameId: number,
   userId: string,
-): Promise<{ success: boolean; gameMember?: GameMember; errorType?: string; message?: string }> {
+): Promise<GameMemberActionResult> {
   try {
     const response = await authMutate({
       addGameEditor: {
@@ -430,11 +443,7 @@ export async function addGameEditor(
         __on: [
           {
             __typeName: "AddGameEditorResponse",
-            gameMember: {
-              id: true,
-              user: { id: true, firstName: true, lastName: true, username: true },
-              role: true,
-            },
+            gameMember: gameMemberSelection,
           },
           errorFragment,
         ],
@@ -496,7 +505,7 @@ export async function removeGameEditor(
 export async function transferGameOwnership(
   gameId: number,
   userId: string,
-): Promise<{ success: boolean; gameMember?: GameMember; errorType?: string; message?: string }> {
+): Promise<GameMemberActionResult> {
   try {
     const response = await authMutate({
       transferGameOwnership: {
@@ -505,11 +514,7 @@ export async function transferGameOwnership(
         __on: [
           {
             __typeName: "TransferGameOwnershipResponse",
-            gameMember: {
-              id: true,
-              user: { id: true, firstName: true, lastName: true, username: true },
-              role: true,
-            },
+            gameMember: gameMemberSelection,
           },
           errorFragment,
         ],
