@@ -21,6 +21,10 @@ const quicksand = Quicksand({
 export const metadata: Metadata = {
   title: "Playground",
   description: "Where friends come to play",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf3e6" },
+    { media: "(prefers-color-scheme: dark)", color: "#302b22" },
+  ],
 };
 
 interface RootLayoutProps {
@@ -37,7 +41,7 @@ export default async function RootLayout({
     notFound();
   }
   return (
-    <html lang={locale} className={`${nunito.variable} ${quicksand.variable}`}>
+    <html lang={locale} className={`${nunito.variable} ${quicksand.variable}`} style={{ colorScheme: "light dark" }}>
       <body className="antialiased min-h-screen flex flex-col">
         <NextIntlClientProvider>
           <Navbar />
