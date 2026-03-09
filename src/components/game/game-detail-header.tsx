@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { GameRole, GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
 import type { GameDetail, GameMetadata } from "@/lib/types/game";
-import { Pencil, Play, StopCircle } from "lucide-react";
+import { Pencil, Play, StopCircle, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { DeleteGameDialog } from "./delete-game-dialog";
 import { GameStatusBadge } from "./game-status-badge";
+import { ManageEditorsDialog } from "./manage-editors-dialog";
 import { UpdateGameForm } from "./update-game-form";
 
 interface GameDetailHeaderProps {
@@ -27,6 +28,7 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [showEditorsDialog, setShowEditorsDialog] = useState(false);
 
   const sportText = t(`sports.${game.sportType}`);
   const subtypeText = t(
@@ -140,6 +142,16 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
                 {t("game.actions.delete")}
               </Button>
             )}
+            {game.viewerGameRole === GameRole.OWNER && (
+              <Button
+                variant="outline"
+                onClick={() => setShowEditorsDialog(true)}
+                disabled={isPending}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                {t("game.manageEditors")}
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -148,6 +160,12 @@ export function GameDetailHeader({ game }: GameDetailHeaderProps) {
         gameId={game.id}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
+      />
+
+      <ManageEditorsDialog
+        gameId={game.id}
+        open={showEditorsDialog}
+        onOpenChange={setShowEditorsDialog}
       />
 
       {/* Update Game Dialog */}
