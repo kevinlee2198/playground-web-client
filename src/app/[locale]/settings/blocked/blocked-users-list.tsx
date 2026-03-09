@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-interface BlockedUserEntry {
+export interface BlockedUserEntry {
   friendshipId: string;
   userId: string;
   displayName: string;

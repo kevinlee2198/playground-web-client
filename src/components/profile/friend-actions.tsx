@@ -109,12 +109,7 @@ export function FriendActions({
     startTransition(async () => {
       const result = await blockUser(userId);
       if (result.success) {
-        setLocalFriendship({
-          id: "",
-          status: FriendshipStatus.BLOCKED,
-          requester: { id: currentUserId },
-          addressee: { id: userId },
-        });
+        setLocalFriendship(result.friendship);
         toast.success(tBlock("success"));
         setBlockDialogOpen(false);
       } else if (result.errorType === "UserBlockedYouError") {
@@ -163,7 +158,7 @@ export function FriendActions({
     )
   ) : null;
 
-  const blockMenu = status !== FriendshipStatus.BLOCKED ? (
+  const blockMenu = (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
@@ -180,13 +175,17 @@ export function FriendActions({
       <AlertDialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{tBlock("confirmTitle", { name: displayName })}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {tBlock("confirmTitle", { name: displayName })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {tBlock("confirmDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>{tProfile("cancel")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>
+              {tProfile("cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction onClick={handleBlock} disabled={isPending}>
               {tBlock("blockUser")}
             </AlertDialogAction>
@@ -194,9 +193,8 @@ export function FriendActions({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  ) : null;
+  );
 
-  // Blocked by current user - show unblock
   if (status === FriendshipStatus.BLOCKED && isRequester) {
     return (
       <Button variant="outline" onClick={handleUnblock} disabled={isPending}>
