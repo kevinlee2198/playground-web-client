@@ -319,6 +319,11 @@ export function ChatLayout({
           currentUserId={currentUser.id}
           isDirectMessage={activeRoom.__typename === "DirectMessageChatRoom"}
           onMembersChange={handleMembersChange}
+          currentUserRole={
+            activeRoomMembers.find(
+              (edge) => edge.node.user.id === currentUser.id,
+            )?.node.role ?? null
+          }
         />
       )}
     </div>

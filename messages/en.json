@@ -501,7 +501,20 @@
       "owner": "Owner",
       "admin": "Admin",
       "member": "Member",
-      "joined": "Joined {date}"
+      "joined": "Joined {date}",
+      "promoteToAdmin": "Promote to Admin",
+      "demoteToMember": "Demote to Member",
+      "transferOwnership": "Transfer Ownership",
+      "leaveChat": "Leave Chat",
+      "transferConfirmTitle": "Transfer Ownership",
+      "transferConfirmDescription": "Are you sure? You will become a regular member.",
+      "leaveConfirmTitle": "Leave Chat",
+      "leaveConfirmDescription": "Are you sure you want to leave this chat?",
+      "cannotLeaveAsOwner": "Transfer ownership before leaving",
+      "promoteSuccess": "{name} promoted to admin",
+      "demoteSuccess": "{name} demoted to member",
+      "transferSuccess": "Ownership transferred successfully",
+      "leaveSuccess": "You have left the chat"
     },
     "deleteConfirm": {
       "title": "Delete Message",
@@ -533,7 +546,9 @@
       "createRoom": "Failed to create conversation",
       "addMember": "Failed to add member",
       "removeMember": "Failed to remove member",
-      "roomNotFound": "Conversation not found"
+      "roomNotFound": "Conversation not found",
+      "updateRole": "Failed to update role",
+      "leaveChat": "Failed to leave chat"
     },
     "time": {
       "justNow": "Just now",
