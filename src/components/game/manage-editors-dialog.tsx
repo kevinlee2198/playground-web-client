@@ -68,13 +68,11 @@ export function ManageEditorsDialog({
       const result = await loadGameMembers(gameId);
       if (result) {
         setMembers(result.members);
-      } else {
-        toast.error(t("errors.loadFailed"));
       }
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, t]);
+  }, [gameId]);
 
   useEffect(() => {
     if (open) {
@@ -110,9 +108,10 @@ export function ManageEditorsDialog({
     startTransition(async () => {
       const result = await addGameEditor(gameId, user.id);
       if (result.success && result.gameMember) {
+        const newMember = result.gameMember;
         setMembers((prev) => [
           ...prev,
-          { cursor: result.gameMember!.id, node: result.gameMember! },
+          { cursor: newMember.id, node: newMember },
         ]);
         setSearchQuery("");
         setSearchResults([]);
@@ -221,6 +220,13 @@ export function ManageEditorsDialog({
                       </div>
                     );
                   })}
+                  {members.every(
+                    (e) => e.node.role === GameRole.OWNER,
+                  ) && (
+                    <p className="py-2 text-center text-sm text-muted-foreground">
+                      {t("noEditors")}
+                    </p>
+                  )}
                 </div>
               </ScrollArea>
 
