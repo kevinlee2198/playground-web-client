@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground — Direction A: Broadcast Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #06060c;
+    --bg-surface: #0e0e18;
+    --bg-card: #13131f;
+    --bg-elevated: #1a1a2a;
+    --accent: #00e87b;
+    --accent-dim: #00e87b33;
+    --accent-secondary: #00b8ff;
+    --score-glow: #00e87b60;
+    --text-primary: #f0f0f5;
+    --text-secondary: #8888a0;
+    --text-muted: #55556a;
+    --border: #ffffff0d;
+    --live-red: #ff2d55;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body: 'Barlow', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === DIRECTION LABEL === */
+  .direction-label {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: var(--accent);
+    color: #000;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px;
+    z-index: 100;
+  }
+
+  /* === NAV === */
+  nav {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-deep);
+  }
+  .nav-brand {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  .nav-brand span { color: var(--accent); }
+  .nav-links {
+    display: flex; gap: 32px; list-style: none;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .nav-links li { cursor: pointer; transition: color 0.2s; }
+  .nav-links li:hover { color: var(--text-primary); }
+  .nav-links li.active { color: var(--accent); }
+  .nav-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .nav-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 2px solid var(--accent-dim);
+  }
+
+  /* === HERO SCOREBOARD === */
+  .hero-score {
+    position: relative;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 40px 50px;
+    overflow: hidden;
+  }
+  .hero-score::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, var(--score-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-score-inner {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--live-red);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    background: #fff;
+    border-radius: 50%;
+    animation: pulse 1.5s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .sport-label {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+  }
+  .team-block { text-align: center; min-width: 200px; }
+  .team-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .team-score {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 96px;
+    line-height: 1;
+    color: var(--text-primary);
+    text-shadow: 0 0 40px var(--score-glow);
+  }
+  .team-score.winning { color: var(--accent); }
+  .score-separator {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 48px;
+    color: var(--text-muted);
+  }
+  .game-meta {
+    margin-top: 24px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+  }
+  .game-meta span { color: var(--accent); }
+
+  /* === GAME CARDS SECTION === */
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .game-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .game-card:hover {
+    background: var(--bg-elevated);
+    border-color: var(--accent-dim);
+  }
+  .card-sport-icon {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background: var(--accent-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    color: var(--accent);
+  }
+  .card-sport-icon svg { width: 22px; height: 22px; fill: var(--accent); }
+  .card-teams {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .card-team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-team-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .card-team-name.winner { color: var(--accent); }
+  .card-team-score {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    min-width: 36px;
+    text-align: right;
+  }
+  .card-team-score.winner { color: var(--accent); }
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+  .card-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+    min-width: 120px;
+  }
+  .card-status {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .card-status.live {
+    background: var(--live-red);
+    color: #fff;
+  }
+  .card-status.final {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+  }
+  .card-status.scheduled {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .card-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .card-location {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* === TICKER BAR === */
+  .ticker {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-content {
+    display: inline-flex;
+    gap: 48px;
+    animation: scroll 30s linear infinite;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .ticker-content .score-accent { color: var(--accent); }
+  .ticker-content .live-accent { color: var(--live-red); }
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* === TYPOGRAPHY SHOWCASE === */
+  .type-showcase {
+    padding: 60px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+  }
+  .type-row {
+    margin-bottom: 32px;
+  }
+  .type-label {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .type-h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 64px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .type-h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 36px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .type-h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .type-body {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    line-height: 1.65;
+  }
+  .type-small {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* === PALETTE === */
+  .palette-section {
+    padding: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .palette-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .swatch {
+    width: 100px; height: 80px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    font-size: 10px;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .swatch-label {
+    font-size: 9px;
+    opacity: 0.7;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* === FOOTER NOTE === */
+  .footer-note {
+    text-align: center;
+    padding: 60px 40px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="direction-label">Direction A — Broadcast Premium</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">PLAY<span>GROUND</span></div>
+  <ul class="nav-links">
+    <li class="active">Feed</li>
+    <li>Games</li>
+    <li>Live</li>
+    <li>Profile</li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-avatar"></div>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-content">
+    <span>Thunder <span class="score-accent">112</span> — Celtics <span class="score-accent">105</span> &bull; Final</span>
+    <span>Warriors vs Lakers &bull; <span class="live-accent">Live Q3 4:22</span></span>
+    <span>Nadal def. Djokovic <span class="score-accent">6-4 3-6 7-5</span> &bull; Final</span>
+    <span>Chiefs <span class="score-accent">28</span> — Ravens <span class="score-accent">21</span> &bull; Final</span>
+    <span>Pickup Basketball @ Central Park &bull; <span class="scheduled">Tomorrow 6PM</span></span>
+    <span>Thunder <span class="score-accent">112</span> — Celtics <span class="score-accent">105</span> &bull; Final</span>
+    <span>Warriors vs Lakers &bull; <span class="live-accent">Live Q3 4:22</span></span>
+    <span>Nadal def. Djokovic <span class="score-accent">6-4 3-6 7-5</span> &bull; Final</span>
+    <span>Chiefs <span class="score-accent">28</span> — Ravens <span class="score-accent">21</span> &bull; Final</span>
+    <span>Pickup Basketball @ Central Park &bull; <span class="scheduled">Tomorrow 6PM</span></span>
+  </div>
+</div>
+
+<!-- HERO SCOREBOARD -->
+<div class="hero-score">
+  <div class="hero-score-inner">
+    <div class="live-badge"><div class="live-dot"></div> Live &bull; Q3 4:22</div>
+    <div class="sport-label">Basketball &bull; 5v5</div>
+    <div class="score-row">
+      <div class="team-block">
+        <div class="team-name">Warriors</div>
+        <div class="team-score winning">87</div>
+      </div>
+      <div class="score-separator">&mdash;</div>
+      <div class="team-block">
+        <div class="team-name">Lakers</div>
+        <div class="team-score">82</div>
+      </div>
+    </div>
+    <div class="game-meta">
+      <span>Rucker Park</span> &bull; New York, NY &bull; Started 7:30 PM
+    </div>
+  </div>
+</div>
+
+<!-- GAME CARDS -->
+<div class="section">
+  <div class="section-title">Recent Games</div>
+
+  <div class="game-card">
+    <div class="card-sport-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2C12 2 15 8 15 12s-3 10-3 10M12 2C12 2 9 8 9 12s3 10 3 10M2 12h20" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+    </div>
+    <div class="card-teams">
+      <div class="card-team-row">
+        <span class="card-team-name winner">Thunder</span>
+        <span class="card-team-score winner">112</span>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-team-row">
+        <span class="card-team-name">Celtics</span>
+        <span class="card-team-score">105</span>
+      </div>
+    </div>
+    <div class="card-meta">
+      <span class="card-status final">Final</span>
+      <span class="card-date">Mar 7, 2026</span>
+      <span class="card-location">Madison Square Garden</span>
+    </div>
+  </div>
+
+  <div class="game-card">
+    <div class="card-sport-icon">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="10" fill="none" stroke="currentColor" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="3" ry="10" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(45 12 12)"/><ellipse cx="12" cy="12" rx="3" ry="10" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(-45 12 12)"/></svg>
+    </div>
+    <div class="card-teams">
+      <div class="card-team-row">
+        <span class="card-team-name winner">Nadal R.</span>
+        <span class="card-team-score winner">6-4 3-6 7-5</span>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-team-row">
+        <span class="card-team-name">Djokovic N.</span>
+        <span class="card-team-score">4-6 6-3 5-7</span>
+      </div>
+    </div>
+    <div class="card-meta">
+      <span class="card-status final">Final</span>
+      <span class="card-date">Mar 6, 2026</span>
+      <span class="card-location">Central Park Courts</span>
+    </div>
+  </div>
+
+  <div class="game-card">
+    <div class="card-sport-icon">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 12c3 -3 7 -3 10 0s7 3 10 0" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+    </div>
+    <div class="card-teams">
+      <div class="card-team-row">
+        <span class="card-team-name">Eagles vs Ravens</span>
+        <span class="card-team-score" style="color: var(--accent)"></span>
+      </div>
+    </div>
+    <div class="card-meta">
+      <span class="card-status scheduled">Upcoming</span>
+      <span class="card-date">Mar 9, 2026 &bull; 3:00 PM</span>
+      <span class="card-location">Riverside Field</span>
+    </div>
+  </div>
+</div>
+
+<!-- TYPOGRAPHY -->
+<div class="type-showcase">
+  <div class="section-title">Typography — Barlow Condensed + Barlow</div>
+  <div class="type-row">
+    <div class="type-label">Display / H1</div>
+    <div class="type-h1">Game Night<br>Is <span style="color: var(--accent)">Live</span></div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Heading / H2</div>
+    <div class="type-h2">Warriors vs Lakers — Q3 4:22</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Subheading / H3</div>
+    <div class="type-h3">Box Score &bull; Player Statistics</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Body</div>
+    <div class="type-body">Track every game, every score, every highlight. Share your moments with friends and watch them live from anywhere. Playground brings the stadium experience to your screen.</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Small / Caption</div>
+    <div class="type-small">Updated 2 minutes ago &bull; 847 viewers watching</div>
+  </div>
+</div>
+
+<!-- PALETTE -->
+<div class="palette-section">
+  <div class="section-title">Color Palette</div>
+  <div class="palette-row">
+    <div class="swatch" style="background: #06060c; border: 1px solid #ffffff15; color: #888;">
+      <span class="swatch-label">Deep BG</span>#06060C
+    </div>
+    <div class="swatch" style="background: #0e0e18; border: 1px solid #ffffff15; color: #888;">
+      <span class="swatch-label">Surface</span>#0E0E18
+    </div>
+    <div class="swatch" style="background: #13131f; border: 1px solid #ffffff15; color: #888;">
+      <span class="swatch-label">Card</span>#13131F
+    </div>
+    <div class="swatch" style="background: #1a1a2a; border: 1px solid #ffffff15; color: #888;">
+      <span class="swatch-label">Elevated</span>#1A1A2A
+    </div>
+    <div class="swatch" style="background: #00e87b; color: #000;">
+      <span class="swatch-label">Accent</span>#00E87B
+    </div>
+    <div class="swatch" style="background: #00b8ff; color: #000;">
+      <span class="swatch-label">Secondary</span>#00B8FF
+    </div>
+    <div class="swatch" style="background: #ff2d55; color: #fff;">
+      <span class="swatch-label">Live</span>#FF2D55
+    </div>
+    <div class="swatch" style="background: #f0f0f5; color: #000;">
+      <span class="swatch-label">Text</span>#F0F0F5
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  Direction A — Dark, cinematic, broadcast-quality. Scores glow. Data commands attention.
+</div>
+
+</body>
+</html>

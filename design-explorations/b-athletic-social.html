@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground — Direction B: Athletic Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-warm: #fafafa;
+    --bg-card: #ffffff;
+    --bg-hover: #f5f5f5;
+    --accent: #ff5a36;
+    --accent-light: #ff5a3615;
+    --accent-warm: #ff8c69;
+    --success: #10b981;
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border: #e5e7eb;
+    --border-light: #f3f4f6;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'Work Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-warm);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* === DIRECTION LABEL === */
+  .direction-label {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: var(--accent);
+    color: #fff;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px;
+    z-index: 100;
+  }
+
+  /* === NAV === */
+  nav {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 40px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo svg { width: 18px; height: 18px; fill: #fff; }
+  .nav-links {
+    display: flex; gap: 8px; list-style: none;
+  }
+  .nav-link {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-link:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .nav-link.active { background: var(--accent-light); color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+  }
+  .nav-btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  /* === FEED LAYOUT === */
+  .feed-layout {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 20px;
+  }
+
+  /* === ACTIVITY CARD === */
+  .activity-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .activity-card:hover { box-shadow: var(--shadow-hover); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  .card-avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    flex-shrink: 0;
+  }
+  .card-user-info { flex: 1; }
+  .card-username {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+  }
+  .card-timestamp {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .card-sport-badge {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .card-score-section {
+    padding: 8px 20px 20px;
+  }
+  .card-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px 0;
+  }
+  .card-team {
+    text-align: center;
+    flex: 1;
+  }
+  .card-team-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .card-team-score-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--text-primary);
+  }
+  .card-team-score-num.winner { color: var(--accent); }
+  .card-team-result {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .card-team-result.w { color: var(--success); }
+  .card-team-result.l { color: var(--text-muted); }
+  .card-vs {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 14px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .card-details {
+    display: flex;
+    gap: 24px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-light);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .card-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-detail svg {
+    width: 14px; height: 14px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 2;
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border-light);
+    gap: 4px;
+  }
+  .card-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+  }
+  .card-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+  .card-action-btn.liked { color: var(--accent); }
+  .card-action-btn svg {
+    width: 18px; height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+  }
+  .card-action-btn.liked svg { fill: var(--accent); }
+
+  /* === HIGHLIGHT CARD === */
+  .highlight-banner {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .highlight-img {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .play-btn {
+    width: 56px; height: 56px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(255,90,54,0.4);
+  }
+  .play-btn svg { width: 22px; height: 22px; fill: #fff; margin-left: 3px; }
+  .highlight-content {
+    padding: 16px 20px;
+  }
+  .highlight-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .highlight-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* === TYPOGRAPHY === */
+  .type-showcase {
+    padding: 40px 20px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .type-section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .type-row { margin-bottom: 28px; }
+  .type-label {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .type-h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1.1;
+    color: var(--text-primary);
+  }
+  .type-h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 32px;
+    color: var(--text-primary);
+  }
+  .type-h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+  .type-body {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    max-width: 520px;
+  }
+  .type-small {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* === PALETTE === */
+  .palette-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    padding: 0 20px 40px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .swatch {
+    flex: 1; min-width: 70px; height: 72px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    font-size: 10px;
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+  .swatch-label {
+    font-size: 9px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .footer-note {
+    text-align: center;
+    padding: 40px 20px 60px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="direction-label">Direction B — Athletic Social</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+    </div>
+    Playground
+  </div>
+  <ul class="nav-links">
+    <li class="nav-link active">Feed</li>
+    <li class="nav-link">Explore</li>
+    <li class="nav-link">Games</li>
+    <li class="nav-link">Messages</li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-btn">+ New Game</button>
+    <div class="nav-avatar"></div>
+  </div>
+</nav>
+
+<!-- FEED -->
+<div class="feed-layout">
+
+  <!-- Activity Card 1 -->
+  <div class="activity-card">
+    <div class="card-header">
+      <div class="card-avatar" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);"></div>
+      <div class="card-user-info">
+        <div class="card-username">Marcus Johnson</div>
+        <div class="card-timestamp">2 hours ago &bull; Rucker Park, NYC</div>
+      </div>
+      <div class="card-sport-badge">Basketball</div>
+    </div>
+    <div class="card-score-section">
+      <div class="card-matchup">
+        <div class="card-team">
+          <div class="card-team-name">Warriors</div>
+          <div class="card-team-score-num winner">87</div>
+          <div class="card-team-result w">Win</div>
+        </div>
+        <div class="card-vs">vs</div>
+        <div class="card-team">
+          <div class="card-team-name">Lakers</div>
+          <div class="card-team-score-num">82</div>
+          <div class="card-team-result l">Loss</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-details">
+      <div class="card-detail">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        1h 45m
+      </div>
+      <div class="card-detail">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Rucker Park
+      </div>
+      <div class="card-detail">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        10 players
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="card-action-btn liked">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        24
+      </button>
+      <button class="card-action-btn">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        8
+      </button>
+      <button class="card-action-btn">
+        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        Share
+      </button>
+    </div>
+  </div>
+
+  <!-- Video Highlight Card -->
+  <div class="highlight-banner">
+    <div class="highlight-img">
+      <div class="play-btn">
+        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      </div>
+    </div>
+    <div class="highlight-content">
+      <div class="highlight-title">Game Highlights: Warriors vs Lakers</div>
+      <div class="highlight-sub">2:34 &bull; 1.2k views &bull; Posted by Marcus Johnson</div>
+    </div>
+  </div>
+
+  <!-- Activity Card 2 — Tennis -->
+  <div class="activity-card">
+    <div class="card-header">
+      <div class="card-avatar" style="background: linear-gradient(135deg, #6ee7b7, #10b981);"></div>
+      <div class="card-user-info">
+        <div class="card-username">Sofia Chen</div>
+        <div class="card-timestamp">5 hours ago &bull; Central Park Courts</div>
+      </div>
+      <div class="card-sport-badge" style="background: #ecfdf5; color: #059669;">Tennis</div>
+    </div>
+    <div class="card-score-section">
+      <div class="card-matchup">
+        <div class="card-team">
+          <div class="card-team-name">Sofia C.</div>
+          <div class="card-team-score-num winner" style="font-size: 36px;">6-4 7-5</div>
+          <div class="card-team-result w">Win</div>
+        </div>
+        <div class="card-vs">vs</div>
+        <div class="card-team">
+          <div class="card-team-name">Alex R.</div>
+          <div class="card-team-score-num" style="font-size: 36px;">4-6 5-7</div>
+          <div class="card-team-result l">Loss</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-details">
+      <div class="card-detail">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        1h 20m
+      </div>
+      <div class="card-detail">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Central Park
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="card-action-btn">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        12
+      </button>
+      <button class="card-action-btn">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        3
+      </button>
+      <button class="card-action-btn">
+        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        Share
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- TYPOGRAPHY -->
+<div class="type-showcase">
+  <div class="type-section-title">Typography — Outfit + Work Sans</div>
+  <div class="type-row">
+    <div class="type-label">Display / H1</div>
+    <div class="type-h1">Your games,<br>your <span style="color: var(--accent)">community</span></div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Heading / H2</div>
+    <div class="type-h2">Warriors vs Lakers</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Subheading / H3</div>
+    <div class="type-h3">Game Summary &bull; Box Score</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Body</div>
+    <div class="type-body">Share your games with friends, track scores in real-time, and relive every moment. Playground is where your sports life comes together.</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Small / Caption</div>
+    <div class="type-small">Posted 2 hours ago &bull; 24 likes &bull; 8 comments</div>
+  </div>
+</div>
+
+<!-- PALETTE -->
+<div class="palette-row">
+  <div class="swatch" style="background: #ffffff; border: 1px solid #e5e7eb; color: #666;">
+    <span class="swatch-label">BG</span>#FFFFFF
+  </div>
+  <div class="swatch" style="background: #fafafa; border: 1px solid #e5e7eb; color: #666;">
+    <span class="swatch-label">Warm</span>#FAFAFA
+  </div>
+  <div class="swatch" style="background: #1a1a1a; color: #999;">
+    <span class="swatch-label">Text</span>#1A1A1A
+  </div>
+  <div class="swatch" style="background: #ff5a36; color: #fff;">
+    <span class="swatch-label">Accent</span>#FF5A36
+  </div>
+  <div class="swatch" style="background: #10b981; color: #fff;">
+    <span class="swatch-label">Success</span>#10B981
+  </div>
+  <div class="swatch" style="background: #6b7280; color: #fff;">
+    <span class="swatch-label">Secondary</span>#6B7280
+  </div>
+  <div class="swatch" style="background: #e5e7eb; color: #666;">
+    <span class="swatch-label">Border</span>#E5E7EB
+  </div>
+</div>
+
+<div class="footer-note">
+  Direction B — Clean, bright, community-first. Social feed is the heart. Approachable and motivating.
+</div>
+
+</body>
+</html>

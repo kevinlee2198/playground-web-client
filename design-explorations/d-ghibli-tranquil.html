@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground — Direction D: Studio Ghibli Tranquil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf3e6;
+    --bg-warm: #f5ecda;
+    --bg-card: #fffdf8;
+    --bg-moss: #e8edd4;
+    --bg-sky: #dce8ef;
+    --bg-blush: #f5e0d8;
+    --accent-forest: #5a8a6e;
+    --accent-forest-light: #5a8a6e18;
+    --accent-terra: #c4785a;
+    --accent-terra-light: #c4785a15;
+    --accent-sky: #6a9ab5;
+    --accent-gold: #c9a84c;
+    --text-primary: #3d3426;
+    --text-secondary: #7a7060;
+    --text-muted: #a89e8e;
+    --border: #e0d8ca;
+    --border-light: #eee8dc;
+    --shadow: 0 2px 8px rgba(61,52,38,0.06);
+    --shadow-hover: 0 6px 20px rgba(61,52,38,0.1);
+    --font-display: 'Quicksand', sans-serif;
+    --font-body: 'Nunito', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* === DIRECTION LABEL === */
+  .direction-label {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: var(--accent-forest);
+    color: #fff;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px;
+    z-index: 100;
+  }
+
+  /* === NAV === */
+  nav {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-leaf {
+    width: 28px; height: 28px;
+    position: relative;
+  }
+  .nav-leaf svg {
+    width: 100%;
+    height: 100%;
+  }
+  .nav-links {
+    display: flex; gap: 6px; list-style: none;
+  }
+  .nav-link {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-secondary);
+    padding: 8px 18px;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .nav-link:hover {
+    background: var(--accent-forest-light);
+    color: var(--accent-forest);
+  }
+  .nav-link.active {
+    background: var(--accent-forest);
+    color: #fff;
+  }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bg-moss), var(--accent-forest));
+    border: 2px solid var(--border);
+  }
+
+  /* === HERO === */
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, var(--bg-moss) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 30%, var(--bg-sky) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, var(--bg-blush) 0%, transparent 40%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .hero-inner { position: relative; }
+  .hero-greeting {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--accent-forest);
+    margin-bottom: 12px;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .hero-sub {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* === CONTENT === */
+  .content {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  .section-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* === SCORE CARD (Featured) === */
+  .featured-game {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  .featured-game:hover { box-shadow: var(--shadow-hover); }
+
+  .featured-game-top {
+    background: linear-gradient(135deg, var(--bg-moss), var(--bg-sky));
+    padding: 32px;
+    text-align: center;
+  }
+  .featured-sport {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-forest);
+    margin-bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.7);
+    padding: 4px 14px;
+    border-radius: 20px;
+  }
+  .featured-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+  .featured-team { text-align: center; }
+  .featured-team-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .featured-team-score {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--text-primary);
+  }
+  .featured-team-score.winner { color: var(--accent-forest); }
+  .featured-vs {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--text-muted);
+  }
+
+  .featured-game-bottom {
+    padding: 16px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+  }
+  .featured-status {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: var(--accent-forest-light);
+    color: var(--accent-forest);
+  }
+
+  /* === GAME LIST CARDS === */
+  .game-list-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: all 0.25s ease;
+  }
+  .game-list-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+  }
+  .game-icon {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+  .game-icon.basketball { background: var(--bg-blush); color: var(--accent-terra); }
+  .game-icon.tennis { background: var(--bg-moss); color: var(--accent-forest); }
+  .game-icon.football { background: var(--bg-sky); color: var(--accent-sky); }
+  .game-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+  .game-info { flex: 1; }
+  .game-info-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .game-info-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .game-score-pill {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 6px 16px;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .game-score-pill.complete {
+    background: var(--accent-forest-light);
+    color: var(--accent-forest);
+  }
+  .game-score-pill.upcoming {
+    background: var(--accent-terra-light);
+    color: var(--accent-terra);
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  /* === FRIENDS ACTIVITY === */
+  .friends-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 22px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow);
+  }
+  .friends-bar-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .friends-list {
+    display: flex; gap: 16px;
+  }
+  .friend-item {
+    text-align: center;
+    cursor: pointer;
+  }
+  .friend-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    border: 2px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .friend-item:hover .friend-avatar { border-color: var(--accent-forest); }
+  .friend-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .friend-active {
+    font-size: 10px;
+    color: var(--accent-forest);
+    font-weight: 600;
+  }
+
+  /* === TYPOGRAPHY === */
+  .type-showcase {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .type-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .type-row { margin-bottom: 28px; }
+  .type-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    font-family: var(--font-body);
+  }
+  .type-h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+  .type-h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--text-primary);
+  }
+  .type-h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+  .type-body {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    max-width: 520px;
+  }
+  .type-small {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* === PALETTE === */
+  .palette-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+  }
+  .swatch {
+    flex: 1; min-width: 65px; height: 72px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    font-size: 10px;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .swatch-label {
+    font-size: 9px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .footer-note {
+    text-align: center;
+    padding: 40px 20px 60px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="direction-label">Direction D — Studio Ghibli Tranquil</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-leaf">
+      <svg viewBox="0 0 28 28" fill="none">
+        <path d="M14 3C8 3 4 8 4 14c0 4 2 7 5 9" stroke="#5a8a6e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M14 3c6 0 10 5 10 11 0 4-2 7-5 9" stroke="#5a8a6e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M14 3v22" stroke="#5a8a6e" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M8 10c2 2 4 3 6 3s4-1 6-3" stroke="#5a8a6e" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    playground
+  </div>
+  <ul class="nav-links">
+    <li class="nav-link active">Home</li>
+    <li class="nav-link">Games</li>
+    <li class="nav-link">Friends</li>
+    <li class="nav-link">Messages</li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-avatar" style="background: linear-gradient(135deg, #e8edd4, #dce8ef);"></div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-greeting">Good afternoon, Marcus</div>
+    <div class="hero-title">A beautiful day<br>to play</div>
+    <div class="hero-sub">Your friends have been active today. Two games are happening nearby, and the weather is perfect for a match.</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- Friends Activity -->
+  <div class="friends-bar">
+    <div class="friends-bar-title">Friends playing today</div>
+    <div class="friends-list">
+      <div class="friend-item">
+        <div class="friend-avatar" style="background: linear-gradient(135deg, #f5e0d8, #e8edd4);"></div>
+        <div class="friend-name">Sofia</div>
+        <div class="friend-active">Playing now</div>
+      </div>
+      <div class="friend-item">
+        <div class="friend-avatar" style="background: linear-gradient(135deg, #dce8ef, #e8edd4);"></div>
+        <div class="friend-name">Alex</div>
+        <div class="friend-active">Won earlier</div>
+      </div>
+      <div class="friend-item">
+        <div class="friend-avatar" style="background: linear-gradient(135deg, #e8edd4, #f5e0d8);"></div>
+        <div class="friend-name">Jordan</div>
+        <div class="friend-active">3 games</div>
+      </div>
+      <div class="friend-item">
+        <div class="friend-avatar" style="background: linear-gradient(135deg, #f5ecda, #dce8ef);"></div>
+        <div class="friend-name">Maya</div>
+        <div class="friend-active">Upcoming</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Game -->
+  <div class="section-label">Today's highlight</div>
+  <div class="featured-game">
+    <div class="featured-game-top">
+      <div class="featured-sport">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a8a6e" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        Basketball
+      </div>
+      <div class="featured-matchup">
+        <div class="featured-team">
+          <div class="featured-team-name">Warriors</div>
+          <div class="featured-team-score winner">87</div>
+        </div>
+        <div class="featured-vs">vs</div>
+        <div class="featured-team">
+          <div class="featured-team-name">Lakers</div>
+          <div class="featured-team-score">82</div>
+        </div>
+      </div>
+    </div>
+    <div class="featured-game-bottom">
+      <span>Rucker Park &bull; 1h 45m</span>
+      <span class="featured-status">Final</span>
+    </div>
+  </div>
+
+  <!-- Game List -->
+  <div class="section-label" style="margin-top: 32px;">Recent games</div>
+
+  <div class="game-list-card">
+    <div class="game-icon tennis">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+    <div class="game-info">
+      <div class="game-info-title">Sofia vs Alex</div>
+      <div class="game-info-detail">Tennis &bull; Central Park &bull; Yesterday</div>
+    </div>
+    <div class="game-score-pill complete">6-4 7-5</div>
+  </div>
+
+  <div class="game-list-card">
+    <div class="game-icon football">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="7"/></svg>
+    </div>
+    <div class="game-info">
+      <div class="game-info-title">Eagles vs Ravens</div>
+      <div class="game-info-detail">Flag Football &bull; Riverside &bull; 2 days ago</div>
+    </div>
+    <div class="game-score-pill complete">28–21</div>
+  </div>
+
+  <div class="game-list-card">
+    <div class="game-icon basketball">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+    <div class="game-info">
+      <div class="game-info-title">Pickup at the Y</div>
+      <div class="game-info-detail">Basketball &bull; YMCA &bull; Tomorrow 6 PM</div>
+    </div>
+    <div class="game-score-pill upcoming">Upcoming</div>
+  </div>
+</div>
+
+<!-- TYPOGRAPHY -->
+<div class="type-showcase">
+  <div class="type-section-title">Typography — Quicksand + Nunito</div>
+  <div class="type-row">
+    <div class="type-label">Display / H1</div>
+    <div class="type-h1">Every game<br>is a <span style="color: var(--accent-forest)">memory</span></div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Heading / H2</div>
+    <div class="type-h2">Warriors vs Lakers</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Subheading / H3</div>
+    <div class="type-h3">Game Summary & Player Stats</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Body</div>
+    <div class="type-body">Sports are about the people you play with, the stories you create, and the joy of the game itself. Playground is a gentle place to keep those moments safe.</div>
+  </div>
+  <div class="type-row">
+    <div class="type-label">Small / Caption</div>
+    <div class="type-small">Yesterday at Rucker Park &bull; Shared with 4 friends</div>
+  </div>
+</div>
+
+<!-- PALETTE -->
+<div class="palette-row">
+  <div class="swatch" style="background: #faf3e6; border: 1px solid #e0d8ca; color: #7a7060;">
+    <span class="swatch-label">Cream</span>#FAF3E6
+  </div>
+  <div class="swatch" style="background: #fffdf8; border: 1px solid #e0d8ca; color: #7a7060;">
+    <span class="swatch-label">Card</span>#FFFDF8
+  </div>
+  <div class="swatch" style="background: #e8edd4; color: #5a6a4e;">
+    <span class="swatch-label">Moss</span>#E8EDD4
+  </div>
+  <div class="swatch" style="background: #dce8ef; color: #4a6a7a;">
+    <span class="swatch-label">Sky</span>#DCE8EF
+  </div>
+  <div class="swatch" style="background: #f5e0d8; color: #8a5a4a;">
+    <span class="swatch-label">Blush</span>#F5E0D8
+  </div>
+  <div class="swatch" style="background: #5a8a6e; color: #fff;">
+    <span class="swatch-label">Forest</span>#5A8A6E
+  </div>
+  <div class="swatch" style="background: #c4785a; color: #fff;">
+    <span class="swatch-label">Terra</span>#C4785A
+  </div>
+  <div class="swatch" style="background: #3d3426; color: #a89e8e;">
+    <span class="swatch-label">Text</span>#3D3426
+  </div>
+</div>
+
+<div class="footer-note">
+  Direction D — Warm, gentle, nature-inspired. Sports as joy, not competition. Cream backgrounds, earthy tones, rounded shapes.
+</div>
+
+</body>
+</html>
