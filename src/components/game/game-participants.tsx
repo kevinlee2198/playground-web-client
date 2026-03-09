@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import {
+  GameVisibility,
   getMaxParticipants,
   getParticipationType,
   getSubtypeFromMetadata,
@@ -58,7 +59,7 @@ export function GameParticipants({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>{t("game.participants.title")}</CardTitle>
-          {isTeamBased && !atParticipantLimit && (
+          {isTeamBased && !atParticipantLimit && (game.viewerGameRole != null || game.visibility === GameVisibility.PUBLIC) && (
             <Button onClick={() => setShowAddTeamDialog(true)} size="sm">
               {t("game.participants.addTeam")}
             </Button>
@@ -89,6 +90,8 @@ export function GameParticipants({
                     gameStatus={game.gameStatus}
                     currentPlayerId={currentPlayerId}
                     isPlayerOnAnyTeam={isPlayerOnAnyTeam}
+                    viewerGameRole={game.viewerGameRole}
+                    visibility={game.visibility}
                   />
                 );
               }
@@ -103,6 +106,8 @@ export function GameParticipants({
             gameId={game.id}
             currentPlayerId={currentPlayerId}
             atParticipantLimit={atParticipantLimit}
+            viewerGameRole={game.viewerGameRole}
+            visibility={game.visibility}
           />
         )}
       </CardContent>

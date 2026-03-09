@@ -6,6 +6,7 @@ import {
 } from "@/app/[locale]/game/participant-actions";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
+import { GameRole, GameVisibility } from "@/lib/constants";
 import type { GameParticipantDetail } from "@/lib/types/game";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -17,6 +18,8 @@ interface IndividualParticipantListProps {
   gameId: number;
   currentPlayerId: number;
   atParticipantLimit: boolean;
+  viewerGameRole: GameRole | null;
+  visibility: GameVisibility;
 }
 
 export function IndividualParticipantList({
@@ -24,6 +27,8 @@ export function IndividualParticipantList({
   gameId,
   currentPlayerId,
   atParticipantLimit,
+  viewerGameRole,
+  visibility,
 }: IndividualParticipantListProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
@@ -38,6 +43,11 @@ export function IndividualParticipantList({
       p.__typename === "IndividualParticipant" &&
       p.player.id === currentPlayerId,
   );
+
+  const canJoin =
+    !atParticipantLimit &&
+    !isCurrentPlayerParticipant &&
+    (viewerGameRole != null || visibility === GameVisibility.PUBLIC);
 
   const handleJoinGame = () => {
     startTransition(async () => {
@@ -98,7 +108,7 @@ export function IndividualParticipantList({
             {t("game.participants.leaveGame")}
           </Button>
         ) : (
-          !atParticipantLimit && (
+          canJoin && (
             <Button
               variant="default"
               size="sm"
@@ -135,17 +145,19 @@ export function IndividualParticipantList({
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <p className="font-medium">{playerName}</p>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveParticipant(player.id)}
-                  disabled={isPending}
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">
-                    {t("game.participants.removeParticipant")}
-                  </span>
-                </Button>
+                {viewerGameRole != null && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveParticipant(player.id)}
+                    disabled={isPending}
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">
+                      {t("game.participants.removeParticipant")}
+                    </span>
+                  </Button>
+                )}
               </div>
             );
           })}
