@@ -172,6 +172,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           sportType: true,
           metadata: gameMetadataFragment,
           gameStatus: true,
+          viewerGameRole: true,
+          visibility: true,
           location: {
             name: true,
             address: {
