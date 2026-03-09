@@ -14,6 +14,7 @@ import type {
   ChatRoomDetailNode,
   ChatRoomListNode,
   ChatRoomMemberNode,
+  ChatRoomRole as ChatRoomRoleType,
 } from "@/lib/types/chat";
 import { z } from "zod";
 
@@ -573,7 +574,7 @@ export async function addMember(chatRoomId: string, userId: string): Promise<{
 export async function updateMemberRole(
   chatRoomId: string,
   userId: string,
-  role: string,
+  role: ChatRoomRoleType,
 ): Promise<{ success: boolean; errorType?: string; message?: string }> {
   const { EnumType } = await import("json-to-graphql-query");
   try {
