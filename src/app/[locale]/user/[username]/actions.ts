@@ -78,6 +78,82 @@ export async function acceptFriendRequest(requesterId: string) {
   }
 }
 
+export async function blockUser(userId: string): Promise<{
+  success: boolean;
+  errorType?: string;
+  message?: string;
+}> {
+  try {
+    const response = await authMutate({
+      blockUser: {
+        __args: { input: { userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "BlockUserResponse",
+            friendship: {
+              id: true,
+              status: true,
+              requester: { id: true },
+              addressee: { id: true },
+            },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.blockUser, "BlockUserResponse");
+    if (!result.success) return result;
+
+    return { success: true };
+  } catch {
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to block user" };
+  }
+}
+
+export async function unblockUser(userId: string): Promise<{
+  success: boolean;
+  errorType?: string;
+  message?: string;
+}> {
+  try {
+    const response = await authMutate({
+      unblockUser: {
+        __args: { input: { userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UnblockUserResponse",
+            friendship: {
+              id: true,
+              status: true,
+              requester: { id: true },
+              addressee: { id: true },
+            },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.unblockUser, "UnblockUserResponse");
+    if (!result.success) return result;
+
+    return { success: true };
+  } catch {
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to unblock user" };
+  }
+}
+
 export async function loadMoreGames(playerId: string, after: string) {
   const response = await query({
     games: {
