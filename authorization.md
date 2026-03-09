@@ -53,18 +53,19 @@ This document describes every authorization rule enforced by the backend. Use it
 
 Derived roles are computed per-request based on the relationship between the authenticated user and the resource.
 
-| Derived Role         | Condition                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `game_organizer`     | The user created the game (`game.createdBy == principal.id`)                               |
-| `game_participant`   | The user's player is on any team/individual slot in the game                               |
-| `team_member`        | The user's player is on the specific team instance                                         |
-| `chat_room_owner`    | The user has the OWNER role in the chat room                                               |
-| `chat_room_admin`    | The user has the ADMIN role in the chat room                                               |
-| `chat_room_member`   | The user has any role (OWNER, ADMIN, or MEMBER) in the chat room                           |
-| `message_author`     | The user sent the specific chat message                                                    |
-| `livestream_creator` | The user started the specific livestream                                                   |
-| `self`               | The resource's `subject_user_id` matches the principal (used for player profile ownership) |
-| `owner`              | The resource's `owner` field matches the principal (used for file/resource ownership)      |
+| Derived Role         | Condition                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `game_owner`         | The user has a `GameMember` record with role `OWNER` for the game (`game_owner_id == principal.id`)    |
+| `game_editor`        | The user has a `GameMember` record with role `EDITOR` for the game (`principal.id in game_editor_ids`) |
+| `game_participant`   | The user's player is on any team/individual slot in the game                                           |
+| `team_member`        | The user's player is on the specific team instance                                                     |
+| `chat_room_owner`    | The user has the OWNER role in the chat room                                                           |
+| `chat_room_admin`    | The user has the ADMIN role in the chat room                                                           |
+| `chat_room_member`   | The user has any role (OWNER, ADMIN, or MEMBER) in the chat room                                       |
+| `message_author`     | The user sent the specific chat message                                                                |
+| `livestream_creator` | The user started the specific livestream                                                               |
+| `self`               | The resource's `subject_user_id` matches the principal (used for player profile ownership)             |
+| `owner`              | The resource's `owner` field matches the principal (used for file/resource ownership)                  |
 
 ---
 
@@ -85,24 +86,67 @@ For blocking behavior on player reads, see [Blocking Behavior by Query](#blockin
 
 ## Game
 
-| Operation | Who Can Do It          | GraphQL                  |
-| --------- | ---------------------- | ------------------------ |
-| Create    | Any authenticated user | `createGame`             |
-| Read      | Any user or anonymous  | `game(id)`, `games(...)` |
-| Update    | Game organizer only    | `updateGame`             |
-| Start     | Game organizer only    | `startGame`              |
-| End       | Game organizer only    | `endGame`                |
-| Delete    | Game organizer only    | `deleteGame`             |
+| Operation          | Who Can Do It          | GraphQL                  |
+| ------------------ | ---------------------- | ------------------------ |
+| Create             | Any authenticated user | `createGame`             |
+| Read               | Any user or anonymous  | `game(id)`, `games(...)` |
+| Update             | Game owner or editor   | `updateGame`             |
+| Start              | Game owner or editor   | `startGame`              |
+| End                | Game owner or editor   | `endGame`                |
+| Delete             | Game owner only        | `deleteGame`             |
+| Add editor         | Game owner only        | `addGameEditor`          |
+| Remove editor      | Game owner only        | `removeGameEditor`       |
+| Transfer ownership | Game owner only        | `transferGameOwnership`  |
+
+### Frontend Fields for Game Management
+
+| Field                 | Type                   | Description                                                                                                                                                                           |
+| --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Game.viewerGameRole` | `GameRole?`            | The current viewer's management role: `OWNER`, `EDITOR`, or `null` (no management role). Use this to conditionally render edit/delete/management buttons. `null` for anonymous users. |
+| `Game.members(...)`   | `GameMemberConnection` | Paginated list of management members (owner + editors). Use for the editor management screen. Each `GameMember` has `user: User!` and `role: GameRole!`.                              |
+
+**Frontend button visibility logic:**
+
+| UI Element                  | Show When                                  |
+| --------------------------- | ------------------------------------------ |
+| Edit game button            | `viewerGameRole != null` (OWNER or EDITOR) |
+| Delete game button          | `viewerGameRole == OWNER`                  |
+| Manage editors button       | `viewerGameRole == OWNER`                  |
+| Start/End game button       | `viewerGameRole != null`                   |
+| Finalize/Unfinalize results | `viewerGameRole != null`                   |
+
+### Filtering Games by Management Role
+
+The `organizedByMe: Boolean` filter on `games(...)` returns only games where the current viewer is an OWNER or EDITOR. Use this for the "My Games" or "Games I Manage" screen. For anonymous users, the filter is silently ignored (returns all games).
+
+```graphql
+games(filter: { organizedByMe: true }) { ... }
+```
+
+### Editor Management Mutations
+
+| Mutation                       | Who Can Call | Success Response                               | Error Responses                          |
+| ------------------------------ | ------------ | ---------------------------------------------- | ---------------------------------------- |
+| `addGameEditor(input)`         | Owner only   | `AddGameEditorResponse { gameMember }`         | `GameNotFoundError`, `UserNotFoundError` |
+| `removeGameEditor(input)`      | Owner only   | `RemoveGameEditorResponse { id }`              | `GameNotFoundError`, `UserNotFoundError` |
+| `transferGameOwnership(input)` | Owner only   | `TransferGameOwnershipResponse { gameMember }` | `GameNotFoundError`, `UserNotFoundError` |
+
+**Transfer behavior:** The current owner becomes an EDITOR, and the target user becomes the new OWNER. If the target was already an EDITOR, they are promoted. If they had no role, a new OWNER membership is created.
+
+**Service-layer restrictions** (not expressible in Cerbos policy alone):
+
+- **Cannot add duplicate member:** If the user already has a role (OWNER or EDITOR), `addGameEditor` throws `IllegalStateException`.
+- **Cannot remove the owner:** `removeGameEditor` rejects attempts to remove the OWNER. Use `transferGameOwnership` first.
 
 ### Game Properties Relevant to Authorization
 
-| Field              | Type                   | Description                                                                   |
-| ------------------ | ---------------------- | ----------------------------------------------------------------------------- |
-| `visibility`       | `PUBLIC` / `PRIVATE`   | Controls who can join the game. Defaults to `PUBLIC`.                         |
-| `resultsFinalized` | `Boolean`              | When `true`, only the organizer can modify scores/stats. Defaults to `false`. |
-| `statEntryMode`    | `OPEN` / `SELF_REPORT` | Controls who can enter statistics. Defaults to `OPEN`.                        |
+| Field              | Type                   | Description                                                                              |
+| ------------------ | ---------------------- | ---------------------------------------------------------------------------------------- |
+| `visibility`       | `PUBLIC` / `PRIVATE`   | Controls who can join the game. Defaults to `PUBLIC`.                                    |
+| `resultsFinalized` | `Boolean`              | When `true`, only the game owner or editor can modify scores/stats. Defaults to `false`. |
+| `statEntryMode`    | `OPEN` / `SELF_REPORT` | Controls who can enter statistics. Defaults to `OPEN`.                                   |
 
-The game organizer is the user who created the game (the `createdBy` user). This cannot be transferred.
+The game owner is the user whose `GameMember` record has role `OWNER`. Ownership can be transferred via `transferGameOwnership` — the previous owner becomes an EDITOR and the target user becomes the new OWNER. Game management roles (`OWNER`, `EDITOR`) are independent from game participation: a user can be an editor without being a player in the game, and vice versa.
 
 ---
 
@@ -115,9 +159,9 @@ Game participants are either **TeamInstance** (team sports) or **IndividualParti
 | Operation                  | Who Can Do It         | GraphQL                                           |
 | -------------------------- | --------------------- | ------------------------------------------------- |
 | Read                       | Any user or anonymous | via `game.participants`                           |
-| Create                     | Game organizer only   | `addGameParticipant`, `addGameParticipants`       |
-| Update (name, description) | Game organizer only   | `updateGameParticipant`, `updateGameParticipants` |
-| Delete                     | Game organizer only   | `removeGameParticipant`, `removeGameParticipants` |
+| Create                     | Game owner or editor  | `addGameParticipant`, `addGameParticipants`       |
+| Update (name, description) | Game owner or editor  | `updateGameParticipant`, `updateGameParticipants` |
+| Delete                     | Game owner or editor  | `removeGameParticipant`, `removeGameParticipants` |
 
 **Score updates** on team instances follow the [Scores](#scores-participant-metadata) rules below.
 
@@ -126,20 +170,20 @@ Game participants are either **TeamInstance** (team sports) or **IndividualParti
 | Operation            | Who Can Do It              | Condition                   | GraphQL                                     |
 | -------------------- | -------------------------- | --------------------------- | ------------------------------------------- |
 | Read                 | Any user or anonymous      |                             | via `game.participants`                     |
-| Create (join)        | Game organizer             | Always                      | `addGameParticipant`, `addGameParticipants` |
+| Create (join)        | Game owner or editor       | Always                      | `addGameParticipant`, `addGameParticipants` |
 | Create (self-join)   | Any authenticated user     | Game visibility is `PUBLIC` | `addGameParticipant`                        |
-| Update               | Game organizer             | Always                      | `updateGameParticipant`                     |
+| Update               | Game owner or editor       | Always                      | `updateGameParticipant`                     |
 | Update (own)         | The participant themselves | Always                      | `updateGameParticipant`                     |
-| Delete (remove)      | Game organizer             | Always                      | `removeGameParticipant`                     |
+| Delete (remove)      | Game owner or editor       | Always                      | `removeGameParticipant`                     |
 | Delete (self-remove) | The participant themselves | Always                      | `removeGameParticipant`                     |
 
 ### Players on a Team
 
 | Operation              | Who Can Do It          | Condition                   | GraphQL                                                         |
 | ---------------------- | ---------------------- | --------------------------- | --------------------------------------------------------------- |
-| Add player             | Game organizer         | Always                      | `addPlayerToTeamInstance`, `addPlayersToTeamInstance`           |
+| Add player             | Game owner or editor   | Always                      | `addPlayerToTeamInstance`, `addPlayersToTeamInstance`           |
 | Add player (self-join) | Any authenticated user | Game visibility is `PUBLIC` | `addPlayerToTeamInstance`                                       |
-| Remove player          | Game organizer         | Always                      | `removePlayerFromTeamInstance`, `removePlayersFromTeamInstance` |
+| Remove player          | Game owner or editor   | Always                      | `removePlayerFromTeamInstance`, `removePlayersFromTeamInstance` |
 | Remove player (self)   | The player themselves  | Always (team member)        | `removePlayerFromTeamInstance`                                  |
 
 ---
@@ -152,7 +196,7 @@ Scores are updated via `updateGameParticipant` / `updateGameParticipants` using 
 
 | Who                           | When                                                           | Can Update Scores? |
 | ----------------------------- | -------------------------------------------------------------- | ------------------ |
-| Game organizer                | Always                                                         | Yes                |
+| Game owner or editor          | Always                                                         | Yes                |
 | Any game participant          | `resultsFinalized == false` AND `statEntryMode == OPEN`        | Yes                |
 | Game participant (own scores) | `resultsFinalized == false` AND `statEntryMode == SELF_REPORT` | Yes (own only)     |
 | Any game participant          | `resultsFinalized == true`                                     | No                 |
@@ -162,34 +206,34 @@ Scores are updated via `updateGameParticipant` / `updateGameParticipants` using 
 | Operation       | Who Can Do It                | Condition                                                                                 | GraphQL                                             |
 | --------------- | ---------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | Read            | Any user or anonymous        |                                                                                           | `basketballBoxScores(...)`                          |
-| Create / Update | Game organizer               | Always                                                                                    | `saveBasketballBoxScore`, `saveBasketballBoxScores` |
+| Create / Update | Game owner or editor         | Always                                                                                    | `saveBasketballBoxScore`, `saveBasketballBoxScores` |
 | Create / Update | Game participant             | `resultsFinalized == false` AND `statEntryMode == OPEN`                                   | `saveBasketballBoxScore`                            |
 | Create / Update | Game participant (own stats) | `resultsFinalized == false` AND `statEntryMode == SELF_REPORT` AND `targetPlayer == self` | `saveBasketballBoxScore`                            |
-| Delete          | Game organizer only          | Always                                                                                    | (not yet exposed in GraphQL)                        |
+| Delete          | Game owner only              | Always                                                                                    | (not yet exposed in GraphQL)                        |
 
 ### Results Finalization
 
-| Operation          | Who Can Do It       | GraphQL                 |
-| ------------------ | ------------------- | ----------------------- |
-| Finalize results   | Game organizer only | `finalizeGameResults`   |
-| Unfinalize results | Game organizer only | `unfinalizeGameResults` |
+| Operation          | Who Can Do It        | GraphQL                 |
+| ------------------ | -------------------- | ----------------------- |
+| Finalize results   | Game owner or editor | `finalizeGameResults`   |
+| Unfinalize results | Game owner or editor | `unfinalizeGameResults` |
 
 When results are finalized (`resultsFinalized == true`):
 
-- Only the game organizer can modify scores and statistics
+- Only the game owner or editor can modify scores and statistics
 - Participants can still read all data
-- The organizer can reverse this at any time with `unfinalizeGameResults`
+- The game owner or editor can reverse this at any time with `unfinalizeGameResults`
 
 ---
 
 ## Livestreams
 
-| Operation                   | Who Can Do It                        | GraphQL                |
-| --------------------------- | ------------------------------------ | ---------------------- |
-| Read                        | Any user or anonymous                | via `game.livestreams` |
-| Start                       | Game organizer OR game participant   | `startLivestream`      |
-| Update (title, description) | Livestream creator only              | `updateLivestream`     |
-| End                         | Livestream creator OR game organizer | `endLivestream`        |
+| Operation                   | Who Can Do It                                   | GraphQL                |
+| --------------------------- | ----------------------------------------------- | ---------------------- |
+| Read                        | Any user or anonymous                           | via `game.livestreams` |
+| Start                       | Game owner, editor, OR game participant         | `startLivestream`      |
+| Update (title, description) | Livestream creator only                         | `updateLivestream`     |
+| End                         | Livestream creator OR game owner OR game editor | `endLivestream`        |
 
 ---
 
@@ -275,6 +319,8 @@ The `friendships` query supports filtering by:
 
 - `status`: Filter by `PENDING`, `ACCEPTED`, `DECLINED`, `BLOCKED`
 - `direction`: `INCOMING` (requests sent to me) or `OUTGOING` (requests I sent)
+
+**Default behavior:** When no `status` filter is provided, `BLOCKED` friendships are excluded. To view blocked users, explicitly filter with `status: BLOCKED`.
 
 ---
 
@@ -362,7 +408,7 @@ This section documents the **exact behavior** for every query and nested field w
 
 **`basketballBoxScores(input)`** — Box score queries
 
-- **Behavior:** **No blocking check.** All matching box scores are returned. The nested `Player` on each box score is **not** anonymized at this level.
+- **Behavior:** All matching box scores are returned. The nested `Player` on each box score is **anonymized** — blocked players' identifying fields are nulled (same pattern as game participants). Stat data remains fully visible.
 
 #### Chat Queries
 
@@ -401,7 +447,7 @@ This section documents the **exact behavior** for every query and nested field w
 
 **`friendships(filter)`** — Query friendships
 
-- **Behavior:** Returns BLOCKED friendships when filtering by `status: BLOCKED`. The blocked user's information is visible in the friendship record.
+- **Behavior:** **Excludes BLOCKED by default.** Only returns BLOCKED friendships when explicitly filtering by `status: BLOCKED` (for the "manage blocked users" settings screen). When viewing blocked users, their information is visible in the friendship record.
 
 **`sendFriendRequest(userId)`** — Send friend request
 
@@ -419,7 +465,7 @@ This section documents the **exact behavior** for every query and nested field w
 
 **`notifications`** — User notifications
 
-- **Behavior:** **No blocking check.** Notifications from blocked users (e.g., past friend requests) remain visible.
+- **Behavior:** **Hidden** — notifications referencing blocked users (friend request received/accepted) are silently excluded. Game started notifications are unaffected (no user reference).
 
 **`chatEvents` subscription** — Chat event stream
 
@@ -473,7 +519,7 @@ The `id` is always preserved so the frontend can still reference the player stru
 | `IndividualParticipant.player`  | **Anonymized** — blocked player with null identifying fields                                         |
 | `Game.livestreams`              | **Hidden** — blocked users' livestreams excluded                                                     |
 | `Game.media`                    | **Hidden** — blocked users' media excluded                                                           |
-| `basketballBoxScores`           | **Unaffected** — all box scores returned                                                             |
+| `basketballBoxScores`           | **Anonymized** — blocked players with null identifying fields; stat data visible                     |
 | `chatRoom(id)`                  | **Unaffected** — returned if viewer is a member                                                      |
 | `chatRooms`                     | **Unaffected** — all member rooms returned                                                           |
 | `directMessageChatRoom(userId)` | **Unaffected** — returns existing DM if it exists                                                    |
@@ -481,6 +527,8 @@ The `id` is always preserved so the frontend can still reference the player stru
 | `createDirectMessage`           | **Blocked** — returns `UserBlockedError` via result union                                            |
 | `createGroupChat`               | **Filtered** — blocked users silently removed from member list                                       |
 | `addChatRoomMember`             | **Unaffected** — blocked users can be added                                                          |
+| `friendships(...)`              | **Filtered** — BLOCKED excluded by default; only returned when filtering `status: BLOCKED`           |
+| `notifications`                 | **Hidden** — notifications from blocked users filtered out                                           |
 | `sendFriendRequest`             | **Blocked** — returns `FriendshipAlreadyExistsError` (status `BLOCKED`) via result union             |
 | `blockUser`                     | **Blocked** — returns `UserBlockedYouError` if target already blocked you, `SelfActionError` if self |
 | `unblockUser`                   | **Restricted** — `BlockNotFoundError` if no block exists, `UserBlockedYouError` if they blocked you  |
@@ -551,7 +599,8 @@ The frontend should:
 
 Common error scenarios:
 
-- Attempting to modify a game you don't organize -> `FORBIDDEN` in GraphQL errors array (Cerbos authorization)
+- Attempting to modify a game you don't own or edit -> `FORBIDDEN` in GraphQL errors array (Cerbos authorization)
+- Attempting to delete a game as an editor (not owner) -> `FORBIDDEN` in GraphQL errors array (Cerbos authorization)
 - Attempting to modify finalized results as a participant -> `FORBIDDEN` in GraphQL errors array (Cerbos authorization)
 - Attempting to create a DM with a blocked user -> `UserBlockedError` via result union
 - Attempting to send a friend request to a blocked user -> `FriendshipAlreadyExistsError` (status `BLOCKED`) via result union
@@ -565,24 +614,26 @@ Common error scenarios:
 
 ### Game Operations
 
-| Action                      | Anonymous | Authenticated | Organizer | Participant |
-| --------------------------- | --------- | ------------- | --------- | ----------- |
-| View game                   | Yes       | Yes           | Yes       | Yes         |
-| Create game                 |           | Yes           |           |             |
-| Update game                 |           |               | Yes       |             |
-| Start/End game              |           |               | Yes       |             |
-| Delete game                 |           |               | Yes       |             |
-| Add participant (PRIVATE)   |           |               | Yes       |             |
-| Add participant (PUBLIC)    |           | Yes           | Yes       |             |
-| Self-remove from game       |           |               |           | Yes         |
-| Finalize/unfinalize results |           |               | Yes       |             |
+| Action                      | Anonymous | Authenticated | Owner | Editor | Participant |
+| --------------------------- | --------- | ------------- | ----- | ------ | ----------- |
+| View game                   | Yes       | Yes           | Yes   | Yes    | Yes         |
+| Create game                 |           | Yes           |       |        |             |
+| Update game                 |           |               | Yes   | Yes    |             |
+| Start/End game              |           |               | Yes   | Yes    |             |
+| Delete game                 |           |               | Yes   |        |             |
+| Add/Remove editor           |           |               | Yes   |        |             |
+| Transfer ownership          |           |               | Yes   |        |             |
+| Add participant (PRIVATE)   |           |               | Yes   | Yes    |             |
+| Add participant (PUBLIC)    |           | Yes           | Yes   | Yes    |             |
+| Self-remove from game       |           |               |       |        | Yes         |
+| Finalize/unfinalize results |           |               | Yes   | Yes    |             |
 
 ### Statistics Operations
 
-| Action          | Organizer | Participant (OPEN, not finalized) | Participant (SELF_REPORT, not finalized) | Participant (finalized) |
-| --------------- | --------- | --------------------------------- | ---------------------------------------- | ----------------------- |
-| Update scores   | Yes       | Yes                               | Own only                                 | No                      |
-| Save box scores | Yes       | Yes                               | Own only                                 | No                      |
+| Action          | Owner or Editor | Participant (OPEN, not finalized) | Participant (SELF_REPORT, not finalized) | Participant (finalized) |
+| --------------- | --------------- | --------------------------------- | ---------------------------------------- | ----------------------- |
+| Update scores   | Yes             | Yes                               | Own only                                 | No                      |
+| Save box scores | Yes             | Yes                               | Own only                                 | No                      |
 
 ### Chat Operations
 

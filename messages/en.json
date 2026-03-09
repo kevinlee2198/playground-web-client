@@ -219,6 +219,32 @@
       "editor": "Editor"
     },
     "manageEditors": "Manage Editors",
+    "editors": {
+      "title": "Manage Editors",
+      "addEditor": "Add Editor",
+      "removeEditor": "Remove Editor",
+      "transferOwnership": "Transfer Ownership",
+      "transferConfirmTitle": "Transfer Ownership",
+      "transferConfirmDescription": "Are you sure you want to transfer ownership to {name}? You will become an editor.",
+      "searchPlaceholder": "Search users...",
+      "noEditors": "No editors yet",
+      "removeConfirmTitle": "Remove Editor",
+      "removeConfirmDescription": "Are you sure you want to remove {name} as an editor?",
+      "cancel": "Cancel",
+      "owner": "Owner",
+      "editor": "Editor",
+      "success": {
+        "added": "Editor added successfully",
+        "removed": "Editor removed successfully",
+        "transferred": "Ownership transferred successfully"
+      },
+      "errors": {
+        "addFailed": "Failed to add editor",
+        "removeFailed": "Failed to remove editor",
+        "transferFailed": "Failed to transfer ownership",
+        "loadFailed": "Failed to load members"
+      }
+    },
     "actions": {
       "create": "Create Game",
       "edit": "Edit Game",
