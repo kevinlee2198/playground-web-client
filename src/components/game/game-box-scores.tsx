@@ -1,6 +1,5 @@
 import { BasketballBoxScoreTable } from "@/components/game/basketball-box-score-table";
 import { GameStatus, SportType } from "@/lib/constants";
-import type { GameRole } from "@/lib/constants";
 import { authQuery } from "@/lib/graphql-request";
 import type {
   GameDetail,
@@ -11,7 +10,6 @@ import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 
 interface GameBoxScoresProps {
   game: GameDetail;
-  viewerGameRole: GameRole | null;
 }
 
 interface TeamBoxScoreGroup {
@@ -50,7 +48,7 @@ function groupByTeam(
   }));
 }
 
-export async function GameBoxScores({ game, viewerGameRole }: GameBoxScoresProps) {
+export async function GameBoxScores({ game }: GameBoxScoresProps) {
   if (game.sportType !== SportType.BASKETBALL) {
     return null;
   }
@@ -108,7 +106,7 @@ export async function GameBoxScores({ game, viewerGameRole }: GameBoxScoresProps
           boxScores={group.boxScores}
           gameStatus={game.gameStatus}
           availablePlayers={group.players}
-          viewerGameRole={viewerGameRole}
+          viewerGameRole={game.viewerGameRole}
         />
       ))}
     </div>

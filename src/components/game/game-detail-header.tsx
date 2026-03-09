@@ -20,10 +20,9 @@ import { UpdateGameForm } from "./update-game-form";
 
 interface GameDetailHeaderProps {
   game: GameDetail;
-  viewerGameRole: GameRole | null;
 }
 
-export function GameDetailHeader({ game, viewerGameRole }: GameDetailHeaderProps) {
+export function GameDetailHeader({ game }: GameDetailHeaderProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -100,7 +99,7 @@ export function GameDetailHeader({ game, viewerGameRole }: GameDetailHeaderProps
             <GameStatusBadge status={game.gameStatus} />
           </div>
         </div>
-        {viewerGameRole != null && (
+        {game.viewerGameRole != null && (
           <div className="flex flex-wrap gap-2">
             {canStart && (
               <Button
@@ -132,7 +131,7 @@ export function GameDetailHeader({ game, viewerGameRole }: GameDetailHeaderProps
               <Pencil className="mr-2 h-4 w-4" />
               {t("game.actions.edit")}
             </Button>
-            {viewerGameRole === GameRole.OWNER && (
+            {game.viewerGameRole === GameRole.OWNER && (
               <Button
                 variant="destructive"
                 onClick={() => setShowDeleteDialog(true)}
@@ -162,7 +161,7 @@ export function GameDetailHeader({ game, viewerGameRole }: GameDetailHeaderProps
             currentStartDate={game.startDate}
             metadata={game.metadata}
             sportType={game.sportType}
-            currentLocation={game.location ?? null}
+            currentLocation={game.location}
             onSuccess={() => setShowUpdateDialog(false)}
           />
         </DialogContent>

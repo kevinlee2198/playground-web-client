@@ -1,7 +1,7 @@
 import {
+  type GameRole,
   type GameSortField,
   type GameStatus,
-  type GameRole,
   type GameVisibility,
   type SortDirection,
   SportSubtype,

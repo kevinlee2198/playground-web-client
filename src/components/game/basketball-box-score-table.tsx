@@ -19,8 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GameStatus } from "@/lib/constants";
-import type { GameRole } from "@/lib/constants";
+import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 import {
