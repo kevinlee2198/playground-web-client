@@ -586,6 +586,16 @@
       "description": "When you and your friends play games, they'll show up here."
     }
   },
+  "settings": {
+    "blocked": {
+      "title": "Blocked Users",
+      "description": "Users you have blocked won't be able to see your profile or contact you.",
+      "empty": "You haven't blocked anyone",
+      "unblock": "Unblock",
+      "unblockSuccess": "User unblocked",
+      "unblockError": "Failed to unblock user"
+    }
+  },
   "contact": {
     "title": "Contact Us",
     "email": "Email: playgroundsocool@gmail.com",
