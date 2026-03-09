@@ -568,6 +568,78 @@ export async function addMember(chatRoomId: string, userId: string): Promise<{
 }
 
 /**
+ * Update a chat room member's role
+ */
+export async function updateMemberRole(
+  chatRoomId: string,
+  userId: string,
+  role: string,
+): Promise<{ success: boolean; errorType?: string; message?: string }> {
+  const { EnumType } = await import("json-to-graphql-query");
+  try {
+    const response = await authMutate({
+      updateChatRoomMemberRole: {
+        __args: {
+          input: { chatRoomId, userId, role: new EnumType(role) },
+        },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UpdateChatRoomMemberRoleResponse",
+            member: { id: true, role: true },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.updateChatRoomMemberRole, "UpdateChatRoomMemberRoleResponse");
+    if (!result.success) return result;
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update member role:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to update role" };
+  }
+}
+
+/**
+ * Leave a chat room
+ */
+export async function leaveChat(
+  chatRoomId: string,
+): Promise<{ success: boolean; errorType?: string; message?: string }> {
+  try {
+    const response = await authMutate({
+      leaveChatRoom: {
+        __args: { input: { chatRoomId } },
+        __typename: true,
+        __on: [
+          { __typeName: "LeaveChatRoomResponse", chatRoomId: true },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.leaveChatRoom, "LeaveChatRoomResponse");
+    if (!result.success) return result;
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to leave chat room:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to leave chat" };
+  }
+}
+
+/**
  * Remove a member from a chat room
  */
 export async function removeMember(chatRoomId: string, userId: string): Promise<{
