@@ -53,6 +53,17 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Shadows — warm four-level elevation system */
+  --shadow-card: 0 1px 3px rgba(61, 52, 38, 0.06), 0 1px 2px rgba(61, 52, 38, 0.04);
+  --shadow-card-hover: 0 4px 12px rgba(61, 52, 38, 0.10), 0 2px 4px rgba(61, 52, 38, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(61, 52, 38, 0.12), 0 4px 8px rgba(61, 52, 38, 0.06);
+  --shadow-float: 0 16px 32px rgba(61, 52, 38, 0.14), 0 6px 12px rgba(61, 52, 38, 0.08);
+
+  /* Easing curves */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-gentle: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 :root {
@@ -65,7 +76,7 @@
   --popover-foreground: oklch(0.28 0.03 55);
 
   /* Primary — Forest green */
-  --primary: oklch(0.58 0.10 155);
+  --primary: oklch(0.54 0.10 155);
   --primary-foreground: oklch(0.99 0.006 85);
 
   /* Secondary — Deep cream */
@@ -74,7 +85,7 @@
 
   /* Muted */
   --muted: oklch(0.93 0.022 80);
-  --muted-foreground: oklch(0.53 0.02 60);
+  --muted-foreground: oklch(0.45 0.02 60);
 
   /* Accent — Terracotta */
   --accent: oklch(0.60 0.12 45);
@@ -86,13 +97,13 @@
   /* Borders & inputs */
   --border: oklch(0.28 0.03 55 / 10%);
   --input: oklch(0.28 0.03 55 / 10%);
-  --ring: oklch(0.58 0.10 155);
+  --ring: oklch(0.54 0.10 155);
 
   /* Sport accents */
   --sport-basketball: oklch(0.92 0.04 45);
   --sport-basketball-foreground: oklch(0.60 0.12 45);
   --sport-tennis: oklch(0.92 0.04 135);
-  --sport-tennis-foreground: oklch(0.58 0.10 155);
+  --sport-tennis-foreground: oklch(0.54 0.10 155);
   --sport-football: oklch(0.92 0.03 220);
   --sport-football-foreground: oklch(0.55 0.08 230);
 
@@ -101,11 +112,18 @@
   --live-foreground: oklch(0.99 0.006 85);
 
   /* Chart colors (nature-inspired) */
-  --chart-1: oklch(0.58 0.10 155);
+  --chart-1: oklch(0.54 0.10 155);
   --chart-2: oklch(0.60 0.12 45);
   --chart-3: oklch(0.55 0.08 230);
   --chart-4: oklch(0.65 0.10 85);
   --chart-5: oklch(0.50 0.08 310);
+
+  /* Motion — duration scale */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-gentle: 600ms;
+  --duration-breath: 2000ms;
 
   /* Radius — larger for rounded Ghibli feel */
   --radius: 0.875rem;
@@ -113,12 +131,12 @@
   /* Sidebar */
   --sidebar: oklch(0.96 0.018 85);
   --sidebar-foreground: oklch(0.28 0.03 55);
-  --sidebar-primary: oklch(0.58 0.10 155);
+  --sidebar-primary: oklch(0.54 0.10 155);
   --sidebar-primary-foreground: oklch(0.99 0.006 85);
   --sidebar-accent: oklch(0.93 0.022 80);
   --sidebar-accent-foreground: oklch(0.28 0.03 55);
   --sidebar-border: oklch(0.28 0.03 55 / 10%);
-  --sidebar-ring: oklch(0.58 0.10 155);
+  --sidebar-ring: oklch(0.54 0.10 155);
 }
 
 .dark {
@@ -133,7 +151,7 @@
   --secondary: oklch(0.28 0.02 55);
   --secondary-foreground: oklch(0.93 0.018 85);
   --muted: oklch(0.28 0.02 55);
-  --muted-foreground: oklch(0.65 0.02 60);
+  --muted-foreground: oklch(0.70 0.02 60);
   --accent: oklch(0.65 0.12 45);
   --accent-foreground: oklch(0.20 0.02 55);
   --destructive: oklch(0.704 0.191 22.216);
@@ -173,5 +191,8 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .font-heading {
+    font-synthesis: none;
   }
 }
