@@ -1,11 +1,18 @@
 import "@/app/globals.css";
 import Footer from "@/components/playground/footer";
 import { Navbar } from "@/components/playground/navbar";
+import { NewGameFab } from "@/components/playground/new-game-fab";
+import { ScrollDirectionProvider } from "@/components/playground/scroll-direction-provider";
+import { SkipNavLink } from "@/components/playground/skip-nav-link";
+import { TabBar } from "@/components/playground/tab-bar";
 import { Toaster } from "@/components/ui/sonner";
 import { routing } from "@/i18n/routing";
+import { auth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { Nunito, Quicksand } from "next/font/google";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 const nunito = Nunito({
@@ -39,22 +46,36 @@ export default async function RootLayout({
   children,
   params,
 }: RootLayoutProps) {
-  const { locale } = await params;
+  const [{ locale }, hdrs] = await Promise.all([params, headers()]);
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+  const session = await auth.api.getSession({ headers: hdrs });
+  const isAuthenticated = !!session?.user;
   return (
     <html
       lang={locale}
       className={`${nunito.variable} ${quicksand.variable}`}
       style={{ colorScheme: "light dark" }}
     >
-      <body className="antialiased min-h-screen flex flex-col">
+      <body
+        className={cn(
+          "flex min-h-screen flex-col antialiased",
+          isAuthenticated && "pb-16 lg:pb-0",
+        )}
+      >
         <NextIntlClientProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <Toaster />
+          <ScrollDirectionProvider>
+            <SkipNavLink />
+            <Navbar />
+            <TabBar />
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <NewGameFab />
+            <Toaster />
+          </ScrollDirectionProvider>
         </NextIntlClientProvider>
       </body>
     </html>
