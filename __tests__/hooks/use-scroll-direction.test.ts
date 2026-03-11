@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useScrollDirection } from "./use-scroll-direction";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 describe("useScrollDirection", () => {
   let rafCallback: FrameRequestCallback | null = null;
