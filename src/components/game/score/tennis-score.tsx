@@ -35,9 +35,10 @@ interface TennisScoreProps {
   participantA: GameParticipant;
   participantB: GameParticipant;
   statusPill?: ReactNode;
+  size?: "sm" | "lg";
 }
 
-export function TennisScore({ participantA, participantB, statusPill }: TennisScoreProps) {
+export function TennisScore({ participantA, participantB, statusPill, size = "sm" }: TennisScoreProps) {
   const tennisA = getTennisMeta(participantA);
   const tennisB = getTennisMeta(participantB);
   const nameA = getParticipantName(participantA);
@@ -57,14 +58,19 @@ export function TennisScore({ participantA, participantB, statusPill }: TennisSc
         })
       : null;
 
+  const nameClass = size === "lg" ? "text-base sm:text-lg" : "text-sm";
+  const scoreClass = size === "lg" ? "text-5xl sm:text-6xl" : "text-3xl";
+  const pillClass = size === "lg" ? "text-sm px-3 py-1" : "text-xs px-2 py-0.5";
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 text-center min-w-0">
-          <p className="truncate text-sm font-semibold font-heading">{nameA}</p>
+          <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameA}</p>
           <p
             className={cn(
-              "text-3xl font-bold font-heading tabular-nums",
+              "font-bold font-heading tabular-nums",
+              scoreClass,
               aWins ? "text-primary" : undefined,
             )}
           >
@@ -75,10 +81,11 @@ export function TennisScore({ participantA, participantB, statusPill }: TennisSc
         {statusPill ? <div className="shrink-0">{statusPill}</div> : null}
 
         <div className="flex-1 text-center min-w-0">
-          <p className="truncate text-sm font-semibold font-heading">{nameB}</p>
+          <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameB}</p>
           <p
             className={cn(
-              "text-3xl font-bold font-heading tabular-nums",
+              "font-bold font-heading tabular-nums",
+              scoreClass,
               bWins ? "text-primary" : undefined,
             )}
           >
@@ -92,7 +99,10 @@ export function TennisScore({ participantA, participantB, statusPill }: TennisSc
           {setScores.map((score, i) => (
             <span
               key={`set-${i}`}
-              className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums"
+              className={cn(
+                "rounded-full bg-muted font-medium text-muted-foreground tabular-nums",
+                pillClass,
+              )}
             >
               {score}
             </span>
