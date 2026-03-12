@@ -416,7 +416,11 @@
       "points": "Points"
     },
     "detail": {
-      "location": "Location"
+      "location": "Location",
+      "backToGames": "Back to Games",
+      "hero": {
+        "scheduled": "Scheduled for"
+      }
     },
     "success": {
       "created": "Game created successfully",
