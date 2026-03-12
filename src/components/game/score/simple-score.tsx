@@ -1,9 +1,7 @@
-import type {
-  GameParticipant,
-  IndividualParticipantNode,
-  ParticipantMetadata,
-  TeamInstanceNode,
-} from "@/lib/types/game";
+import { getParticipantName } from "@/components/game/score/participant-utils";
+import { cn } from "@/lib/utils";
+import type { GameParticipant, ParticipantMetadata } from "@/lib/types/game";
+import type { ReactNode } from "react";
 
 function getSimpleScore(
   metadata: ParticipantMetadata | null | undefined,
@@ -21,27 +19,45 @@ function getSimpleScore(
 interface SimpleScoreProps {
   participantA: GameParticipant;
   participantB: GameParticipant;
+  statusPill?: ReactNode;
 }
 
-function getParticipantName(participant: GameParticipant): string {
-  if (participant.__typename === "TeamInstance") {
-    return (participant as TeamInstanceNode).name;
-  }
-  const p = participant as IndividualParticipantNode;
-  return p.player ? `${p.player.firstName} ${p.player.lastName}` : "Unknown";
-}
-
-export function SimpleScore({ participantA, participantB }: SimpleScoreProps) {
+export function SimpleScore({ participantA, participantB, statusPill }: SimpleScoreProps) {
   const scoreA = getSimpleScore(participantA.metadata);
   const scoreB = getSimpleScore(participantB.metadata);
-  const displayA = scoreA !== null ? String(scoreA) : "-";
-  const displayB = scoreB !== null ? String(scoreB) : "-";
   const nameA = getParticipantName(participantA);
   const nameB = getParticipantName(participantB);
 
+  const aWins = scoreA !== null && scoreB !== null && scoreA > scoreB;
+  const bWins = scoreA !== null && scoreB !== null && scoreB > scoreA;
+
   return (
-    <span>
-      {nameA} {displayA} - {displayB} {nameB}
-    </span>
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex-1 text-center min-w-0">
+        <p className="truncate text-sm font-semibold font-heading">{nameA}</p>
+        <p
+          className={cn(
+            "text-3xl font-bold font-heading tabular-nums",
+            aWins ? "text-primary" : undefined,
+          )}
+        >
+          {scoreA !== null ? scoreA : "-"}
+        </p>
+      </div>
+
+      {statusPill ? <div className="shrink-0">{statusPill}</div> : null}
+
+      <div className="flex-1 text-center min-w-0">
+        <p className="truncate text-sm font-semibold font-heading">{nameB}</p>
+        <p
+          className={cn(
+            "text-3xl font-bold font-heading tabular-nums",
+            bWins ? "text-primary" : undefined,
+          )}
+        >
+          {scoreB !== null ? scoreB : "-"}
+        </p>
+      </div>
+    </div>
   );
 }

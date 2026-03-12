@@ -233,7 +233,10 @@
     "status": {
       "scheduled": "Scheduled",
       "inProgress": "In Progress",
-      "complete": "Complete"
+      "complete": "Complete",
+      "final": "Final",
+      "upcoming": "Upcoming",
+      "live": "Live"
     },
     "role": {
       "owner": "Owner",
