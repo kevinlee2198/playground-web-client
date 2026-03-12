@@ -75,7 +75,7 @@ export default async function ChatPage({ params, searchParams }: PageProps) {
   const initialRoomId = room || null;
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="h-[calc(100dvh-8rem)] overflow-hidden lg:h-[calc(100dvh-6.5rem)]">
       <ChatLayout
         initialRooms={chatRoomsData.edges}
         initialPageInfo={chatRoomsData.pageInfo}
