@@ -2,7 +2,7 @@ import { BreathingDot } from "@/components/game/breathing-dot";
 import { GameScoreBlock } from "@/components/game/game-score-block";
 import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
 import { Badge } from "@/components/ui/badge";
-import { TypographyMuted } from "@/components/ui/typography";
+import { TypographyLarge, TypographyMuted } from "@/components/ui/typography";
 import {
   GameStatus,
   GameStatusBadgeVariant,
@@ -84,7 +84,7 @@ export async function GameDetailHero({
         {game.gameStatus === GameStatus.SCHEDULED ? (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
             <TypographyMuted>{t("game.detail.hero.scheduled")}</TypographyMuted>
-            <p className="text-2xl font-bold font-heading">{formattedDate}</p>
+            <TypographyLarge className="text-2xl font-bold font-heading">{formattedDate}</TypographyLarge>
             {statusPill}
           </div>
         ) : (

@@ -1,10 +1,9 @@
 import { GameBoxScores } from "@/components/game/game-box-scores";
-import { GameDetailHeader } from "@/components/game/game-detail-header";
+import { GameDetailActions } from "@/components/game/game-detail-actions";
+import { GameDetailHero } from "@/components/game/game-detail-hero";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameParticipants } from "@/components/game/game-participants";
-import { GameScoreboard } from "@/components/game/game-scoreboard";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
@@ -18,7 +17,7 @@ import { authQuery } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
-import { MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -87,7 +86,7 @@ export default async function GameDetailPage({ params }: PageProps) {
   // Show message if no player profile
   if (!player) {
     return (
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
           <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
             {t("player.modal.title")}
@@ -101,7 +100,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -141,7 +140,7 @@ export default async function GameDetailPage({ params }: PageProps) {
 
   if (!game) {
     return (
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="rounded-lg border border-destructive bg-destructive/10 p-12 text-center">
           <h2 className="text-2xl font-bold text-destructive">
             {t("game.notFound")}
@@ -156,7 +155,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             {t("game.title")}
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -177,88 +176,50 @@ export default async function GameDetailPage({ params }: PageProps) {
     (game.gameStatus === GameStatus.IN_PROGRESS ||
       game.gameStatus === GameStatus.COMPLETE);
 
-  const startDate = new Date(game.startDate).toLocaleString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const endDate = game.endDate
-    ? new Date(game.endDate).toLocaleString(locale, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const locationText = game.location ? formatAddress(game.location.address) : null;
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Back button */}
-      <div className="mb-4">
-        <Link href="/games" className={buttonVariants({ variant: "ghost" })}>
-          ← {t("game.title")}
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+      {/* Back navigation */}
+      <div className="mb-6">
+        <Link
+          href="/games"
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            "gap-1.5 text-muted-foreground",
+          )}
+        >
+          <ArrowLeft className="size-4" />
+          {t("game.detail.backToGames")}
         </Link>
       </div>
 
-      {/* Header with actions */}
-      <GameDetailHeader game={game} />
+      {/* Hero scoreboard */}
+      <GameDetailHero game={game} locationText={locationText} />
 
-      {/* Scoreboard - only show once game has started */}
-      {game.gameStatus !== GameStatus.SCHEDULED && (
-        <div className="mb-8">
-          <GameScoreboard game={game} />
-        </div>
-      )}
-
-      {/* Schedule Info */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>{t("game.schedule")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div>
-            <span className="font-medium">{t("game.startDate")}:</span>{" "}
-            <span className="text-muted-foreground">{startDate}</span>
-          </div>
-          {endDate && (
-            <div>
-              <span className="font-medium">{t("game.endDate")}:</span>{" "}
-              <span className="text-muted-foreground">{endDate}</span>
-            </div>
-          )}
-          {game.location && (
-            <div
-              className="flex items-start gap-2"
-              aria-label={t("game.detail.location")}
-            >
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground break-words">
-                {formatAddress(game.location.address)}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Action bar */}
+      <GameDetailActions game={game} />
 
       {/* Participants */}
-      <div className="mb-8">
+      <section className="mt-8">
         <GameParticipants game={game} currentPlayerId={player.id} />
-      </div>
-
-      {/* Media Gallery */}
-      <GameMediaGallery
-        gameId={game.id}
-        initialMedia={game.media.edges}
-        initialPageInfo={game.media.pageInfo}
-        canUpload={canUpload}
-        isParticipant={isParticipant}
-      />
+      </section>
 
       {/* Box Scores */}
-      <GameBoxScores game={game} />
-    </main>
+      <section className="mt-8">
+        <GameBoxScores game={game} />
+      </section>
+
+      {/* Media Gallery */}
+      <section className="mt-8">
+        <GameMediaGallery
+          gameId={game.id}
+          initialMedia={game.media.edges}
+          initialPageInfo={game.media.pageInfo}
+          canUpload={canUpload}
+          isParticipant={isParticipant}
+        />
+      </section>
+    </div>
   );
 }
