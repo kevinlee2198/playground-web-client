@@ -8,9 +8,10 @@ interface GameScoreProps {
   sportType: SportType;
   participants: GameParticipant[];
   statusPill?: ReactNode;
+  size?: "sm" | "lg";
 }
 
-export function GameScore({ sportType, participants, statusPill }: GameScoreProps) {
+export function GameScore({ sportType, participants, statusPill, size = "sm" }: GameScoreProps) {
   if (participants.length < 2) return null;
 
   const [a, b] = participants;
@@ -19,9 +20,9 @@ export function GameScore({ sportType, participants, statusPill }: GameScoreProp
   switch (sportType) {
     case SportType.BASKETBALL:
     case SportType.FOOTBALL:
-      return <SimpleScore participantA={a} participantB={b} statusPill={statusPill} />;
+      return <SimpleScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
     case SportType.TENNIS:
-      return <TennisScore participantA={a} participantB={b} statusPill={statusPill} />;
+      return <TennisScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
     default:
       return null;
   }
