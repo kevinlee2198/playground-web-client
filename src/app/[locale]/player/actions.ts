@@ -7,9 +7,9 @@ import type { Player } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
 interface CreatePlayerInput {
-  age?: number | null;
-  height?: number | null;
-  weight?: number | null;
+  age?: number;
+  height?: number;
+  weight?: number;
 }
 
 interface UpdatePlayerInput {
@@ -64,6 +64,7 @@ export async function createPlayer(
     if (!result.success) return result;
 
     revalidatePath("/[locale]/player", "page");
+    revalidatePath("/[locale]/user/[username]", "page");
     return { success: true, player: result.data.player };
   } catch (error) {
     console.error("Failed to create player:", error);
@@ -121,6 +122,7 @@ export async function updatePlayer(
     if (!result.success) return result;
 
     revalidatePath("/[locale]/player", "page");
+    revalidatePath("/[locale]/user/[username]", "page");
     return { success: true, player: result.data.player };
   } catch (error) {
     console.error("Failed to update player:", error);

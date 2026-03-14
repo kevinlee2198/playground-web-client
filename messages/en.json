@@ -82,7 +82,19 @@
       "age": "Age",
       "height": "Height",
       "weight": "Weight",
-      "years": "years"
+      "years": "years",
+      "agePlaceholder": "e.g. 25",
+      "heightPlaceholder": "cm",
+      "weightPlaceholder": "kg",
+      "edit": "Edit Stats",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Stats updated",
+      "addStats": "Add your stats",
+      "createPlayer": "Create Player Profile",
+      "creating": "Creating...",
+      "created": "Player profile created",
+      "error": "Failed to save stats"
     },
     "games": {
       "title": "Game History",

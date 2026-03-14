@@ -1,5 +1,6 @@
 import { fetchCurrentUser } from "@/components/auth/actions";
 import { GameHistory } from "@/components/profile/game-history";
+import { PlayerStatsEditorLoader } from "@/components/profile/player-stats-editor-loader";
 import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import {
@@ -7,6 +8,7 @@ import {
   GameSortField,
   SortDirection,
 } from "@/lib/constants";
+import { auth } from "@/lib/auth";
 import {
   gameMetadataFragment,
   participantNodeFragment,
@@ -15,23 +17,29 @@ import {
 import { authQuery, query } from "@/lib/graphql-request";
 import { EnumType } from "json-to-graphql-query";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { cache, Suspense } from "react";
 
 interface PageProps {
   params: Promise<{ locale: string; username: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
-  const { username } = await params;
+const getCachedUserDisplayName = cache(async (username: string) => {
   const response = await query({
     user: {
       __args: { input: { username } },
       displayName: true,
     },
   });
-  const user = response.data?.user;
+  return response.data?.user;
+});
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { username } = await params;
+  const user = await getCachedUserDisplayName(username);
 
   return {
     title: user ? `${user.displayName} | Playground` : "Profile | Playground",
@@ -118,18 +126,47 @@ function buildGamesQuery(playerId: number) {
   };
 }
 
+async function GameHistorySection({ playerId }: { playerId?: number }) {
+  if (!playerId) return <GameHistory />;
+
+  const gamesResponse = await query(buildGamesQuery(playerId));
+  return (
+    <GameHistory
+      playerId={String(playerId)}
+      initialGames={gamesResponse.data?.games}
+    />
+  );
+}
+
+function GameHistorySkeleton() {
+  return (
+    <section>
+      <div className="mb-4 h-7 w-36 animate-pulse rounded-md bg-muted" />
+      <div className="grid gap-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
 
-  const currentUser = await fetchCurrentUser();
-  const currentUserId = currentUser?.id;
-  const isAuthenticated = !!currentUserId;
-  const isOwnProfile = currentUser?.username === username;
+  const reqHeaders = await headers();
+  const session = await auth.api.getSession({ headers: reqHeaders });
+  const isAuthenticated = !!session?.user?.id;
 
-  // Fetch user data - use authQuery if authenticated to get friendship data
-  const userResponse = isAuthenticated
-    ? await authQuery(buildUserQuery(username))
-    : await query(buildUserQuery(username));
+  const [currentUser, userResponse] = await Promise.all([
+    isAuthenticated ? fetchCurrentUser() : Promise.resolve(null),
+    isAuthenticated
+      ? authQuery(buildUserQuery(username))
+      : query(buildUserQuery(username)),
+  ]);
+
+  const currentUserId = currentUser?.id;
+  const isOwnProfile = currentUser?.username === username;
 
   const user = userResponse.data?.user;
 
@@ -137,7 +174,6 @@ export default async function UserProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  // Check for BLOCKED status - show 404 to hide the block
   const friendship = user.friendship;
   if (
     friendship?.status === FriendshipStatus.BLOCKED &&
@@ -147,13 +183,6 @@ export default async function UserProfilePage({ params }: PageProps) {
   }
 
   const player = user.player;
-
-  // Fetch games if player exists
-  let initialGames = null;
-  if (player) {
-    const gamesResponse = await query(buildGamesQuery(player.id));
-    initialGames = gamesResponse.data?.games;
-  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -165,9 +194,15 @@ export default async function UserProfilePage({ params }: PageProps) {
         isAuthenticated={isAuthenticated}
       />
 
-      {player && <PlayerStats player={player} />}
+      {isOwnProfile ? (
+        <PlayerStatsEditorLoader initialPlayer={player} />
+      ) : (
+        player && <PlayerStats player={player} />
+      )}
 
-      <GameHistory playerId={player?.id} initialGames={initialGames} />
+      <Suspense fallback={<GameHistorySkeleton />}>
+        <GameHistorySection playerId={player?.id} />
+      </Suspense>
     </main>
   );
 }
