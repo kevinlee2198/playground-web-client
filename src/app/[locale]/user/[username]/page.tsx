@@ -50,6 +50,7 @@ function buildUserQuery(username: string) {
       firstName: true,
       lastName: true,
       displayName: true,
+      biography: true,
       profilePicture: resourceFragment,
       player: {
         id: true,
@@ -118,7 +119,7 @@ function buildGamesQuery(playerId: number) {
 }
 
 export default async function UserProfilePage({ params }: PageProps) {
-  const { locale, username } = await params;
+  const { username } = await params;
 
   const currentUser = await fetchCurrentUser();
   const currentUserId = currentUser?.id;
@@ -162,7 +163,6 @@ export default async function UserProfilePage({ params }: PageProps) {
         currentUserId={currentUserId}
         isOwnProfile={isOwnProfile}
         isAuthenticated={isAuthenticated}
-        locale={locale}
       />
 
       {player && <PlayerStats player={player} />}

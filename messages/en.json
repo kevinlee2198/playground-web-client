@@ -60,6 +60,20 @@
     "viewProfile": "View Profile",
     "settings": "Settings",
     "editProfile": "Edit Profile",
+    "displayName": {
+      "editLabel": "Edit display name",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Display name updated"
+    },
+    "biography": {
+      "editLabel": "Edit biography",
+      "placeholder": "Add a bio...",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Biography updated",
+      "wordCount": "{count} / {max} words"
+    },
     "message": "Message",
     "messageFriendsOnly": "You must be friends to send messages",
     "cannotMessageBlocked": "Cannot message this user",
