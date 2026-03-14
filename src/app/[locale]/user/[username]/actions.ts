@@ -159,7 +159,6 @@ export async function updateUser(input: {
               biography: true,
             },
           },
-          errorFragment,
         ],
       },
     });
@@ -172,15 +171,18 @@ export async function updateUser(input: {
       };
     }
 
-    const result = extractMutationResult(
-      response.data.updateUser,
-      "UpdateUserResponse",
-    );
-    if (!result.success) return result;
+    const data = response.data?.updateUser;
+    if (!data || data.__typename !== "UpdateUserResponse") {
+      return {
+        success: false,
+        errorType: MutationErrorType.UNEXPECTED_ERROR,
+        message: "Unexpected response",
+      };
+    }
 
     revalidatePath("/[locale]/user/[username]", "page");
 
-    return { success: true, user: result.data.user };
+    return { success: true, user: data.user };
   } catch {
     return {
       success: false,
