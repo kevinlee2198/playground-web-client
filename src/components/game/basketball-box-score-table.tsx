@@ -103,7 +103,7 @@ export function BasketballBoxScoreTable({
         header: "Player",
         cell: ({ row }) => {
           const player = row.original.player;
-          return `${player.firstName} ${player.lastName}`;
+          return player.user.displayName;
         },
         enableSorting: false,
       },
@@ -294,7 +294,7 @@ export function BasketballBoxScoreTable({
         <SelectContent>
           {playersWithoutStats.map((player) => (
             <SelectItem key={player.id} value={String(player.id)}>
-              {player.firstName} {player.lastName}
+              {player.user.displayName}
             </SelectItem>
           ))}
         </SelectContent>

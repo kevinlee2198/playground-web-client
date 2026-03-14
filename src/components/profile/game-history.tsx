@@ -54,7 +54,7 @@ export function GameHistory({ playerId, initialGames }: GameHistoryProps) {
         </Empty>
       ) : (
         <>
-          <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             {games.map((edge) => (
               <GameCard key={edge.node.id} game={edge.node} />
             ))}

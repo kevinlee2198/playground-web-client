@@ -57,8 +57,6 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       id: true,
       player: {
         id: true,
-        firstName: true,
-        lastName: true,
       },
     },
   });

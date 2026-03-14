@@ -116,7 +116,7 @@ export function BasketballBoxScoreForm({
     },
   });
 
-  const playerName = `${initialData.player.firstName} ${initialData.player.lastName}`;
+  const playerName = initialData.player.user.displayName;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

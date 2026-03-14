@@ -17,13 +17,9 @@ import { UpdatePlayerForm } from "./update-player-form";
 
 interface PlayerProfileCardProps {
   initialPlayer: Player | null;
-  userDefaults: { firstName: string; lastName: string };
 }
 
-export function PlayerProfileCard({
-  initialPlayer,
-  userDefaults,
-}: PlayerProfileCardProps) {
+export function PlayerProfileCard({ initialPlayer }: PlayerProfileCardProps) {
   const t = useTranslations();
   const [player, setPlayer] = useState<Player | null>(initialPlayer);
   const [mode, setMode] = useState(
@@ -82,7 +78,6 @@ export function PlayerProfileCard({
           <PlayerView player={player} onEdit={handleEdit} />
         ) : mode === FormMode.CREATE ? (
           <CreatePlayerForm
-            userDefaults={userDefaults}
             onSubmit={handleCreate}
             isPending={isPending}
           />

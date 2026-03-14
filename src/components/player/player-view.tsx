@@ -26,13 +26,8 @@ export function PlayerView({
 
   return (
     <div className="space-y-6">
-      {/* Header with Name and Edit Button */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">
-            {player.firstName} {player.lastName}
-          </h2>
-        </div>
+      {/* Header with Edit Button */}
+      <div className="flex justify-end">
         <Button onClick={onEdit}>{t("actions.edit")}</Button>
       </div>
 
@@ -75,18 +70,6 @@ export function PlayerView({
           </div>
         </div>
       </div>
-
-      {/* Biography */}
-      {player.biography && (
-        <div>
-          <div className="text-sm font-medium text-muted-foreground">
-            {t("profile.stats.biography")}
-          </div>
-          <div className="mt-2 whitespace-pre-wrap text-base">
-            {player.biography}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

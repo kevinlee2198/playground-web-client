@@ -52,8 +52,7 @@ export async function addTeamParticipant(
                 description: true,
                 players: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  user: { displayName: true },
                 },
                 metadata: participantMetadataFragment,
               },
@@ -106,8 +105,7 @@ export async function addIndividualParticipant(
                 id: true,
                 player: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  user: { displayName: true },
                 },
                 metadata: participantMetadataFragment,
               },
@@ -170,8 +168,7 @@ export async function updateTeamParticipant(
                 description: true,
                 players: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  user: { displayName: true },
                 },
                 metadata: participantMetadataFragment,
               },
@@ -225,8 +222,7 @@ export async function joinTeam(
               name: true,
               players: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                user: { displayName: true },
               },
             },
           },
@@ -276,8 +272,7 @@ export async function leaveTeam(
               name: true,
               players: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                user: { displayName: true },
               },
             },
           },

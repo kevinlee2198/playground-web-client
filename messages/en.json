@@ -60,6 +60,20 @@
     "viewProfile": "View Profile",
     "settings": "Settings",
     "editProfile": "Edit Profile",
+    "displayName": {
+      "editLabel": "Edit display name",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Display name updated"
+    },
+    "biography": {
+      "editLabel": "Edit biography",
+      "placeholder": "Add a bio...",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Biography updated",
+      "wordCount": "{count} / {max} words"
+    },
     "message": "Message",
     "messageFriendsOnly": "You must be friends to send messages",
     "cannotMessageBlocked": "Cannot message this user",
@@ -69,7 +83,18 @@
       "height": "Height",
       "weight": "Weight",
       "years": "years",
-      "biography": "Biography"
+      "agePlaceholder": "e.g. 25",
+      "heightPlaceholder": "cm",
+      "weightPlaceholder": "kg",
+      "edit": "Edit Stats",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Stats updated",
+      "addStats": "Add your stats",
+      "createPlayer": "Create Player Profile",
+      "creating": "Creating...",
+      "created": "Player profile created",
+      "error": "Failed to save stats"
     },
     "games": {
       "title": "Game History",
@@ -141,13 +166,9 @@
     "createTitle": "Create Player Profile",
     "editTitle": "Edit Player Profile",
     "form": {
-      "firstName": "First Name",
-      "lastName": "Last Name",
       "age": "Age",
       "height": "Height",
       "weight": "Weight",
-      "biography": "Biography",
-      "biographyWordCount": "{count} / 1,000 words",
       "required": "Required"
     },
     "actions": {
@@ -155,14 +176,9 @@
       "saving": "Saving..."
     },
     "validation": {
-      "firstNameRequired": "First name is required",
-      "firstNameMaxLength": "First name must be 255 characters or less",
-      "lastNameRequired": "Last name is required",
-      "lastNameMaxLength": "Last name must be 255 characters or less",
       "agePositive": "Age must be greater than 0",
       "heightPositive": "Height must be greater than 0",
-      "weightPositive": "Weight must be greater than 0",
-      "biographyMaxWords": "Biography must be 1,000 words or less"
+      "weightPositive": "Weight must be greater than 0"
     },
     "onboarding": {
       "title": "Create Your Player Profile",

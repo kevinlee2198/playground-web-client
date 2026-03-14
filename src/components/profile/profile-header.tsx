@@ -1,10 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { FriendshipStatus } from "@/lib/constants";
 import type { Resource } from "@/lib/types/resource";
-import { UserPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
+import { EditableBiography } from "./editable-biography";
+import { EditableDisplayName } from "./editable-display-name";
 import { FriendActions } from "./friend-actions";
 import { ProfileAvatar } from "./profile-avatar";
 
@@ -15,10 +14,8 @@ interface ProfileHeaderProps {
     firstName: string;
     lastName: string;
     displayName: string;
+    biography: string | null;
     profilePicture?: Resource | null;
-    player?: {
-      biography?: string | null;
-    } | null;
   };
   friendship?: {
     id: string;
@@ -29,7 +26,6 @@ interface ProfileHeaderProps {
   currentUserId?: string | null;
   isOwnProfile: boolean;
   isAuthenticated: boolean;
-  locale: string;
 }
 
 export async function ProfileHeader({
@@ -38,7 +34,6 @@ export async function ProfileHeader({
   currentUserId,
   isOwnProfile,
   isAuthenticated,
-  locale,
 }: ProfileHeaderProps) {
   const t = await getTranslations("profile");
 
@@ -77,46 +72,50 @@ export async function ProfileHeader({
         )}
 
         {/* User Info */}
-        <div className="flex flex-1 flex-col items-center gap-4 text-center sm:items-start sm:text-left">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {user.displayName}
-            </h1>
-            <p className="text-muted-foreground">@{user.username}</p>
-          </div>
-
-          {user.player?.biography && (
-            <p className="max-w-2xl text-muted-foreground">
-              {user.player.biography}
-            </p>
+        <div className="flex flex-1 flex-col items-center gap-2 text-center sm:items-start sm:text-left">
+          {isOwnProfile ? (
+            <>
+              <EditableDisplayName
+                initialDisplayName={user.displayName}
+              />
+              <p className="text-muted-foreground">@{user.username}</p>
+              <EditableBiography
+                initialBiography={user.biography}
+              />
+            </>
+          ) : (
+            <>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {user.displayName}
+                </h1>
+                <p className="text-muted-foreground">@{user.username}</p>
+              </div>
+              {user.biography && (
+                <p className="leading-7 text-sm">{user.biography}</p>
+              )}
+            </>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
-            {isOwnProfile ? (
-              <Button variant="outline">
-                <Link href={`/${locale}/settings/profile`}>
-                  <UserPen className="mr-2 h-4 w-4" />
-                  {t("editProfile")}
-                </Link>
-              </Button>
-            ) : (
-              <>
-                {/* Friend Actions + Message Button */}
-                {isAuthenticated && (
-                  <FriendActions
-                    userId={user.id}
-                    friendship={friendship}
-                    currentUserId={currentUserId!}
-                    showMessageButton
-                    displayName={user.displayName}
-                  />
-                )}
-              </>
-            )}
-          </div>
+          {!isOwnProfile && isAuthenticated && (
+            <div className="flex gap-3">
+              <FriendActions
+                userId={user.id}
+                friendship={friendship}
+                currentUserId={currentUserId!}
+                showMessageButton
+                displayName={user.displayName}
+              />
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Accessible label for editable sections */}
+      {isOwnProfile && (
+        <span className="sr-only">{t("editProfile")}</span>
+      )}
     </section>
   );
 }

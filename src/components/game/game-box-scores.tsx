@@ -66,7 +66,7 @@ export async function GameBoxScores({ game }: GameBoxScoresProps) {
       edges: {
         node: {
           id: true,
-          player: { id: true, firstName: true, lastName: true },
+          player: { id: true, user: { displayName: true } },
           points: true,
           assists: true,
           totalRebounds: true,
