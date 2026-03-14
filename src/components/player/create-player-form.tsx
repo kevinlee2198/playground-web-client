@@ -2,38 +2,28 @@
 
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
-import { FormTextareaField, FormTextField } from "@/components/ui/form-field";
+import { FormTextField } from "@/components/ui/form-field";
 import { UnitPreference } from "@/lib/constants";
 import type { CreatePlayerInput } from "@/lib/types/player";
 import { feetInchesToCm, lbsToKg } from "@/lib/unit-conversion";
 import { useForm } from "@tanstack/react-form";
 import { useTranslations } from "next-intl";
-import {
-  countWords,
-  playerFormSchema,
-  type PlayerFormValues,
-} from "./player-form-fields";
+import { playerFormSchema, type PlayerFormValues } from "./player-form-fields";
 
 interface CreatePlayerFormProps {
-  userDefaults?: { firstName: string; lastName: string };
   onSubmit: (data: CreatePlayerInput) => Promise<void>;
   isPending?: boolean;
   unitPreference?: UnitPreference;
 }
 
 export function CreatePlayerForm({
-  userDefaults,
   onSubmit,
   isPending = false,
   unitPreference = UnitPreference.METRIC,
 }: CreatePlayerFormProps) {
   const t = useTranslations();
 
-  const defaultValues: PlayerFormValues = {
-    firstName: userDefaults?.firstName ?? "",
-    lastName: userDefaults?.lastName ?? "",
-    biography: "",
-  };
+  const defaultValues: PlayerFormValues = {};
 
   const form = useForm({
     defaultValues,
@@ -60,12 +50,9 @@ export function CreatePlayerForm({
       }
 
       const input: CreatePlayerInput = {
-        firstName: value.firstName,
-        lastName: value.lastName,
         age: value.age,
         height,
         weight,
-        biography: value.biography || undefined,
       };
 
       await onSubmit(input);
@@ -80,32 +67,6 @@ export function CreatePlayerForm({
       }}
       className="space-y-6"
     >
-      <FieldGroup className="sm:flex-row">
-        <form.Field name="firstName">
-          {(field) => (
-            <FormTextField
-              field={field}
-              label={t("player.form.firstName")}
-              required
-              disabled={isPending}
-              placeholder={t("player.form.firstName")}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="lastName">
-          {(field) => (
-            <FormTextField
-              field={field}
-              label={t("player.form.lastName")}
-              required
-              disabled={isPending}
-              placeholder={t("player.form.lastName")}
-            />
-          )}
-        </form.Field>
-      </FieldGroup>
-
       <FieldGroup className="sm:flex-row">
         <form.Field name="age">
           {(field) => (
@@ -186,25 +147,6 @@ export function CreatePlayerForm({
           </form.Field>
         )}
       </FieldGroup>
-
-      <form.Field name="biography">
-        {(field) => (
-          <FormTextareaField
-            field={field}
-            label={t("player.form.biography")}
-            disabled={isPending}
-            placeholder={t("player.form.biography")}
-            rows={5}
-            footer={
-              <div className="text-sm text-muted-foreground">
-                {t("player.form.biographyWordCount", {
-                  count: countWords(field.state.value || ""),
-                })}
-              </div>
-            }
-          />
-        )}
-      </form.Field>
 
       <div className="flex justify-end gap-3">
         <Button type="submit" disabled={isPending}>

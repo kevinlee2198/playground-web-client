@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
-import { FormTextareaField, FormTextField } from "@/components/ui/form-field";
+import { FormTextField } from "@/components/ui/form-field";
 import { UnitPreference } from "@/lib/constants";
 import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import {
@@ -13,11 +13,7 @@ import {
 } from "@/lib/unit-conversion";
 import { useForm } from "@tanstack/react-form";
 import { useTranslations } from "next-intl";
-import {
-  countWords,
-  playerFormSchema,
-  type PlayerFormValues,
-} from "./player-form-fields";
+import { playerFormSchema, type PlayerFormValues } from "./player-form-fields";
 
 function buildDefaultValues(
   initialData: Player,
@@ -48,15 +44,12 @@ function buildDefaultValues(
   }
 
   return {
-    firstName: initialData.firstName,
-    lastName: initialData.lastName,
     age: initialData.age ?? undefined,
     heightCm,
     heightFeet,
     heightInches,
     weightKg,
     weightLbs,
-    biography: initialData.biography ?? "",
   };
 }
 
@@ -88,12 +81,6 @@ export function UpdatePlayerForm({
       const isDirty = (name: keyof PlayerFormValues) =>
         formApi.getFieldMeta(name)?.isDirty ?? false;
 
-      if (isDirty("firstName")) {
-        input.firstName = value.firstName;
-      }
-      if (isDirty("lastName")) {
-        input.lastName = value.lastName;
-      }
       if (isDirty("age")) {
         input.age = value.age ?? null;
       }
@@ -118,9 +105,6 @@ export function UpdatePlayerForm({
           input.weight = value.weightLbs ? lbsToKg(value.weightLbs) : null;
         }
       }
-      if (isDirty("biography")) {
-        input.biography = value.biography || null;
-      }
 
       await onSubmit(input);
     },
@@ -134,32 +118,6 @@ export function UpdatePlayerForm({
       }}
       className="space-y-6"
     >
-      <FieldGroup className="sm:flex-row">
-        <form.Field name="firstName">
-          {(field) => (
-            <FormTextField
-              field={field}
-              label={t("player.form.firstName")}
-              required
-              disabled={isPending}
-              placeholder={t("player.form.firstName")}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="lastName">
-          {(field) => (
-            <FormTextField
-              field={field}
-              label={t("player.form.lastName")}
-              required
-              disabled={isPending}
-              placeholder={t("player.form.lastName")}
-            />
-          )}
-        </form.Field>
-      </FieldGroup>
-
       <FieldGroup className="sm:flex-row">
         <form.Field name="age">
           {(field) => (
@@ -240,25 +198,6 @@ export function UpdatePlayerForm({
           </form.Field>
         )}
       </FieldGroup>
-
-      <form.Field name="biography">
-        {(field) => (
-          <FormTextareaField
-            field={field}
-            label={t("player.form.biography")}
-            disabled={isPending}
-            placeholder={t("player.form.biography")}
-            rows={5}
-            footer={
-              <div className="text-sm text-muted-foreground">
-                {t("player.form.biographyWordCount", {
-                  count: countWords(field.state.value || ""),
-                })}
-              </div>
-            }
-          />
-        )}
-      </form.Field>
 
       <div className="flex justify-end gap-3">
         <Button

@@ -137,7 +137,7 @@ export function IndividualParticipantList({
             if (participant.__typename !== "IndividualParticipant") return null;
 
             const player = participant.player;
-            const playerName = `${player.firstName} ${player.lastName}`;
+            const playerName = player.user.displayName;
 
             return (
               <div

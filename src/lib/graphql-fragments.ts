@@ -182,13 +182,13 @@ export const participantNodeFragment = {
       __typeName: "TeamInstance",
       id: true,
       name: true,
-      players: { id: true, firstName: true, lastName: true },
+      players: { id: true, user: { displayName: true } },
       metadata: participantMetadataFragment,
     },
     {
       __typeName: "IndividualParticipant",
       id: true,
-      player: { id: true, firstName: true, lastName: true },
+      player: { id: true, user: { displayName: true } },
       metadata: participantMetadataFragment,
     },
   ],
@@ -196,13 +196,11 @@ export const participantNodeFragment = {
 
 /**
  * Fragment for viewerFriendPlayers on feed game nodes.
- * Fetches friend player names, user display name, and profile picture thumbnail.
+ * Fetches user display name and profile picture thumbnail.
  */
 export const viewerFriendPlayersFragment = {
   nodes: {
     id: true,
-    firstName: true,
-    lastName: true,
     user: {
       id: true,
       displayName: true,
@@ -232,13 +230,13 @@ export const participantDetailNodeFragment = {
       id: true,
       name: true,
       description: true,
-      players: { id: true, firstName: true, lastName: true },
+      players: { id: true, user: { displayName: true } },
       metadata: participantMetadataFragment,
     },
     {
       __typeName: "IndividualParticipant",
       id: true,
-      player: { id: true, firstName: true, lastName: true },
+      player: { id: true, user: { displayName: true } },
       metadata: participantMetadataFragment,
     },
   ],

@@ -7,22 +7,16 @@ import type { Player } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
 interface CreatePlayerInput {
-  firstName: string;
-  lastName: string;
   age?: number | null;
   height?: number | null;
   weight?: number | null;
-  biography?: string | null;
 }
 
 interface UpdatePlayerInput {
   id: number;
-  firstName?: string;
-  lastName?: string;
   age?: number | null;
   height?: number | null;
   weight?: number | null;
-  biography?: string | null;
 }
 
 interface PlayerActionResult {
@@ -45,12 +39,9 @@ export async function createPlayer(
             __typeName: "CreatePlayerResponse",
             player: {
               id: true,
-              firstName: true,
-              lastName: true,
               age: true,
               height: true,
               weight: true,
-              biography: true,
             },
           },
           errorFragment,
@@ -92,13 +83,9 @@ export async function updatePlayer(
     const mutationInput: Record<string, unknown> = { id: input.id };
 
     // Only include fields that are explicitly provided
-    if (input.firstName !== undefined)
-      mutationInput.firstName = input.firstName;
-    if (input.lastName !== undefined) mutationInput.lastName = input.lastName;
     if ("age" in input) mutationInput.age = input.age;
     if ("height" in input) mutationInput.height = input.height;
     if ("weight" in input) mutationInput.weight = input.weight;
-    if ("biography" in input) mutationInput.biography = input.biography;
 
     const response = await authMutate({
       updatePlayer: {
@@ -109,12 +96,9 @@ export async function updatePlayer(
             __typeName: "UpdatePlayerResponse",
             player: {
               id: true,
-              firstName: true,
-              lastName: true,
               age: true,
               height: true,
               weight: true,
-              biography: true,
             },
           },
           errorFragment,

@@ -28,18 +28,15 @@ export async function generateMetadata({
   const response = await query({
     user: {
       __args: { input: { username } },
-      firstName: true,
-      lastName: true,
+      displayName: true,
     },
   });
   const user = response.data?.user;
 
   return {
-    title: user
-      ? `${user.firstName} ${user.lastName} | Playground`
-      : "Profile | Playground",
+    title: user ? `${user.displayName} | Playground` : "Profile | Playground",
     description: user
-      ? `View ${user.firstName}'s profile on Playground`
+      ? `View ${user.displayName}'s profile on Playground`
       : "User profile",
   };
 }
@@ -56,12 +53,9 @@ function buildUserQuery(username: string) {
       profilePicture: resourceFragment,
       player: {
         id: true,
-        firstName: true,
-        lastName: true,
         age: true,
         height: true,
         weight: true,
-        biography: true,
       },
       friendship: {
         id: true,

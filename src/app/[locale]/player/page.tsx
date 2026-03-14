@@ -27,16 +27,11 @@ export default async function PlayerPage({ params }: PageProps) {
   const response = await authQuery({
     me: {
       id: true,
-      firstName: true,
-      lastName: true,
       player: {
         id: true,
-        firstName: true,
-        lastName: true,
         age: true,
         height: true,
         weight: true,
-        biography: true,
       },
     },
   });
@@ -62,13 +57,7 @@ export default async function PlayerPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-      <PlayerProfileCard
-        initialPlayer={player}
-        userDefaults={{
-          firstName: user.firstName,
-          lastName: user.lastName,
-        }}
-      />
+      <PlayerProfileCard initialPlayer={player} />
     </main>
   );
 }

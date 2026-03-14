@@ -16,9 +16,6 @@ interface ProfileHeaderProps {
     lastName: string;
     displayName: string;
     profilePicture?: Resource | null;
-    player?: {
-      biography?: string | null;
-    } | null;
   };
   friendship?: {
     id: string;
@@ -84,12 +81,6 @@ export async function ProfileHeader({
             </h1>
             <p className="text-muted-foreground">@{user.username}</p>
           </div>
-
-          {user.player?.biography && (
-            <p className="max-w-2xl text-muted-foreground">
-              {user.player.biography}
-            </p>
-          )}
 
           {/* Action Buttons */}
           <div className="flex gap-3">

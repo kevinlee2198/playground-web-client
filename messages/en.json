@@ -68,8 +68,7 @@
       "age": "Age",
       "height": "Height",
       "weight": "Weight",
-      "years": "years",
-      "biography": "Biography"
+      "years": "years"
     },
     "games": {
       "title": "Game History",
@@ -141,13 +140,9 @@
     "createTitle": "Create Player Profile",
     "editTitle": "Edit Player Profile",
     "form": {
-      "firstName": "First Name",
-      "lastName": "Last Name",
       "age": "Age",
       "height": "Height",
       "weight": "Weight",
-      "biography": "Biography",
-      "biographyWordCount": "{count} / 1,000 words",
       "required": "Required"
     },
     "actions": {
@@ -155,14 +150,9 @@
       "saving": "Saving..."
     },
     "validation": {
-      "firstNameRequired": "First name is required",
-      "firstNameMaxLength": "First name must be 255 characters or less",
-      "lastNameRequired": "Last name is required",
-      "lastNameMaxLength": "Last name must be 255 characters or less",
       "agePositive": "Age must be greater than 0",
       "heightPositive": "Height must be greater than 0",
-      "weightPositive": "Weight must be greater than 0",
-      "biographyMaxWords": "Biography must be 1,000 words or less"
+      "weightPositive": "Weight must be greater than 0"
     },
     "onboarding": {
       "title": "Create Your Player Profile",

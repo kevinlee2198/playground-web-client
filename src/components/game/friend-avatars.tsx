@@ -16,11 +16,16 @@ interface FriendAvatarsProps {
 }
 
 function getInitials(player: FeedPlayerNode): string {
-  return `${player.firstName.charAt(0)}${player.lastName.charAt(0)}`.toUpperCase();
+  const name = player.user.displayName;
+  const parts = name.split(" ");
+  if (parts.length >= 2) {
+    return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+  }
+  return name.charAt(0).toUpperCase();
 }
 
 function getDisplayName(player: FeedPlayerNode): string {
-  return player.user.displayName ?? `${player.firstName} ${player.lastName}`;
+  return player.user.displayName;
 }
 
 export function FriendAvatars({

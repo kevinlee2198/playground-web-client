@@ -26,8 +26,6 @@ export interface FeedProfilePicture {
  */
 export interface FeedPlayerNode {
   id: number;
-  firstName: string;
-  lastName: string;
   user: FeedPlayerUser;
 }
 

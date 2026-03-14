@@ -60,7 +60,7 @@ export async function saveBasketballBoxScore(
             __typeName: "SaveBasketballBoxScoreResponse",
             basketballBoxScore: {
               id: true,
-              player: { id: true, firstName: true, lastName: true },
+              player: { id: true, user: { displayName: true } },
               points: true,
               assists: true,
               totalRebounds: true,
@@ -159,7 +159,7 @@ export async function saveBasketballBoxScores(
             __typeName: "SaveBasketballBoxScoresResponse",
             basketballBoxScores: {
               id: true,
-              player: { id: true, firstName: true, lastName: true },
+              player: { id: true, user: { displayName: true } },
               points: true,
               assists: true,
               totalRebounds: true,

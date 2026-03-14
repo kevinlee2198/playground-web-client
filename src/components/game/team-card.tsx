@@ -157,7 +157,7 @@ export function TeamCard({
               <ul className="space-y-1 text-sm">
                 {team.players.map((player) => (
                   <li key={player.id}>
-                    {player.firstName} {player.lastName}
+                    {player.user.displayName}
                   </li>
                 ))}
               </ul>
