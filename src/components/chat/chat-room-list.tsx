@@ -3,17 +3,21 @@
 import { loadChatRooms } from "@/app/[locale]/chat/actions";
 import { ChatRoomListItem } from "@/components/chat/chat-room-list-item";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TypographyMuted } from "@/components/ui/typography";
+import { Link } from "@/i18n/navigation";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type { ChatMessageNode, ChatRoomListNode } from "@/lib/types/chat";
-import { Plus } from "lucide-react";
+import { MessageCircle, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -172,9 +176,20 @@ export function ChatRoomList({
         </div>
         <Empty className="flex-1 border-none">
           <EmptyHeader>
-            <EmptyTitle>{t("noRooms")}</EmptyTitle>
+            {/* TODO: Replace with custom illustration */}
+            <EmptyMedia variant="icon">
+              <MessageCircle />
+            </EmptyMedia>
+            <EmptyTitle className="font-display font-semibold">
+              {t("noRooms")}
+            </EmptyTitle>
             <EmptyDescription>{t("createFirst")}</EmptyDescription>
           </EmptyHeader>
+          <EmptyContent>
+            <Link href="/search" className={buttonVariants({ variant: "outline" })}>
+              {t("findFriends")}
+            </Link>
+          </EmptyContent>
         </Empty>
       </div>
     );

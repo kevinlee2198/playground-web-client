@@ -100,6 +100,9 @@
       "title": "Game History",
       "noGames": "No games played yet",
       "noActivity": "No Activity",
+      "emptyTitle": "No games yet.",
+      "emptyDescription": "Your story starts with the first whistle.",
+      "createGame": "Create a game",
       "loadMore": "Load More",
       "vs": "vs",
       "status": {
@@ -226,7 +229,7 @@
     "detailTitle": "Game Details",
     "notFound": "Game not found",
     "notFoundDescription": "The game you are looking for does not exist or has been removed.",
-    "noGames": "No games found",
+    "noGames": "No games match your filters.",
     "noGamesDescription": "Try adjusting your filters or create a new game.",
     "schedule": "Schedule",
     "startDate": "Start Date",
@@ -487,7 +490,7 @@
   },
   "notifications": {
     "title": "Notifications",
-    "empty": "No notifications",
+    "empty": "All caught up.",
     "markAsRead": "Mark as read",
     "loadMore": "Load more",
     "loading": "Loading notifications...",
@@ -517,8 +520,9 @@
     "title": "Chat",
     "newChat": "New Chat",
     "noConversation": "Select a conversation or start a new one",
-    "noRooms": "No conversations yet",
+    "noRooms": "No conversations yet.",
     "createFirst": "Start a conversation with a friend",
+    "findFriends": "Find friends to message",
     "noFriends": "You need to add friends before you can start a conversation",
     "groupName": "Group Name",
     "groupNameRequired": "Group name is required",
@@ -618,8 +622,10 @@
     "error": "Failed to load activity feed",
     "retry": "Try again",
     "empty": {
-      "title": "No activity yet",
-      "description": "When you and your friends play games, they'll show up here."
+      "title": "Your friends' games will appear here.",
+      "description": "Play together and your activity will show up in this feed.",
+      "createGame": "Create a game",
+      "findFriends": "Find friends"
     }
   },
   "settings": {

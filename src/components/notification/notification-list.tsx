@@ -3,13 +3,13 @@
 import { Button } from "@/components/ui/button";
 import {
   Empty,
-  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
+  EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Notification } from "@/lib/types/notification";
-import { Inbox, Loader2 } from "lucide-react";
+import { Bell, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NotificationItem } from "./notification-item";
 
@@ -68,10 +68,13 @@ export function NotificationList({
     return (
       <Empty className="border-0 py-8">
         <EmptyHeader>
+          {/* TODO: Replace with custom illustration */}
           <EmptyMedia variant="icon">
-            <Inbox />
+            <Bell />
           </EmptyMedia>
-          <EmptyDescription>{t("empty")}</EmptyDescription>
+          <EmptyTitle className="font-display font-semibold">
+            {t("empty")}
+          </EmptyTitle>
         </EmptyHeader>
       </Empty>
     );

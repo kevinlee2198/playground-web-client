@@ -5,8 +5,10 @@ import { GameListSort } from "@/components/game/game-list-sort";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Link, redirect } from "@/i18n/navigation";
@@ -25,6 +27,7 @@ import { authQuery } from "@/lib/graphql-request";
 import type { GameFilterParams } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
 import { EnumType } from "json-to-graphql-query";
+import { Gamepad2 } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -239,11 +242,22 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           {games.edges.length === 0 ? (
             <Empty>
               <EmptyHeader>
-                <EmptyTitle>{t("game.noGames")}</EmptyTitle>
+                {/* TODO: Replace with custom illustration */}
+                <EmptyMedia variant="icon">
+                  <Gamepad2 />
+                </EmptyMedia>
+                <EmptyTitle className="font-display font-semibold">
+                  {t("game.noGames")}
+                </EmptyTitle>
                 <EmptyDescription>
                   {t("game.noGamesDescription")}
                 </EmptyDescription>
               </EmptyHeader>
+              <EmptyContent>
+                <Link href="/games" className={buttonVariants()}>
+                  {t("game.filters.clearFilters")}
+                </Link>
+              </EmptyContent>
             </Empty>
           ) : (
             <GameInfiniteList

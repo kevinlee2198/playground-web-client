@@ -3,13 +3,22 @@
 import { loadMoreGames } from "@/app/[locale]/user/[username]/actions";
 import { GameCard } from "@/components/game/game-card";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { TypographyH2 } from "@/components/ui/typography";
+import { Link } from "@/i18n/navigation";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { GameNode } from "@/lib/types/game";
-import { Loader2 } from "lucide-react";
+import { Gamepad2, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { Empty, EmptyDescription, EmptyHeader } from "../ui/empty";
-import { TypographyH2 } from "../ui/typography";
 
 interface GameHistoryProps {
   playerId?: string | null;
@@ -47,10 +56,22 @@ export function GameHistory({ playerId, initialGames }: GameHistoryProps) {
       </TypographyH2>
 
       {!playerId || games.length === 0 ? (
-        <Empty className="border-none">
+        <Empty className="border-none py-12">
           <EmptyHeader>
-            <EmptyDescription>{t("noActivity")}</EmptyDescription>
+            {/* TODO: Replace with custom illustration */}
+            <EmptyMedia variant="icon">
+              <Gamepad2 />
+            </EmptyMedia>
+            <EmptyTitle className="font-display font-semibold">
+              {t("emptyTitle")}
+            </EmptyTitle>
+            <EmptyDescription>{t("emptyDescription")}</EmptyDescription>
           </EmptyHeader>
+          <EmptyContent>
+            <Link href="/games" className={buttonVariants()}>
+              {t("createGame")}
+            </Link>
+          </EmptyContent>
         </Empty>
       ) : (
         <>
