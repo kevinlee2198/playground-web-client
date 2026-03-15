@@ -3,6 +3,7 @@ import { GameHistory } from "@/components/profile/game-history";
 import { PlayerStatsEditorLoader } from "@/components/profile/player-stats-editor-loader";
 import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   FriendshipStatus,
   GameSortField,
@@ -141,10 +142,10 @@ async function GameHistorySection({ playerId }: { playerId?: number }) {
 function GameHistorySkeleton() {
   return (
     <section>
-      <div className="mb-4 h-7 w-36 animate-pulse rounded-md bg-muted" />
+      <Skeleton className="mb-4 h-7 w-36" />
       <div className="grid gap-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
+          <Skeleton key={i} className="h-24 rounded-lg" />
         ))}
       </div>
     </section>

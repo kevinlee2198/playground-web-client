@@ -5,6 +5,7 @@ import { signIn, useSession } from "@/lib/auth-client";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { UserAvatarMenu } from "../playground/user-avatar-menu";
+import { Skeleton } from "../ui/skeleton";
 import { TypographyP } from "../ui/typography";
 import { fetchCurrentUser } from "./actions";
 
@@ -36,7 +37,7 @@ export default function AuthButton() {
   if (session.isPending) {
     return (
       <div className="flex items-center gap-3">
-        <div className="h-9 w-9 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+        <Skeleton className="h-9 w-9 rounded-full" />
       </div>
     );
   }
@@ -45,7 +46,7 @@ export default function AuthButton() {
     if (!currentUser) {
       return (
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+          <Skeleton className="h-9 w-9 rounded-full" />
         </div>
       );
     }
