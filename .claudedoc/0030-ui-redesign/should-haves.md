@@ -12,14 +12,14 @@ Mark each item **[DONE]** after it has been completed and merged/committed.
 ## Small Items (direct commits to main)
 
 ### 1. Contextual back navigation
-- [ ] Replace hardcoded `<Link href="/games">` with `router.back()` + same-origin fallback
+- [DONE] Replace hardcoded `<Link href="/games">` with `router.back()` + same-origin fallback
 - Per addendum Section 11: use `document.referrer` to check same origin, fall back to `/games`
 - File: `src/app/[locale]/game/[id]/page.tsx` — the back link (lines ~183-194)
 - Note: requires a small client component (e.g., `BackButton`) since the page is a Server Component and `router.back()` needs `useRouter`
 
 ### 2. Score change animation
-- [ ] Number cross-fade with subtle scale `1.0 -> 1.05 -> 1.0` over `--duration-gentle` with `--ease-bounce`
-- [ ] Score block background pulse: deep cream -> slightly warmer -> deep cream
+- [DONE] Number cross-fade with subtle scale `1.0 -> 1.05 -> 1.0` over `--duration-gentle` with `--ease-bounce`
+- [DONE] Score block background pulse: deep cream -> slightly warmer -> deep cream
 - Per addendum Section 5
 - Files: score display components (`simple-score.tsx`, `tennis-score.tsx`), possibly `globals.css` for keyframes
 - Note: requires detecting when a score value changes (compare prev vs current). May need a `usePrevious` hook or transition group. Touches 4-5 files
@@ -27,14 +27,14 @@ Mark each item **[DONE]** after it has been completed and merged/committed.
 ### 3. Shape-accurate skeleton screens
 - [DONE] Game card skeleton — already shape-accurate in `game-card-skeleton.tsx` (accent strip, sport pill, score block, meta row)
 - [DONE] Game detail hero skeleton — already shape-accurate in `game/[id]/loading.tsx`
-- [ ] Profile skeleton: large avatar circle, name/username rectangles, stat card row — needs new `loading.tsx` at profile route level. Note: defer if #5 (progressive disclosure) will restructure the profile page, or do together
-- [ ] Games browse loading: replace old Card-based skeleton in `games/loading.tsx` with existing `GameCardSkeleton` component
+- [DONE] Profile skeleton: large avatar circle, name/username rectangles, stat card row
+- [DONE] Games browse loading: replaced old Card-based skeleton with `GameCardSkeleton` + filter sidebar skeleton
 
 ### 4. Focus management for inline editing
 - [DONE] `GameScoreBlock` — already fully compliant (focus to first input on edit, focus return to trigger on save/cancel)
-- [ ] `EditableDisplayName` — add focus-return-to-trigger on save/cancel (add a trigger ref, focus it in close handler)
-- [ ] `EditableBiography` — same fix needed
-- [ ] `PlayerStatsEditor` — same fix needed
+- [DONE] `EditableDisplayName` — added focus-return-to-trigger on save/cancel
+- [DONE] `EditableBiography` — same fix applied
+- [DONE] `PlayerStatsEditor` — same fix applied
 - Per addendum Section 20
 - Files: `src/components/profile/editable-display-name.tsx`, `src/components/profile/editable-biography.tsx`, `src/components/profile/player-stats-editor.tsx`
 
