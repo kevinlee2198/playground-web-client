@@ -1,3 +1,4 @@
+import { AnimatedScore } from "@/components/game/score/animated-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { cn } from "@/lib/utils";
 import type {
@@ -67,30 +68,14 @@ export function TennisScore({ participantA, participantB, statusPill, size = "sm
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 text-center min-w-0">
           <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameA}</p>
-          <p
-            className={cn(
-              "font-bold font-heading tabular-nums",
-              scoreClass,
-              aWins ? "text-primary" : undefined,
-            )}
-          >
-            {setsA}
-          </p>
+          <AnimatedScore value={setsA} winning={aWins} scoreClass={scoreClass} />
         </div>
 
         {statusPill ? <div className="shrink-0">{statusPill}</div> : null}
 
         <div className="flex-1 text-center min-w-0">
           <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameB}</p>
-          <p
-            className={cn(
-              "font-bold font-heading tabular-nums",
-              scoreClass,
-              bWins ? "text-primary" : undefined,
-            )}
-          >
-            {setsB}
-          </p>
+          <AnimatedScore value={setsB} winning={bWins} scoreClass={scoreClass} />
         </div>
       </div>
 
