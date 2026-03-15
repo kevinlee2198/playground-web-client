@@ -73,6 +73,10 @@ export async function createGame(
       metadata,
     };
 
+    if (input.description !== undefined) {
+      sportInput.description = input.description;
+    }
+
     if (input.location) {
       sportInput.location = {
         address: input.location.address,
@@ -128,7 +132,8 @@ export async function updateGame(
 ): Promise<GameActionResult> {
   try {
     const mutationInput: Record<string, unknown> = { id: input.id };
-    if (input.startDate) mutationInput.startDate = input.startDate;
+    if (input.startDate !== undefined) mutationInput.startDate = input.startDate;
+    if (input.description !== undefined) mutationInput.description = input.description;
 
     if (input.metadata) {
       // Build @oneOf GameMetadataInput with EnumType for subtype values

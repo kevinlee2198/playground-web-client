@@ -107,6 +107,7 @@ export default async function GameDetailPage({ params }: PageProps) {
     game: {
       __args: { id },
       id: true,
+      description: true,
       startDate: true,
       endDate: true,
       sportType: true,

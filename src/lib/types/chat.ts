@@ -96,6 +96,7 @@ export interface ChatRoomMemberNode {
 interface ChatRoomListBase {
   id: string;
   createdDate: string;
+  lastModifiedDate?: string;
   members: {
     edges: { node: { user: ChatUser } }[];
   };
@@ -124,6 +125,7 @@ export type ChatRoomListNode =
 interface ChatRoomDetailBase {
   id: string;
   createdDate: string;
+  lastModifiedDate?: string;
   members: {
     edges: { cursor: string; node: ChatRoomMemberNode }[];
     pageInfo: import("@/lib/graphql-connection").PageInfo;

@@ -60,6 +60,7 @@ import type { GameDetail } from "@/lib/types/game";
 function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
   return {
     id: 1,
+    description: null,
     startDate: "2026-03-10T19:00:00Z",
     endDate: null,
     sportType: SportType.BASKETBALL,

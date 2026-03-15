@@ -141,6 +141,7 @@ export interface GameMember {
  */
 export interface GameNode {
   id: number;
+  description?: string | null;
   startDate: string;
   endDate: string | null;
   sportType: SportType;
@@ -166,6 +167,7 @@ export interface GameNode {
  */
 export interface GameDetail {
   id: number;
+  description: string | null;
   startDate: string;
   endDate: string | null;
   sportType: SportType;
@@ -190,6 +192,7 @@ export interface GameDetail {
 export interface CreateBasketballGameInput {
   sportType: SportType.BASKETBALL;
   startDate: string;
+  description?: string;
   location?: {
     address: {
       street?: string;
@@ -215,6 +218,7 @@ export interface CreateBasketballGameInput {
 export interface CreateTennisGameInput {
   sportType: SportType.TENNIS;
   startDate: string;
+  description?: string;
   location?: {
     address: {
       street?: string;
@@ -241,6 +245,7 @@ export interface CreateTennisGameInput {
 export interface CreateFootballGameInput {
   sportType: SportType.FOOTBALL;
   startDate: string;
+  description?: string;
   location?: {
     address: {
       street?: string;
@@ -273,6 +278,7 @@ export type CreateGameInput =
  */
 export interface UpdateGameInput {
   id: number;
+  description?: string | null;
   startDate?: string;
   /**
    * PATCH semantics for location:
