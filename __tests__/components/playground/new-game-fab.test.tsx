@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth-client", () => ({
@@ -8,13 +7,21 @@ vi.mock("@/lib/auth-client", () => ({
 
 vi.mock("@/i18n/navigation", () => ({
   usePathname: vi.fn(),
+  Link: vi.fn(
+    ({
+      children,
+      ...props
+    }: {
+      children: React.ReactNode;
+      [key: string]: unknown;
+    }) => <a {...props}>{children}</a>,
+  ),
 }));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
       "nav.newGame": "New Game",
-      "game.createTitle": "Create Game",
     };
     return map[key] ?? key;
   },
@@ -22,39 +29,6 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/components/playground/scroll-direction-provider", () => ({
   useScrollDirectionContext: vi.fn(),
-}));
-
-vi.mock("next/dynamic", () => ({
-  default: () => {
-    const Stub = () => null;
-    Stub.displayName = "DynamicStub";
-    return Stub;
-  },
-}));
-
-vi.mock("@/components/ui/dialog", () => ({
-  Dialog: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  DialogContent: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DialogHeader: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DialogTitle: ({ children }: { children: ReactNode }) => (
-    <div>{children}</div>
-  ),
-  DialogTrigger: ({
-    children,
-    render,
-  }: {
-    children: ReactNode;
-    render: ReactNode;
-  }) => (
-    <div>
-      {render}
-      {children}
-    </div>
-  ),
 }));
 
 import { useScrollDirectionContext } from "@/components/playground/scroll-direction-provider";
@@ -69,7 +43,7 @@ const mockUseScrollDirection = vi.mocked(useScrollDirectionContext);
 function setup({
   authenticated = true,
   pathname = "/",
-  direction = "idle" as const,
+  direction = "idle" as "idle" | "up" | "down",
 } = {}) {
   mockUseSession.mockReturnValue({
     data: authenticated ? { user: { id: "1", name: "Test" } } : null,
@@ -81,6 +55,8 @@ function setup({
     direction,
     scrollTop: 0,
     isAtTop: true,
+    isPullGestureActive: false,
+    setPullGestureActive: vi.fn(),
   });
 }
 
@@ -104,6 +80,20 @@ describe("NewGameFab", () => {
 
     render(<NewGameFab />);
     expect(screen.getByLabelText("New Game")).toBeInTheDocument();
+  });
+
+  it("renders on a game detail page", () => {
+    setup({ pathname: "/games/abc-123" });
+
+    render(<NewGameFab />);
+    expect(screen.getByLabelText("New Game")).toBeInTheDocument();
+  });
+
+  it("renders null on the create game page", () => {
+    setup({ pathname: "/games/new" });
+
+    const { container } = render(<NewGameFab />);
+    expect(container.firstChild).toBeNull();
   });
 
   it("renders null on non-FAB pages", () => {

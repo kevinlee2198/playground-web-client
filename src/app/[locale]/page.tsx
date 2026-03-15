@@ -1,7 +1,6 @@
 import { loadFeedGames } from "@/app/[locale]/feed/actions";
 import { ComponentExample } from "@/components/component-example";
 import { ActivityFeed } from "@/components/feed/activity-feed";
-import { CreateGameDialog } from "@/components/game/create-game-dialog";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Empty,
@@ -56,7 +55,9 @@ export default async function HomePage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <TypographyH1 className="text-3xl">{t("feed.title")}</TypographyH1>
-        <CreateGameDialog />
+        <Link href="/games/new" className={buttonVariants()}>
+          {t("game.actions.create")}
+        </Link>
       </div>
 
       {/* Feed content */}

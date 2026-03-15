@@ -2,7 +2,6 @@
 
 import { Link } from "@/i18n/navigation";
 import { useSession } from "@/lib/auth-client";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -11,16 +10,9 @@ import { NotificationBell } from "../notification/notification-bell";
 import { MobileSearchOverlay } from "../search/mobile-search-overlay";
 import { NavbarSearch } from "../search/navbar-search";
 import { Button } from "../ui/button";
+import { buttonVariants } from "../ui/button-variants";
 import { TypographyH1 } from "../ui/typography";
 import { Search } from "lucide-react";
-
-const CreateGameDialog = dynamic(
-  () =>
-    import("../game/create-game-dialog").then((m) => ({
-      default: m.CreateGameDialog,
-    })),
-  { ssr: false },
-);
 
 export function Navbar() {
   const t = useTranslations();
@@ -50,9 +42,12 @@ export function Navbar() {
         <div className="ml-auto flex items-center gap-2">
           {/* New Game button — desktop only, auth only */}
           {session?.user && (
-            <div className="hidden lg:block">
-              <CreateGameDialog />
-            </div>
+            <Link
+              href="/games/new"
+              className={buttonVariants({ variant: "default", className: "hidden lg:inline-flex" })}
+            >
+              {t("game.actions.create")}
+            </Link>
           )}
           {/* Search icon button — mobile/tablet only */}
           <Button

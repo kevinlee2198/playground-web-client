@@ -60,8 +60,10 @@ Mark each item **[DONE]** after it has been completed and merged/committed.
 - Files: `src/components/notification/notification-bell.tsx`, `src/components/notification/notification-list.tsx`, `src/components/notification/notification-item.tsx`
 
 ### 7. `/games/new` dedicated route
-- [ ] Create full-page game creation form at `/games/new`
-- [ ] Update navbar "New Game" button and mobile FAB to navigate to `/games/new` instead of opening dialog
+- [DONE] Create full-page game creation form at `/games/new`
+- [DONE] Update navbar "New Game" button and mobile FAB to navigate to `/games/new` instead of opening dialog
+- [DONE] Deleted unused `CreateGameDialog` component
+- [DONE] Replaced `CreateGameDialog` usage on feed and games browse pages with links
 - Per addendum Section 16
 - Note: `CreateGameForm` is already extracted as a standalone component (316 lines). The `/games/new` page primarily needs a new page layout file that imports it, plus updating nav links. Simpler than it sounds
 
