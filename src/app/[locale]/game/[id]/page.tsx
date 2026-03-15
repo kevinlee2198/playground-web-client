@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/game/back-button";
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
 import { GameDetailHero } from "@/components/game/game-detail-hero";
@@ -17,7 +18,6 @@ import { authQuery } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -181,16 +181,7 @@ export default async function GameDetailPage({ params }: PageProps) {
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       {/* Back navigation */}
       <div className="mb-6">
-        <Link
-          href="/games"
-          className={cn(
-            buttonVariants({ variant: "ghost" }),
-            "gap-1.5 text-muted-foreground",
-          )}
-        >
-          <ArrowLeft className="size-4" />
-          {t("game.detail.backToGames")}
-        </Link>
+        <BackButton label={t("game.detail.backToGames")} />
       </div>
 
       {/* Hero scoreboard */}
