@@ -39,6 +39,10 @@ function mapNominatimResult(result: NominatimResult): GeocodeSuggestion | null {
   const city =
     address.city ?? address.town ?? address.village ?? address.municipality;
 
+  if (!city) {
+    return null;
+  }
+
   const state = address.state;
   const postalCode = address.postcode;
 

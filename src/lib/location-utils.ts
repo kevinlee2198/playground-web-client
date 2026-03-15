@@ -6,14 +6,14 @@ import type { Location, LocationValue } from "@/lib/types/location";
  *
  * Example: "123 Main St, Springfield, IL 62701, United States"
  *
- * Filters out falsy values so missing optional fields (empty strings or
- * undefined) are simply omitted from the output.
+ * Filters out falsy values so missing optional fields (null or undefined)
+ * are simply omitted from the output.
  */
 export function formatAddress(address: {
-  street?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
   country: string;
 }): string {
   return [
@@ -53,18 +53,14 @@ export function formatLocationShort(location: Location): string {
  * Null coordinates are mapped to undefined (omitted) rather than a fallback
  * like (0, 0), to avoid writing bogus data back to the server if the form
  * is re-submitted without changes.
- *
- * Empty string address fields are mapped to undefined so they are omitted
- * from mutation inputs, since the backend treats absent optional fields
- * differently from empty strings.
  */
 export function locationToValue(location: Location): LocationValue {
   return {
     address: {
-      street: location.address.street || undefined,
-      city: location.address.city || undefined,
-      state: location.address.state || undefined,
-      postalCode: location.address.postalCode || undefined,
+      street: location.address.street ?? undefined,
+      city: location.address.city,
+      state: location.address.state ?? undefined,
+      postalCode: location.address.postalCode ?? undefined,
       country: location.address.country,
     },
     coordinates: location.coordinates ?? undefined,

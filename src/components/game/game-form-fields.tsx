@@ -6,7 +6,7 @@ const locationSchema = z
   .object({
     address: z.object({
       street: z.string().optional(),
-      city: z.string().optional(),
+      city: z.string().min(1, "City is required"),
       state: z.string().optional(),
       postalCode: z.string().optional(),
       country: z.string(),

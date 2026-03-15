@@ -10,7 +10,7 @@ export interface GeocodeSuggestion {
   displayName: string;
   address: {
     street?: string;
-    city?: string;
+    city: string;
     state?: string;
     postalCode?: string;
     country: string;

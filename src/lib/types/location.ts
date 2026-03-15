@@ -6,7 +6,7 @@
 export interface LocationValue {
   address: {
     street?: string;
-    city?: string;
+    city: string;
     state?: string;
     postalCode?: string;
     country: string;
@@ -27,17 +27,15 @@ export interface LocationValue {
 /**
  * Location data as returned by the backend on Game queries.
  * Response type: fields present but nullable per convention.
- * The Address type has all fields as String! (non-nullable) in the backend schema,
- * so empty strings are used for missing fields rather than null.
  */
 export interface Location {
   id: string;
   name: string | null;
   address: {
-    street: string;
+    street: string | null;
     city: string;
-    state: string;
-    postalCode: string;
+    state: string | null;
+    postalCode: string | null;
     country: string;
   };
   coordinates: {

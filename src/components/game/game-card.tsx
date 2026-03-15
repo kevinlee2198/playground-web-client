@@ -21,7 +21,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 function getLocationText(location: {
   name: string | null;
-  address: { city: string; state: string; country: string };
+  address: { city: string; state: string | null; country: string };
 }): string {
   const { city, state, country } = location.address;
   if (city) return state ? `${city}, ${state}` : city;

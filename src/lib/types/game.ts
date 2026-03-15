@@ -152,7 +152,7 @@ export interface GameNode {
     name: string | null;
     address: {
       city: string;
-      state: string;
+      state: string | null;
       country: string;
     };
   } | null;
@@ -193,7 +193,7 @@ export interface CreateBasketballGameInput {
   location?: {
     address: {
       street?: string;
-      city?: string;
+      city: string;
       state?: string;
       postalCode?: string;
       country: string;
@@ -218,7 +218,7 @@ export interface CreateTennisGameInput {
   location?: {
     address: {
       street?: string;
-      city?: string;
+      city: string;
       state?: string;
       postalCode?: string;
       country: string;
@@ -244,7 +244,7 @@ export interface CreateFootballGameInput {
   location?: {
     address: {
       street?: string;
-      city?: string;
+      city: string;
       state?: string;
       postalCode?: string;
       country: string;
@@ -283,7 +283,7 @@ export interface UpdateGameInput {
   location?: {
     address: {
       street?: string;
-      city?: string;
+      city: string;
       state?: string;
       postalCode?: string;
       country: string;
