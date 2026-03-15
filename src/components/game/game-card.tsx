@@ -11,6 +11,9 @@ import { TypographyMuted } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import {
   GameStatus,
+  GameStatusAriaLabelKey,
+  GameStatusBadgeVariant,
+  GameStatusLabelKey,
   getSubtypeFromMetadata,
 } from "@/lib/constants";
 import type { ViewerFriendPlayers } from "@/lib/types/feed";
@@ -27,30 +30,6 @@ function getLocationText(location: {
   if (city) return state ? `${city}, ${state}` : city;
   if (state) return `${state}, ${country}`;
   return country;
-}
-
-function getStatusBadgeVariant(
-  status: GameStatus,
-): "default" | "secondary" | "outline" {
-  switch (status) {
-    case GameStatus.IN_PROGRESS:
-      return "default";
-    case GameStatus.SCHEDULED:
-      return "secondary";
-    case GameStatus.COMPLETE:
-      return "outline";
-  }
-}
-
-function getStatusLabelKey(status: GameStatus): string {
-  switch (status) {
-    case GameStatus.IN_PROGRESS:
-      return "game.status.live";
-    case GameStatus.SCHEDULED:
-      return "game.status.upcoming";
-    case GameStatus.COMPLETE:
-      return "game.status.final";
-  }
 }
 
 interface GameCardProps {
@@ -81,14 +60,15 @@ export function GameCard({ game }: GameCardProps) {
 
   const statusPill = (
     <Badge
-      variant={getStatusBadgeVariant(game.gameStatus)}
+      variant={GameStatusBadgeVariant[game.gameStatus]}
+      aria-label={t(GameStatusAriaLabelKey[game.gameStatus])}
       className={cn(
         "text-xs",
         isLive ? "bg-live text-live-foreground gap-1.5" : null,
       )}
     >
       {isLive ? <BreathingDot className="size-1.5" /> : null}
-      {t(getStatusLabelKey(game.gameStatus))}
+      {t(GameStatusLabelKey[game.gameStatus])}
     </Badge>
   );
 

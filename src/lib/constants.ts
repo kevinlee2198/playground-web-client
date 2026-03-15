@@ -169,6 +169,24 @@ export const GameStatusBadgeVariant = {
 } as const;
 
 /**
+ * i18n key mapping for game status display labels
+ */
+export const GameStatusLabelKey: Record<GameStatus, string> = {
+  [GameStatus.IN_PROGRESS]: "game.status.live",
+  [GameStatus.SCHEDULED]: "game.status.upcoming",
+  [GameStatus.COMPLETE]: "game.status.final",
+};
+
+/**
+ * i18n key mapping for game status aria-labels (accessible descriptions)
+ */
+export const GameStatusAriaLabelKey: Record<GameStatus, string> = {
+  [GameStatus.IN_PROGRESS]: "game.status.ariaLabel.live",
+  [GameStatus.SCHEDULED]: "game.status.ariaLabel.upcoming",
+  [GameStatus.COMPLETE]: "game.status.ariaLabel.final",
+};
+
+/**
  * Extract the SportSubtype value from a GameMetadata union member.
  * Due to GraphQL field conflict resolution, each metadata type uses
  * an aliased subtype field (basketballSubtype, tennisSubtype, footballSubtype).

@@ -252,7 +252,12 @@
       "complete": "Complete",
       "final": "Final",
       "upcoming": "Upcoming",
-      "live": "Live"
+      "live": "Live",
+      "ariaLabel": {
+        "live": "Game in progress",
+        "upcoming": "Game not yet started",
+        "final": "Game finished, final score"
+      }
     },
     "role": {
       "owner": "Owner",

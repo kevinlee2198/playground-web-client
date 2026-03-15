@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { TypographyLarge, TypographyMuted } from "@/components/ui/typography";
 import {
   GameStatus,
+  GameStatusAriaLabelKey,
   GameStatusBadgeVariant,
+  GameStatusLabelKey,
   getSubtypeFromMetadata,
 } from "@/lib/constants";
 import type { SportType } from "@/lib/constants";
@@ -18,12 +20,6 @@ interface GameDetailHeroProps {
   game: GameDetail;
   locationText: string | null;
 }
-
-const statusLabelKey: Record<GameStatus, string> = {
-  [GameStatus.IN_PROGRESS]: "game.status.live",
-  [GameStatus.SCHEDULED]: "game.status.upcoming",
-  [GameStatus.COMPLETE]: "game.status.final",
-};
 
 const sportGradientClass: Record<SportType, string> = {
   BASKETBALL: "bg-sport-basketball/5 dark:bg-sport-basketball/15",
@@ -53,13 +49,14 @@ export async function GameDetailHero({
   const statusPill = (
     <Badge
       variant={badgeVariant}
+      aria-label={t(GameStatusAriaLabelKey[game.gameStatus])}
       className={cn(
         "text-xs",
         isLive && "bg-live text-live-foreground gap-1.5",
       )}
     >
       {isLive ? <BreathingDot className="size-1.5" /> : null}
-      {t(statusLabelKey[game.gameStatus])}
+      {t(GameStatusLabelKey[game.gameStatus])}
     </Badge>
   );
 
