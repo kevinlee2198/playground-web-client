@@ -1,4 +1,5 @@
 import { fetchCurrentUser } from "@/components/auth/actions";
+import { GameCardSkeleton } from "@/components/game/game-card-skeleton";
 import { GameHistory } from "@/components/profile/game-history";
 import { PlayerStatsEditorLoader } from "@/components/profile/player-stats-editor-loader";
 import { PlayerStats } from "@/components/profile/player-stats";
@@ -143,9 +144,9 @@ function GameHistorySkeleton() {
   return (
     <section>
       <Skeleton className="mb-4 h-7 w-36" />
-      <div className="grid gap-4">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[0, 1, 2, 3].map((i) => (
+          <GameCardSkeleton key={i} />
         ))}
       </div>
     </section>
