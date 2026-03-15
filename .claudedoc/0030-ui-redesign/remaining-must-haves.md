@@ -47,23 +47,23 @@ Per addendum Section 13. Phase 1: text + Lucide icons + CTAs, no custom illustra
 Note: most of these are **updates to existing partial empty states**, not greenfield. Check existing implementations before modifying.
 
 ### 3. Feed empty state
-- [ ] Update existing empty state: add `Users` icon, update copy to "Your friends' games will appear here.", add two CTAs: "Create a game" (primary), "Find friends" (secondary outline)
+- [DONE] Update existing empty state: add `Users` icon, update copy to "Your friends' games will appear here.", add two CTAs: "Create a game" (primary), "Find friends" (secondary outline)
 - File: `src/app/[locale]/page.tsx` (lines ~60-66)
 
 ### 4. Games browse empty state (no filter results)
-- [ ] Update existing empty state: "No games match your filters." + "Clear filters" CTA
+- [DONE] Update existing empty state: "No games match your filters." + "Clear filters" CTA
 - File: `src/app/[locale]/games/page.tsx` (lines ~240-246)
 
 ### 5. Profile game history empty state
-- [ ] Update existing empty state: "No games yet. Your story starts with the first whistle." + "Create a game" CTA
+- [DONE] Update existing empty state: "No games yet. Your story starts with the first whistle." + "Create a game" CTA
 - File: `src/components/profile/game-history.tsx` (lines ~49-54)
 
 ### 6. Notifications empty state
-- [ ] Update existing empty state: "All caught up." copy, swap icon — no CTA needed
+- [DONE] Update existing empty state: "All caught up." copy, swap icon — no CTA needed
 - File: `src/components/notification/notification-list.tsx` (lines ~67-78)
 
 ### 7. Messages empty state
-- [ ] Update existing empty state: "No conversations yet." + "Find friends to message" CTA
+- [DONE] Update existing empty state: "No conversations yet." + "Find friends to message" CTA
 - File: `src/components/chat/chat-room-list.tsx` (lines ~164-180)
 
 ### Style rules
