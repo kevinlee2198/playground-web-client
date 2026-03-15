@@ -30,12 +30,12 @@ These items from the addendum are already shipped in PRs 1–4 and PR #55:
 ## Small Items (direct commits to main)
 
 ### 1. Status pill `aria-label` with full text
-- [ ] Add `aria-label` to status pills in `game-card.tsx` and `game-detail-hero.tsx`
+- [DONE] Add `aria-label` to status pills in `game-card.tsx` and `game-detail-hero.tsx`
 - Per addendum Section 20: "Third quarter, 4:22 remaining" not "Q3 4:22"
 - Files: `src/components/game/game-card.tsx`, `src/components/game/game-detail-hero.tsx`
 
 ### 2. Migrate remaining `animate-pulse` to `Skeleton` component
-- [ ] Replace raw `animate-pulse` divs in `user/[username]/page.tsx` (GameHistorySkeleton) and `auth-button.tsx`
+- [DONE] Replace raw `animate-pulse` divs in `user/[username]/page.tsx` (GameHistorySkeleton) and `auth-button.tsx`
 - Files: `src/app/[locale]/user/[username]/page.tsx`, `src/components/auth/auth-button.tsx`
 
 ---
