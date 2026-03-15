@@ -1,6 +1,7 @@
 {
   "common": {
-    "title": "Playground"
+    "title": "Playground",
+    "close": "Close"
   },
   "auth": {
     "signIn": "Sign In",
@@ -482,11 +483,18 @@
     "placeholder": "Search users...",
     "submit": "Search",
     "noResults": "No users found",
+    "noResultsFor": "No results for \"{query}\".",
+    "trySomethingElse": "Try a different search",
+    "recent": "Recent",
+    "clearAll": "Clear all",
     "viewAllResults": "View all results",
     "loading": "Searching...",
     "error": "Failed to search. Please try again.",
     "loadMore": "Load More",
-    "title": "Search"
+    "title": "Search",
+    "openSearch": "Open search",
+    "cancel": "Cancel",
+    "retry": "Retry"
   },
   "notifications": {
     "title": "Notifications",

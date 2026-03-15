@@ -80,21 +80,21 @@ Note: most of these are **updates to existing partial empty states**, not greenf
 Per addendum Section 14. Visual update + mobile overlay, users only — no backend changes.
 
 ### 8. Mobile search overlay
-- [ ] Tap search icon -> full-screen overlay slides up
-- [ ] Text input auto-focused with keyboard open
-- [ ] "Cancel" text button to dismiss
+- [DONE] Tap search icon -> full-screen overlay slides up
+- [DONE] Text input auto-focused with keyboard open
+- [DONE] "Cancel" text button to dismiss
 
 ### 9. Desktop search visual update
-- [ ] Search bar expands on focus
-- [ ] Results in dropdown popover (existing pattern, just restyle)
+- [DONE] Search bar expands on focus
+- [DONE] Results in dropdown popover (existing pattern, just restyle)
 
 ### 10. Recent searches
-- [ ] Store recent searches in `localStorage`
-- [ ] Show when search is focused with no query
+- [DONE] Store recent searches in `localStorage`
+- [DONE] Show when search is focused with no query
 
 ### 11. Search empty & loading states
-- [ ] Skeleton shimmer while loading
-- [ ] No results: "No results for '[query]'." + suggestions ("Try a different search" or "Browse games")
+- [DONE] Skeleton shimmer while loading
+- [DONE] No results: "No results for '[query]'." + suggestions ("Try a different search" or "Browse games")
 - File: `src/components/search/navbar-search.tsx` or search results component
 
 ---

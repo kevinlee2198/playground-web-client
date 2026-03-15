@@ -1,72 +1,71 @@
 "use client";
 
-import { searchUsers } from "@/components/search/actions";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { TypographyMuted } from "@/components/ui/typography";
+import { useRecentSearches } from "@/hooks/use-recent-searches";
+import { useSearchResults } from "@/hooks/use-search-results";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { UserSearchEdge } from "@/lib/types/user";
-import { Loader2, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
+import { RecentSearchesList } from "./recent-searches-list";
+import { SearchSkeletons } from "./search-skeletons";
 import { UserSearchResult } from "./user-search-result";
 
 export function NavbarSearch() {
   const t = useTranslations("search");
   const router = useRouter();
 
+  const { recentSearches, addSearch, removeSearch, clearSearches } =
+    useRecentSearches();
+
   const [inputValue, setInputValue] = useState("");
-  const [debouncedValue, setDebouncedValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [results, setResults] = useState<UserSearchEdge[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
-  // Debounce input
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(inputValue.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [inputValue]);
+  const { debouncedValue, results, error, isPending } = useSearchResults({
+    inputValue,
+    fallbackError: t("error"),
+  });
 
-  // Clear results when debounced value is empty (during render, not in effect)
+  // Re-open popover when results arrive
   const [prevDebouncedValue, setPrevDebouncedValue] = useState(debouncedValue);
   if (prevDebouncedValue !== debouncedValue) {
     setPrevDebouncedValue(debouncedValue);
-    if (!debouncedValue) {
-      setResults([]);
-      setIsOpen(false);
-      setError(null);
+    if (debouncedValue) {
+      setHighlightedIndex(-1);
     }
   }
 
-  // Fetch results when debounced value changes
-  useEffect(() => {
-    if (!debouncedValue) return;
+  const showRecentSearches =
+    !debouncedValue && recentSearches.length > 0 && isFocused;
+  const showResults = !!debouncedValue;
 
-    startTransition(async () => {
-      const result = await searchUsers(debouncedValue, 5);
-      if (result.success) {
-        setResults(result.edges ?? []);
-        setError(null);
-      } else {
-        setResults([]);
-        setError(result.error ?? t("error"));
-      }
-      setIsOpen(true);
-      setHighlightedIndex(-1);
-    });
-  }, [debouncedValue, t]);
+  function addSearchAndClose() {
+    if (inputValue.trim()) {
+      addSearch(inputValue.trim());
+    }
+    setIsOpen(false);
+  }
+
+  function handleNavigateToResult(username: string) {
+    addSearchAndClose();
+    router.push(`/user/${username}`);
+  }
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") {
       if (highlightedIndex >= 0 && highlightedIndex < results.length) {
-        router.push(`/user/${results[highlightedIndex].node.username}`);
-        setIsOpen(false);
+        handleNavigateToResult(results[highlightedIndex].node.username);
       } else if (inputValue.trim()) {
+        addSearch(inputValue.trim());
         router.push(`/search?q=${encodeURIComponent(inputValue.trim())}`);
         setIsOpen(false);
       }
@@ -79,6 +78,13 @@ export function NavbarSearch() {
       e.preventDefault();
       setHighlightedIndex((prev) => Math.max(prev - 1, -1));
     }
+  }
+
+  function handleRecentSearchClick(query: string) {
+    setInputValue(query);
+    addSearch(query);
+    router.push(`/search?q=${encodeURIComponent(query)}`);
+    setIsOpen(false);
   }
 
   return (
@@ -94,24 +100,25 @@ export function NavbarSearch() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => {
-                if (debouncedValue && (results.length > 0 || error))
+                setIsFocused(true);
+                if (debouncedValue && (results.length > 0 || error)) {
                   setIsOpen(true);
+                } else if (!debouncedValue && recentSearches.length > 0) {
+                  setIsOpen(true);
+                }
               }}
-              className="h-9 w-48 pl-8 lg:w-64"
+              onBlur={() => setIsFocused(false)}
+              className={cn(
+                "h-9 pl-8 transition-[width] duration-[var(--duration-normal)] ease-[var(--ease-default)]",
+                isFocused ? "w-64 lg:w-96" : "w-48 lg:w-64",
+              )}
             />
           </div>
         }
       />
       <PopoverContent align="start" className="w-80 p-0">
-        {/* Loading */}
-        {isPending && (
-          <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">
-              {t("loading")}
-            </span>
-          </div>
-        )}
+        {/* Loading state */}
+        {isPending && <SearchSkeletons />}
 
         {/* Error */}
         {!isPending && error && (
@@ -119,28 +126,43 @@ export function NavbarSearch() {
         )}
 
         {/* No results */}
-        {!isPending && !error && results.length === 0 && debouncedValue && (
-          <div className="px-4 py-3 text-center text-sm text-muted-foreground">
-            {t("noResults")}
+        {!isPending && !error && showResults && results.length === 0 && (
+          <div className="px-4 py-4 text-center">
+            <TypographyMuted>
+              {t("noResultsFor", { query: debouncedValue })}
+            </TypographyMuted>
+            <TypographyMuted className="mt-1">
+              {t("trySomethingElse")}
+            </TypographyMuted>
           </div>
         )}
 
+        {/* Recent searches */}
+        {!isPending && showRecentSearches && (
+          <RecentSearchesList
+            searches={recentSearches}
+            onSelect={handleRecentSearchClick}
+            onRemove={removeSearch}
+            onClearAll={clearSearches}
+          />
+        )}
+
         {/* Results */}
-        {!isPending && !error && results.length > 0 && (
+        {!isPending && !error && showResults && results.length > 0 && (
           <div className="divide-y">
             {results.map((edge, index) => (
               <UserSearchResult
                 key={edge.node.id}
                 user={edge.node}
                 isHighlighted={index === highlightedIndex}
-                onClick={() => setIsOpen(false)}
+                onClick={addSearchAndClose}
               />
             ))}
 
             {/* "View all results" link */}
             <Link
               href={`/search?q=${encodeURIComponent(debouncedValue)}`}
-              onClick={() => setIsOpen(false)}
+              onClick={addSearchAndClose}
               className="flex items-center justify-center px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-muted"
             >
               {t("viewAllResults")}

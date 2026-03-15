@@ -5,10 +5,14 @@ import { useSession } from "@/lib/auth-client";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import AuthButton from "../auth/auth-button";
 import { NotificationBell } from "../notification/notification-bell";
+import { MobileSearchOverlay } from "../search/mobile-search-overlay";
 import { NavbarSearch } from "../search/navbar-search";
+import { Button } from "../ui/button";
 import { TypographyH1 } from "../ui/typography";
+import { Search } from "lucide-react";
 
 const CreateGameDialog = dynamic(
   () =>
@@ -21,6 +25,7 @@ const CreateGameDialog = dynamic(
 export function Navbar() {
   const t = useTranslations();
   const { data: session } = useSession();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <nav className="w-full border-b bg-background/95 backdrop-blur-sm">
@@ -49,10 +54,22 @@ export function Navbar() {
               <CreateGameDialog />
             </div>
           )}
+          {/* Search icon button — mobile/tablet only */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="min-h-11 min-w-11 lg:hidden"
+            onClick={() => setSearchOpen(true)}
+            aria-label={t("search.openSearch")}
+          >
+            <Search />
+          </Button>
           <NotificationBell />
           <AuthButton />
         </div>
       </div>
+
+      <MobileSearchOverlay open={searchOpen} onOpenChange={setSearchOpen} />
     </nav>
   );
 }
