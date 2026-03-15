@@ -125,42 +125,30 @@ export function NotificationItem({
   }, [notification.isRead, notification.id, onMarkAsRead]);
 
   const innerContent = (
-    <>
-      {/* Unread dot indicator */}
-      <div className="mt-1.5 flex-shrink-0">
-        {!notification.isRead ? (
-          <div className="h-2 w-2 rounded-full bg-primary" />
-        ) : (
-          <div className="h-2 w-2" />
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        {content.templateKey && (
-          <TypographySmall>
-            {tNotif(`${content.templateKey}.title`)}
-          </TypographySmall>
-        )}
-        <p className="text-sm">
-          {content.templateKey
-            ? tNotif.rich(`${content.templateKey}.body`, {
-                ...content.richParams,
-                link: (chunks) => (
-                  <strong className="font-semibold">{chunks}</strong>
-                ),
-              })
-            : tNotif("unknown.body")}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">{relativeTime}</p>
-      </div>
-    </>
+    <div className="min-w-0 w-full">
+      {content.templateKey && (
+        <TypographySmall>
+          {tNotif(`${content.templateKey}.title`)}
+        </TypographySmall>
+      )}
+      <p className="text-sm">
+        {content.templateKey
+          ? tNotif.rich(`${content.templateKey}.body`, {
+              ...content.richParams,
+              link: (chunks) => (
+                <strong className="font-semibold">{chunks}</strong>
+              ),
+            })
+          : tNotif("unknown.body")}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">{relativeTime}</p>
+    </div>
   );
 
   const sharedClasses = cn(
-    "flex items-start gap-3 px-4 py-3 transition-colors touch-manipulation",
-    !notification.isRead && "bg-accent/50",
-    content.href && "cursor-pointer hover:bg-accent/80",
+    "flex items-start border-l-[3px] px-4 py-3 min-h-11 transition-colors touch-manipulation",
+    notification.isRead ? "border-transparent" : "border-live bg-secondary/50",
+    content.href && "cursor-pointer hover:bg-secondary",
     !content.href && !notification.isRead && "cursor-pointer",
   );
 

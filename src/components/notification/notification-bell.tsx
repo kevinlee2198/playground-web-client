@@ -122,6 +122,35 @@ export function NotificationBell() {
     }
   }, []);
 
+  const handleMarkAllAsRead = useCallback(async (): Promise<void> => {
+    const unreadIds = notifications
+      .filter((n) => !n.isRead)
+      .map((n) => n.id)
+      .filter((id) => !markingInFlightRef.current.has(id));
+
+    if (unreadIds.length === 0) return;
+
+    for (const id of unreadIds) markingInFlightRef.current.add(id);
+
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((n) => (unreadIds.includes(n.id) ? { ...n, isRead: true } : n)),
+    );
+
+    const result = await markNotificationsAsRead(unreadIds);
+    for (const id of unreadIds) markingInFlightRef.current.delete(id);
+
+    if (!result.success) {
+      setNotifications((prev) =>
+        prev.map((n) =>
+          unreadIds.includes(n.id) && !markingInFlightRef.current.has(n.id)
+            ? { ...n, isRead: false }
+            : n,
+        ),
+      );
+    }
+  }, [notifications]);
+
   if (!session?.user) return null;
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -162,7 +191,7 @@ export function NotificationBell() {
             {unreadCount > 0 && (
               <span
                 className={cn(
-                  "absolute -right-1 -top-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium",
+                  "absolute -right-1 -top-1 flex items-center justify-center rounded-full bg-live text-live-foreground text-xs font-display font-bold",
                   unreadCount > 9 ? "h-5 min-w-5 px-1" : "h-4 w-4",
                 )}
               >
@@ -174,8 +203,17 @@ export function NotificationBell() {
         }
       />
       <PopoverContent align="end" className="w-[360px] p-0">
-        <div className="border-b px-4 py-3">
+        <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="text-sm font-semibold">{t("title")}</h3>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllAsRead}
+              className="text-xs text-primary hover:underline"
+            >
+              {t("markAllRead")}
+            </button>
+          )}
         </div>
         <ScrollArea className="max-h-[400px] overscroll-contain">
           <NotificationList

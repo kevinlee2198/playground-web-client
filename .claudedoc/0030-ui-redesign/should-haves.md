@@ -43,18 +43,19 @@ Mark each item **[DONE]** after it has been completed and merged/committed.
 ## Branch-Sized Items
 
 ### 5. Profile progressive disclosure
-- [ ] Game history: show 5 most recent games + "View all N games" button (expand inline or navigate to `/games?user=[username]`)
-- [ ] Media highlights: show 2x3 grid of most recent thumbnails + "View all media" button
+- [DONE] Game history: show 5 most recent games + "View all games" link
+- [ ] Media highlights: show 2x3 grid of most recent thumbnails + "View all media" button (deferred — no backend query for aggregated user media)
 - Per addendum Section 12
 - Files: profile game history component, profile page layout
 - Note: game history currently loads 10 games with a manual "Load more" button. This changes it to show 5 most recent with a "View all N games" button
 
 ### 6. Notification center visual update
-- [ ] Notification count badge: dark terracotta background (`oklch(0.50 0.12 45)`) with white foreground, ≥4.5:1 contrast (replace current `bg-destructive`)
-- [ ] Unread indicator: warm 3px left border (terracotta) on unread items (replace current green dot)
-- [ ] Notification item styling: avatar 40px rounded + text + relative timestamp, min-height 44px
-- [ ] Hover state: background shifts to secondary (deep cream, replace current `hover:bg-accent/80`)
-- [ ] "Mark all read" text button in popover header (new feature — wire to existing `markNotificationsAsRead` action)
+- [DONE] Notification count badge: terracotta background (bg-live) with Quicksand bold
+- [DONE] Unread indicator: warm 3px terracotta left border replacing green dot
+- [ ] Notification item styling: avatar 40px rounded (not yet — notifications don't have avatar data in current schema)
+- [DONE] Hover state: bg-secondary (deep cream)
+- [DONE] "Mark all read" button with batch optimistic update and rollback
+- [DONE] Min-height 44px touch targets
 - Per addendum Section 15
 - Files: `src/components/notification/notification-bell.tsx`, `src/components/notification/notification-list.tsx`, `src/components/notification/notification-item.tsx`
 

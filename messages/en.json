@@ -501,6 +501,7 @@
     "title": "Notifications",
     "empty": "All caught up.",
     "markAsRead": "Mark as read",
+    "markAllRead": "Mark all read",
     "loadMore": "Load more",
     "loading": "Loading notifications...",
     "error": "Failed to load notifications",
