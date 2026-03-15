@@ -113,6 +113,7 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
   const [weightInput, setWeightInput] = useState("");
 
   const firstInputRef = useRef<HTMLInputElement | null>(null);
+  const editButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const isCreating = player == null;
 
@@ -125,12 +126,13 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
 
   useEffect(() => {
     if (isEditing) {
-      setTimeout(() => firstInputRef.current?.focus(), 0);
+      requestAnimationFrame(() => firstInputRef.current?.focus());
     }
   }, [isEditing]);
 
   const handleCancel = () => {
     setIsEditing(false);
+    requestAnimationFrame(() => editButtonRef.current?.focus());
   };
 
   const handleSave = () => {
@@ -149,6 +151,7 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
           setPlayer(result.player);
         }
         setIsEditing(false);
+        requestAnimationFrame(() => editButtonRef.current?.focus());
         toast.success(t("created"));
         return;
       }
@@ -176,6 +179,7 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
         setPlayer(result.player);
       }
       setIsEditing(false);
+      requestAnimationFrame(() => editButtonRef.current?.focus());
       toast.success(t("saved"));
     });
   };
@@ -202,7 +206,7 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
               <TypographyP className="text-muted-foreground text-sm">
                 {t("addStats")}
               </TypographyP>
-              <Button variant="outline" size="sm" onClick={enterEditMode}>
+              <Button ref={editButtonRef} variant="outline" size="sm" onClick={enterEditMode}>
                 {t("createPlayer")}
               </Button>
             </div>
@@ -284,7 +288,7 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t("title")}</CardTitle>
-          <Button variant="outline" size="sm" onClick={enterEditMode}>
+          <Button ref={editButtonRef} variant="outline" size="sm" onClick={enterEditMode}>
             <Pencil className="mr-1 h-3 w-3" />
             {t("edit")}
           </Button>

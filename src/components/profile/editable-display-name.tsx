@@ -23,16 +23,18 @@ export function EditableDisplayName({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const editButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleEdit = () => {
     setInputValue(displayName);
     setIsEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
+    requestAnimationFrame(() => inputRef.current?.focus());
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     setInputValue(displayName);
+    requestAnimationFrame(() => editButtonRef.current?.focus());
   };
 
   const handleSave = () => {
@@ -52,6 +54,7 @@ export function EditableDisplayName({
         toast.error(result.message ?? t("errors.loadError"));
       } else {
         setIsEditing(false);
+        requestAnimationFrame(() => editButtonRef.current?.focus());
         if (result.user) {
           setDisplayName(result.user.displayName);
         }
@@ -118,6 +121,7 @@ export function EditableDisplayName({
   return (
     <div className="group relative">
       <button
+        ref={editButtonRef}
         onClick={handleEdit}
         className={cn(
           "flex cursor-pointer items-center gap-2 rounded-md text-left",

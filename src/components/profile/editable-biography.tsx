@@ -31,18 +31,20 @@ export function EditableBiography({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editButtonRef = useRef<HTMLButtonElement>(null);
 
   const wordCount = countWords(inputValue);
 
   const handleEdit = () => {
     setInputValue(biography ?? "");
     setIsEditing(true);
-    setTimeout(() => textareaRef.current?.focus(), 0);
+    requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     setInputValue(biography ?? "");
+    requestAnimationFrame(() => editButtonRef.current?.focus());
   };
 
   const handleSave = () => {
@@ -62,6 +64,7 @@ export function EditableBiography({
         toast.error(result.message ?? t("errors.loadError"));
       } else {
         setIsEditing(false);
+        requestAnimationFrame(() => editButtonRef.current?.focus());
         if (result.user) {
           setBiography(result.user.biography);
         }
@@ -137,6 +140,7 @@ export function EditableBiography({
   return (
     <div className="group relative">
       <button
+        ref={editButtonRef}
         onClick={handleEdit}
         className={cn(
           "flex cursor-pointer items-start gap-2 rounded-md text-left",
