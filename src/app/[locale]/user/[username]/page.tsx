@@ -90,7 +90,7 @@ function buildGamesQuery(playerId: number) {
             direction: new EnumType(SortDirection.DESC),
           },
         ],
-        first: 10,
+        first: 5,
       },
       edges: {
         cursor: true,
@@ -122,7 +122,6 @@ function buildGamesQuery(playerId: number) {
       },
       pageInfo: {
         hasNextPage: true,
-        endCursor: true,
       },
     },
   };

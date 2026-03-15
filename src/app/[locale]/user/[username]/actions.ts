@@ -1,14 +1,8 @@
 "use server";
 
-import { GameSortField, SortDirection } from "@/lib/constants";
-import {
-  errorFragment,
-  gameMetadataFragment,
-  participantNodeFragment,
-} from "@/lib/graphql-fragments";
-import { authMutate, query } from "@/lib/graphql-request";
+import { errorFragment } from "@/lib/graphql-fragments";
+import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
-import { EnumType } from "json-to-graphql-query";
 import { revalidatePath } from "next/cache";
 
 const friendshipSelection = {
@@ -190,56 +184,4 @@ export async function updateUser(input: {
       message: "Failed to update user",
     };
   }
-}
-
-export async function loadMoreGames(playerId: string, after: string) {
-  const response = await query({
-    games: {
-      __args: {
-        input: { playerId },
-        sort: [
-          {
-            field: new EnumType(GameSortField.START_DATE),
-            direction: new EnumType(SortDirection.DESC),
-          },
-        ],
-        first: 10,
-        after,
-      },
-      edges: {
-        cursor: true,
-        node: {
-          id: true,
-          startDate: true,
-          endDate: true,
-          sportType: true,
-          metadata: gameMetadataFragment,
-          gameStatus: true,
-          viewerGameRole: true,
-          visibility: true,
-          location: {
-            name: true,
-            address: {
-              city: true,
-              state: true,
-              country: true,
-            },
-          },
-          participants: {
-            __args: { first: 10 },
-            edges: {
-              cursor: true,
-              node: participantNodeFragment,
-            },
-          },
-        },
-      },
-      pageInfo: {
-        hasNextPage: true,
-        endCursor: true,
-      },
-    },
-  });
-
-  return response.data?.games;
 }
