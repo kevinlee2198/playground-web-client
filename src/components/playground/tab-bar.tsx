@@ -31,12 +31,12 @@ export function TabBar(): ReactNode {
   const { data: session, isPending } = useSession();
   const pathname = usePathname();
   const t = useTranslations();
-  const { direction } = useScrollDirectionContext();
+  const { direction, isPullGestureActive } = useScrollDirectionContext();
 
   if (isPending || !session?.user) return null;
 
-  // On mobile, hide when scrolling down
-  const isHidden = direction === "down";
+  // On mobile, hide when scrolling down (suppressed during pull-to-refresh)
+  const isHidden = !isPullGestureActive && direction === "down";
 
   return (
     <nav

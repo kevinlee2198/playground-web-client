@@ -210,3 +210,28 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
+@keyframes ptr-bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+}
+
+/* Pull-to-refresh loading dots */
+.ptr-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  animation: ptr-bounce 1s ease-in-out infinite;
+}
+
+.ptr-dot-1 { animation-delay: 0ms; }
+.ptr-dot-2 { animation-delay: 150ms; }
+.ptr-dot-3 { animation-delay: 300ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ptr-dot {
+    animation: none;
+  }
+}

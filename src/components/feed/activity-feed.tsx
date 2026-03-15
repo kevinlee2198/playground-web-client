@@ -2,6 +2,7 @@
 
 import { loadFeedGames } from "@/app/[locale]/feed/actions";
 import { GameCard } from "@/components/game/game-card";
+import { PullToRefresh } from "@/components/playground/pull-to-refresh";
 import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type { FeedGameNode } from "@/lib/types/feed";
@@ -53,6 +54,25 @@ export function ActivityFeed({
     });
   }, [pageInfo, hasError]);
 
+  const refresh = useCallback((): Promise<void> => {
+    return new Promise((resolve) => {
+      startTransition(async () => {
+        try {
+          const result = await loadFeedGames(10);
+          if (result?.edges && result?.pageInfo) {
+            setEdges(result.edges);
+            setPageInfo(result.pageInfo);
+            setHasError(false);
+          } else {
+            setHasError(true);
+          }
+        } finally {
+          resolve();
+        }
+      });
+    });
+  }, []);
+
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -71,7 +91,7 @@ export function ActivityFeed({
   }, [loadMore]);
 
   return (
-    <>
+    <PullToRefresh onRefresh={refresh}>
       <div className="space-y-4">
         {edges.map((edge) => (
           <GameCard key={edge.node.id} game={edge.node} />
@@ -90,6 +110,6 @@ export function ActivityFeed({
         )}
         {hasError && <TypographyMuted>{t("feed.error")}</TypographyMuted>}
       </div>
-    </>
+    </PullToRefresh>
   );
 }

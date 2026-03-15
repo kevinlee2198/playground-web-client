@@ -3,12 +3,20 @@
 import type { ScrollDirectionState } from "@/hooks/use-scroll-direction";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
-const ScrollDirectionContext = createContext<ScrollDirectionState>({
+interface ScrollDirectionContextValue extends ScrollDirectionState {
+  /** When true, tab bar/FAB should ignore scroll direction changes (e.g., during a pull-to-refresh gesture) */
+  isPullGestureActive: boolean;
+  setPullGestureActive: (active: boolean) => void;
+}
+
+const ScrollDirectionContext = createContext<ScrollDirectionContextValue>({
   direction: "idle",
   scrollTop: 0,
   isAtTop: true,
+  isPullGestureActive: false,
+  setPullGestureActive: () => {},
 });
 
 interface ScrollDirectionProviderProps {
@@ -18,14 +26,21 @@ interface ScrollDirectionProviderProps {
 export function ScrollDirectionProvider({
   children,
 }: ScrollDirectionProviderProps): ReactNode {
-  const value = useScrollDirection({ threshold: 10 });
+  const scrollState = useScrollDirection({ threshold: 10 });
+  const [isPullGestureActive, setIsPullGestureActive] = useState(false);
+  const setPullGestureActive = useCallback(
+    (active: boolean) => setIsPullGestureActive(active),
+    [],
+  );
   return (
-    <ScrollDirectionContext value={value}>
+    <ScrollDirectionContext
+      value={{ ...scrollState, isPullGestureActive, setPullGestureActive }}
+    >
       {children}
     </ScrollDirectionContext>
   );
 }
 
-export function useScrollDirectionContext(): ScrollDirectionState {
+export function useScrollDirectionContext(): ScrollDirectionContextValue {
   return useContext(ScrollDirectionContext);
 }

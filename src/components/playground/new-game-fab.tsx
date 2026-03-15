@@ -38,13 +38,14 @@ export function NewGameFab(): ReactNode {
   const { data: session } = useSession();
   const pathname = usePathname();
   const t = useTranslations();
-  const { direction } = useScrollDirectionContext();
+  const { direction, isPullGestureActive } = useScrollDirectionContext();
   const [open, setOpen] = useState(false);
 
   if (!session?.user) return null;
   if (!isFabPage(pathname)) return null;
 
-  const isHidden = direction === "down";
+  // Suppressed during pull-to-refresh gesture
+  const isHidden = !isPullGestureActive && direction === "down";
 
   return (
     <div

@@ -106,17 +106,17 @@ Per addendum Section 21. Uses existing `useScrollDirection` hook from PR2.
 Note: the `useScrollDirection` hook and `ScrollDirectionProvider` may need modification to support gesture suppression during active pull gestures (addendum Section 21). FAB and tab bar behavior must be tested alongside pull-to-refresh — during an active pull gesture, their hide/show is suppressed.
 
 ### 12. Pull-to-refresh component
-- [ ] Track touch events on scroll container when `scrollTop === 0`
-- [ ] Pull down past 60px threshold to trigger refresh
-- [ ] Warm loading indicator (three forest-green bouncing dots or similar)
-- [ ] `overscroll-behavior-y: none` on scroll container
+- [DONE] Track touch events on scroll container when `scrollTop === 0`
+- [DONE] Pull down past 60px threshold to trigger refresh
+- [DONE] Warm loading indicator (three forest-green bouncing dots or similar)
+- [DONE] `overscroll-behavior-y: none` on scroll container
 
 ### 13. Feed integration
-- [ ] Wire pull-to-refresh to feed page data refetch
+- [DONE] Wire pull-to-refresh to feed page data refetch
 
 ### 14. Desktop alternative
-- [ ] No pull-to-refresh on desktop
-- [ ] Optional "Refresh" icon button in feed header
+- [DONE] No pull-to-refresh on desktop (coarse pointer check)
+- [ ] Optional "Refresh" icon button in feed header (deferred)
 
 ---
 
