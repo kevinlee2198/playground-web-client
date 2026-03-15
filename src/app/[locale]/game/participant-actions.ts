@@ -347,8 +347,7 @@ export async function removeIndividualParticipant(
         __args: {
           input: {
             individual: {
-              gameId: input.gameId,
-              playerId: input.playerId,
+              id: input.id,
             },
           },
         },

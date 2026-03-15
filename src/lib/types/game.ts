@@ -378,8 +378,7 @@ export interface RemoveTeamInstanceInput {
  * Input for removing an individual participant from a game
  */
 export interface RemoveIndividualParticipantInput {
-  gameId: number;
-  playerId: number;
+  id: number;
 }
 
 /**

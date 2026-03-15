@@ -49,3 +49,24 @@ export interface SaveBasketballBoxScoreInput extends SaveBoxScoreInput {
   freeThrowsMade?: number | null;
   freeThrowsAttempted?: number | null;
 }
+
+/**
+ * Per-player box score data for bulk save (gameId is at parent level).
+ * Independent interface mirroring schema — not derived from SaveBasketballBoxScoreInput.
+ */
+export interface SaveBasketballBoxScoreData {
+  playerId: number;
+  assists?: number | null;
+  steals?: number | null;
+  blocks?: number | null;
+  turnovers?: number | null;
+  personalFouls?: number | null;
+  offensiveRebounds?: number | null;
+  defensiveRebounds?: number | null;
+  threePointersMade?: number | null;
+  threePointersAttempted?: number | null;
+  twoPointersMade?: number | null;
+  twoPointersAttempted?: number | null;
+  freeThrowsMade?: number | null;
+  freeThrowsAttempted?: number | null;
+}

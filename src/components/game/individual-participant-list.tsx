@@ -38,11 +38,13 @@ export function IndividualParticipantList({
     (p) => p.__typename === "IndividualParticipant",
   );
 
-  const isCurrentPlayerParticipant = individualParticipants.some(
+  const currentPlayerParticipant = individualParticipants.find(
     (p) =>
       p.__typename === "IndividualParticipant" &&
       p.player.id === currentPlayerId,
   );
+
+  const isCurrentPlayerParticipant = currentPlayerParticipant !== undefined;
 
   const canJoin =
     !atParticipantLimit &&
@@ -65,10 +67,10 @@ export function IndividualParticipantList({
   };
 
   const handleLeaveGame = () => {
+    if (!currentPlayerParticipant) return;
     startTransition(async () => {
       const result = await removeIndividualParticipant({
-        gameId,
-        playerId: currentPlayerId,
+        id: currentPlayerParticipant.id,
       });
 
       if (result.success) {
@@ -79,11 +81,10 @@ export function IndividualParticipantList({
     });
   };
 
-  const handleRemoveParticipant = (playerId: number) => {
+  const handleRemoveParticipant = (participantId: number) => {
     startTransition(async () => {
       const result = await removeIndividualParticipant({
-        gameId,
-        playerId,
+        id: participantId,
       });
 
       if (result.success) {
@@ -149,7 +150,7 @@ export function IndividualParticipantList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveParticipant(player.id)}
+                    onClick={() => handleRemoveParticipant(participant.id)}
                     disabled={isPending}
                   >
                     <X className="h-4 w-4" />
