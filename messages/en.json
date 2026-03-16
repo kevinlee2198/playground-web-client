@@ -330,7 +330,14 @@
       "teamDescription": "Team Description",
       "players": "Players",
       "noPlayers": "No players on this team",
-      "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?"
+      "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?",
+      "teamOptions": "Team options",
+      "noPlayersYet": "This team is waiting for players",
+      "currentUser": "You",
+      "removePlayer": "Remove player",
+      "playerCount": "{count, plural, one {# player} other {# players}}",
+      "removeTeamConfirm": "Are you sure you want to remove {teamName}? This action cannot be undone.",
+      "removePlayerConfirm": "Are you sure you want to remove {playerName} from this team? This action cannot be undone."
     },
     "boxScore": {
       "title": "Box Scores",

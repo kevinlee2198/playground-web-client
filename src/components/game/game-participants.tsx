@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
+import { TypographyH4 } from "@/components/ui/typography";
 import {
   GameVisibility,
   getMaxParticipants,
@@ -16,7 +16,8 @@ import {
   getSubtypeFromMetadata,
   ParticipationType,
 } from "@/lib/constants";
-import type { GameDetail, TeamInstanceDetail } from "@/lib/types/game";
+import type { GameDetail } from "@/lib/types/game";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AddTeamForm } from "./add-team-form";
@@ -44,73 +45,82 @@ export function GameParticipants({
 
   const isPlayerOnAnyTeam =
     isTeamBased &&
-    game.participants.edges.some((edge) => {
-      const node = edge.node;
-      return (
-        node.__typename === "TeamInstance" &&
-        (node as TeamInstanceDetail).players.some(
-          (p) => p.id === currentPlayerId,
-        )
-      );
-    });
+    game.participants.edges.some(
+      (edge) =>
+        edge.node.__typename === "TeamInstance" &&
+        edge.node.players.some((p) => p.id === currentPlayerId),
+    );
+
+  const teamCount = isTeamBased ? game.participants.edges.length : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{t("game.participants.title")}</CardTitle>
-          {isTeamBased && !atParticipantLimit && (game.viewerGameRole != null || game.visibility === GameVisibility.PUBLIC) && (
-            <Button onClick={() => setShowAddTeamDialog(true)} size="sm">
+    <div>
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-4">
+        <TypographyH4>{t("game.participants.title")}</TypographyH4>
+        {isTeamBased &&
+          !atParticipantLimit &&
+          (game.viewerGameRole != null ||
+            game.visibility === GameVisibility.PUBLIC) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddTeamDialog(true)}
+            >
               {t("game.participants.addTeam")}
             </Button>
           )}
+      </div>
+
+      {/* Content */}
+      {!hasParticipants && (
+        <Empty className="border-none">
+          <EmptyHeader>
+            <EmptyDescription>
+              {t("game.participants.noParticipants")}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
+
+      {isTeamBased && hasParticipants && (
+        <div
+          className={cn(
+            "grid gap-4",
+            teamCount >= 2 && "md:grid-cols-2",
+          )}
+        >
+          {game.participants.edges.map((edge, index) => {
+            const participant = edge.node;
+            if (participant.__typename === "TeamInstance") {
+              return (
+                <TeamCard
+                  key={participant.id}
+                  team={participant}
+                  gameStatus={game.gameStatus}
+                  currentPlayerId={currentPlayerId}
+                  isPlayerOnAnyTeam={isPlayerOnAnyTeam}
+                  viewerGameRole={game.viewerGameRole}
+                  visibility={game.visibility}
+                  participantIndex={index}
+                />
+              );
+            }
+            return null;
+          })}
         </div>
-      </CardHeader>
-      <CardContent>
-        {!hasParticipants && (
-          <Empty className="border-none">
-            <EmptyHeader>
-              <EmptyDescription>
-                {t("game.participants.noParticipants")}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
+      )}
 
-        {isTeamBased && hasParticipants && (
-          <div className="space-y-4">
-            {game.participants.edges.map((edge) => {
-              const participant = edge.node;
-              if (participant.__typename === "TeamInstance") {
-                return (
-                  <TeamCard
-                    key={participant.id}
-                    team={participant}
-                    gameId={game.id}
-                    gameStatus={game.gameStatus}
-                    currentPlayerId={currentPlayerId}
-                    isPlayerOnAnyTeam={isPlayerOnAnyTeam}
-                    viewerGameRole={game.viewerGameRole}
-                    visibility={game.visibility}
-                  />
-                );
-              }
-              return null;
-            })}
-          </div>
-        )}
-
-        {!isTeamBased && (
-          <IndividualParticipantList
-            participants={game.participants.edges.map((edge) => edge.node)}
-            gameId={game.id}
-            currentPlayerId={currentPlayerId}
-            atParticipantLimit={atParticipantLimit}
-            viewerGameRole={game.viewerGameRole}
-            visibility={game.visibility}
-          />
-        )}
-      </CardContent>
+      {!isTeamBased && (
+        <IndividualParticipantList
+          participants={game.participants.edges.map((edge) => edge.node)}
+          gameId={game.id}
+          currentPlayerId={currentPlayerId}
+          atParticipantLimit={atParticipantLimit}
+          viewerGameRole={game.viewerGameRole}
+          visibility={game.visibility}
+        />
+      )}
 
       {/* Add Team Dialog */}
       <Dialog open={showAddTeamDialog} onOpenChange={setShowAddTeamDialog}>
@@ -124,6 +134,6 @@ export function GameParticipants({
           />
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }
