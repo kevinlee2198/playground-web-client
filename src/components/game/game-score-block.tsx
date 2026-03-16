@@ -40,13 +40,19 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
     }
   }, [isEditing]);
 
+  // Force-close score form if results are finalized by another user while editing
+  const resultsFinalizedRef = useRef(game.resultsFinalized);
   useEffect(() => {
-    if (isEditing && game.resultsFinalized) {
-      setIsEditing(false);
-      toast.error(t("game.live.resultsFinalizedWhileEditing"));
-      requestAnimationFrame(() => editButtonRef.current?.focus());
+    const wasFinalizedBefore = resultsFinalizedRef.current;
+    resultsFinalizedRef.current = game.resultsFinalized;
+    if (!wasFinalizedBefore && game.resultsFinalized && isEditing) {
+      requestAnimationFrame(() => {
+        setIsEditing(false);
+        toast.error(t("game.live.resultsFinalizedWhileEditing"));
+        editButtonRef.current?.focus();
+      });
     }
-  }, [game.resultsFinalized, isEditing, t]);
+  });
 
   function handleClose() {
     setIsEditing(false);

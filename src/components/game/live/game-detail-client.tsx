@@ -24,15 +24,9 @@ import {
   type LiveGameState,
 } from "./game-live-reducer";
 
-interface GameLiveContextValue {
-  game: LiveGameState["game"];
-  boxScores: LiveGameState["boxScores"];
-  isConnected: LiveGameState["isConnected"];
-}
+const GameLiveContext = createContext<LiveGameState | null>(null);
 
-const GameLiveContext = createContext<GameLiveContextValue | null>(null);
-
-export function useGameLiveContext(): GameLiveContextValue | null {
+export function useGameLiveContext(): LiveGameState | null {
   return useContext(GameLiveContext);
 }
 
@@ -144,13 +138,7 @@ export function GameDetailClient({
   });
 
   return (
-    <GameLiveContext.Provider
-      value={{
-        game: state.game,
-        boxScores: state.boxScores,
-        isConnected: state.isConnected,
-      }}
-    >
+    <GameLiveContext.Provider value={state}>
       {!state.isConnected && (
         <div
           role="alert"
