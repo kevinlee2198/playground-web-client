@@ -21,24 +21,13 @@
     "chat": "Chat"
   },
   "footer": {
-    "company": {
-      "about": "About the company",
-      "contact": "Contact"
-    },
-    "features": {
-      "title": "Features",
-      "pricing": "Pricing",
-      "statTracking": "Stat Tracking"
-    },
-    "help": {
-      "title": "Help",
-      "gettingStarted": "Getting Started"
-    },
-    "resources": {
-      "title": "Resources",
-      "privacyPolicy": "Privacy Policy",
-      "faq": "FAQ"
-    },
+    "about": "About",
+    "contact": "Contact",
+    "pricing": "Pricing",
+    "statTracking": "Stat Tracking",
+    "gettingStarted": "Getting Started",
+    "privacyPolicy": "Privacy",
+    "faq": "FAQ",
     "allRightsReserved": "© {currentDate, date, ::yyyy} Playground. All rights reserved."
   },
   "sports": {
