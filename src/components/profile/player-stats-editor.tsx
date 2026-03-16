@@ -3,7 +3,7 @@
 import {
   createPlayer,
   updatePlayer,
-} from "@/app/[locale]/player/actions";
+} from "@/app/[locale]/user/[username]/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

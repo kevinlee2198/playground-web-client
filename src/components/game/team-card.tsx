@@ -44,7 +44,7 @@ const BORDER_COLORS = [
 interface TeamCardProps {
   team: TeamInstanceDetail;
   gameStatus: GameStatus;
-  currentPlayerId: number;
+  currentPlayerId: number | null;
   isPlayerOnAnyTeam: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
@@ -66,20 +66,23 @@ export function TeamCard({
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<PlayerRef | null>(null);
 
-  const isPlayerOnTeam = team.players.some((p) => p.id === currentPlayerId);
+  const isPlayerOnTeam =
+    currentPlayerId != null &&
+    team.players.some((p) => p.id === currentPlayerId);
   const gameHasStarted =
     gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
   const canJoinOrLeave =
     viewerGameRole != null || visibility === GameVisibility.PUBLIC;
   const showJoinButton =
-    !isPlayerOnTeam && !isPlayerOnAnyTeam && canJoinOrLeave;
+    currentPlayerId != null && !isPlayerOnTeam && !isPlayerOnAnyTeam && canJoinOrLeave;
   const showLeaveButton = isPlayerOnTeam;
   const isEditor = viewerGameRole != null;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
 
-  const handleJoinTeam = () => {
+  function handleJoinTeam(): void {
+    if (currentPlayerId == null) return;
     startTransition(async () => {
       const result = await joinTeam({
         teamInstanceId: team.id,
@@ -92,9 +95,9 @@ export function TeamCard({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
-  const handleRemovePlayerFromTeam = (playerId: number) => {
+  function handleRemovePlayerFromTeam(playerId: number): void {
     startTransition(async () => {
       const result = await leaveTeam({
         teamInstanceId: team.id,
@@ -108,9 +111,9 @@ export function TeamCard({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
-  const handleRemoveTeam = () => {
+  function handleRemoveTeam(): void {
     startTransition(async () => {
       const result = await removeTeamParticipant({
         teamInstanceId: team.id,
@@ -123,7 +126,7 @@ export function TeamCard({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
   return (
     <>
@@ -152,7 +155,11 @@ export function TeamCard({
                 onClick={
                   gameHasStarted
                     ? () => setShowLeaveDialog(true)
-                    : () => handleRemovePlayerFromTeam(currentPlayerId)
+                    : () => {
+                        if (currentPlayerId != null) {
+                          handleRemovePlayerFromTeam(currentPlayerId);
+                        }
+                      }
                 }
                 disabled={isPending}
               >
@@ -250,7 +257,9 @@ export function TeamCard({
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                handleRemovePlayerFromTeam(currentPlayerId);
+                if (currentPlayerId != null) {
+                  handleRemovePlayerFromTeam(currentPlayerId);
+                }
                 setShowLeaveDialog(false);
               }}
               disabled={isPending}

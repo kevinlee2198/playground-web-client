@@ -13,7 +13,7 @@ export function GameDescription({ description }: GameDescriptionProps) {
   const t = useTranslations("game.hero");
   const [expanded, setExpanded] = useState(false);
   const [isClamped, setIsClamped] = useState(false);
-  const textRef = useRef<HTMLParagraphElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = textRef.current;

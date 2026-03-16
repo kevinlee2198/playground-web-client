@@ -70,8 +70,8 @@ export default async function GameDetailPage({ params }: PageProps) {
     redirect({ href: "/", locale });
   }
 
-  // Check if user has a player profile
-  const playerResponse = await authQuery({
+  // Fetch current user's player id (may be null if not yet auto-created)
+  const meResponse = await authQuery({
     me: {
       id: true,
       player: {
@@ -80,29 +80,7 @@ export default async function GameDetailPage({ params }: PageProps) {
     },
   });
 
-  const user = playerResponse.data?.me;
-  const player = user?.player;
-
-  // Show message if no player profile
-  if (!player) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
-          <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-            {t("player.modal.title")}
-          </h2>
-          <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-            {t("player.modal.description")}
-          </p>
-          <div className="mt-4">
-            <Link href="/player" className={buttonVariants()}>
-              {t("player.modal.create")}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const playerId = meResponse.data?.me?.player?.id ?? null;
 
   // Fetch game details
   const gameResponse = await authQuery({
@@ -161,16 +139,18 @@ export default async function GameDetailPage({ params }: PageProps) {
   }
 
   // Determine if current player is a participant
-  const isParticipant = game.participants.edges.some((edge) => {
-    const node = edge.node;
-    if (node.__typename === "TeamInstance") {
-      return node.players.some((p) => p.id === player.id);
-    }
-    if (node.__typename === "IndividualParticipant") {
-      return node.player.id === player.id;
-    }
-    return false;
-  });
+  const isParticipant =
+    playerId != null &&
+    game.participants.edges.some((edge) => {
+      const node = edge.node;
+      if (node.__typename === "TeamInstance") {
+        return node.players.some((p) => p.id === playerId);
+      }
+      if (node.__typename === "IndividualParticipant") {
+        return node.player.id === playerId;
+      }
+      return false;
+    });
 
   const canUpload =
     isParticipant &&
@@ -194,7 +174,7 @@ export default async function GameDetailPage({ params }: PageProps) {
 
       {/* Participants */}
       <section className="mt-8">
-        <GameParticipants game={game} currentPlayerId={player.id} />
+        <GameParticipants game={game} currentPlayerId={playerId} />
       </section>
 
       {/* Media Gallery */}

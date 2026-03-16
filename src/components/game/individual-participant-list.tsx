@@ -23,7 +23,7 @@ import { toast } from "sonner";
 interface IndividualParticipantListProps {
   participants: GameParticipantDetail[];
   gameId: number;
-  currentPlayerId: number;
+  currentPlayerId: number | null;
   atParticipantLimit: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
@@ -45,16 +45,19 @@ export function IndividualParticipantList({
       p.__typename === "IndividualParticipant",
   );
 
-  const currentPlayerParticipant = individualParticipants.find(
-    (p) => p.player.id === currentPlayerId,
-  );
+  const currentPlayerParticipant =
+    currentPlayerId != null
+      ? individualParticipants.find((p) => p.player.id === currentPlayerId)
+      : undefined;
 
   const canJoin =
+    currentPlayerId != null &&
     !atParticipantLimit &&
     !currentPlayerParticipant &&
     (viewerGameRole != null || visibility === GameVisibility.PUBLIC);
 
-  const handleJoinGame = () => {
+  function handleJoinGame(): void {
+    if (currentPlayerId == null) return;
     startTransition(async () => {
       const result = await addIndividualParticipant({
         gameId,
@@ -67,9 +70,9 @@ export function IndividualParticipantList({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
-  const handleRemoveParticipant = (participantId: number) => {
+  function handleRemoveParticipant(participantId: number): void {
     startTransition(async () => {
       const result = await removeIndividualParticipant({
         id: participantId,
@@ -81,7 +84,7 @@ export function IndividualParticipantList({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
   return (
     <div className="space-y-4">
