@@ -104,11 +104,10 @@ export function useChatSubscription({
     });
 
     const unsubscribeConnected = client.on("connected", () => {
-      if (isFirstConnection) {
-        isFirstConnection = false;
-      } else {
+      if (!isFirstConnection) {
         onReconnectRef.current?.();
       }
+      isFirstConnection = false;
     });
 
     const unsubscribe = client.subscribe<{
