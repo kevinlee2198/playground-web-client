@@ -1,5 +1,6 @@
 import { BasketballBoxScoreTable } from "@/components/game/basketball-box-score-table";
 import { GameStatus, SportType } from "@/lib/constants";
+import { playerRefFragment } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type {
   GameDetail,
@@ -66,7 +67,7 @@ export async function GameBoxScores({ game }: GameBoxScoresProps) {
       edges: {
         node: {
           id: true,
-          player: { id: true, user: { displayName: true } },
+          player: playerRefFragment,
           points: true,
           assists: true,
           totalRebounds: true,

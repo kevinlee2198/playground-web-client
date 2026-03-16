@@ -4,6 +4,28 @@
  */
 
 /**
+ * Profile picture thumbnail selection for the Resource interface.
+ * Use as: profilePicture: profilePictureThumbnailFragment
+ */
+export const profilePictureThumbnailFragment = {
+  __typename: true,
+  __on: [{ __typeName: "ImageResource", thumbnailUrl: true }],
+};
+
+/**
+ * Player reference fragment matching the PlayerRef type.
+ * Use as: player: playerRefFragment or players: playerRefFragment
+ */
+export const playerRefFragment = {
+  id: true,
+  user: {
+    displayName: true,
+    username: true,
+    profilePicture: profilePictureThumbnailFragment,
+  },
+};
+
+/**
  * Inline fragments for the Resource interface.
  * Use as: resource: resourceFragment
  */
@@ -182,13 +204,13 @@ export const participantNodeFragment = {
       __typeName: "TeamInstance",
       id: true,
       name: true,
-      players: { id: true, user: { displayName: true } },
+      players: playerRefFragment,
       metadata: participantMetadataFragment,
     },
     {
       __typeName: "IndividualParticipant",
       id: true,
-      player: { id: true, user: { displayName: true } },
+      player: playerRefFragment,
       metadata: participantMetadataFragment,
     },
   ],
@@ -204,15 +226,7 @@ export const viewerFriendPlayersFragment = {
     user: {
       id: true,
       displayName: true,
-      profilePicture: {
-        __typename: true,
-        __on: [
-          {
-            __typeName: "ImageResource",
-            thumbnailUrl: true,
-          },
-        ],
-      },
+      profilePicture: profilePictureThumbnailFragment,
     },
   },
   totalCount: true,
@@ -230,13 +244,13 @@ export const participantDetailNodeFragment = {
       id: true,
       name: true,
       description: true,
-      players: { id: true, user: { displayName: true } },
+      players: playerRefFragment,
       metadata: participantMetadataFragment,
     },
     {
       __typeName: "IndividualParticipant",
       id: true,
-      player: { id: true, user: { displayName: true } },
+      player: playerRefFragment,
       metadata: participantMetadataFragment,
     },
   ],
