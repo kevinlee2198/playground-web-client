@@ -1,5 +1,6 @@
 import { BasketballBoxScoreTable } from "@/components/game/basketball-box-score-table";
-import { GameStatus, SportType } from "@/lib/constants";
+import { CollapsibleBoxScore } from "@/components/game/collapsible-box-score";
+import { GameStatus, type GameRole, SportType } from "@/lib/constants";
 import { playerRefFragment } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type {
@@ -11,6 +12,8 @@ import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 
 interface GameBoxScoresProps {
   game: GameDetail;
+  viewerGameRole: GameRole | null;
+  gameStatus: GameStatus;
 }
 
 interface TeamBoxScoreGroup {
@@ -49,12 +52,16 @@ function groupByTeam(
   }));
 }
 
-export async function GameBoxScores({ game }: GameBoxScoresProps) {
+export async function GameBoxScores({
+  game,
+  viewerGameRole,
+  gameStatus,
+}: GameBoxScoresProps) {
   if (game.sportType !== SportType.BASKETBALL) {
     return null;
   }
 
-  if (game.gameStatus === GameStatus.SCHEDULED) {
+  if (gameStatus === GameStatus.SCHEDULED) {
     return null;
   }
 
@@ -97,18 +104,30 @@ export async function GameBoxScores({ game }: GameBoxScoresProps) {
   const allBoxScores = boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
   const teamGroups = groupByTeam(game, allBoxScores);
 
+  // Expand by default when the viewer is an owner/editor and the game is complete
+  const defaultOpen =
+    viewerGameRole != null && gameStatus === GameStatus.COMPLETE;
+
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]"
+    >
       {teamGroups.map((group) => (
-        <BasketballBoxScoreTable
+        <CollapsibleBoxScore
           key={group.teamName}
-          gameId={game.id}
           teamName={group.teamName}
-          boxScores={group.boxScores}
-          gameStatus={game.gameStatus}
-          availablePlayers={group.players}
-          viewerGameRole={game.viewerGameRole}
-        />
+          playerCount={group.boxScores.length || group.players.length}
+          defaultOpen={defaultOpen}
+        >
+          <BasketballBoxScoreTable
+            gameId={game.id}
+            teamName={group.teamName}
+            boxScores={group.boxScores}
+            gameStatus={gameStatus}
+            availablePlayers={group.players}
+            viewerGameRole={viewerGameRole}
+          />
+        </CollapsibleBoxScore>
       ))}
     </div>
   );
