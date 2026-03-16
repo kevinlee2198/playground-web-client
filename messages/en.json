@@ -17,7 +17,6 @@
   },
   "header": {
     "home": "Home",
-    "player": "Player",
     "games": "Games",
     "chat": "Chat"
   },
@@ -91,10 +90,6 @@
       "save": "Save",
       "saving": "Saving...",
       "saved": "Stats updated",
-      "addStats": "Add your stats",
-      "createPlayer": "Create Player Profile",
-      "creating": "Creating...",
-      "created": "Player profile created",
       "error": "Failed to save stats"
     },
     "games": {
@@ -164,48 +159,6 @@
       "error": "Failed to process request",
       "alreadyBlockedYou": "This user has already blocked you",
       "cannotBlockSelf": "You cannot block yourself"
-    }
-  },
-  "player": {
-    "title": "Player Profile",
-    "createTitle": "Create Player Profile",
-    "editTitle": "Edit Player Profile",
-    "form": {
-      "age": "Age",
-      "height": "Height",
-      "weight": "Weight",
-      "required": "Required"
-    },
-    "actions": {
-      "create": "Create Player",
-      "saving": "Saving..."
-    },
-    "validation": {
-      "agePositive": "Age must be greater than 0",
-      "heightPositive": "Height must be greater than 0",
-      "weightPositive": "Weight must be greater than 0"
-    },
-    "onboarding": {
-      "title": "Create Your Player Profile",
-      "description": "Create your player profile to join games and track your stats.",
-      "cta": "Create Player Profile",
-      "dismiss": "Dismiss"
-    },
-    "modal": {
-      "title": "Player Profile Required",
-      "description": "You need a player profile to perform this action. Create your profile to join games and participate in events.",
-      "create": "Create Player Profile",
-      "cancel": "Cancel"
-    },
-    "success": {
-      "created": "Player profile created successfully",
-      "updated": "Player profile updated successfully"
-    },
-    "errors": {
-      "loadError": "Failed to load player profile",
-      "createError": "Failed to create player profile",
-      "updateError": "Failed to update player profile",
-      "retry": "Retry"
     }
   },
   "actions": {

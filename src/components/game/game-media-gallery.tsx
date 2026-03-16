@@ -60,7 +60,7 @@ export function GameMediaGallery({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLoadMore = async () => {
+  async function handleLoadMore(): Promise<void> {
     if (!pageInfo.hasNextPage || isLoading) return;
     setIsLoading(true);
 
@@ -76,7 +76,7 @@ export function GameMediaGallery({
     }
 
     setIsLoading(false);
-  };
+  }
 
   const uploadSingleFile = useCallback(
     async (file: File, fileId: string) => {
@@ -198,12 +198,12 @@ export function GameMediaGallery({
     [t, uploadSingleFile],
   );
 
-  const handleDeleteClick = (resourceId: string) => {
+  function handleDeleteClick(resourceId: string): void {
     setResourceToDelete(resourceId);
     setDeleteDialogOpen(true);
-  };
+  }
 
-  const handleDeleteConfirm = async () => {
+  async function handleDeleteConfirm(): Promise<void> {
     if (!resourceToDelete) return;
 
     setIsDeleting(true);
@@ -222,15 +222,15 @@ export function GameMediaGallery({
     setDeleteDialogOpen(false);
     setResourceToDelete(null);
     setIsDeleting(false);
-  };
+  }
 
-  const dismissUploadError = (fileId: string) => {
+  function dismissUploadError(fileId: string): void {
     setUploadingFiles((prev) => {
       const next = new Map(prev);
       next.delete(fileId);
       return next;
     });
-  };
+  }
 
   const isEmpty = media.length === 0 && uploadingFiles.size === 0;
   const mediaCount = media.length + uploadingFiles.size;

@@ -45,16 +45,15 @@ export function IndividualParticipantList({
       p.__typename === "IndividualParticipant",
   );
 
-  const currentPlayerParticipant = individualParticipants.find(
-    (p) => p.player.id === currentPlayerId,
-  );
+  const currentPlayerParticipant =
+    individualParticipants.find((p) => p.player.id === currentPlayerId);
 
   const canJoin =
     !atParticipantLimit &&
     !currentPlayerParticipant &&
     (viewerGameRole != null || visibility === GameVisibility.PUBLIC);
 
-  const handleJoinGame = () => {
+  function handleJoinGame(): void {
     startTransition(async () => {
       const result = await addIndividualParticipant({
         gameId,
@@ -67,9 +66,9 @@ export function IndividualParticipantList({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
-  const handleRemoveParticipant = (participantId: number) => {
+  function handleRemoveParticipant(participantId: number): void {
     startTransition(async () => {
       const result = await removeIndividualParticipant({
         id: participantId,
@@ -81,7 +80,7 @@ export function IndividualParticipantList({
         toast.error(result.message || t("game.errors.participantError"));
       }
     });
-  };
+  }
 
   return (
     <div className="space-y-4">

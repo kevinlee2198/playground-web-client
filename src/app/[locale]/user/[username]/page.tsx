@@ -127,9 +127,7 @@ function buildGamesQuery(playerId: number) {
   };
 }
 
-async function GameHistorySection({ playerId }: { playerId?: number }) {
-  if (!playerId) return <GameHistory />;
-
+async function GameHistorySection({ playerId }: { playerId: number }) {
   const gamesResponse = await query(buildGamesQuery(playerId));
   return (
     <GameHistory
@@ -198,11 +196,11 @@ export default async function UserProfilePage({ params }: PageProps) {
       {isOwnProfile ? (
         <PlayerStatsEditorLoader initialPlayer={player} />
       ) : (
-        player && <PlayerStats player={player} />
+        <PlayerStats player={player} />
       )}
 
       <Suspense fallback={<GameHistorySkeleton />}>
-        <GameHistorySection playerId={player?.id} />
+        <GameHistorySection playerId={player.id} />
       </Suspense>
     </main>
   );

@@ -1,11 +1,12 @@
 "use client";
 
+import { fetchCurrentUser } from "@/components/auth/actions";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Gamepad2, Home, MessageCircle, User } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { TypographySmall } from "../ui/typography";
 import { useScrollDirectionContext } from "./scroll-direction-provider";
 
@@ -20,11 +21,10 @@ interface TabItem {
   icon: typeof Home;
 }
 
-const TABS: TabItem[] = [
+const STATIC_TABS: TabItem[] = [
   { labelKey: "nav.feed", href: "/", icon: Home },
   { labelKey: "nav.games", href: "/games", icon: Gamepad2 },
   { labelKey: "nav.messages", href: "/chat", icon: MessageCircle },
-  { labelKey: "nav.profile", href: "/player", icon: User },
 ];
 
 export function TabBar(): ReactNode {
@@ -32,8 +32,26 @@ export function TabBar(): ReactNode {
   const pathname = usePathname();
   const t = useTranslations();
   const { direction, isPullGestureActive } = useScrollDirectionContext();
+  const [username, setUsername] = useState<string | null>(null);
+
+  const userId = session?.user?.id;
+
+  useEffect(() => {
+    if (userId) {
+      fetchCurrentUser().then((user) => {
+        if (user) setUsername(user.username);
+      });
+    }
+  }, [userId]);
 
   if (isPending || !session?.user) return null;
+
+  const profileHref = username != null ? `/user/${username}` : "/";
+
+  const tabs: TabItem[] = [
+    ...STATIC_TABS,
+    { labelKey: "nav.profile", href: profileHref, icon: User },
+  ];
 
   // On mobile, hide when scrolling down (suppressed during pull-to-refresh)
   const isHidden = !isPullGestureActive && direction === "down";
@@ -53,13 +71,13 @@ export function TabBar(): ReactNode {
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center lg:gap-1 lg:px-6">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const isActive = matchesRoute(pathname, tab.href);
           const Icon = tab.icon;
 
           return (
             <Link
-              key={tab.href}
+              key={tab.labelKey}
               href={tab.href}
               aria-current={isActive ? "page" : undefined}
               onClick={(e) => {

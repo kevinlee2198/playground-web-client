@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  createPlayer,
-  updatePlayer,
-} from "@/app/[locale]/player/actions";
+import { updatePlayer } from "@/app/[locale]/user/[username]/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { TypographyP } from "@/components/ui/typography";
+import type { UpdatePlayerInput } from "@/lib/types/player";
 import { cn } from "@/lib/utils";
 import { Loader2, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -20,7 +18,7 @@ export interface PlayerStatsEditorProps {
     age: number | null;
     height: number | null;
     weight: number | null;
-  } | null;
+  };
 }
 
 function formatHeight(cm: number | null): string | null {
@@ -115,14 +113,12 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
   const firstInputRef = useRef<HTMLInputElement | null>(null);
   const editButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const isCreating = player == null;
-
-  const enterEditMode = () => {
-    setAgeInput(player?.age != null ? String(player.age) : "");
-    setHeightInput(player?.height != null ? String(player.height) : "");
-    setWeightInput(player?.weight != null ? String(player.weight) : "");
+  function enterEditMode(): void {
+    setAgeInput(player.age != null ? String(player.age) : "");
+    setHeightInput(player.height != null ? String(player.height) : "");
+    setWeightInput(player.weight != null ? String(player.weight) : "");
     setIsEditing(true);
-  };
+  }
 
   useEffect(() => {
     if (isEditing) {
@@ -130,39 +126,19 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
     }
   }, [isEditing]);
 
-  const handleCancel = () => {
+  function handleCancel(): void {
     setIsEditing(false);
     requestAnimationFrame(() => editButtonRef.current?.focus());
-  };
+  }
 
-  const handleSave = () => {
+  function handleSave(): void {
     startTransition(async () => {
       const age = parseOptionalNumber(ageInput);
       const height = parseOptionalNumber(heightInput);
       const weight = parseOptionalNumber(weightInput);
 
-      if (isCreating) {
-        const result = await createPlayer({ age, height, weight });
-        if (!result.success) {
-          toast.error(result.message ?? t("error"));
-          return;
-        }
-        if (result.player) {
-          setPlayer(result.player);
-        }
-        setIsEditing(false);
-        requestAnimationFrame(() => editButtonRef.current?.focus());
-        toast.success(t("created"));
-        return;
-      }
-
       // PATCH semantics: only send fields that changed
-      const input: {
-        id: number;
-        age?: number | null;
-        height?: number | null;
-        weight?: number | null;
-      } = { id: player.id };
+      const input: UpdatePlayerInput = {};
       const newAge = age ?? null;
       const newHeight = height ?? null;
       const newWeight = weight ?? null;
@@ -182,45 +158,19 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
       requestAnimationFrame(() => editButtonRef.current?.focus());
       toast.success(t("saved"));
     });
-  };
+  }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
     if (e.key === "Escape") {
       handleCancel();
     } else if (e.key === "Enter") {
       e.preventDefault();
       handleSave();
     }
-  };
-
-  // No player profile yet -- show creation prompt
-  if (player == null && !isEditing) {
-    return (
-      <section className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("title")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center gap-4 py-4">
-              <TypographyP className="text-muted-foreground text-sm">
-                {t("addStats")}
-              </TypographyP>
-              <Button ref={editButtonRef} variant="outline" size="sm" onClick={enterEditMode}>
-                {t("createPlayer")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-    );
   }
 
-  // Edit mode -- shared between create and update
+  // Edit mode
   if (isEditing) {
-    const submitLabel = isCreating ? t("createPlayer") : t("save");
-    const pendingLabel = isCreating ? t("creating") : t("saving");
-
     return (
       <section className="mb-8">
         <Card>
@@ -257,10 +207,10 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
                 {isPending ? (
                   <>
                     <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                    {pendingLabel}
+                    {t("saving")}
                   </>
                 ) : (
-                  submitLabel
+                  t("save")
                 )}
               </Button>
               <Button
@@ -279,10 +229,6 @@ export function PlayerStatsEditor({ initialPlayer }: PlayerStatsEditorProps) {
   }
 
   // View mode -- shows current stats (or dashes when empty)
-  // player is guaranteed non-null: the null+!editing case returns above,
-  // and the editing case returns above that. Guard satisfies TypeScript.
-  if (player == null) return null;
-
   return (
     <section className="mb-8">
       <Card>

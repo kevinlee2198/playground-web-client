@@ -53,39 +53,6 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     redirect({ href: "/", locale });
   }
 
-  // Check if user has a player profile
-  const playerResponse = await authQuery({
-    me: {
-      id: true,
-      player: {
-        id: true,
-      },
-    },
-  });
-
-  const player = playerResponse.data?.me?.player;
-
-  // Show message if no player profile
-  if (!player) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
-          <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-            {t("player.modal.title")}
-          </h2>
-          <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-            {t("player.modal.description")}
-          </p>
-          <div className="mt-4">
-            <Link href="/player" className={buttonVariants()}>
-              {t("player.modal.create")}
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   // Parse filters from URL
   const sportTypeParam =
     typeof queryParams.sportType === "string"
