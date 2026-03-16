@@ -93,6 +93,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       sportType: true,
       metadata: gameMetadataFragment,
       gameStatus: true,
+      resultsFinalized: true,
       viewerGameRole: true,
       visibility: true,
       location: locationFragment,

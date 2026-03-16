@@ -154,6 +154,7 @@ export interface GameNode {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
   location: {
@@ -180,6 +181,7 @@ export interface GameDetail {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
   location: Location | null;
