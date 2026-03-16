@@ -1,28 +1,25 @@
 import { BackButton } from "@/components/game/back-button";
-import { GameBoxScores } from "@/components/game/game-box-scores";
-import { GameBoxScoresSkeleton } from "@/components/game/game-box-scores-skeleton";
-import { GameDetailActions } from "@/components/game/game-detail-actions";
+import { GameDetailClient } from "@/components/game/live/game-detail-client";
 import { GameDetailHero } from "@/components/game/game-detail-hero";
-import { GameMediaGallery } from "@/components/game/game-media-gallery";
-import { GameParticipants } from "@/components/game/game-participants";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameStatus, getSubtypeFromMetadata } from "@/lib/constants";
+import { GameStatus, getSubtypeFromMetadata, SportType } from "@/lib/constants";
 import {
   gameMetadataFragment,
   locationFragment,
   participantDetailNodeFragment,
+  playerRefFragment,
   resourceFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
+import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
-import { Suspense } from "react";
 
 interface PageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -93,6 +90,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       sportType: true,
       metadata: gameMetadataFragment,
       gameStatus: true,
+      resultsFinalized: true,
       viewerGameRole: true,
       visibility: true,
       location: locationFragment,
@@ -158,45 +156,61 @@ export default async function GameDetailPage({ params }: PageProps) {
 
   const locationText = game.location ? formatAddress(game.location.address) : null;
 
+  let initialBoxScores: { node: BasketballBoxScoreNode }[] = [];
+  if (
+    game.sportType === SportType.BASKETBALL &&
+    game.gameStatus !== GameStatus.SCHEDULED
+  ) {
+    const boxScoreResponse = await authQuery({
+      basketballBoxScores: {
+        __args: { input: { gameIds: [game.id] }, first: 50 },
+        edges: {
+          node: {
+            id: true,
+            player: playerRefFragment,
+            points: true,
+            assists: true,
+            totalRebounds: true,
+            offensiveRebounds: true,
+            defensiveRebounds: true,
+            steals: true,
+            blocks: true,
+            turnovers: true,
+            personalFouls: true,
+            fieldGoalsMade: true,
+            fieldGoalsAttempted: true,
+            fieldGoalPercentage: true,
+            threePointersMade: true,
+            threePointersAttempted: true,
+            threePointerPercentage: true,
+            twoPointersMade: true,
+            twoPointersAttempted: true,
+            twoPointerPercentage: true,
+            freeThrowsMade: true,
+            freeThrowsAttempted: true,
+            freeThrowPercentage: true,
+          },
+        },
+      },
+    });
+    initialBoxScores =
+      boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Back navigation */}
       <div className="mb-6">
         <BackButton label={t("game.detail.backToGames")} />
       </div>
 
-      {/* Hero scoreboard */}
-      <GameDetailHero game={game} locationText={locationText} />
-
-      {/* Action bar */}
-      <GameDetailActions game={game} />
-
-      {/* Participants */}
-      <section className="mt-8">
-        <GameParticipants game={game} currentPlayerId={playerId} />
-      </section>
-
-      {/* Media Gallery */}
-      <section className="mt-8">
-        <GameMediaGallery
-          gameId={game.id}
-          initialMedia={game.media.edges}
-          initialPageInfo={game.media.pageInfo}
-          canUpload={canUpload}
-          isParticipant={isParticipant}
-        />
-      </section>
-
-      {/* Box Scores */}
-      <section className="mt-8">
-        <Suspense fallback={<GameBoxScoresSkeleton />}>
-          <GameBoxScores
-            game={game}
-            viewerGameRole={game.viewerGameRole}
-            gameStatus={game.gameStatus}
-          />
-        </Suspense>
-      </section>
+      <GameDetailClient
+        game={game}
+        initialBoxScores={initialBoxScores}
+        playerId={playerId}
+        canUpload={canUpload}
+      >
+        <GameDetailHero game={game} locationText={locationText} />
+      </GameDetailClient>
     </div>
   );
 }

@@ -1,16 +1,9 @@
-import { BreathingDot } from "@/components/game/breathing-dot";
 import { GameDescription } from "@/components/game/game-description";
-import { GameScoreBlock } from "@/components/game/game-score-block";
+import { GameHeroContent } from "@/components/game/live/game-hero-content";
 import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
 import { Badge } from "@/components/ui/badge";
-import { TypographyLarge, TypographyMuted } from "@/components/ui/typography";
-import {
-  GameStatus,
-  GameStatusAriaLabelKey,
-  GameStatusBadgeVariant,
-  GameStatusLabelKey,
-  getSubtypeFromMetadata,
-} from "@/lib/constants";
+import { TypographyMuted } from "@/components/ui/typography";
+import { getSubtypeFromMetadata } from "@/lib/constants";
 import type { SportType } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
@@ -35,9 +28,7 @@ export async function GameDetailHero({
   const t = await getTranslations();
   const format = await getFormatter();
 
-  const isLive = game.gameStatus === GameStatus.IN_PROGRESS;
   const subtype = getSubtypeFromMetadata(game.metadata);
-  const badgeVariant = GameStatusBadgeVariant[game.gameStatus];
 
   const formattedDate = format.dateTime(new Date(game.startDate), {
     year: "numeric",
@@ -47,26 +38,11 @@ export async function GameDetailHero({
     minute: "2-digit",
   });
 
-  const statusPill = (
-    <Badge
-      variant={badgeVariant}
-      aria-label={t(GameStatusAriaLabelKey[game.gameStatus])}
-      className={cn(
-        "text-xs",
-        isLive && "bg-live text-live-foreground gap-1.5",
-      )}
-    >
-      {isLive ? <BreathingDot className="size-1.5" /> : null}
-      {t(GameStatusLabelKey[game.gameStatus])}
-    </Badge>
-  );
-
   return (
     <section
       className={cn(
         "rounded-3xl p-6 sm:p-8",
         sportGradientClass[game.sportType],
-        isLive && "ring-1 ring-live/12 bg-secondary/80",
       )}
     >
       <div className="flex flex-col items-center gap-4">
@@ -83,16 +59,8 @@ export async function GameDetailHero({
           <GameDescription description={game.description} />
         ) : null}
 
-        {/* Score block or scheduled date */}
-        {game.gameStatus === GameStatus.SCHEDULED ? (
-          <div className="flex flex-col items-center gap-2 py-4 text-center">
-            <TypographyMuted>{t("game.detail.hero.scheduled")}</TypographyMuted>
-            <TypographyLarge className="text-2xl font-bold font-heading">{formattedDate}</TypographyLarge>
-            {statusPill}
-          </div>
-        ) : (
-          <GameScoreBlock game={game} statusPill={statusPill} />
-        )}
+        {/* Reactive score block or scheduled date */}
+        <GameHeroContent game={game} formattedDate={formattedDate} />
 
         {/* Venue and date metadata */}
         <div className="flex flex-wrap items-center justify-center gap-4">

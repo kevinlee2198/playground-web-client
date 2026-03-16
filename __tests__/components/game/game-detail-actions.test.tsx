@@ -12,6 +12,7 @@ vi.mock("next-intl", () => ({
       "game.actions.ending": "Ending...",
       "game.actions.edit": "Edit",
       "game.actions.delete": "Delete",
+      "game.actions.moreOptions": "More options",
       "game.manageEditors": "Manage Editors",
       "game.success.started": "Game started",
       "game.success.ended": "Game ended",
@@ -20,6 +21,10 @@ vi.mock("next-intl", () => ({
     };
     return map[key] ?? key;
   },
+}));
+
+vi.mock("@/components/game/live/game-detail-client", () => ({
+  useGameLiveContext: () => null,
 }));
 
 vi.mock("@/app/[locale]/game/actions", () => ({
@@ -70,6 +75,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
       periods: 4,
     },
     gameStatus: GameStatus.SCHEDULED,
+    resultsFinalized: false,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
     location: null,
@@ -151,8 +157,9 @@ describe("GameDetailActions", () => {
     render(
       <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
     );
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
     expect(
-      screen.getByRole("button", { name: "Edit" }),
+      screen.getByRole("menuitem", { name: "Edit" }),
     ).toBeInTheDocument();
   });
 
@@ -162,8 +169,9 @@ describe("GameDetailActions", () => {
         game={makeGame({ viewerGameRole: GameRole.EDITOR })}
       />,
     );
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
     expect(
-      screen.getByRole("button", { name: "Edit" }),
+      screen.getByRole("menuitem", { name: "Edit" }),
     ).toBeInTheDocument();
   });
 
@@ -171,11 +179,12 @@ describe("GameDetailActions", () => {
     render(
       <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
     );
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
     expect(
-      screen.getByRole("button", { name: /Manage Editors/i }),
+      screen.getByRole("menuitem", { name: /Manage Editors/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Delete/i }),
+      screen.getByRole("menuitem", { name: /Delete/i }),
     ).toBeInTheDocument();
   });
 
@@ -185,11 +194,12 @@ describe("GameDetailActions", () => {
         game={makeGame({ viewerGameRole: GameRole.EDITOR })}
       />,
     );
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
     expect(
-      screen.queryByRole("button", { name: /Manage Editors/i }),
+      screen.queryByRole("menuitem", { name: /Manage Editors/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /Delete/i }),
+      screen.queryByRole("menuitem", { name: /Delete/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -215,7 +225,8 @@ describe("GameDetailActions", () => {
     );
 
     expect(screen.queryByTestId("delete-dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Delete/i }));
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Delete/i }));
     expect(screen.getByTestId("delete-dialog")).toBeInTheDocument();
   });
 
@@ -225,7 +236,8 @@ describe("GameDetailActions", () => {
     );
 
     expect(screen.queryByTestId("editors-dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Manage Editors/i }));
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Manage Editors/i }));
     expect(screen.getByTestId("editors-dialog")).toBeInTheDocument();
   });
 
@@ -235,7 +247,8 @@ describe("GameDetailActions", () => {
     );
 
     expect(screen.queryByTestId("update-form")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(screen.getByTestId("update-form")).toBeInTheDocument();
   });
 

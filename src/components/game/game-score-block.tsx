@@ -3,6 +3,7 @@
 import { Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { GameScore } from "@/components/game/score/game-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { BasketballScoreForm } from "@/components/game/scoreboard/basketball-score-form";
@@ -27,6 +28,7 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
   const isLive = game.gameStatus === GameStatus.IN_PROGRESS;
   const canEdit =
     game.viewerGameRole != null &&
+    !game.resultsFinalized &&
     (game.gameStatus === GameStatus.IN_PROGRESS ||
       game.gameStatus === GameStatus.COMPLETE);
 
@@ -37,6 +39,20 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
       });
     }
   }, [isEditing]);
+
+  // Force-close score form if results are finalized by another user while editing
+  const resultsFinalizedRef = useRef(game.resultsFinalized);
+  useEffect(() => {
+    const wasFinalizedBefore = resultsFinalizedRef.current;
+    resultsFinalizedRef.current = game.resultsFinalized;
+    if (!wasFinalizedBefore && game.resultsFinalized && isEditing) {
+      requestAnimationFrame(() => {
+        setIsEditing(false);
+        toast.error(t("game.live.resultsFinalizedWhileEditing"));
+        editButtonRef.current?.focus();
+      });
+    }
+  });
 
   function handleClose() {
     setIsEditing(false);

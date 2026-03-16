@@ -61,6 +61,7 @@ export interface FeedGameNode {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
+  resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
   location: FeedLocation | null;
