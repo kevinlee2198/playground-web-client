@@ -401,6 +401,16 @@
         "scheduled": "Scheduled for"
       }
     },
+    "live": {
+      "connectionLost": "Connection lost. Reconnecting\u2026",
+      "gameStarted": "Game is now live",
+      "gameEnded": "Game has ended",
+      "resultsFinalized": "Results have been finalized",
+      "resultsUnfinalized": "Results have been unfinalized",
+      "participantAdded": "{name} joined the game",
+      "participantRemoved": "A participant left the game",
+      "resultsFinalizedWhileEditing": "Results have been finalized. Your edits were not saved."
+    },
     "hero": {
       "showMore": "Show more",
       "showLess": "Show less"

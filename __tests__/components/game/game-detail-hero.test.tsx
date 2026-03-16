@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 // ---- Mocks ----
@@ -32,14 +31,16 @@ vi.mock("next-intl/server", () => ({
     }),
 }));
 
-vi.mock("@/components/game/game-score-block", () => ({
-  GameScoreBlock: ({
-    statusPill,
+vi.mock("@/components/game/live/game-hero-content", () => ({
+  GameHeroContent: ({
+    game,
+    formattedDate,
   }: {
-    statusPill: ReactNode;
+    game: { gameStatus: string };
+    formattedDate: string;
   }) => (
-    <div data-testid="game-score-block">
-      <div data-testid="status-pill-slot">{statusPill}</div>
+    <div data-testid="game-hero-content" data-status={game.gameStatus}>
+      <span data-testid="formatted-date">{formattedDate}</span>
     </div>
   ),
 }));
@@ -49,12 +50,6 @@ vi.mock("@/components/game/sport-emoji-pill", () => ({
     <span data-testid="sport-emoji-pill" data-sport={sportType}>
       {sportType}
     </span>
-  ),
-}));
-
-vi.mock("@/components/game/breathing-dot", () => ({
-  BreathingDot: ({ className }: { className?: string }) => (
-    <span data-testid="breathing-dot" className={className} />
   ),
 }));
 
@@ -83,6 +78,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
       periods: 4,
     },
     gameStatus: GameStatus.IN_PROGRESS,
+    resultsFinalized: false,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
     location: null,
@@ -161,41 +157,34 @@ describe("GameDetailHero", () => {
     expect(screen.getByText("5v5")).toBeInTheDocument();
   });
 
-  it("renders 'Live' status pill for IN_PROGRESS game", async () => {
+  it("renders GameHeroContent for IN_PROGRESS game", async () => {
     await renderHero({ gameStatus: GameStatus.IN_PROGRESS });
 
-    expect(screen.getByText("Live")).toBeInTheDocument();
+    expect(screen.getByTestId("game-hero-content")).toBeInTheDocument();
+    expect(screen.getByTestId("game-hero-content")).toHaveAttribute(
+      "data-status",
+      "IN_PROGRESS",
+    );
   });
 
-  it("renders 'Final' status pill for COMPLETE game", async () => {
+  it("renders GameHeroContent for COMPLETE game", async () => {
     await renderHero({ gameStatus: GameStatus.COMPLETE });
 
-    expect(screen.getByText("Final")).toBeInTheDocument();
+    expect(screen.getByTestId("game-hero-content")).toBeInTheDocument();
+    expect(screen.getByTestId("game-hero-content")).toHaveAttribute(
+      "data-status",
+      "COMPLETE",
+    );
   });
 
-  it("renders 'Upcoming' status pill for SCHEDULED game", async () => {
+  it("renders GameHeroContent for SCHEDULED game", async () => {
     await renderHero({ gameStatus: GameStatus.SCHEDULED });
 
-    expect(screen.getByText("Upcoming")).toBeInTheDocument();
-  });
-
-  it("renders GameScoreBlock for IN_PROGRESS game", async () => {
-    await renderHero({ gameStatus: GameStatus.IN_PROGRESS });
-
-    expect(screen.getByTestId("game-score-block")).toBeInTheDocument();
-  });
-
-  it("renders GameScoreBlock for COMPLETE game", async () => {
-    await renderHero({ gameStatus: GameStatus.COMPLETE });
-
-    expect(screen.getByTestId("game-score-block")).toBeInTheDocument();
-  });
-
-  it("renders 'Scheduled for' label and date prominently for SCHEDULED game (no score block)", async () => {
-    await renderHero({ gameStatus: GameStatus.SCHEDULED });
-
-    expect(screen.getByText("Scheduled for")).toBeInTheDocument();
-    expect(screen.queryByTestId("game-score-block")).not.toBeInTheDocument();
+    expect(screen.getByTestId("game-hero-content")).toBeInTheDocument();
+    expect(screen.getByTestId("game-hero-content")).toHaveAttribute(
+      "data-status",
+      "SCHEDULED",
+    );
   });
 
   it("renders venue and date metadata", async () => {
@@ -208,19 +197,6 @@ describe("GameDetailHero", () => {
     await renderHero();
 
     expect(screen.queryByTestId("map-pin")).not.toBeInTheDocument();
-  });
-
-  it("shows breathing dot on status pill for live game", async () => {
-    await renderHero({ gameStatus: GameStatus.IN_PROGRESS });
-
-    const pillSlot = screen.getByTestId("status-pill-slot");
-    expect(pillSlot.querySelector("[data-testid='breathing-dot']")).toBeInTheDocument();
-  });
-
-  it("does not show breathing dot on status pill for non-live game", async () => {
-    await renderHero({ gameStatus: GameStatus.COMPLETE });
-
-    expect(screen.queryByTestId("breathing-dot")).not.toBeInTheDocument();
   });
 
   it("applies sport-themed gradient background for basketball", async () => {
@@ -262,25 +238,6 @@ describe("GameDetailHero", () => {
 
     const section = container.querySelector("section");
     expect(section?.className).toContain("bg-sport-football/5");
-  });
-
-  it("applies ring treatment for live games", async () => {
-    const { container } = await renderHero({
-      gameStatus: GameStatus.IN_PROGRESS,
-    });
-
-    const section = container.querySelector("section");
-    expect(section?.className).toContain("ring-1");
-    expect(section?.className).toContain("ring-live/12");
-  });
-
-  it("does not apply ring treatment for non-live games", async () => {
-    const { container } = await renderHero({
-      gameStatus: GameStatus.COMPLETE,
-    });
-
-    const section = container.querySelector("section");
-    expect(section?.className).not.toContain("ring-live/12");
   });
 
   it("renders formatted date in metadata row", async () => {

@@ -14,6 +14,10 @@ vi.mock("next-intl", () => ({
   },
 }));
 
+vi.mock("@/components/game/live/game-detail-client", () => ({
+  useGameLiveContext: () => null,
+}));
+
 vi.mock("@/components/game/score/game-score", () => ({
   GameScore: ({
     size,
@@ -118,6 +122,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
       periods: 4,
     },
     gameStatus: GameStatus.IN_PROGRESS,
+    resultsFinalized: false,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
     location: null,
