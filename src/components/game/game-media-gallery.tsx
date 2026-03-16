@@ -7,13 +7,9 @@ import {
   requestGameMediaUpload,
 } from "@/app/[locale]/upload/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { TypographyH4 } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { Resource } from "@/lib/types/resource";
@@ -22,7 +18,8 @@ import {
   getMaxSizeLabel,
   validateFile,
 } from "@/lib/upload-validation";
-import { ImageIcon, Loader2, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Camera, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -236,43 +233,50 @@ export function GameMediaGallery({
   };
 
   const isEmpty = media.length === 0 && uploadingFiles.size === 0;
+  const mediaCount = media.length + uploadingFiles.size;
+
+  // Hide the section entirely when no media and user cannot upload
+  if (isEmpty && !canUpload) {
+    return null;
+  }
+
+  const uploadButton = (
+    <button
+      type="button"
+      onClick={() => fileInputRef.current?.click()}
+      aria-label={t("media.uploadPhoto")}
+      className={cn(
+        "aspect-square flex flex-col items-center justify-center gap-2",
+        "border-2 border-dashed border-muted-foreground/25 rounded-xl",
+        "text-muted-foreground transition-colors",
+        "hover:border-muted-foreground/50 hover:text-foreground",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        !isEmpty && "motion-safe:hover:shadow-card-hover",
+      )}
+    >
+      <Camera className="h-8 w-8" />
+      <span className="text-xs font-medium">{t("media.uploadPhoto")}</span>
+    </button>
+  );
 
   return (
     <Card className="mb-8">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t("media.title")}</CardTitle>
-        {canUpload && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t("media.upload")}
-          </Button>
+      <CardHeader className="flex flex-row items-center gap-3">
+        <TypographyH4>{t("media.title")}</TypographyH4>
+        {mediaCount > 0 && (
+          <Badge variant="secondary">{mediaCount}</Badge>
         )}
       </CardHeader>
       <CardContent>
-        {isEmpty ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <ImageIcon />
-              </EmptyMedia>
-              <EmptyDescription>
-                {canUpload ? t("media.emptyParticipant") : t("media.empty")}
-              </EmptyDescription>
-            </EmptyHeader>
-            {canUpload && (
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {t("media.upload")}
-              </Button>
-            )}
-          </Empty>
+        {isEmpty && canUpload ? (
+          <div className="flex flex-col items-center gap-4">
+            <div className="grid grid-cols-2 gap-4 w-full sm:grid-cols-3 md:grid-cols-4">
+              {uploadButton}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t("media.emptyUploadPrompt")}
+            </p>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
@@ -296,6 +300,7 @@ export function GameMediaGallery({
                   }
                 />
               ))}
+              {canUpload && uploadButton}
             </div>
 
             {pageInfo.hasNextPage && (
@@ -324,6 +329,7 @@ export function GameMediaGallery({
           accept={getAcceptAttribute("gameMedia")}
           onChange={handleFilesSelected}
           className="hidden"
+          aria-label={t("media.uploadPhoto")}
         />
       )}
 
