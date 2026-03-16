@@ -342,6 +342,7 @@
     "boxScore": {
       "title": "Box Scores",
       "noBoxScores": "No box scores recorded yet",
+      "playerCount": "{count, plural, one {# player} other {# players}}",
       "selectPlayer": "Select player...",
       "addPlayerStats": "Add Player Stats",
       "playerStatsAdded": "Player stats row added",
@@ -370,10 +371,12 @@
       }
     },
     "media": {
-      "title": "Media",
+      "title": "Photos & Videos",
       "loadMore": "Load More",
       "upload": "Add Media",
       "uploading": "Uploading\u2026",
+      "uploadPhoto": "Add photo",
+      "emptyUploadPrompt": "Capture the moment \u2014 add your first photo",
       "empty": "No media yet",
       "emptyParticipant": "Share photos and videos from this game",
       "delete": {
