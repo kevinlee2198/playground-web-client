@@ -4,10 +4,17 @@ import {
   addIndividualParticipant,
   removeIndividualParticipant,
 } from "@/app/[locale]/game/participant-actions";
+import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
+import { TypographySmall } from "@/components/ui/typography";
+import { Link } from "@/i18n/navigation";
 import { GameRole, GameVisibility } from "@/lib/constants";
-import type { GameParticipantDetail } from "@/lib/types/game";
+import type {
+  GameParticipantDetail,
+  IndividualParticipantNode,
+} from "@/lib/types/game";
+import { cn } from "@/lib/utils";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -33,22 +40,18 @@ export function IndividualParticipantList({
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
 
-  // Extract individual participants
   const individualParticipants = participants.filter(
-    (p) => p.__typename === "IndividualParticipant",
+    (p): p is IndividualParticipantNode =>
+      p.__typename === "IndividualParticipant",
   );
 
   const currentPlayerParticipant = individualParticipants.find(
-    (p) =>
-      p.__typename === "IndividualParticipant" &&
-      p.player.id === currentPlayerId,
+    (p) => p.player.id === currentPlayerId,
   );
-
-  const isCurrentPlayerParticipant = currentPlayerParticipant !== undefined;
 
   const canJoin =
     !atParticipantLimit &&
-    !isCurrentPlayerParticipant &&
+    !currentPlayerParticipant &&
     (viewerGameRole != null || visibility === GameVisibility.PUBLIC);
 
   const handleJoinGame = () => {
@@ -60,21 +63,6 @@ export function IndividualParticipantList({
 
       if (result.success) {
         toast.success(t("game.success.participantAdded"));
-      } else {
-        toast.error(result.message || t("game.errors.participantError"));
-      }
-    });
-  };
-
-  const handleLeaveGame = () => {
-    if (!currentPlayerParticipant) return;
-    startTransition(async () => {
-      const result = await removeIndividualParticipant({
-        id: currentPlayerParticipant.id,
-      });
-
-      if (result.success) {
-        toast.success(t("game.success.participantRemoved"));
       } else {
         toast.error(result.message || t("game.errors.participantError"));
       }
@@ -99,11 +87,11 @@ export function IndividualParticipantList({
     <div className="space-y-4">
       {/* Join/Leave Game Button */}
       <div className="flex justify-end">
-        {isCurrentPlayerParticipant ? (
+        {currentPlayerParticipant ? (
           <Button
             variant="outline"
             size="sm"
-            onClick={handleLeaveGame}
+            onClick={() => handleRemoveParticipant(currentPlayerParticipant.id)}
             disabled={isPending}
           >
             {t("game.participants.leaveGame")}
@@ -133,30 +121,47 @@ export function IndividualParticipantList({
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="space-y-2">
+        <div
+          className={cn(
+            individualParticipants.length === 2
+              ? "grid md:grid-cols-2 gap-4"
+              : "flex flex-col gap-4",
+          )}
+        >
           {individualParticipants.map((participant) => {
-            if (participant.__typename !== "IndividualParticipant") return null;
-
             const player = participant.player;
-            const playerName = player.user.displayName;
 
             return (
               <div
                 key={participant.id}
-                className="flex items-center justify-between rounded-lg border p-3"
+                className={cn(
+                  "relative bg-card rounded-xl shadow-card p-4",
+                  "flex items-center gap-3",
+                  "focus-within:ring-2 focus-within:ring-ring",
+                  "motion-safe:hover:shadow-card-hover motion-safe:hover:-translate-y-0.5 transition-[transform,box-shadow]",
+                )}
               >
-                <p className="font-medium">{playerName}</p>
+                <PlayerAvatar player={player} size="lg" loading="lazy" />
+
+                <TypographySmall className="font-semibold truncate min-w-0 flex-1">
+                  <Link
+                    href={`/user/${player.user.username}`}
+                    className="after:absolute after:inset-0 after:z-[1] text-foreground hover:text-primary transition-colors focus-visible:outline-none"
+                  >
+                    {player.user.displayName}
+                  </Link>
+                </TypographySmall>
+
                 {viewerGameRole != null && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveParticipant(participant.id)}
                     disabled={isPending}
+                    aria-label={`${t("game.participants.removePlayer")} ${player.user.displayName}`}
+                    className="relative z-10 min-h-11 min-w-11 shrink-0"
                   >
                     <X className="h-4 w-4" />
-                    <span className="sr-only">
-                      {t("game.participants.removeParticipant")}
-                    </span>
                   </Button>
                 )}
               </div>
