@@ -1,5 +1,6 @@
 import { BackButton } from "@/components/game/back-button";
 import { GameBoxScores } from "@/components/game/game-box-scores";
+import { GameBoxScoresSkeleton } from "@/components/game/game-box-scores-skeleton";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
 import { GameDetailHero } from "@/components/game/game-detail-hero";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
+import { Suspense } from "react";
 
 interface PageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -195,11 +197,6 @@ export default async function GameDetailPage({ params }: PageProps) {
         <GameParticipants game={game} currentPlayerId={player.id} />
       </section>
 
-      {/* Box Scores */}
-      <section className="mt-8">
-        <GameBoxScores game={game} />
-      </section>
-
       {/* Media Gallery */}
       <section className="mt-8">
         <GameMediaGallery
@@ -209,6 +206,17 @@ export default async function GameDetailPage({ params }: PageProps) {
           canUpload={canUpload}
           isParticipant={isParticipant}
         />
+      </section>
+
+      {/* Box Scores */}
+      <section className="mt-8">
+        <Suspense fallback={<GameBoxScoresSkeleton />}>
+          <GameBoxScores
+            game={game}
+            viewerGameRole={game.viewerGameRole}
+            gameStatus={game.gameStatus}
+          />
+        </Suspense>
       </section>
     </div>
   );

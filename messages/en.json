@@ -306,7 +306,8 @@
       "starting": "Starting...",
       "ending": "Ending...",
       "saving": "Saving...",
-      "deleting": "Deleting..."
+      "deleting": "Deleting...",
+      "moreOptions": "More options"
     },
     "deleteConfirmation": {
       "title": "Delete Game",
@@ -329,11 +330,19 @@
       "teamDescription": "Team Description",
       "players": "Players",
       "noPlayers": "No players on this team",
-      "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?"
+      "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?",
+      "teamOptions": "Team options",
+      "noPlayersYet": "This team is waiting for players",
+      "currentUser": "You",
+      "removePlayer": "Remove player",
+      "playerCount": "{count, plural, one {# player} other {# players}}",
+      "removeTeamConfirm": "Are you sure you want to remove {teamName}? This action cannot be undone.",
+      "removePlayerConfirm": "Are you sure you want to remove {playerName} from this team? This action cannot be undone."
     },
     "boxScore": {
       "title": "Box Scores",
       "noBoxScores": "No box scores recorded yet",
+      "playerCount": "{count, plural, one {# player} other {# players}}",
       "selectPlayer": "Select player...",
       "addPlayerStats": "Add Player Stats",
       "playerStatsAdded": "Player stats row added",
@@ -362,10 +371,12 @@
       }
     },
     "media": {
-      "title": "Media",
+      "title": "Photos & Videos",
       "loadMore": "Load More",
       "upload": "Add Media",
       "uploading": "Uploading\u2026",
+      "uploadPhoto": "Add photo",
+      "emptyUploadPrompt": "Capture the moment \u2014 add your first photo",
       "empty": "No media yet",
       "emptyParticipant": "Share photos and videos from this game",
       "delete": {
@@ -447,6 +458,10 @@
       "hero": {
         "scheduled": "Scheduled for"
       }
+    },
+    "hero": {
+      "showMore": "Show more",
+      "showLess": "Show less"
     },
     "success": {
       "created": "Game created successfully",

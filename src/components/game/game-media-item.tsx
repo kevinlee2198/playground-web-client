@@ -22,7 +22,7 @@ export function GameMediaItem({
 
   if (isVideo) {
     return (
-      <div className="group relative aspect-square overflow-hidden rounded-lg border touch-manipulation">
+      <div className="group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow">
         {isPlaying ? (
           <video
             controls
@@ -79,7 +79,7 @@ export function GameMediaItem({
       : undefined;
 
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-lg border touch-manipulation">
+    <div className="group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow">
       <a
         href={resource.downloadUrl}
         target="_blank"

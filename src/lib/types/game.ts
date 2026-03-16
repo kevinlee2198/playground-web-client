@@ -15,7 +15,14 @@ import type { Location } from "@/lib/types/location";
  */
 export interface PlayerRef {
   id: number;
-  user: { displayName: string };
+  user: {
+    displayName: string;
+    username: string;
+    profilePicture: {
+      __typename: "ImageResource";
+      thumbnailUrl: string | null;
+    } | null;
+  };
 }
 
 // ---------- Game Metadata (response types -- fields are T | null for nullable) ----------

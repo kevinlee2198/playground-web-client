@@ -1,6 +1,7 @@
 "use client";
 
 import { saveBasketballBoxScore } from "@/app/[locale]/game/box-score-actions";
+import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
@@ -22,6 +23,7 @@ import {
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import { cn } from "@/lib/utils";
 import {
   flexRender,
   getCoreRowModel,
@@ -32,9 +34,23 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, Pencil } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { type ReactNode, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { BasketballBoxScoreForm } from "./basketball-box-score-form";
+
+const STICKY_FIRST_COL =
+  "sticky left-0 z-10 bg-card group-hover/row:bg-muted/50 min-w-[140px]";
+
+/** Stat keys that support leading-value highlighting */
+const HIGHLIGHTABLE_STATS = [
+  "points",
+  "assists",
+  "totalRebounds",
+  "steals",
+  "blocks",
+] as const;
+
+type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 
 interface BasketballBoxScoreTableProps {
   gameId: number;
@@ -43,6 +59,29 @@ interface BasketballBoxScoreTableProps {
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
+}
+
+/**
+ * Compute the maximum value for each highlightable stat column.
+ * Returns a map from stat key to the max value (or null if all values are null).
+ */
+function computeMaxStats(
+  data: BasketballBoxScoreNode[],
+): Record<HighlightableStat, number | null> {
+  const result = {} as Record<HighlightableStat, number | null>;
+
+  for (const stat of HIGHLIGHTABLE_STATS) {
+    let max: number | null = null;
+    for (const row of data) {
+      const value = row[stat];
+      if (value != null && (max === null || value > max)) {
+        max = value;
+      }
+    }
+    result[stat] = max;
+  }
+
+  return result;
 }
 
 export function BasketballBoxScoreTable({
@@ -96,157 +135,141 @@ export function BasketballBoxScoreTable({
 
   const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
 
-  const columns: ColumnDef<BasketballBoxScoreNode>[] = useMemo(
-    () => [
+  const maxStats = useMemo(() => computeMaxStats(data), [data]);
+
+  const columns: ColumnDef<BasketballBoxScoreNode>[] = useMemo(() => {
+    function statCellClass(
+      stat: HighlightableStat,
+      value: number | null,
+    ): string {
+      if (
+        data.length >= 2 &&
+        value != null &&
+        maxStats[stat] != null &&
+        value === maxStats[stat]
+      ) {
+        return "text-primary font-semibold";
+      }
+      return "";
+    }
+
+    function sortableHeader(
+      label: string,
+      column: { toggleSorting: (asc: boolean) => void; getIsSorted: () => false | "asc" | "desc" },
+    ): ReactNode {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-8 px-2"
+        >
+          {label}
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      );
+    }
+
+    function highlightableStatColumn(
+      stat: HighlightableStat,
+    ): ColumnDef<BasketballBoxScoreNode> {
+      return {
+        accessorKey: stat,
+        header: ({ column }) => sortableHeader(t(stat), column),
+        cell: ({ row }) => {
+          const value = row.original[stat];
+          return (
+            <span className={cn("tabular-nums", statCellClass(stat, value))}>
+              {value ?? "-"}
+            </span>
+          );
+        },
+      };
+    }
+
+    function plainStatColumn(
+      key: keyof BasketballBoxScoreNode & string,
+    ): ColumnDef<BasketballBoxScoreNode> {
+      return {
+        accessorKey: key,
+        header: t(key),
+        cell: ({ row }) => (
+          <span className="tabular-nums">
+            {(row.original[key] as number | null) ?? "-"}
+          </span>
+        ),
+      };
+    }
+
+    function madeAttemptedColumn(
+      id: string,
+      headerKey: string,
+      madeKey: keyof BasketballBoxScoreNode,
+      attemptedKey: keyof BasketballBoxScoreNode,
+    ): ColumnDef<BasketballBoxScoreNode> {
+      return {
+        id,
+        header: t(headerKey),
+        cell: ({ row }) => {
+          const made = row.original[madeKey] as number | null;
+          const attempted = row.original[attemptedKey] as number | null;
+          if (made == null && attempted == null) {
+            return <span className="tabular-nums">-</span>;
+          }
+          return (
+            <span className="tabular-nums">
+              {`${made ?? 0}/${attempted ?? 0}`}
+            </span>
+          );
+        },
+      };
+    }
+
+    function percentageColumn(
+      key: keyof BasketballBoxScoreNode & string,
+    ): ColumnDef<BasketballBoxScoreNode> {
+      return {
+        accessorKey: key,
+        header: t(key),
+        cell: ({ row }) => {
+          const pct = row.original[key] as number | null;
+          return (
+            <span className="tabular-nums">
+              {pct != null
+                ? format.number(pct, {
+                    style: "percent",
+                    maximumFractionDigits: 1,
+                  })
+                : "-"}
+            </span>
+          );
+        },
+      };
+    }
+
+    return [
       {
         accessorKey: "player",
         header: "Player",
         cell: ({ row }) => {
           const player = row.original.player;
-          return player.user.displayName;
+          return (
+            <div className="flex items-center gap-2">
+              <PlayerAvatar player={player} size="sm" loading="lazy" />
+              <span className="truncate">{player.user.displayName}</span>
+            </div>
+          );
         },
         enableSorting: false,
       },
-      {
-        accessorKey: "points",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 px-2"
-          >
-            {t("points")}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
-          </Button>
-        ),
-        cell: ({ row }) => row.original.points ?? "-",
-      },
-      {
-        accessorKey: "assists",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 px-2"
-          >
-            {t("assists")}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
-          </Button>
-        ),
-        cell: ({ row }) => row.original.assists ?? "-",
-      },
-      {
-        accessorKey: "totalRebounds",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 px-2"
-          >
-            {t("totalRebounds")}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
-          </Button>
-        ),
-        cell: ({ row }) => row.original.totalRebounds ?? "-",
-      },
-      {
-        accessorKey: "steals",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 px-2"
-          >
-            {t("steals")}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
-          </Button>
-        ),
-        cell: ({ row }) => row.original.steals ?? "-",
-      },
-      {
-        accessorKey: "blocks",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 px-2"
-          >
-            {t("blocks")}
-            <ArrowUpDown className="ml-1 h-3 w-3" />
-          </Button>
-        ),
-        cell: ({ row }) => row.original.blocks ?? "-",
-      },
-      {
-        accessorKey: "turnovers",
-        header: t("turnovers"),
-        cell: ({ row }) => row.original.turnovers ?? "-",
-      },
-      {
-        accessorKey: "personalFouls",
-        header: t("personalFouls"),
-        cell: ({ row }) => row.original.personalFouls ?? "-",
-      },
-      {
-        id: "fg",
-        header: t("fieldGoals"),
-        cell: ({ row }) => {
-          const made = row.original.fieldGoalsMade;
-          const attempted = row.original.fieldGoalsAttempted;
-          if (made == null && attempted == null) return "-";
-          return `${made ?? 0}/${attempted ?? 0}`;
-        },
-      },
-      {
-        accessorKey: "fieldGoalPercentage",
-        header: t("fieldGoalPercentage"),
-        cell: ({ row }) => {
-          const pct = row.original.fieldGoalPercentage;
-          return pct != null
-            ? format.number(pct, { style: "percent", maximumFractionDigits: 1 })
-            : "-";
-        },
-      },
-      {
-        id: "3pt",
-        header: t("threePointers"),
-        cell: ({ row }) => {
-          const made = row.original.threePointersMade;
-          const attempted = row.original.threePointersAttempted;
-          if (made == null && attempted == null) return "-";
-          return `${made ?? 0}/${attempted ?? 0}`;
-        },
-      },
-      {
-        accessorKey: "threePointerPercentage",
-        header: t("threePointerPercentage"),
-        cell: ({ row }) => {
-          const pct = row.original.threePointerPercentage;
-          return pct != null
-            ? format.number(pct, { style: "percent", maximumFractionDigits: 1 })
-            : "-";
-        },
-      },
-      {
-        id: "ft",
-        header: t("freeThrows"),
-        cell: ({ row }) => {
-          const made = row.original.freeThrowsMade;
-          const attempted = row.original.freeThrowsAttempted;
-          if (made == null && attempted == null) return "-";
-          return `${made ?? 0}/${attempted ?? 0}`;
-        },
-      },
-      {
-        accessorKey: "freeThrowPercentage",
-        header: t("freeThrowPercentage"),
-        cell: ({ row }) => {
-          const pct = row.original.freeThrowPercentage;
-          return pct != null
-            ? format.number(pct, { style: "percent", maximumFractionDigits: 1 })
-            : "-";
-        },
-      },
+      ...HIGHLIGHTABLE_STATS.map(highlightableStatColumn),
+      plainStatColumn("turnovers"),
+      plainStatColumn("personalFouls"),
+      madeAttemptedColumn("fg", "fieldGoals", "fieldGoalsMade", "fieldGoalsAttempted"),
+      percentageColumn("fieldGoalPercentage"),
+      madeAttemptedColumn("3pt", "threePointers", "threePointersMade", "threePointersAttempted"),
+      percentageColumn("threePointerPercentage"),
+      madeAttemptedColumn("ft", "freeThrows", "freeThrowsMade", "freeThrowsAttempted"),
+      percentageColumn("freeThrowPercentage"),
       ...(canEdit
         ? [
             {
@@ -269,9 +292,8 @@ export function BasketballBoxScoreTable({
             },
           ]
         : []),
-    ],
-    [t, format, canEdit],
-  );
+    ];
+  }, [t, format, canEdit, maxStats, data.length]);
 
   const table = useReactTable({
     data,
@@ -339,8 +361,13 @@ export function BasketballBoxScoreTable({
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
+                  {headerGroup.headers.map((header, index) => (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        index === 0 && STICKY_FIRST_COL,
+                      )}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -354,9 +381,14 @@ export function BasketballBoxScoreTable({
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                <TableRow key={row.id} className="group/row">
+                  {row.getVisibleCells().map((cell, index) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        index === 0 && STICKY_FIRST_COL,
+                      )}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

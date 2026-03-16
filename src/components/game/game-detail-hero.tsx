@@ -1,4 +1,5 @@
 import { BreathingDot } from "@/components/game/breathing-dot";
+import { GameDescription } from "@/components/game/game-description";
 import { GameScoreBlock } from "@/components/game/game-score-block";
 import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +77,11 @@ export async function GameDetailHero({
             {t(`sportSubtypes.${subtype}`)}
           </Badge>
         </div>
+
+        {/* Game description */}
+        {game.description ? (
+          <GameDescription description={game.description} />
+        ) : null}
 
         {/* Score block or scheduled date */}
         {game.gameStatus === GameStatus.SCHEDULED ? (

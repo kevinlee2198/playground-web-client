@@ -9,9 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GameRole, GameStatus } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
-import { Pencil, Play, Square, Trash2, Users } from "lucide-react";
+import { MoreHorizontal, Pencil, Play, Square, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -34,6 +41,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
 
   const canStart = game.gameStatus === GameStatus.SCHEDULED;
   const canEnd = game.gameStatus === GameStatus.IN_PROGRESS;
+  const isOwner = game.viewerGameRole === GameRole.OWNER;
 
   function handleGameAction(
     action: (id: number) => Promise<{ success: boolean; message?: string }>,
@@ -60,13 +68,13 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
 
   return (
     <>
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        {/* Primary actions: Start/End */}
+      <div className="mt-4 flex items-center gap-2">
+        {/* Primary CTA: Start/End Game */}
         {canStart && (
           <Button
             onClick={handleStart}
             disabled={isPending}
-            className="min-h-11"
+            className="flex-1 md:flex-none w-full min-h-11 md:w-auto"
           >
             <Play className="mr-2 h-4 w-4" />
             {isPending ? t("game.actions.starting") : t("game.actions.start")}
@@ -76,49 +84,51 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
           <Button
             onClick={handleEnd}
             disabled={isPending}
-            className="min-h-11"
+            className="flex-1 md:flex-none w-full min-h-11 md:w-auto"
           >
             <Square className="mr-2 h-4 w-4" />
             {isPending ? t("game.actions.ending") : t("game.actions.end")}
           </Button>
         )}
 
-        {/* Secondary actions: Edit, Manage Editors, Delete */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowUpdateDialog(true)}
-          disabled={isPending}
-          className="min-h-11"
-        >
-          <Pencil className="mr-2 h-4 w-4" />
-          {t("game.actions.edit")}
-        </Button>
-
-        {game.viewerGameRole === GameRole.OWNER && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditorsDialog(true)}
-              disabled={isPending}
-              className="min-h-11"
-            >
-              <Users className="mr-2 h-4 w-4" />
-              {t("game.manageEditors")}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-              disabled={isPending}
-              className="min-h-11"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {t("game.actions.delete")}
-            </Button>
-          </>
-        )}
+        {/* Overflow menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={isPending}
+                aria-label={t("game.actions.moreOptions")}
+                className="ml-auto min-h-11 min-w-11"
+              />
+            }
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowUpdateDialog(true)}>
+              <Pencil className="h-4 w-4" />
+              {t("game.actions.edit")}
+            </DropdownMenuItem>
+            {isOwner && (
+              <>
+                <DropdownMenuItem onClick={() => setShowEditorsDialog(true)}>
+                  <Users className="h-4 w-4" />
+                  {t("game.manageEditors")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t("game.actions.delete")}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Dialogs */}

@@ -19,7 +19,7 @@ export function GameMediaUploadPlaceholder({
   if (status === "error") {
     return (
       <div
-        className="relative flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-4"
+        className="relative flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border border-destructive/50 bg-destructive/10 p-4"
         aria-live="polite"
       >
         {onDismiss && (
@@ -43,7 +43,7 @@ export function GameMediaUploadPlaceholder({
 
   return (
     <div
-      className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border bg-muted/50 p-4"
+      className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border bg-muted/50 p-4"
       aria-live="polite"
     >
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
