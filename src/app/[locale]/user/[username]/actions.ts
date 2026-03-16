@@ -3,7 +3,7 @@
 import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
-import type { Player } from "@/lib/types/player";
+import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
 const friendshipSelection = {
@@ -187,19 +187,6 @@ export async function updateUser(input: {
   }
 }
 
-interface CreatePlayerInput {
-  age?: number;
-  height?: number;
-  weight?: number;
-}
-
-interface UpdatePlayerInput {
-  id: number;
-  age?: number | null;
-  height?: number | null;
-  weight?: number | null;
-}
-
 interface PlayerActionResult {
   success: boolean;
   player?: Player;
@@ -207,61 +194,12 @@ interface PlayerActionResult {
   message?: string;
 }
 
-export async function createPlayer(
-  input: CreatePlayerInput,
-): Promise<PlayerActionResult> {
-  try {
-    const response = await authMutate({
-      createPlayer: {
-        __args: { input },
-        __typename: true,
-        __on: [
-          {
-            __typeName: "CreatePlayerResponse",
-            player: {
-              id: true,
-              age: true,
-              height: true,
-              weight: true,
-            },
-          },
-          errorFragment,
-        ],
-      },
-    });
-
-    if (response.errors?.length > 0) {
-      return {
-        success: false,
-        errorType: MutationErrorType.GRAPHQL_ERROR,
-        message: response.errors[0].message,
-      };
-    }
-
-    const result = extractMutationResult(
-      response.data.createPlayer,
-      "CreatePlayerResponse",
-    );
-    if (!result.success) return result;
-
-    revalidatePath("/[locale]/user/[username]", "page");
-    return { success: true, player: result.data.player };
-  } catch (error) {
-    console.error("Failed to create player:", error);
-    return {
-      success: false,
-      errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Failed to create player",
-    };
-  }
-}
-
 export async function updatePlayer(
   input: UpdatePlayerInput,
 ): Promise<PlayerActionResult> {
   try {
-    // Build input object with only changed fields
-    const mutationInput: Record<string, unknown> = { id: input.id };
+    // Build input object with only changed fields (PATCH semantics)
+    const mutationInput: Record<string, unknown> = {};
 
     // Only include fields that are explicitly provided
     if ("age" in input) mutationInput.age = input.age;

@@ -26,7 +26,7 @@ import { TeamCard } from "./team-card";
 
 interface GameParticipantsProps {
   game: GameDetail;
-  currentPlayerId: number | null;
+  currentPlayerId: number;
 }
 
 export function GameParticipants({
@@ -45,7 +45,6 @@ export function GameParticipants({
 
   const isPlayerOnAnyTeam =
     isTeamBased &&
-    currentPlayerId != null &&
     game.participants.edges.some(
       (edge) =>
         edge.node.__typename === "TeamInstance" &&

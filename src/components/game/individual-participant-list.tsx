@@ -23,7 +23,7 @@ import { toast } from "sonner";
 interface IndividualParticipantListProps {
   participants: GameParticipantDetail[];
   gameId: number;
-  currentPlayerId: number | null;
+  currentPlayerId: number;
   atParticipantLimit: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
@@ -46,18 +46,14 @@ export function IndividualParticipantList({
   );
 
   const currentPlayerParticipant =
-    currentPlayerId != null
-      ? individualParticipants.find((p) => p.player.id === currentPlayerId)
-      : undefined;
+    individualParticipants.find((p) => p.player.id === currentPlayerId);
 
   const canJoin =
-    currentPlayerId != null &&
     !atParticipantLimit &&
     !currentPlayerParticipant &&
     (viewerGameRole != null || visibility === GameVisibility.PUBLIC);
 
   function handleJoinGame(): void {
-    if (currentPlayerId == null) return;
     startTransition(async () => {
       const result = await addIndividualParticipant({
         gameId,

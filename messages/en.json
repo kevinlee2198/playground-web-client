@@ -90,10 +90,6 @@
       "save": "Save",
       "saving": "Saving...",
       "saved": "Stats updated",
-      "addStats": "Add your stats",
-      "createPlayer": "Create Player Profile",
-      "creating": "Creating...",
-      "created": "Player profile created",
       "error": "Failed to save stats"
     },
     "games": {

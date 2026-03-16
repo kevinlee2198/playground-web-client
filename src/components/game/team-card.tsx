@@ -44,7 +44,7 @@ const BORDER_COLORS = [
 interface TeamCardProps {
   team: TeamInstanceDetail;
   gameStatus: GameStatus;
-  currentPlayerId: number | null;
+  currentPlayerId: number;
   isPlayerOnAnyTeam: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
@@ -67,7 +67,6 @@ export function TeamCard({
   const [playerToRemove, setPlayerToRemove] = useState<PlayerRef | null>(null);
 
   const isPlayerOnTeam =
-    currentPlayerId != null &&
     team.players.some((p) => p.id === currentPlayerId);
   const gameHasStarted =
     gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
@@ -75,14 +74,13 @@ export function TeamCard({
   const canJoinOrLeave =
     viewerGameRole != null || visibility === GameVisibility.PUBLIC;
   const showJoinButton =
-    currentPlayerId != null && !isPlayerOnTeam && !isPlayerOnAnyTeam && canJoinOrLeave;
+    !isPlayerOnTeam && !isPlayerOnAnyTeam && canJoinOrLeave;
   const showLeaveButton = isPlayerOnTeam;
   const isEditor = viewerGameRole != null;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
 
   function handleJoinTeam(): void {
-    if (currentPlayerId == null) return;
     startTransition(async () => {
       const result = await joinTeam({
         teamInstanceId: team.id,
@@ -155,11 +153,7 @@ export function TeamCard({
                 onClick={
                   gameHasStarted
                     ? () => setShowLeaveDialog(true)
-                    : () => {
-                        if (currentPlayerId != null) {
-                          handleRemovePlayerFromTeam(currentPlayerId);
-                        }
-                      }
+                    : () => handleRemovePlayerFromTeam(currentPlayerId)
                 }
                 disabled={isPending}
               >
@@ -257,9 +251,7 @@ export function TeamCard({
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (currentPlayerId != null) {
-                  handleRemovePlayerFromTeam(currentPlayerId);
-                }
+                handleRemovePlayerFromTeam(currentPlayerId);
                 setShowLeaveDialog(false);
               }}
               disabled={isPending}

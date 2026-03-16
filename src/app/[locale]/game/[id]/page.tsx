@@ -70,7 +70,7 @@ export default async function GameDetailPage({ params }: PageProps) {
     redirect({ href: "/", locale });
   }
 
-  // Fetch current user's player id (may be null if not yet auto-created)
+  // Fetch current user's player id (player is auto-created, always non-null)
   const meResponse = await authQuery({
     me: {
       id: true,
@@ -80,7 +80,7 @@ export default async function GameDetailPage({ params }: PageProps) {
     },
   });
 
-  const playerId = meResponse.data?.me?.player?.id ?? null;
+  const playerId: number = meResponse.data.me.player.id;
 
   // Fetch game details
   const gameResponse = await authQuery({
@@ -140,7 +140,6 @@ export default async function GameDetailPage({ params }: PageProps) {
 
   // Determine if current player is a participant
   const isParticipant =
-    playerId != null &&
     game.participants.edges.some((edge) => {
       const node = edge.node;
       if (node.__typename === "TeamInstance") {
