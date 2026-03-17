@@ -167,6 +167,16 @@ export const gameMetadataFragment = {
       },
       periods: true,
     },
+    {
+      __typeName: "PickleballGameMetadata",
+      pickleballSubtype: {
+        __aliasFor: "subtype",
+      },
+      bestOf: true,
+      pointsPerGame: true,
+      winByTwo: true,
+      scoringType: true,
+    },
   ],
 };
 
@@ -189,6 +199,11 @@ export const participantMetadataFragment = {
     {
       __typeName: "FootballParticipantMetadata",
       score: true,
+    },
+    {
+      __typeName: "PickleballParticipantMetadata",
+      gamesWon: true,
+      games: { pointsScored: true },
     },
   ],
 };

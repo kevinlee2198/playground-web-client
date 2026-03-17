@@ -665,6 +665,7 @@ enum SportType {
   BASKETBALL
   FOOTBALL
   TENNIS
+  PICKLEBALL
 }
 
 """
@@ -685,6 +686,16 @@ enum FootballSubtype {
   AMERICAN_FOOTBALL
 }
 
+enum PickleballSubtype {
+  SINGLES
+  DOUBLES
+}
+
+enum PickleballScoringType {
+  SIDE_OUT
+  RALLY
+}
+
 # ============================================================================
 # Game Metadata
 # ============================================================================
@@ -697,6 +708,7 @@ union GameMetadata =
   | BasketballGameMetadata
   | TennisGameMetadata
   | FootballGameMetadata
+  | PickleballGameMetadata
 
 type BasketballGameMetadata {
   subtype: BasketballSubtype!
@@ -726,6 +738,26 @@ type FootballGameMetadata {
   periods: Int
 }
 
+type PickleballGameMetadata {
+  subtype: PickleballSubtype!
+  """
+  Number of games in match (1, 3, or 5)
+  """
+  bestOf: Int
+  """
+  Target score per game (11, 15, or 21)
+  """
+  pointsPerGame: Int
+  """
+  Whether win-by-two rule applies
+  """
+  winByTwo: Boolean
+  """
+  Scoring format (side-out or rally)
+  """
+  scoringType: PickleballScoringType
+}
+
 # ============================================================================
 # Participant Metadata
 # ============================================================================
@@ -738,6 +770,7 @@ union ParticipantMetadata =
   | BasketballParticipantMetadata
   | TennisParticipantMetadata
   | FootballParticipantMetadata
+  | PickleballParticipantMetadata
 
 type BasketballParticipantMetadata {
   score: Int!
@@ -755,6 +788,15 @@ type TennisSetScore {
 
 type FootballParticipantMetadata {
   score: Int!
+}
+
+type PickleballParticipantMetadata {
+  gamesWon: Int!
+  games: [PickleballGameScore!]!
+}
+
+type PickleballGameScore {
+  pointsScored: Int!
 }
 
 """
@@ -1241,6 +1283,14 @@ input CreateFootballGameMetadataInput {
   periods: Int
 }
 
+input CreatePickleballGameMetadataInput {
+  subtype: PickleballSubtype!
+  bestOf: Int
+  pointsPerGame: Int
+  winByTwo: Boolean
+  scoringType: PickleballScoringType
+}
+
 input BasketballGameMetadataInput {
   subtype: BasketballSubtype
   periods: Int
@@ -1255,6 +1305,14 @@ input TennisGameMetadataInput {
 input FootballGameMetadataInput {
   subtype: FootballSubtype
   periods: Int
+}
+
+input PickleballGameMetadataInput {
+  subtype: PickleballSubtype
+  bestOf: Int
+  pointsPerGame: Int
+  winByTwo: Boolean
+  scoringType: PickleballScoringType
 }
 
 # ============================================================================
@@ -1279,6 +1337,15 @@ input FootballParticipantMetadataInput {
   score: Int!
 }
 
+input PickleballParticipantMetadataInput {
+  gamesWon: Int!
+  games: [PickleballGameScoreInput!]!
+}
+
+input PickleballGameScoreInput {
+  pointsScored: Int!
+}
+
 """
 Sport-specific participant metadata. Exactly one must be provided.
 Must match the game's sport type.
@@ -1287,6 +1354,7 @@ input ParticipantMetadataInput @oneOf {
   basketball: BasketballParticipantMetadataInput
   tennis: TennisParticipantMetadataInput
   football: FootballParticipantMetadataInput
+  pickleball: PickleballParticipantMetadataInput
 }
 
 # ============================================================================
@@ -1301,6 +1369,7 @@ input CreateGameInput @oneOf {
   basketball: CreateBasketballGameInput
   football: CreateFootballGameInput
   tennis: CreateTennisGameInput
+  pickleball: CreatePickleballGameInput
 }
 
 """
@@ -1345,6 +1414,18 @@ input CreateTennisGameInput {
   statEntryMode: StatEntryMode
 }
 
+"""
+Create a pickleball game
+"""
+input CreatePickleballGameInput {
+  startDate: DateTime!
+  description: String
+  location: LocationInput
+  metadata: CreatePickleballGameMetadataInput!
+  visibility: GameVisibility
+  statEntryMode: StatEntryMode
+}
+
 input UpdateGameInput {
   id: ID!
   description: String
@@ -1373,6 +1454,7 @@ input GameMetadataInput @oneOf {
   basketball: BasketballGameMetadataInput
   tennis: TennisGameMetadataInput
   football: FootballGameMetadataInput
+  pickleball: PickleballGameMetadataInput
 }
 
 input DeleteGameInput {
@@ -2128,6 +2210,61 @@ type Query {
     last: Int
     before: String
   ): BasketballBoxScoreConnection!
+  """
+  Query and filter football offensive stats
+  """
+  footballOffensiveStats(
+    input: FootballOffensiveStatsFilterInput!
+    sort: [FootballOffensiveStatsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FootballOffensiveStatsConnection!
+  """
+  Query and filter football defensive stats
+  """
+  footballDefensiveStats(
+    input: FootballDefensiveStatsFilterInput!
+    sort: [FootballDefensiveStatsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FootballDefensiveStatsConnection!
+  """
+  Query and filter football special teams stats
+  """
+  footballSpecialTeamsStats(
+    input: FootballSpecialTeamsStatsFilterInput!
+    sort: [FootballSpecialTeamsStatsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FootballSpecialTeamsStatsConnection!
+  """
+  Query and filter pickleball statistics
+  """
+  pickleballStatistics(
+    input: PickleballStatisticsFilterInput!
+    sort: [PickleballStatisticsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): PickleballStatisticsConnection!
+  """
+  Query and filter tennis match statistics
+  """
+  tennisStatistics(
+    input: TennisStatisticsFilterInput!
+    sort: [TennisStatisticsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): TennisStatisticsConnection!
 }
 
 """
@@ -2371,6 +2508,76 @@ type Mutation {
     input: SaveBasketballBoxScoresInput!
   ): SaveBasketballBoxScoresResult!
   """
+  Save offensive stats for a football game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveFootballOffensiveStats(
+    input: SaveFootballOffensiveStatsInput!
+  ): SaveFootballOffensiveStatsResult!
+  """
+  Save offensive stats for multiple players in a football game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveFootballOffensiveStatsBulk(
+    input: SaveFootballOffensiveStatsBulkInput!
+  ): SaveFootballOffensiveStatsBulkResult!
+  """
+  Save defensive stats for a football game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveFootballDefensiveStats(
+    input: SaveFootballDefensiveStatsInput!
+  ): SaveFootballDefensiveStatsResult!
+  """
+  Save defensive stats for multiple players in a football game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveFootballDefensiveStatsBulk(
+    input: SaveFootballDefensiveStatsBulkInput!
+  ): SaveFootballDefensiveStatsBulkResult!
+  """
+  Save special teams stats for a football game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveFootballSpecialTeamsStats(
+    input: SaveFootballSpecialTeamsStatsInput!
+  ): SaveFootballSpecialTeamsStatsResult!
+  """
+  Save special teams stats for multiple players in a football game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveFootballSpecialTeamsStatsBulk(
+    input: SaveFootballSpecialTeamsStatsBulkInput!
+  ): SaveFootballSpecialTeamsStatsBulkResult!
+  """
+  Save statistics for a pickleball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  savePickleballStatistics(
+    input: SavePickleballStatisticsInput!
+  ): SavePickleballStatisticsResult!
+  """
+  Save statistics for multiple players in a pickleball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  savePickleballStatisticsBulk(
+    input: SavePickleballStatisticsBulkInput!
+  ): SavePickleballStatisticsBulkResult!
+  """
+  Save statistics for a tennis match.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveTennisStatistics(
+    input: SaveTennisStatisticsInput!
+  ): SaveTennisStatisticsResult!
+  """
+  Save statistics for multiple players in a tennis match.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveTennisStatisticsBulk(
+    input: SaveTennisStatisticsBulkInput!
+  ): SaveTennisStatisticsBulkResult!
+  """
   Request a presigned upload URL. Phase 1 of the upload flow.
   """
   requestUpload(input: RequestUploadInput!): RequestUploadResult!
@@ -2532,6 +2739,666 @@ union SaveBasketballBoxScoreResult =
   | InvalidSportTypeError
 union SaveBasketballBoxScoresResult =
   | SaveBasketballBoxScoresResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Football Offensive Stats
+# ============================================================================
+
+"""
+Filter for football offensive stats by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input FootballOffensiveStatsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Football offensive statistics for a single player in a game.
+Covers passing, rushing, and receiving.
+"""
+type FootballOffensiveStats implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  completions: Int
+  passAttempts: Int
+  passingYards: Int
+  passingTouchdowns: Int
+  interceptionsThrown: Int
+  sacksTaken: Int
+  sackYardsLost: Int
+  rushAttempts: Int
+  rushingYards: Int
+  rushingTouchdowns: Int
+  fumbles: Int
+  fumblesLost: Int
+  receptions: Int
+  targets: Int
+  receivingYards: Int
+  receivingTouchdowns: Int
+}
+
+type FootballOffensiveStatsEdge implements Edge {
+  node: FootballOffensiveStats!
+  cursor: String!
+}
+
+type FootballOffensiveStatsConnection implements Connection {
+  edges: [FootballOffensiveStatsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum FootballOffensiveStatsSortField {
+  PASSING_YARDS
+  PASSING_TOUCHDOWNS
+  RUSHING_YARDS
+  RUSHING_TOUCHDOWNS
+  RECEIVING_YARDS
+  RECEIVING_TOUCHDOWNS
+  RUSH_ATTEMPTS
+}
+
+input FootballOffensiveStatsSortInput {
+  field: FootballOffensiveStatsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveFootballOffensiveStatsInput {
+  playerId: ID!
+  gameId: ID!
+  completions: Int
+  passAttempts: Int
+  passingYards: Int
+  passingTouchdowns: Int
+  interceptionsThrown: Int
+  sacksTaken: Int
+  sackYardsLost: Int
+  rushAttempts: Int
+  rushingYards: Int
+  rushingTouchdowns: Int
+  fumbles: Int
+  fumblesLost: Int
+  receptions: Int
+  targets: Int
+  receivingYards: Int
+  receivingTouchdowns: Int
+}
+
+"""
+Offensive stats data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveFootballOffensiveStatsData {
+  playerId: ID!
+  completions: Int
+  passAttempts: Int
+  passingYards: Int
+  passingTouchdowns: Int
+  interceptionsThrown: Int
+  sacksTaken: Int
+  sackYardsLost: Int
+  rushAttempts: Int
+  rushingYards: Int
+  rushingTouchdowns: Int
+  fumbles: Int
+  fumblesLost: Int
+  receptions: Int
+  targets: Int
+  receivingYards: Int
+  receivingTouchdowns: Int
+}
+
+input SaveFootballOffensiveStatsBulkInput {
+  gameId: ID!
+  offensiveStats: [SaveFootballOffensiveStatsData!]!
+}
+
+type SaveFootballOffensiveStatsResponse {
+  footballOffensiveStats: FootballOffensiveStats!
+}
+
+type SaveFootballOffensiveStatsBulkResponse {
+  offensiveStats: [FootballOffensiveStats!]!
+}
+
+union SaveFootballOffensiveStatsResult =
+  | SaveFootballOffensiveStatsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveFootballOffensiveStatsBulkResult =
+  | SaveFootballOffensiveStatsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Football Defensive Stats
+# ============================================================================
+
+"""
+Filter for football defensive stats by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input FootballDefensiveStatsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Football defensive statistics for a single player in a game.
+"""
+type FootballDefensiveStats implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  soloTackles: Int
+  assistedTackles: Int
+  sacks: Int
+  tacklesForLoss: Int
+  passesDefended: Int
+  interceptions: Int
+  interceptionReturnYards: Int
+  interceptionReturnTouchdowns: Int
+  forcedFumbles: Int
+  fumbleRecoveries: Int
+  fumbleReturnYards: Int
+  fumbleReturnTouchdowns: Int
+  safeties: Int
+}
+
+type FootballDefensiveStatsEdge implements Edge {
+  node: FootballDefensiveStats!
+  cursor: String!
+}
+
+type FootballDefensiveStatsConnection implements Connection {
+  edges: [FootballDefensiveStatsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum FootballDefensiveStatsSortField {
+  SOLO_TACKLES
+  SACKS
+  TACKLES_FOR_LOSS
+  INTERCEPTIONS
+  FORCED_FUMBLES
+  PASSES_DEFENDED
+}
+
+input FootballDefensiveStatsSortInput {
+  field: FootballDefensiveStatsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveFootballDefensiveStatsInput {
+  playerId: ID!
+  gameId: ID!
+  soloTackles: Int
+  assistedTackles: Int
+  sacks: Int
+  tacklesForLoss: Int
+  passesDefended: Int
+  interceptions: Int
+  interceptionReturnYards: Int
+  interceptionReturnTouchdowns: Int
+  forcedFumbles: Int
+  fumbleRecoveries: Int
+  fumbleReturnYards: Int
+  fumbleReturnTouchdowns: Int
+  safeties: Int
+}
+
+"""
+Defensive stats data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveFootballDefensiveStatsData {
+  playerId: ID!
+  soloTackles: Int
+  assistedTackles: Int
+  sacks: Int
+  tacklesForLoss: Int
+  passesDefended: Int
+  interceptions: Int
+  interceptionReturnYards: Int
+  interceptionReturnTouchdowns: Int
+  forcedFumbles: Int
+  fumbleRecoveries: Int
+  fumbleReturnYards: Int
+  fumbleReturnTouchdowns: Int
+  safeties: Int
+}
+
+input SaveFootballDefensiveStatsBulkInput {
+  gameId: ID!
+  defensiveStats: [SaveFootballDefensiveStatsData!]!
+}
+
+type SaveFootballDefensiveStatsResponse {
+  footballDefensiveStats: FootballDefensiveStats!
+}
+
+type SaveFootballDefensiveStatsBulkResponse {
+  defensiveStats: [FootballDefensiveStats!]!
+}
+
+union SaveFootballDefensiveStatsResult =
+  | SaveFootballDefensiveStatsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveFootballDefensiveStatsBulkResult =
+  | SaveFootballDefensiveStatsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Football Special Teams Stats
+# ============================================================================
+
+"""
+Filter for football special teams stats by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input FootballSpecialTeamsStatsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Football special teams statistics for a single player in a game.
+Covers kicking, punting, and return stats.
+"""
+type FootballSpecialTeamsStats implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  fieldGoalsMade: Int
+  fieldGoalsAttempted: Int
+  longestFieldGoal: Int
+  extraPointsMade: Int
+  extraPointsAttempted: Int
+  punts: Int
+  puntYards: Int
+  longestPunt: Int
+  puntReturns: Int
+  puntReturnYards: Int
+  puntReturnTouchdowns: Int
+  kickReturns: Int
+  kickReturnYards: Int
+  kickReturnTouchdowns: Int
+}
+
+type FootballSpecialTeamsStatsEdge implements Edge {
+  node: FootballSpecialTeamsStats!
+  cursor: String!
+}
+
+type FootballSpecialTeamsStatsConnection implements Connection {
+  edges: [FootballSpecialTeamsStatsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum FootballSpecialTeamsStatsSortField {
+  FIELD_GOALS_MADE
+  PUNT_YARDS
+  PUNT_RETURN_YARDS
+  KICK_RETURN_YARDS
+  KICK_RETURN_TOUCHDOWNS
+  LONGEST_FIELD_GOAL
+}
+
+input FootballSpecialTeamsStatsSortInput {
+  field: FootballSpecialTeamsStatsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveFootballSpecialTeamsStatsInput {
+  playerId: ID!
+  gameId: ID!
+  fieldGoalsMade: Int
+  fieldGoalsAttempted: Int
+  longestFieldGoal: Int
+  extraPointsMade: Int
+  extraPointsAttempted: Int
+  punts: Int
+  puntYards: Int
+  longestPunt: Int
+  puntReturns: Int
+  puntReturnYards: Int
+  puntReturnTouchdowns: Int
+  kickReturns: Int
+  kickReturnYards: Int
+  kickReturnTouchdowns: Int
+}
+
+"""
+Special teams stats data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveFootballSpecialTeamsStatsData {
+  playerId: ID!
+  fieldGoalsMade: Int
+  fieldGoalsAttempted: Int
+  longestFieldGoal: Int
+  extraPointsMade: Int
+  extraPointsAttempted: Int
+  punts: Int
+  puntYards: Int
+  longestPunt: Int
+  puntReturns: Int
+  puntReturnYards: Int
+  puntReturnTouchdowns: Int
+  kickReturns: Int
+  kickReturnYards: Int
+  kickReturnTouchdowns: Int
+}
+
+input SaveFootballSpecialTeamsStatsBulkInput {
+  gameId: ID!
+  specialTeamsStats: [SaveFootballSpecialTeamsStatsData!]!
+}
+
+type SaveFootballSpecialTeamsStatsResponse {
+  footballSpecialTeamsStats: FootballSpecialTeamsStats!
+}
+
+type SaveFootballSpecialTeamsStatsBulkResponse {
+  specialTeamsStats: [FootballSpecialTeamsStats!]!
+}
+
+union SaveFootballSpecialTeamsStatsResult =
+  | SaveFootballSpecialTeamsStatsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveFootballSpecialTeamsStatsBulkResult =
+  | SaveFootballSpecialTeamsStatsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Pickleball Statistics
+# ============================================================================
+
+"""
+Filter for pickleball statistics by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input PickleballStatisticsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Pickleball statistics for a single player in a game.
+"""
+type PickleballStatistics implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  aces: Int
+  faults: Int
+  doubleFaults: Int
+  pointsWon: Int
+  winners: Int
+  unforcedErrors: Int
+  forcedErrors: Int
+  dinks: Int
+  drives: Int
+  drops: Int
+  lobs: Int
+  volleys: Int
+  overheads: Int
+}
+
+type PickleballStatisticsEdge implements Edge {
+  node: PickleballStatistics!
+  cursor: String!
+}
+
+type PickleballStatisticsConnection implements Connection {
+  edges: [PickleballStatisticsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum PickleballStatisticsSortField {
+  POINTS_WON
+  ACES
+  WINNERS
+  UNFORCED_ERRORS
+  DINKS
+}
+
+input PickleballStatisticsSortInput {
+  field: PickleballStatisticsSortField!
+  direction: SortDirection = ASC
+}
+
+input SavePickleballStatisticsInput {
+  playerId: ID!
+  gameId: ID!
+  aces: Int
+  faults: Int
+  doubleFaults: Int
+  pointsWon: Int
+  winners: Int
+  unforcedErrors: Int
+  forcedErrors: Int
+  dinks: Int
+  drives: Int
+  drops: Int
+  lobs: Int
+  volleys: Int
+  overheads: Int
+}
+
+"""
+Pickleball statistics data for a single player within a bulk save (gameId is at parent level).
+"""
+input SavePickleballStatisticsData {
+  playerId: ID!
+  aces: Int
+  faults: Int
+  doubleFaults: Int
+  pointsWon: Int
+  winners: Int
+  unforcedErrors: Int
+  forcedErrors: Int
+  dinks: Int
+  drives: Int
+  drops: Int
+  lobs: Int
+  volleys: Int
+  overheads: Int
+}
+
+input SavePickleballStatisticsBulkInput {
+  gameId: ID!
+  statistics: [SavePickleballStatisticsData!]!
+}
+
+type SavePickleballStatisticsResponse {
+  pickleballStatistics: PickleballStatistics!
+}
+
+type SavePickleballStatisticsBulkResponse {
+  statistics: [PickleballStatistics!]!
+}
+
+union SavePickleballStatisticsResult =
+  | SavePickleballStatisticsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SavePickleballStatisticsBulkResult =
+  | SavePickleballStatisticsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Tennis Statistics
+# ============================================================================
+
+"""
+Filter for tennis statistics by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input TennisStatisticsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Tennis match statistics for a single player in a game.
+Covers serving, returning, and general point play.
+"""
+type TennisStatistics implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  """
+  Number of aces served
+  """
+  aces: Int
+  """
+  Number of double faults
+  """
+  doubleFaults: Int
+  """
+  Number of first serves that landed in
+  """
+  firstServesIn: Int
+  """
+  Total number of first serve attempts
+  """
+  firstServeAttempts: Int
+  """
+  Points won when the first serve was in
+  """
+  firstServePointsWon: Int
+  """
+  Total points played on first serve
+  """
+  firstServePointsPlayed: Int
+  """
+  Points won when the second serve was in
+  """
+  secondServePointsWon: Int
+  """
+  Total points played on second serve
+  """
+  secondServePointsPlayed: Int
+  """
+  Number of break points converted
+  """
+  breakPointsConverted: Int
+  """
+  Number of break points faced
+  """
+  breakPointsFaced: Int
+  """
+  Points won on return of serve
+  """
+  returnPointsWon: Int
+  """
+  Total return points played
+  """
+  returnPointsPlayed: Int
+  """
+  Number of outright winners hit
+  """
+  winners: Int
+  """
+  Number of unforced errors
+  """
+  unforcedErrors: Int
+  """
+  Total points won in the match
+  """
+  totalPointsWon: Int
+}
+
+type TennisStatisticsEdge implements Edge {
+  node: TennisStatistics!
+  cursor: String!
+}
+
+type TennisStatisticsConnection implements Connection {
+  edges: [TennisStatisticsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum TennisStatisticsSortField {
+  ACES
+  TOTAL_POINTS_WON
+  WINNERS
+  UNFORCED_ERRORS
+  DOUBLE_FAULTS
+}
+
+input TennisStatisticsSortInput {
+  field: TennisStatisticsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveTennisStatisticsInput {
+  playerId: ID!
+  gameId: ID!
+  aces: Int
+  doubleFaults: Int
+  firstServesIn: Int
+  firstServeAttempts: Int
+  firstServePointsWon: Int
+  firstServePointsPlayed: Int
+  secondServePointsWon: Int
+  secondServePointsPlayed: Int
+  breakPointsConverted: Int
+  breakPointsFaced: Int
+  returnPointsWon: Int
+  returnPointsPlayed: Int
+  winners: Int
+  unforcedErrors: Int
+  totalPointsWon: Int
+}
+
+"""
+Tennis statistics data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveTennisStatisticsData {
+  playerId: ID!
+  aces: Int
+  doubleFaults: Int
+  firstServesIn: Int
+  firstServeAttempts: Int
+  firstServePointsWon: Int
+  firstServePointsPlayed: Int
+  secondServePointsWon: Int
+  secondServePointsPlayed: Int
+  breakPointsConverted: Int
+  breakPointsFaced: Int
+  returnPointsWon: Int
+  returnPointsPlayed: Int
+  winners: Int
+  unforcedErrors: Int
+  totalPointsWon: Int
+}
+
+input SaveTennisStatisticsBulkInput {
+  gameId: ID!
+  statistics: [SaveTennisStatisticsData!]!
+}
+
+type SaveTennisStatisticsResponse {
+  tennisStatistics: TennisStatistics!
+}
+
+type SaveTennisStatisticsBulkResponse {
+  statistics: [TennisStatistics!]!
+}
+
+union SaveTennisStatisticsResult =
+  | SaveTennisStatisticsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveTennisStatisticsBulkResult =
+  | SaveTennisStatisticsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
 """
