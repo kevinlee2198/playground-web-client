@@ -298,6 +298,21 @@
       "addBoxScores": "Add Box Scores",
       "editBoxScores": "Edit Box Scores",
       "saveBoxScores": "Save Box Scores",
+      "pickleball": {
+        "aces": "ACE",
+        "faults": "FLT",
+        "doubleFaults": "DF",
+        "pointsWon": "PTS",
+        "winners": "WIN",
+        "unforcedErrors": "UE",
+        "forcedErrors": "FE",
+        "dinks": "DNK",
+        "drives": "DRV",
+        "drops": "DRP",
+        "lobs": "LOB",
+        "volleys": "VOL",
+        "overheads": "OH"
+      },
       "basketball": {
         "points": "PTS",
         "assists": "AST",
