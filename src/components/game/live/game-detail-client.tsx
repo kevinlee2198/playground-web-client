@@ -8,6 +8,11 @@ import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type {
+  FootballDefensiveStatsNode,
+  FootballOffensiveStatsNode,
+  FootballSpecialTeamsStatsNode,
+} from "@/lib/types/stats/football";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import { WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -35,6 +40,9 @@ interface GameDetailClientProps {
   game: GameDetail;
   initialBoxScores: { node: BasketballBoxScoreNode }[];
   initialPickleballStats?: { node: PickleballStatisticsNode }[];
+  initialFootballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
+  initialFootballDefensiveStats?: { node: FootballDefensiveStatsNode }[];
+  initialFootballSpecialTeamsStats?: { node: FootballSpecialTeamsStatsNode }[];
   playerId: number;
   canUpload: boolean;
   children: ReactNode;
@@ -44,6 +52,9 @@ export function GameDetailClient({
   game,
   initialBoxScores,
   initialPickleballStats,
+  initialFootballOffensiveStats,
+  initialFootballDefensiveStats,
+  initialFootballSpecialTeamsStats,
   playerId,
   canUpload,
   children,
@@ -175,6 +186,9 @@ export function GameDetailClient({
           game={state.game}
           boxScores={state.boxScores}
           pickleballStats={initialPickleballStats}
+          footballOffensiveStats={initialFootballOffensiveStats}
+          footballDefensiveStats={initialFootballDefensiveStats}
+          footballSpecialTeamsStats={initialFootballSpecialTeamsStats}
         />
       </section>
 

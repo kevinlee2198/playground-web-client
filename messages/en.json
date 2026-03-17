@@ -298,6 +298,7 @@
       "addBoxScores": "Add Box Scores",
       "editBoxScores": "Edit Box Scores",
       "saveBoxScores": "Save Box Scores",
+      "player": "Player",
       "pickleball": {
         "aces": "ACE",
         "faults": "FLT",
@@ -331,6 +332,74 @@
         "twoPointerPercentage": "2PT%",
         "freeThrows": "FT",
         "freeThrowPercentage": "FT%"
+      },
+      "football": {
+        "offensive": {
+          "completions": "CMP",
+          "passAttempts": "ATT",
+          "completionPercentage": "CMP%",
+          "passingYards": "PASS YDS",
+          "passingTouchdowns": "PASS TD",
+          "interceptionsThrown": "INT",
+          "sacksTaken": "SCK",
+          "sackYardsLost": "SCK YDS",
+          "rushAttempts": "CAR",
+          "rushingYards": "RUSH YDS",
+          "rushingTouchdowns": "RUSH TD",
+          "fumbles": "FUM",
+          "fumblesLost": "LOST",
+          "receptions": "REC",
+          "targets": "TGT",
+          "receivingYards": "REC YDS",
+          "receivingTouchdowns": "REC TD"
+        },
+        "defensive": {
+          "soloTackles": "SOLO",
+          "assistedTackles": "AST",
+          "totalTackles": "TOT",
+          "sacks": "SCK",
+          "tacklesForLoss": "TFL",
+          "passesDefended": "PD",
+          "interceptions": "INT",
+          "interceptionReturnYards": "INT YDS",
+          "interceptionReturnTouchdowns": "INT TD",
+          "forcedFumbles": "FF",
+          "fumbleRecoveries": "FR",
+          "fumbleReturnYards": "FR YDS",
+          "fumbleReturnTouchdowns": "FR TD",
+          "safeties": "SAF"
+        },
+        "specialTeams": {
+          "fieldGoals": "FG",
+          "fieldGoalsMade": "FGM",
+          "fieldGoalsAttempted": "FGA",
+          "fieldGoalPercentage": "FG%",
+          "longestFieldGoal": "LNG",
+          "extraPoints": "XP",
+          "extraPointsMade": "XPM",
+          "extraPointsAttempted": "XPA",
+          "punts": "PUNTS",
+          "puntYards": "YDS",
+          "puntAverage": "AVG",
+          "longestPunt": "LNG",
+          "puntReturns": "PR",
+          "puntReturnYards": "PR YDS",
+          "puntReturnTouchdowns": "PR TD",
+          "kickReturns": "KR",
+          "kickReturnYards": "KR YDS",
+          "kickReturnTouchdowns": "KR TD"
+        },
+        "sections": {
+          "passing": "Passing",
+          "rushing": "Rushing",
+          "receiving": "Receiving",
+          "kicking": "Kicking",
+          "punting": "Punting",
+          "returns": "Returns",
+          "offensive": "Offense",
+          "defensive": "Defense",
+          "specialTeams": "Special Teams"
+        }
       }
     },
     "media": {
