@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "@/i18n/navigation";
-import { getSubtypes, SportSubtype, SportType } from "@/lib/constants";
+import { getSubtypes, PickleballScoringType, SportSubtype, SportType } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
 import type { LocationValue } from "@/lib/types/location";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -54,6 +54,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       periods: undefined as number | undefined,
       bestOf: undefined as number | undefined,
       tiebreakFinalSet: undefined as boolean | undefined,
+      pointsPerGame: undefined as number | undefined,
+      winByTwo: undefined as boolean | undefined,
+      scoringType: undefined as PickleballScoringType | undefined,
       location: undefined as LocationValue | undefined,
     },
     validators: {
@@ -94,6 +97,26 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                 | SportSubtype.FLAG_FOOTBALL
                 | SportSubtype.AMERICAN_FOOTBALL,
               ...(value.periods !== undefined && { periods: value.periods }),
+            },
+          };
+        } else if (sportType === SportType.PICKLEBALL) {
+          input = {
+            sportType: SportType.PICKLEBALL,
+            startDate: value.startDate.toISOString(),
+            metadata: {
+              subtype: value.subtype as
+                | SportSubtype.SINGLES
+                | SportSubtype.DOUBLES,
+              ...(value.bestOf !== undefined && { bestOf: value.bestOf }),
+              ...(value.pointsPerGame !== undefined && {
+                pointsPerGame: value.pointsPerGame,
+              }),
+              ...(value.winByTwo !== undefined && {
+                winByTwo: value.winByTwo,
+              }),
+              ...(value.scoringType !== undefined && {
+                scoringType: value.scoringType,
+              }),
             },
           };
         } else {
@@ -290,6 +313,143 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                     <FormSwitchField
                       field={field}
                       label={t("game.form.tiebreakFinalSet")}
+                      disabled={isPending}
+                    />
+                  )}
+                </form.Field>
+              </>
+            )}
+
+            {selectedSportType === SportType.PICKLEBALL && (
+              <>
+                <form.Field name="bestOf">
+                  {(field) => (
+                    <Field
+                      data-invalid={
+                        field.state.meta.isTouched &&
+                        field.state.meta.errors.length > 0
+                          ? true
+                          : undefined
+                      }
+                    >
+                      <FieldLabel htmlFor={field.name}>
+                        {t("game.form.bestOf")}
+                      </FieldLabel>
+                      <Select
+                        value={field.state.value?.toString() ?? null}
+                        onValueChange={(v) => {
+                          field.handleChange(Number(v));
+                          field.handleBlur();
+                        }}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={t("game.form.bestOfPlaceholder")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="5">5</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {field.state.meta.isTouched && (
+                        <FieldError
+                          errors={toFieldErrors(field.state.meta.errors)}
+                        />
+                      )}
+                    </Field>
+                  )}
+                </form.Field>
+                <form.Field name="pointsPerGame">
+                  {(field) => (
+                    <Field
+                      data-invalid={
+                        field.state.meta.isTouched &&
+                        field.state.meta.errors.length > 0
+                          ? true
+                          : undefined
+                      }
+                    >
+                      <FieldLabel htmlFor={field.name}>
+                        {t("game.form.pointsPerGame")}
+                      </FieldLabel>
+                      <Select
+                        value={field.state.value?.toString() ?? null}
+                        onValueChange={(v) => {
+                          field.handleChange(Number(v));
+                          field.handleBlur();
+                        }}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={t("game.form.pointsPerGamePlaceholder")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="11">11</SelectItem>
+                          <SelectItem value="15">15</SelectItem>
+                          <SelectItem value="21">21</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {field.state.meta.isTouched && (
+                        <FieldError
+                          errors={toFieldErrors(field.state.meta.errors)}
+                        />
+                      )}
+                    </Field>
+                  )}
+                </form.Field>
+                <form.Field name="scoringType">
+                  {(field) => (
+                    <Field
+                      data-invalid={
+                        field.state.meta.isTouched &&
+                        field.state.meta.errors.length > 0
+                          ? true
+                          : undefined
+                      }
+                    >
+                      <FieldLabel htmlFor={field.name}>
+                        {t("game.form.scoringType")}
+                      </FieldLabel>
+                      <Select
+                        value={field.state.value ?? null}
+                        onValueChange={(v) => {
+                          field.handleChange(v as PickleballScoringType);
+                          field.handleBlur();
+                        }}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={t("game.form.selectScoringType")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={PickleballScoringType.RALLY}>
+                            {t("game.metadata.scoringType.RALLY")}
+                          </SelectItem>
+                          <SelectItem value={PickleballScoringType.SIDE_OUT}>
+                            {t("game.metadata.scoringType.SIDE_OUT")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {field.state.meta.isTouched && (
+                        <FieldError
+                          errors={toFieldErrors(field.state.meta.errors)}
+                        />
+                      )}
+                    </Field>
+                  )}
+                </form.Field>
+                <form.Field name="winByTwo">
+                  {(field) => (
+                    <FormSwitchField
+                      field={field}
+                      label={t("game.form.winByTwo")}
                       disabled={isPending}
                     />
                   )}

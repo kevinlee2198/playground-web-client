@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SportType } from "@/lib/constants";
+import { PickleballScoringType, SportType } from "@/lib/constants";
 import { locationToValue } from "@/lib/location-utils";
 import type { GameMetadata, UpdateGameInput } from "@/lib/types/game";
 import type { Location, LocationValue } from "@/lib/types/location";
@@ -47,21 +47,38 @@ function buildDefaultValues(
   metadata: GameMetadata,
   currentLocation?: Location | null,
 ) {
+  const hasPeriods =
+    metadata.__typename === "BasketballGameMetadata" ||
+    metadata.__typename === "FootballGameMetadata";
+
+  const isTennis = metadata.__typename === "TennisGameMetadata";
+  const isPickleball = metadata.__typename === "PickleballGameMetadata";
+
+  let bestOf: number | undefined;
+  if (isTennis) {
+    bestOf = metadata.bestOf;
+  } else if (isPickleball) {
+    bestOf = metadata.bestOf ?? undefined;
+  }
+
   return {
     startDate: new Date(currentStartDate),
-    periods:
-      metadata.__typename === "BasketballGameMetadata" ||
-      metadata.__typename === "FootballGameMetadata"
-        ? (metadata.periods ?? undefined)
-        : (undefined as number | undefined),
-    bestOf:
-      metadata.__typename === "TennisGameMetadata"
-        ? (metadata.bestOf as number | undefined)
-        : (undefined as number | undefined),
-    tiebreakFinalSet:
-      metadata.__typename === "TennisGameMetadata"
-        ? (metadata.tiebreakFinalSet as boolean | undefined)
-        : (undefined as boolean | undefined),
+    periods: hasPeriods
+      ? (metadata.periods ?? undefined)
+      : (undefined as number | undefined),
+    bestOf,
+    tiebreakFinalSet: isTennis
+      ? (metadata.tiebreakFinalSet as boolean | undefined)
+      : (undefined as boolean | undefined),
+    pointsPerGame: isPickleball
+      ? (metadata.pointsPerGame ?? undefined)
+      : (undefined as number | undefined),
+    winByTwo: isPickleball
+      ? (metadata.winByTwo ?? undefined)
+      : (undefined as boolean | undefined),
+    scoringType: isPickleball
+      ? (metadata.scoringType ?? undefined)
+      : (undefined as PickleballScoringType | undefined),
     location: (currentLocation
       ? locationToValue(currentLocation)
       : undefined) as LocationValue | null | undefined,
@@ -112,18 +129,44 @@ export function UpdateGameForm({
             ? metadata.periods
             : null;
         const originalBestOf =
-          metadata.__typename === "TennisGameMetadata" ? metadata.bestOf : null;
+          metadata.__typename === "TennisGameMetadata" ||
+          metadata.__typename === "PickleballGameMetadata"
+            ? metadata.bestOf
+            : null;
         const originalTiebreakFinalSet =
           metadata.__typename === "TennisGameMetadata"
             ? metadata.tiebreakFinalSet
+            : null;
+        const originalPointsPerGame =
+          metadata.__typename === "PickleballGameMetadata"
+            ? metadata.pointsPerGame
+            : null;
+        const originalWinByTwo =
+          metadata.__typename === "PickleballGameMetadata"
+            ? metadata.winByTwo
+            : null;
+        const originalScoringType =
+          metadata.__typename === "PickleballGameMetadata"
+            ? metadata.scoringType
             : null;
 
         const periodsChanged = value.periods !== originalPeriods;
         const bestOfChanged = value.bestOf !== originalBestOf;
         const tiebreakChanged =
           value.tiebreakFinalSet !== originalTiebreakFinalSet;
+        const pointsPerGameChanged =
+          value.pointsPerGame !== originalPointsPerGame;
+        const winByTwoChanged = value.winByTwo !== originalWinByTwo;
+        const scoringTypeChanged = value.scoringType !== originalScoringType;
 
-        if (periodsChanged || bestOfChanged || tiebreakChanged) {
+        if (
+          periodsChanged ||
+          bestOfChanged ||
+          tiebreakChanged ||
+          pointsPerGameChanged ||
+          winByTwoChanged ||
+          scoringTypeChanged
+        ) {
           input.metadata = {};
 
           if (sportType === SportType.BASKETBALL) {
@@ -143,6 +186,20 @@ export function UpdateGameForm({
             }
             if (tiebreakChanged && value.tiebreakFinalSet !== undefined) {
               input.metadata.tennis.tiebreakFinalSet = value.tiebreakFinalSet;
+            }
+          } else if (sportType === SportType.PICKLEBALL) {
+            input.metadata.pickleball = {};
+            if (bestOfChanged && value.bestOf !== undefined) {
+              input.metadata.pickleball.bestOf = value.bestOf;
+            }
+            if (pointsPerGameChanged && value.pointsPerGame !== undefined) {
+              input.metadata.pickleball.pointsPerGame = value.pointsPerGame;
+            }
+            if (winByTwoChanged && value.winByTwo !== undefined) {
+              input.metadata.pickleball.winByTwo = value.winByTwo;
+            }
+            if (scoringTypeChanged && value.scoringType !== undefined) {
+              input.metadata.pickleball.scoringType = value.scoringType;
             }
           }
         }
@@ -285,6 +342,143 @@ export function UpdateGameForm({
                   <FormSwitchField
                     field={field}
                     label={t("game.form.tiebreakFinalSet")}
+                    disabled={isPending}
+                  />
+                )}
+              </form.Field>
+            </>
+          )}
+
+          {sportType === SportType.PICKLEBALL && (
+            <>
+              <form.Field name="bestOf">
+                {(field) => (
+                  <Field
+                    data-invalid={
+                      field.state.meta.isTouched &&
+                      field.state.meta.errors.length > 0
+                        ? true
+                        : undefined
+                    }
+                  >
+                    <FieldLabel htmlFor={field.name}>
+                      {t("game.form.bestOf")}
+                    </FieldLabel>
+                    <Select
+                      value={field.state.value?.toString() ?? null}
+                      onValueChange={(v) => {
+                        field.handleChange(Number(v));
+                        field.handleBlur();
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={t("game.form.bestOfPlaceholder")}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="3">3</SelectItem>
+                        <SelectItem value="5">5</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.isTouched && (
+                      <FieldError
+                        errors={toFieldErrors(field.state.meta.errors)}
+                      />
+                    )}
+                  </Field>
+                )}
+              </form.Field>
+              <form.Field name="pointsPerGame">
+                {(field) => (
+                  <Field
+                    data-invalid={
+                      field.state.meta.isTouched &&
+                      field.state.meta.errors.length > 0
+                        ? true
+                        : undefined
+                    }
+                  >
+                    <FieldLabel htmlFor={field.name}>
+                      {t("game.form.pointsPerGame")}
+                    </FieldLabel>
+                    <Select
+                      value={field.state.value?.toString() ?? null}
+                      onValueChange={(v) => {
+                        field.handleChange(Number(v));
+                        field.handleBlur();
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={t("game.form.pointsPerGamePlaceholder")}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="11">11</SelectItem>
+                        <SelectItem value="15">15</SelectItem>
+                        <SelectItem value="21">21</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.isTouched && (
+                      <FieldError
+                        errors={toFieldErrors(field.state.meta.errors)}
+                      />
+                    )}
+                  </Field>
+                )}
+              </form.Field>
+              <form.Field name="scoringType">
+                {(field) => (
+                  <Field
+                    data-invalid={
+                      field.state.meta.isTouched &&
+                      field.state.meta.errors.length > 0
+                        ? true
+                        : undefined
+                    }
+                  >
+                    <FieldLabel htmlFor={field.name}>
+                      {t("game.form.scoringType")}
+                    </FieldLabel>
+                    <Select
+                      value={field.state.value ?? null}
+                      onValueChange={(v) => {
+                        field.handleChange(v as PickleballScoringType);
+                        field.handleBlur();
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={t("game.form.selectScoringType")}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={PickleballScoringType.RALLY}>
+                          {t("game.metadata.scoringType.RALLY")}
+                        </SelectItem>
+                        <SelectItem value={PickleballScoringType.SIDE_OUT}>
+                          {t("game.metadata.scoringType.SIDE_OUT")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.isTouched && (
+                      <FieldError
+                        errors={toFieldErrors(field.state.meta.errors)}
+                      />
+                    )}
+                  </Field>
+                )}
+              </form.Field>
+              <form.Field name="winByTwo">
+                {(field) => (
+                  <FormSwitchField
+                    field={field}
+                    label={t("game.form.winByTwo")}
                     disabled={isPending}
                   />
                 )}

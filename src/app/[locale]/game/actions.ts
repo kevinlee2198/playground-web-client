@@ -51,7 +51,8 @@ export async function createGame(
     const sportKey = input.sportType.toLowerCase() as
       | "basketball"
       | "football"
-      | "tennis";
+      | "tennis"
+      | "pickleball";
     const metadata: Record<string, unknown> = {
       subtype: new EnumType(input.metadata.subtype),
     };
@@ -66,6 +67,24 @@ export async function createGame(
       input.metadata.tiebreakFinalSet !== undefined
     ) {
       metadata.tiebreakFinalSet = input.metadata.tiebreakFinalSet;
+    }
+    if (
+      "pointsPerGame" in input.metadata &&
+      input.metadata.pointsPerGame !== undefined
+    ) {
+      metadata.pointsPerGame = input.metadata.pointsPerGame;
+    }
+    if (
+      "winByTwo" in input.metadata &&
+      input.metadata.winByTwo !== undefined
+    ) {
+      metadata.winByTwo = input.metadata.winByTwo;
+    }
+    if (
+      "scoringType" in input.metadata &&
+      input.metadata.scoringType !== undefined
+    ) {
+      metadata.scoringType = new EnumType(input.metadata.scoringType);
     }
 
     const sportInput: Record<string, unknown> = {
@@ -161,6 +180,19 @@ export async function updateGame(
         if (input.metadata.football.periods !== undefined)
           f.periods = input.metadata.football.periods;
         metadataInput.football = f;
+      } else if (input.metadata.pickleball) {
+        const p: Record<string, unknown> = {};
+        if (input.metadata.pickleball.subtype)
+          p.subtype = new EnumType(input.metadata.pickleball.subtype);
+        if (input.metadata.pickleball.bestOf !== undefined)
+          p.bestOf = input.metadata.pickleball.bestOf;
+        if (input.metadata.pickleball.pointsPerGame !== undefined)
+          p.pointsPerGame = input.metadata.pickleball.pointsPerGame;
+        if (input.metadata.pickleball.winByTwo !== undefined)
+          p.winByTwo = input.metadata.pickleball.winByTwo;
+        if (input.metadata.pickleball.scoringType !== undefined)
+          p.scoringType = new EnumType(input.metadata.pickleball.scoringType);
+        metadataInput.pickleball = p;
       }
       mutationInput.metadata = metadataInput;
     }
