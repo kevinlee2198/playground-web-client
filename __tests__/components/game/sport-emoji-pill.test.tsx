@@ -7,6 +7,7 @@ vi.mock("next-intl", () => ({
       "sports.BASKETBALL": "Basketball",
       "sports.TENNIS": "Tennis",
       "sports.FOOTBALL": "Football",
+      "sports.PICKLEBALL": "Pickleball",
     };
     return map[key] ?? key;
   },
@@ -35,6 +36,13 @@ describe("SportEmojiPill", () => {
     const pill = screen.getByLabelText("Football");
     expect(pill).toBeInTheDocument();
     expect(pill.textContent).toContain("🏈");
+  });
+
+  it("renders pickleball emoji with correct aria-label", () => {
+    render(<SportEmojiPill sportType={SportType.PICKLEBALL} />);
+    const pill = screen.getByLabelText("Pickleball");
+    expect(pill).toBeInTheDocument();
+    expect(pill.textContent).toContain("🥒");
   });
 
   it("uses sport-specific background color class", () => {
