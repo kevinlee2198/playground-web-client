@@ -20,11 +20,51 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
+const STAT_FIELDS = [
+  "aces",
+  "faults",
+  "doubleFaults",
+  "pointsWon",
+  "winners",
+  "unforcedErrors",
+  "forcedErrors",
+  "dinks",
+  "drives",
+  "drops",
+  "lobs",
+  "volleys",
+  "overheads",
+] as const;
+
+type StatField = (typeof STAT_FIELDS)[number];
+
 interface PickleballStatsFormProps {
   gameId: number;
   initialData: PickleballStatisticsNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function buildDefaultValues(
+  data: PickleballStatisticsNode,
+): Record<StatField, number | undefined> {
+  const result = {} as Record<StatField, number | undefined>;
+  for (const field of STAT_FIELDS) {
+    result[field] = nullToUndefined(data[field]);
+  }
+  return result;
+}
+
+function buildInput(
+  value: Record<StatField, number | undefined>,
+  playerId: number,
+  gameId: number,
+): SavePickleballStatisticsInput {
+  const input: SavePickleballStatisticsInput = { playerId, gameId };
+  for (const field of STAT_FIELDS) {
+    input[field] = undefinedToNull(value[field]);
+  }
+  return input;
 }
 
 export function PickleballStatsForm({
@@ -38,43 +78,12 @@ export function PickleballStatsForm({
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
-    defaultValues: {
-      aces: nullToUndefined(initialData.aces),
-      faults: nullToUndefined(initialData.faults),
-      doubleFaults: nullToUndefined(initialData.doubleFaults),
-      pointsWon: nullToUndefined(initialData.pointsWon),
-      winners: nullToUndefined(initialData.winners),
-      unforcedErrors: nullToUndefined(initialData.unforcedErrors),
-      forcedErrors: nullToUndefined(initialData.forcedErrors),
-      dinks: nullToUndefined(initialData.dinks),
-      drives: nullToUndefined(initialData.drives),
-      drops: nullToUndefined(initialData.drops),
-      lobs: nullToUndefined(initialData.lobs),
-      volleys: nullToUndefined(initialData.volleys),
-      overheads: nullToUndefined(initialData.overheads),
-    },
+    defaultValues: buildDefaultValues(initialData),
     onSubmit: async ({ value }) => {
       setError(null);
 
       startTransition(async () => {
-        const input: SavePickleballStatisticsInput = {
-          playerId: initialData.player.id,
-          gameId,
-          aces: undefinedToNull(value.aces),
-          faults: undefinedToNull(value.faults),
-          doubleFaults: undefinedToNull(value.doubleFaults),
-          pointsWon: undefinedToNull(value.pointsWon),
-          winners: undefinedToNull(value.winners),
-          unforcedErrors: undefinedToNull(value.unforcedErrors),
-          forcedErrors: undefinedToNull(value.forcedErrors),
-          dinks: undefinedToNull(value.dinks),
-          drives: undefinedToNull(value.drives),
-          drops: undefinedToNull(value.drops),
-          lobs: undefinedToNull(value.lobs),
-          volleys: undefinedToNull(value.volleys),
-          overheads: undefinedToNull(value.overheads),
-        };
-
+        const input = buildInput(value, initialData.player.id, gameId);
         const result = await savePickleballStatistics(input);
 
         if (result.success) {
@@ -107,71 +116,19 @@ export function PickleballStatsForm({
           className="space-y-4"
         >
           <FieldGroup className="sm:grid sm:grid-cols-2">
-            <form.Field name="aces">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.aces")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="faults">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.faults")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="doubleFaults">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.doubleFaults")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="pointsWon">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.pointsWon")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="winners">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.winners")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="unforcedErrors">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.unforcedErrors")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="forcedErrors">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.forcedErrors")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="dinks">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.dinks")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="drives">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.drives")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="drops">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.drops")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="lobs">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.lobs")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="volleys">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.volleys")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
-            <form.Field name="overheads">
-              {(field) => (
-                <FormTextField field={field} label={t("game.boxScore.pickleball.overheads")} type="number" disabled={isPending} placeholder="0" />
-              )}
-            </form.Field>
+            {STAT_FIELDS.map((field) => (
+              <form.Field key={field} name={field}>
+                {(fieldApi) => (
+                  <FormTextField
+                    field={fieldApi}
+                    label={t(`game.boxScore.pickleball.${field}`)}
+                    type="number"
+                    disabled={isPending}
+                    placeholder="0"
+                  />
+                )}
+              </form.Field>
+            ))}
           </FieldGroup>
 
           {error && (

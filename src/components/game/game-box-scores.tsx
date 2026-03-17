@@ -1,8 +1,8 @@
 "use client";
 
 import { BasketballBoxScoreTable } from "@/components/game/basketball-box-score-table";
-import { PickleballStatsTable } from "@/components/game/pickleball-stats-table";
 import { CollapsibleBoxScore } from "@/components/game/collapsible-box-score";
+import { PickleballStatsTable } from "@/components/game/pickleball-stats-table";
 import { GameStatus, SportType } from "@/lib/constants";
 import type {
   GameDetail,
@@ -10,8 +10,8 @@ import type {
   TeamInstanceDetail,
 } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
-import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import type { BoxScoreNode } from "@/lib/types/stats/base";
+import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 
 interface GameBoxScoresProps {
   game: GameDetail;
@@ -75,37 +75,39 @@ export function GameBoxScores({
   const defaultOpen =
     game.viewerGameRole != null && game.gameStatus === GameStatus.COMPLETE;
 
-  if (game.sportType === SportType.PICKLEBALL && pickleballStats) {
-    const teamGroups = groupByTeam(game, pickleballStats);
+  function renderTable(group: TeamBoxScoreGroup<BoxScoreNode>) {
+    const sharedProps = {
+      gameId: game.id,
+      teamName: group.teamName,
+      gameStatus: game.gameStatus,
+      availablePlayers: group.players,
+      viewerGameRole: game.viewerGameRole,
+    };
+
+    if (game.sportType === SportType.PICKLEBALL) {
+      return (
+        <PickleballStatsTable
+          {...sharedProps}
+          boxScores={group.boxScores as { node: PickleballStatisticsNode }[]}
+        />
+      );
+    }
+
     return (
-      <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-        {teamGroups.map((group) => (
-          <CollapsibleBoxScore
-            key={group.teamName}
-            teamName={group.teamName}
-            playerCount={group.boxScores.length || group.players.length}
-            defaultOpen={defaultOpen}
-          >
-            <PickleballStatsTable
-              gameId={game.id}
-              teamName={group.teamName}
-              boxScores={group.boxScores}
-              gameStatus={game.gameStatus}
-              availablePlayers={group.players}
-              viewerGameRole={game.viewerGameRole}
-            />
-          </CollapsibleBoxScore>
-        ))}
-      </div>
+      <BasketballBoxScoreTable
+        {...sharedProps}
+        boxScores={group.boxScores as { node: BasketballBoxScoreNode }[]}
+      />
     );
   }
 
-  const teamGroups = groupByTeam(game, boxScores);
+  const teamGroups =
+    game.sportType === SportType.PICKLEBALL && pickleballStats
+      ? groupByTeam(game, pickleballStats)
+      : groupByTeam(game, boxScores);
 
   return (
-    <div
-      className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]"
-    >
+    <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
       {teamGroups.map((group) => (
         <CollapsibleBoxScore
           key={group.teamName}
@@ -113,14 +115,7 @@ export function GameBoxScores({
           playerCount={group.boxScores.length || group.players.length}
           defaultOpen={defaultOpen}
         >
-          <BasketballBoxScoreTable
-            gameId={game.id}
-            teamName={group.teamName}
-            boxScores={group.boxScores}
-            gameStatus={game.gameStatus}
-            availablePlayers={group.players}
-            viewerGameRole={game.viewerGameRole}
-          />
+          {renderTable(group)}
         </CollapsibleBoxScore>
       ))}
     </div>
