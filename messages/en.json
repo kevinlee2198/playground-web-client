@@ -299,6 +299,40 @@
       "editBoxScores": "Edit Box Scores",
       "saveBoxScores": "Save Box Scores",
       "player": "Player",
+      "tennis": {
+        "aces": "ACE",
+        "doubleFaults": "DF",
+        "firstServesIn": "1st In",
+        "firstServeAttempts": "1st Att",
+        "firstServePointsWon": "1st Serve W",
+        "firstServePointsPlayed": "1st Pts Played",
+        "secondServePointsWon": "2nd Serve W",
+        "secondServePointsPlayed": "2nd Pts Played",
+        "breakPointsConverted": "BP Won",
+        "breakPointsFaced": "BP Faced",
+        "returnPointsWon": "Ret Won",
+        "returnPointsPlayed": "Ret Played",
+        "winners": "WIN",
+        "unforcedErrors": "UE",
+        "totalPointsWon": "PTS",
+        "columns": {
+          "firstServeIn": "1ST IN",
+          "firstServePercentage": "1ST%",
+          "firstServePointsWon": "1ST W",
+          "firstServePointsWonPercentage": "1ST W%",
+          "secondServePointsWon": "2ND W",
+          "secondServePointsWonPercentage": "2ND W%",
+          "breakPointsConverted": "BP WON",
+          "breakPointsPercentage": "BP%",
+          "returnPointsWon": "RET W",
+          "returnPointsWonPercentage": "RET W%"
+        },
+        "sections": {
+          "serving": "Serving",
+          "returning": "Returning",
+          "general": "General"
+        }
+      },
       "pickleball": {
         "aces": "ACE",
         "faults": "FLT",

@@ -22,6 +22,7 @@ import type {
   FootballSpecialTeamsStatsNode,
 } from "@/lib/types/stats/football";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
+import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -236,6 +237,41 @@ export default async function GameDetailPage({ params }: PageProps) {
       statsResponse.data?.pickleballStatistics?.edges ?? [];
   }
 
+  let initialTennisStats: { node: TennisStatisticsNode }[] = [];
+  if (
+    game.sportType === SportType.TENNIS &&
+    game.gameStatus !== GameStatus.SCHEDULED
+  ) {
+    const tennisStatsResponse = await authQuery({
+      tennisStatistics: {
+        __args: { input: { gameIds: [game.id] }, first: 50 },
+        edges: {
+          node: {
+            id: true,
+            player: playerRefFragment,
+            aces: true,
+            doubleFaults: true,
+            firstServesIn: true,
+            firstServeAttempts: true,
+            firstServePointsWon: true,
+            firstServePointsPlayed: true,
+            secondServePointsWon: true,
+            secondServePointsPlayed: true,
+            breakPointsConverted: true,
+            breakPointsFaced: true,
+            returnPointsWon: true,
+            returnPointsPlayed: true,
+            winners: true,
+            unforcedErrors: true,
+            totalPointsWon: true,
+          },
+        },
+      },
+    });
+    initialTennisStats =
+      tennisStatsResponse.data?.tennisStatistics?.edges ?? [];
+  }
+
   let initialFootballOffensiveStats: { node: FootballOffensiveStatsNode }[] = [];
   let initialFootballDefensiveStats: { node: FootballDefensiveStatsNode }[] = [];
   let initialFootballSpecialTeamsStats: { node: FootballSpecialTeamsStatsNode }[] = [];
@@ -341,6 +377,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialFootballOffensiveStats={initialFootballOffensiveStats}
         initialFootballDefensiveStats={initialFootballDefensiveStats}
         initialFootballSpecialTeamsStats={initialFootballSpecialTeamsStats}
+        initialTennisStats={initialTennisStats}
         playerId={playerId}
         canUpload={canUpload}
       >
