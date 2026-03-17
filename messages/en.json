@@ -370,10 +370,12 @@
           "safeties": "SAF"
         },
         "specialTeams": {
+          "fieldGoals": "FG",
           "fieldGoalsMade": "FGM",
           "fieldGoalsAttempted": "FGA",
           "fieldGoalPercentage": "FG%",
           "longestFieldGoal": "LNG",
+          "extraPoints": "XP",
           "extraPointsMade": "XPM",
           "extraPointsAttempted": "XPA",
           "punts": "PUNTS",
