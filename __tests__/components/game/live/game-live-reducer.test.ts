@@ -1,24 +1,20 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  gameLiveReducer,
   createInitialState,
+  gameLiveReducer,
   type LiveGameState,
-} from "./game-live-reducer";
-import { GameStatus, GameVisibility, SportType, SportSubtype } from "@/lib/constants";
+} from "@/components/game/live/game-live-reducer";
+import { GameStatus, GameVisibility, SportSubtype, SportType } from "@/lib/constants";
 import type { GameDetail, GameParticipantDetail, TeamInstanceDetail } from "@/lib/types/game";
 import type {
+  BoxScoreSavedEvent,
   GameEventGame,
-  GameStartedEvent,
-  GameScoreUpdatedEvent,
   GameParticipantAddedEvent,
   GameParticipantRemovedEvent,
-  BoxScoreSavedEvent,
+  GameScoreUpdatedEvent,
+  GameStartedEvent,
 } from "@/lib/types/game-event";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
-
-// ---------------------------------------------------------------------------
-// Minimal fixture helpers
-// ---------------------------------------------------------------------------
 
 const emptyPageInfo = {
   hasPreviousPage: false,
@@ -27,9 +23,7 @@ const emptyPageInfo = {
   endCursor: null,
 } as const;
 
-function makeGameEventGame(
-  overrides: Partial<GameEventGame> = {}
-): GameEventGame {
+function makeGameEventGame(overrides: Partial<GameEventGame> = {}): GameEventGame {
   return {
     id: 1,
     gameStatus: GameStatus.SCHEDULED,
@@ -69,10 +63,7 @@ function makeGameDetail(overrides: Partial<GameDetail> = {}): GameDetail {
   };
 }
 
-function makeTeamParticipant(
-  id: number,
-  score: number
-): { cursor: string; node: GameParticipantDetail } {
+function makeTeamParticipant(id: number, score: number): { cursor: string; node: GameParticipantDetail } {
   const node: TeamInstanceDetail = {
     __typename: "TeamInstance",
     id,
@@ -87,10 +78,7 @@ function makeTeamParticipant(
   return { cursor: `cursor-${id}`, node };
 }
 
-function makeBoxScore(
-  playerId: number,
-  points: number
-): BasketballBoxScoreNode {
+function makeBoxScore(playerId: number, points: number): BasketballBoxScoreNode {
   return {
     id: playerId,
     player: {
@@ -125,10 +113,6 @@ function makeBoxScore(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe("createInitialState", () => {
   it("creates state with the given game, boxScores, and isConnected: true", () => {
     const game = makeGameDetail();
@@ -150,7 +134,7 @@ describe("gameLiveReducer", () => {
         startDate: "2026-03-16T10:00:00Z",
         location: null,
       });
-      const initialState: LiveGameState = createInitialState(game, []);
+      const initialState = createInitialState(game, []);
 
       const event: GameStartedEvent = {
         __typename: "GameStartedEvent",
@@ -164,7 +148,6 @@ describe("gameLiveReducer", () => {
       });
 
       expect(nextState.game.gameStatus).toBe(GameStatus.IN_PROGRESS);
-      // Fields NOT sourced from the event must be preserved
       expect(nextState.game.description).toBe("My special game");
       expect(nextState.game.startDate).toBe("2026-03-16T10:00:00Z");
       expect(nextState.game.location).toBeNull();
@@ -285,8 +268,8 @@ describe("gameLiveReducer", () => {
         { node: existingBoxScore },
       ]);
 
-      const updatedBoxScore = makeBoxScore(1, 20); // same player, updated points
-      const newBoxScore = makeBoxScore(2, 15);     // new player
+      const updatedBoxScore = makeBoxScore(1, 20);
+      const newBoxScore = makeBoxScore(2, 15);
 
       const event: BoxScoreSavedEvent = {
         __typename: "BoxScoreSavedEvent",
@@ -309,9 +292,7 @@ describe("gameLiveReducer", () => {
         (e) => e.node.player.id === 2
       )!;
 
-      // Existing entry must be updated (not the original reference)
       expect(player1Entry.node.points).toBe(20);
-      // New entry must be wrapped in { node: ... }
       expect(player2Entry.node.points).toBe(15);
     });
   });
