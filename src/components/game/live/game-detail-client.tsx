@@ -14,6 +14,7 @@ import type {
   FootballSpecialTeamsStatsNode,
 } from "@/lib/types/stats/football";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
+import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
 import { WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -43,6 +44,7 @@ interface GameDetailClientProps {
   initialFootballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
   initialFootballDefensiveStats?: { node: FootballDefensiveStatsNode }[];
   initialFootballSpecialTeamsStats?: { node: FootballSpecialTeamsStatsNode }[];
+  initialTennisStats?: { node: TennisStatisticsNode }[];
   playerId: number;
   canUpload: boolean;
   children: ReactNode;
@@ -55,6 +57,7 @@ export function GameDetailClient({
   initialFootballOffensiveStats,
   initialFootballDefensiveStats,
   initialFootballSpecialTeamsStats,
+  initialTennisStats,
   playerId,
   canUpload,
   children,
@@ -189,6 +192,7 @@ export function GameDetailClient({
           footballOffensiveStats={initialFootballOffensiveStats}
           footballDefensiveStats={initialFootballDefensiveStats}
           footballSpecialTeamsStats={initialFootballSpecialTeamsStats}
+          tennisStats={initialTennisStats}
         />
       </section>
 

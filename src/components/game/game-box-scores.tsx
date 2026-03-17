@@ -6,16 +6,19 @@ import { FootballDefensiveStatsTable } from "@/components/game/football-defensiv
 import { FootballOffensiveStatsTable } from "@/components/game/football-offensive-stats-table";
 import { FootballSpecialTeamsStatsTable } from "@/components/game/football-special-teams-stats-table";
 import { PickleballStatsTable } from "@/components/game/pickleball-stats-table";
+import { TennisStatsTable } from "@/components/game/tennis-stats-table";
 import { TypographyH4 } from "@/components/ui/typography";
 import { GameStatus, SportType } from "@/lib/constants";
 import type {
   GameDetail,
+  IndividualParticipantNode,
   PlayerRef,
   TeamInstanceDetail,
 } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 import type { BoxScoreNode } from "@/lib/types/stats/base";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
+import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
 import type {
   FootballDefensiveStatsNode,
   FootballOffensiveStatsNode,
@@ -27,6 +30,7 @@ interface GameBoxScoresProps {
   game: GameDetail;
   boxScores?: { node: BasketballBoxScoreNode }[];
   pickleballStats?: { node: PickleballStatisticsNode }[];
+  tennisStats?: { node: TennisStatisticsNode }[];
   footballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
   footballDefensiveStats?: { node: FootballDefensiveStatsNode }[];
   footballSpecialTeamsStats?: { node: FootballSpecialTeamsStatsNode }[];
@@ -41,6 +45,7 @@ interface TeamBoxScoreGroup<T extends BoxScoreNode> {
 function groupByTeam<T extends BoxScoreNode>(
   game: GameDetail,
   allBoxScores: { node: T }[],
+  fallbackGroupName: string,
 ): TeamBoxScoreGroup<T>[] {
   const teams: {
     name: string;
@@ -59,6 +64,23 @@ function groupByTeam<T extends BoxScoreNode>(
     }
   }
 
+  // Handle individual participants (e.g., tennis/pickleball singles)
+  if (teams.length === 0) {
+    const individualPlayers: PlayerRef[] = [];
+    for (const edge of game.participants.edges) {
+      if (edge.node.__typename === "IndividualParticipant") {
+        individualPlayers.push((edge.node as IndividualParticipantNode).player);
+      }
+    }
+    if (individualPlayers.length > 0) {
+      return [{
+        teamName: fallbackGroupName,
+        players: individualPlayers,
+        boxScores: allBoxScores,
+      }];
+    }
+  }
+
   return teams.map((team) => ({
     teamName: team.name,
     players: team.players,
@@ -72,6 +94,7 @@ export function GameBoxScores({
   game,
   boxScores,
   pickleballStats,
+  tennisStats,
   footballOffensiveStats,
   footballDefensiveStats,
   footballSpecialTeamsStats,
@@ -81,6 +104,7 @@ export function GameBoxScores({
   if (
     game.sportType !== SportType.BASKETBALL &&
     game.sportType !== SportType.PICKLEBALL &&
+    game.sportType !== SportType.TENNIS &&
     game.sportType !== SportType.FOOTBALL
   ) {
     return null;
@@ -94,13 +118,15 @@ export function GameBoxScores({
   const defaultOpen =
     game.viewerGameRole != null && game.gameStatus === GameStatus.COMPLETE;
 
+  const fallbackGroupName = t("game.boxScore.title");
+
   if (game.sportType === SportType.FOOTBALL) {
     return (
       <div className="space-y-6">
         {footballOffensiveStats && footballOffensiveStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
             <TypographyH4>{t("game.boxScore.football.sections.offensive")}</TypographyH4>
-            {groupByTeam(game, footballOffensiveStats).map((group) => (
+            {groupByTeam(game, footballOffensiveStats, fallbackGroupName).map((group) => (
               <CollapsibleBoxScore
                 key={group.teamName}
                 teamName={group.teamName}
@@ -122,7 +148,7 @@ export function GameBoxScores({
         {footballDefensiveStats && footballDefensiveStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
             <TypographyH4>{t("game.boxScore.football.sections.defensive")}</TypographyH4>
-            {groupByTeam(game, footballDefensiveStats).map((group) => (
+            {groupByTeam(game, footballDefensiveStats, fallbackGroupName).map((group) => (
               <CollapsibleBoxScore
                 key={group.teamName}
                 teamName={group.teamName}
@@ -144,7 +170,7 @@ export function GameBoxScores({
         {footballSpecialTeamsStats && footballSpecialTeamsStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
             <TypographyH4>{t("game.boxScore.football.sections.specialTeams")}</TypographyH4>
-            {groupByTeam(game, footballSpecialTeamsStats).map((group) => (
+            {groupByTeam(game, footballSpecialTeamsStats, fallbackGroupName).map((group) => (
               <CollapsibleBoxScore
                 key={group.teamName}
                 teamName={group.teamName}
@@ -185,6 +211,15 @@ export function GameBoxScores({
       );
     }
 
+    if (game.sportType === SportType.TENNIS) {
+      return (
+        <TennisStatsTable
+          {...sharedProps}
+          boxScores={group.boxScores as { node: TennisStatisticsNode }[]}
+        />
+      );
+    }
+
     return (
       <BasketballBoxScoreTable
         {...sharedProps}
@@ -195,8 +230,10 @@ export function GameBoxScores({
 
   const teamGroups =
     game.sportType === SportType.PICKLEBALL && pickleballStats
-      ? groupByTeam(game, pickleballStats)
-      : groupByTeam(game, boxScores ?? []);
+      ? groupByTeam(game, pickleballStats, fallbackGroupName)
+      : game.sportType === SportType.TENNIS && tennisStats
+        ? groupByTeam(game, tennisStats, fallbackGroupName)
+        : groupByTeam(game, boxScores ?? [], fallbackGroupName);
 
   return (
     <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
