@@ -16,6 +16,11 @@ import { authQuery } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type {
+  FootballDefensiveStatsNode,
+  FootballOffensiveStatsNode,
+  FootballSpecialTeamsStatsNode,
+} from "@/lib/types/stats/football";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -231,6 +236,98 @@ export default async function GameDetailPage({ params }: PageProps) {
       statsResponse.data?.pickleballStatistics?.edges ?? [];
   }
 
+  let initialFootballOffensiveStats: { node: FootballOffensiveStatsNode }[] = [];
+  let initialFootballDefensiveStats: { node: FootballDefensiveStatsNode }[] = [];
+  let initialFootballSpecialTeamsStats: { node: FootballSpecialTeamsStatsNode }[] = [];
+
+  if (
+    game.sportType === SportType.FOOTBALL &&
+    game.gameStatus !== GameStatus.SCHEDULED
+  ) {
+    const [offResponse, defResponse, stResponse] = await Promise.all([
+      authQuery({
+        footballOffensiveStats: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              completions: true,
+              passAttempts: true,
+              passingYards: true,
+              passingTouchdowns: true,
+              interceptionsThrown: true,
+              sacksTaken: true,
+              sackYardsLost: true,
+              rushAttempts: true,
+              rushingYards: true,
+              rushingTouchdowns: true,
+              fumbles: true,
+              fumblesLost: true,
+              receptions: true,
+              targets: true,
+              receivingYards: true,
+              receivingTouchdowns: true,
+            },
+          },
+        },
+      }),
+      authQuery({
+        footballDefensiveStats: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              soloTackles: true,
+              assistedTackles: true,
+              sacks: true,
+              tacklesForLoss: true,
+              passesDefended: true,
+              interceptions: true,
+              interceptionReturnYards: true,
+              interceptionReturnTouchdowns: true,
+              forcedFumbles: true,
+              fumbleRecoveries: true,
+              fumbleReturnYards: true,
+              fumbleReturnTouchdowns: true,
+              safeties: true,
+            },
+          },
+        },
+      }),
+      authQuery({
+        footballSpecialTeamsStats: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              fieldGoalsMade: true,
+              fieldGoalsAttempted: true,
+              longestFieldGoal: true,
+              extraPointsMade: true,
+              extraPointsAttempted: true,
+              punts: true,
+              puntYards: true,
+              longestPunt: true,
+              puntReturns: true,
+              puntReturnYards: true,
+              puntReturnTouchdowns: true,
+              kickReturns: true,
+              kickReturnYards: true,
+              kickReturnTouchdowns: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    initialFootballOffensiveStats = offResponse.data?.footballOffensiveStats?.edges ?? [];
+    initialFootballDefensiveStats = defResponse.data?.footballDefensiveStats?.edges ?? [];
+    initialFootballSpecialTeamsStats = stResponse.data?.footballSpecialTeamsStats?.edges ?? [];
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6">
@@ -241,6 +338,9 @@ export default async function GameDetailPage({ params }: PageProps) {
         game={game}
         initialBoxScores={initialBoxScores}
         initialPickleballStats={initialPickleballStats}
+        initialFootballOffensiveStats={initialFootballOffensiveStats}
+        initialFootballDefensiveStats={initialFootballDefensiveStats}
+        initialFootballSpecialTeamsStats={initialFootballSpecialTeamsStats}
         playerId={playerId}
         canUpload={canUpload}
       >
