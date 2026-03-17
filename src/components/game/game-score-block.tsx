@@ -8,6 +8,7 @@ import { GameScore } from "@/components/game/score/game-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { BasketballScoreForm } from "@/components/game/scoreboard/basketball-score-form";
 import { FootballScoreForm } from "@/components/game/scoreboard/football-score-form";
+import { PickleballScoreForm } from "@/components/game/scoreboard/pickleball-score-form";
 import { TennisScoreForm } from "@/components/game/scoreboard/tennis-score-form";
 import { Button } from "@/components/ui/button";
 import { GameStatus, SportType } from "@/lib/constants";
@@ -106,6 +107,23 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
             nameB={nameB}
             bestOf={
               game.metadata.__typename === "TennisGameMetadata"
+                ? game.metadata.bestOf
+                : 3
+            }
+            onSuccess={handleClose}
+            onCancel={handleClose}
+          />
+        );
+      case SportType.PICKLEBALL:
+        return (
+          <PickleballScoreForm
+            participantA={participantA}
+            participantB={participantB}
+            nameA={nameA}
+            nameB={nameB}
+            bestOf={
+              game.metadata.__typename === "PickleballGameMetadata" &&
+              game.metadata.bestOf != null
                 ? game.metadata.bestOf
                 : 3
             }

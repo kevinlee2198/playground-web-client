@@ -3,6 +3,7 @@ import {
   type GameSortField,
   type GameStatus,
   type GameVisibility,
+  type PickleballScoringType,
   type SortDirection,
   SportSubtype,
   SportType,
@@ -46,10 +47,20 @@ export interface FootballGameMetadata {
   periods: number | null;
 }
 
+export interface PickleballGameMetadata {
+  __typename: "PickleballGameMetadata";
+  pickleballSubtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+  bestOf: number | null;
+  pointsPerGame: number | null;
+  winByTwo: boolean | null;
+  scoringType: PickleballScoringType | null;
+}
+
 export type GameMetadata =
   | BasketballGameMetadata
   | TennisGameMetadata
-  | FootballGameMetadata;
+  | FootballGameMetadata
+  | PickleballGameMetadata;
 
 // ---------- Participant Metadata (response types) ----------
 
@@ -74,10 +85,21 @@ export interface FootballParticipantMetadata {
   score: number;
 }
 
+export interface PickleballGameScore {
+  pointsScored: number;
+}
+
+export interface PickleballParticipantMetadata {
+  __typename: "PickleballParticipantMetadata";
+  gamesWon: number;
+  games: PickleballGameScore[];
+}
+
 export type ParticipantMetadata =
   | BasketballParticipantMetadata
   | TennisParticipantMetadata
-  | FootballParticipantMetadata;
+  | FootballParticipantMetadata
+  | PickleballParticipantMetadata;
 
 /**
  * Team instance participant in a game (basic info)
@@ -275,12 +297,42 @@ export interface CreateFootballGameInput {
 }
 
 /**
+ * Input for creating a pickleball game
+ */
+export interface CreatePickleballGameInput {
+  sportType: SportType.PICKLEBALL;
+  startDate: string;
+  description?: string;
+  location?: {
+    address: {
+      street?: string;
+      city: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  metadata: {
+    subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+    bestOf?: number;
+    pointsPerGame?: number;
+    winByTwo?: boolean;
+    scoringType?: PickleballScoringType;
+  };
+}
+
+/**
  * Union type for creating a game
  */
 export type CreateGameInput =
   | CreateBasketballGameInput
   | CreateTennisGameInput
-  | CreateFootballGameInput;
+  | CreateFootballGameInput
+  | CreatePickleballGameInput;
 
 /**
  * Input for updating a game
@@ -322,6 +374,13 @@ export interface UpdateGameInput {
       subtype?: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
       periods?: number;
     };
+    pickleball?: {
+      subtype?: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+      bestOf?: number;
+      pointsPerGame?: number;
+      winByTwo?: boolean;
+      scoringType?: PickleballScoringType;
+    };
   };
 }
 
@@ -352,6 +411,10 @@ export interface ParticipantMetadataInput {
     sets: { gamesWon: number; tiebreakPoints?: number }[];
   };
   football?: { score: number };
+  pickleball?: {
+    gamesWon: number;
+    games: { pointsScored: number }[];
+  };
 }
 
 /**

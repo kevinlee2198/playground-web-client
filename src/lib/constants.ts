@@ -79,6 +79,12 @@ export enum SportType {
   BASKETBALL = "BASKETBALL",
   FOOTBALL = "FOOTBALL",
   TENNIS = "TENNIS",
+  PICKLEBALL = "PICKLEBALL",
+}
+
+export enum PickleballScoringType {
+  SIDE_OUT = "SIDE_OUT",
+  RALLY = "RALLY",
 }
 
 export const SportTypeConfig = {
@@ -95,7 +101,10 @@ export const SportTypeConfig = {
     subtypes: [SportSubtype.SINGLES, SportSubtype.DOUBLES],
     icon: "/sports/tennis.svg",
   },
-  //   PICKLEBALL: [SportSubtype.SINGLES, SportSubtype.DOUBLES],
+  PICKLEBALL: {
+    subtypes: [SportSubtype.SINGLES, SportSubtype.DOUBLES],
+    icon: "/sports/pickleball.svg",
+  },
   //   SOFTBALL: [],
   //   SWIM: [],
 } as const;
@@ -195,7 +204,8 @@ export function getSubtypeFromMetadata(
   metadata:
     | { __typename: "BasketballGameMetadata"; basketballSubtype: string }
     | { __typename: "TennisGameMetadata"; tennisSubtype: string }
-    | { __typename: "FootballGameMetadata"; footballSubtype: string },
+    | { __typename: "FootballGameMetadata"; footballSubtype: string }
+    | { __typename: "PickleballGameMetadata"; pickleballSubtype: string },
 ): SportSubtype {
   switch (metadata.__typename) {
     case "BasketballGameMetadata":
@@ -204,5 +214,7 @@ export function getSubtypeFromMetadata(
       return metadata.tennisSubtype as SportSubtype;
     case "FootballGameMetadata":
       return metadata.footballSubtype as SportSubtype;
+    case "PickleballGameMetadata":
+      return metadata.pickleballSubtype as SportSubtype;
   }
 }

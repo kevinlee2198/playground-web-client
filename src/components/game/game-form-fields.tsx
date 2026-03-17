@@ -1,4 +1,4 @@
-import { getSubtypes, SportSubtype, SportType } from "@/lib/constants";
+import { getSubtypes, PickleballScoringType, SportSubtype, SportType } from "@/lib/constants";
 import type { LocationValue } from "@/lib/types/location";
 import { z } from "zod";
 
@@ -27,11 +27,14 @@ export const createGameFormSchema = z
     subtype: z.enum(SportSubtype, { message: "Required" }),
     startDate: z.date({ message: "Required" }),
     periods: z.number().int().positive("Must be positive").optional(),
-    bestOf: z
-      .number()
-      .refine((v) => v === 3 || v === 5, "Must be 3 or 5")
-      .optional(),
+    bestOf: z.number().int().positive("Must be positive").optional(),
     tiebreakFinalSet: z.boolean().optional(),
+    pointsPerGame: z
+      .number()
+      .refine((v) => v === 11 || v === 15 || v === 21, "Must be 11, 15, or 21")
+      .optional(),
+    winByTwo: z.boolean().optional(),
+    scoringType: z.enum(PickleballScoringType).optional(),
     location: locationSchema,
   })
   .refine(
@@ -44,6 +47,18 @@ export const createGameFormSchema = z
       message: "Invalid subtype for selected sport",
       path: ["subtype"],
     },
+  )
+  .refine(
+    (data) => {
+      if (data.bestOf === undefined) return true;
+      if (data.sportType === SportType.TENNIS) return data.bestOf === 3 || data.bestOf === 5;
+      if (data.sportType === SportType.PICKLEBALL) return data.bestOf === 1 || data.bestOf === 3 || data.bestOf === 5;
+      return true;
+    },
+    {
+      message: "Invalid best-of value for selected sport",
+      path: ["bestOf"],
+    },
   );
 
 export interface CreateGameFormValues {
@@ -53,17 +68,23 @@ export interface CreateGameFormValues {
   periods?: number;
   bestOf?: number;
   tiebreakFinalSet?: boolean;
+  pointsPerGame?: number;
+  winByTwo?: boolean;
+  scoringType?: PickleballScoringType;
   location?: LocationValue;
 }
 
 export const updateGameFormSchema = z.object({
   startDate: z.date({ message: "Required" }),
   periods: z.number().int().positive("Must be positive").optional(),
-  bestOf: z
-    .number()
-    .refine((v) => v === 3 || v === 5, "Must be 3 or 5")
-    .optional(),
+  bestOf: z.number().int().positive("Must be positive").optional(),
   tiebreakFinalSet: z.boolean().optional(),
+  pointsPerGame: z
+    .number()
+    .refine((v) => v === 11 || v === 15 || v === 21, "Must be 11, 15, or 21")
+    .optional(),
+  winByTwo: z.boolean().optional(),
+  scoringType: z.enum(PickleballScoringType).optional(),
   location: locationSchema.nullable(),
 });
 
@@ -72,5 +93,8 @@ export interface UpdateGameFormValues {
   periods?: number;
   bestOf?: number;
   tiebreakFinalSet?: boolean;
+  pointsPerGame?: number;
+  winByTwo?: boolean;
+  scoringType?: PickleballScoringType;
   location?: LocationValue | null;
 }

@@ -19,6 +19,7 @@ const sportGradientClass: Record<SportType, string> = {
   BASKETBALL: "bg-sport-basketball/5 dark:bg-sport-basketball/15",
   TENNIS: "bg-sport-tennis/5 dark:bg-sport-tennis/15",
   FOOTBALL: "bg-sport-football/5 dark:bg-sport-football/15",
+  PICKLEBALL: "bg-sport-pickleball/5 dark:bg-sport-pickleball/15",
 };
 
 export async function GameDetailHero({

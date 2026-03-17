@@ -16,6 +16,7 @@ import { authQuery } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -197,6 +198,39 @@ export default async function GameDetailPage({ params }: PageProps) {
       boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
   }
 
+  let initialPickleballStats: { node: PickleballStatisticsNode }[] = [];
+  if (
+    game.sportType === SportType.PICKLEBALL &&
+    game.gameStatus !== GameStatus.SCHEDULED
+  ) {
+    const statsResponse = await authQuery({
+      pickleballStatistics: {
+        __args: { input: { gameIds: [game.id] }, first: 50 },
+        edges: {
+          node: {
+            id: true,
+            player: playerRefFragment,
+            aces: true,
+            faults: true,
+            doubleFaults: true,
+            pointsWon: true,
+            winners: true,
+            unforcedErrors: true,
+            forcedErrors: true,
+            dinks: true,
+            drives: true,
+            drops: true,
+            lobs: true,
+            volleys: true,
+            overheads: true,
+          },
+        },
+      },
+    });
+    initialPickleballStats =
+      statsResponse.data?.pickleballStatistics?.edges ?? [];
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6">
@@ -206,6 +240,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       <GameDetailClient
         game={game}
         initialBoxScores={initialBoxScores}
+        initialPickleballStats={initialPickleballStats}
         playerId={playerId}
         canUpload={canUpload}
       >

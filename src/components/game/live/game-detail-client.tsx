@@ -8,6 +8,7 @@ import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import { WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -33,6 +34,7 @@ export function useGameLiveContext(): LiveGameState | null {
 interface GameDetailClientProps {
   game: GameDetail;
   initialBoxScores: { node: BasketballBoxScoreNode }[];
+  initialPickleballStats?: { node: PickleballStatisticsNode }[];
   playerId: number;
   canUpload: boolean;
   children: ReactNode;
@@ -41,6 +43,7 @@ interface GameDetailClientProps {
 export function GameDetailClient({
   game,
   initialBoxScores,
+  initialPickleballStats,
   playerId,
   canUpload,
   children,
@@ -171,6 +174,7 @@ export function GameDetailClient({
         <GameBoxScores
           game={state.game}
           boxScores={state.boxScores}
+          pickleballStats={initialPickleballStats}
         />
       </section>
 

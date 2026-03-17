@@ -8,12 +8,14 @@ const sportEmoji: Record<SportType, string> = {
   BASKETBALL: "🏀",
   TENNIS: "🎾",
   FOOTBALL: "🏈",
+  PICKLEBALL: "🥒",
 };
 
 const sportBgClass: Record<SportType, string> = {
   BASKETBALL: "bg-sport-basketball",
   TENNIS: "bg-sport-tennis",
   FOOTBALL: "bg-sport-football",
+  PICKLEBALL: "bg-sport-pickleball",
 };
 
 interface SportEmojiPillProps {
