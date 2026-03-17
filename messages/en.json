@@ -33,7 +33,8 @@
   "sports": {
     "BASKETBALL": "Basketball",
     "FOOTBALL": "Football",
-    "TENNIS": "Tennis"
+    "TENNIS": "Tennis",
+    "PICKLEBALL": "Pickleball"
   },
   "sportSubtypes": {
     "FIVE_ON_FIVE": "5v5",
@@ -191,6 +192,11 @@
       "bestOf": "Best Of",
       "bestOfPlaceholder": "Default: 3",
       "tiebreakFinalSet": "Tiebreak in Final Set",
+      "pointsPerGame": "Points Per Game",
+      "pointsPerGamePlaceholder": "Default: 11",
+      "winByTwo": "Win by Two",
+      "scoringType": "Scoring Type",
+      "selectScoringType": "Select scoring type",
       "location": "Location"
     },
     "status": {
@@ -373,7 +379,14 @@
       "periods": "{count, plural, one {# Period} other {# Periods}}",
       "bestOf": "Best of {count}",
       "tiebreakFinalSet": "Final Set Tiebreak",
-      "noTiebreakFinalSet": "No Final Set Tiebreak"
+      "noTiebreakFinalSet": "No Final Set Tiebreak",
+      "pointsPerGame": "{count} points per game",
+      "winByTwo": "Win by Two",
+      "noWinByTwo": "No Win by Two",
+      "scoringType": {
+        "SIDE_OUT": "Side-Out Scoring",
+        "RALLY": "Rally Scoring"
+      }
     },
     "scoreboard": {
       "title": "Score",
@@ -389,10 +402,13 @@
       "sets": "Sets",
       "addSet": "Add Set",
       "removeSet": "Remove Set",
+      "game": "Game",
+      "addGame": "Add Game",
       "gamesWon": "Games",
       "tiebreakPoints": "TB",
       "setsWon": "Sets Won",
-      "points": "Points"
+      "points": "Points",
+      "player": "Player"
     },
     "detail": {
       "location": "Location",
