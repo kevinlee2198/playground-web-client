@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { GameScore } from "@/components/game/score/game-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
+import { BaseballScoreForm } from "@/components/game/scoreboard/baseball-score-form";
 import { BasketballScoreForm } from "@/components/game/scoreboard/basketball-score-form";
 import { FootballScoreForm } from "@/components/game/scoreboard/football-score-form";
 import { PickleballScoreForm } from "@/components/game/scoreboard/pickleball-score-form";
@@ -74,6 +75,18 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
 
   function renderScoreForm(): ReactNode {
     switch (game.sportType) {
+      case SportType.BASEBALL:
+        return (
+          <BaseballScoreForm
+            sportType={SportType.BASEBALL}
+            participantA={participantA}
+            participantB={participantB}
+            nameA={nameA}
+            nameB={nameB}
+            onSuccess={handleClose}
+            onCancel={handleClose}
+          />
+        );
       case SportType.BASKETBALL:
         return (
           <BasketballScoreForm
