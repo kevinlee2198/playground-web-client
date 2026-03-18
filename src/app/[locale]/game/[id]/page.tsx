@@ -52,7 +52,7 @@ export async function generateMetadata({
       const subtype = getSubtypeFromMetadata(game.metadata);
       return {
         title: `${game.sportType} Game | Playground`,
-        description: `${game.sportType} - ${subtype}`,
+        description: subtype ? `${game.sportType} - ${subtype}` : `${game.sportType}`,
       };
     }
   } catch (error) {

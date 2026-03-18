@@ -102,9 +102,11 @@ export function GameCard({ game }: GameCardProps) {
           {/* Sport info row: emoji pill + subtype */}
           <div className="flex items-center gap-2">
             <SportEmojiPill sportType={game.sportType} />
-            <Badge variant="outline" className="text-xs">
-              {t(`sportSubtypes.${subtype}`)}
-            </Badge>
+            {subtype != null && (
+              <Badge variant="outline" className="text-xs">
+                {t(`sportSubtypes.${subtype}`)}
+              </Badge>
+            )}
           </div>
 
           {/* Score block */}

@@ -11,8 +11,8 @@ import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographyH4 } from "@/components/ui/typography";
 import {
   GameVisibility,
-  getMaxParticipants,
-  getParticipationType,
+  getSportMaxParticipants,
+  getSportParticipationType,
   getSubtypeFromMetadata,
   ParticipationType,
 } from "@/lib/constants";
@@ -37,10 +37,10 @@ export function GameParticipants({
   const [showAddTeamDialog, setShowAddTeamDialog] = useState(false);
 
   const subtype = getSubtypeFromMetadata(game.metadata);
-  const participationType = getParticipationType(subtype);
+  const participationType = getSportParticipationType(game.sportType, subtype);
   const isTeamBased = participationType === ParticipationType.TEAM;
   const hasParticipants = game.participants.edges.length > 0;
-  const maxParticipants = getMaxParticipants(subtype);
+  const maxParticipants = getSportMaxParticipants(game.sportType, subtype);
   const atParticipantLimit = game.participants.edges.length >= maxParticipants;
 
   const isPlayerOnAnyTeam =

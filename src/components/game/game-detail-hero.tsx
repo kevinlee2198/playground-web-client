@@ -20,6 +20,7 @@ const sportGradientClass: Record<SportType, string> = {
   TENNIS: "bg-sport-tennis/5 dark:bg-sport-tennis/15",
   FOOTBALL: "bg-sport-football/5 dark:bg-sport-football/15",
   PICKLEBALL: "bg-sport-pickleball/5 dark:bg-sport-pickleball/15",
+  BASEBALL: "bg-sport-baseball/5 dark:bg-sport-baseball/15",
 };
 
 export async function GameDetailHero({
@@ -50,9 +51,11 @@ export async function GameDetailHero({
         {/* Sport info row: emoji pill + subtype badge */}
         <div className="flex items-center justify-center gap-2">
           <SportEmojiPill sportType={game.sportType} />
-          <Badge variant="outline" className="text-xs">
-            {t(`sportSubtypes.${subtype}`)}
-          </Badge>
+          {subtype != null && (
+            <Badge variant="outline" className="text-xs">
+              {t(`sportSubtypes.${subtype}`)}
+            </Badge>
+          )}
         </div>
 
         {/* Game description */}

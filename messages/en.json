@@ -34,7 +34,8 @@
     "BASKETBALL": "Basketball",
     "FOOTBALL": "Football",
     "TENNIS": "Tennis",
-    "PICKLEBALL": "Pickleball"
+    "PICKLEBALL": "Pickleball",
+    "BASEBALL": "Baseball"
   },
   "sportSubtypes": {
     "FIVE_ON_FIVE": "5v5",
@@ -197,7 +198,9 @@
       "winByTwo": "Win by Two",
       "scoringType": "Scoring Type",
       "selectScoringType": "Select scoring type",
-      "location": "Location"
+      "location": "Location",
+      "innings": "Number of Innings",
+      "inningsPlaceholder": "Default: 9"
     },
     "status": {
       "scheduled": "Scheduled",
@@ -433,6 +436,51 @@
           "offensive": "Offense",
           "defensive": "Defense",
           "specialTeams": "Special Teams"
+        }
+      },
+      "baseball": {
+        "batting": {
+          "atBats": "AB",
+          "runs": "R",
+          "hits": "H",
+          "doubles": "2B",
+          "triples": "3B",
+          "homeRuns": "HR",
+          "rbi": "RBI",
+          "walks": "BB",
+          "strikeouts": "K",
+          "stolenBases": "SB",
+          "caughtStealing": "CS",
+          "hitByPitch": "HBP",
+          "sacrifices": "SAC",
+          "battingAverage": "AVG"
+        },
+        "pitching": {
+          "inningsPitched": "IP",
+          "hitsAllowed": "H",
+          "runsAllowed": "R",
+          "earnedRuns": "ER",
+          "walks": "BB",
+          "strikeouts": "K",
+          "homeRunsAllowed": "HR",
+          "hitBatsmen": "HB",
+          "wildPitches": "WP",
+          "pitchCount": "PC",
+          "win": "W",
+          "loss": "L",
+          "creditedSave": "SV",
+          "era": "ERA"
+        },
+        "fielding": {
+          "putouts": "PO",
+          "assists": "A",
+          "errors": "E",
+          "fieldingPercentage": "FPCT"
+        },
+        "sections": {
+          "batting": "Batting",
+          "pitching": "Pitching",
+          "fielding": "Fielding"
         }
       }
     },
