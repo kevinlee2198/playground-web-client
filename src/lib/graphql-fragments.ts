@@ -146,6 +146,10 @@ export const gameMetadataFragment = {
   __typename: true,
   __on: [
     {
+      __typeName: "BaseballGameMetadata",
+      innings: true,
+    },
+    {
       __typeName: "BasketballGameMetadata",
       basketballSubtype: {
         __aliasFor: "subtype",
@@ -187,6 +191,10 @@ export const gameMetadataFragment = {
 export const participantMetadataFragment = {
   __typename: true,
   __on: [
+    {
+      __typeName: "BaseballParticipantMetadata",
+      score: true,
+    },
     {
       __typeName: "BasketballParticipantMetadata",
       score: true,

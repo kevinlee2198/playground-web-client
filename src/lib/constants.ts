@@ -76,6 +76,7 @@ export const SportSubtypeConfig = {
 } as const;
 
 export enum SportType {
+  BASEBALL = "BASEBALL",
   BASKETBALL = "BASKETBALL",
   FOOTBALL = "FOOTBALL",
   TENNIS = "TENNIS",
@@ -88,7 +89,13 @@ export enum PickleballScoringType {
 }
 
 export const SportTypeConfig = {
-  //   BASEBALL: [],
+  BASEBALL: {
+    subtypes: [],
+    icon: "/sports/baseball.svg",
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 25,
+    maxParticipants: 2,
+  },
   BASKETBALL: {
     subtypes: [SportSubtype.FIVE_ON_FIVE, SportSubtype.THREE_ON_THREE],
     icon: "/sports/basketball.svg",
@@ -202,12 +209,15 @@ export const GameStatusAriaLabelKey: Record<GameStatus, string> = {
  */
 export function getSubtypeFromMetadata(
   metadata:
+    | { __typename: "BaseballGameMetadata" }
     | { __typename: "BasketballGameMetadata"; basketballSubtype: string }
     | { __typename: "TennisGameMetadata"; tennisSubtype: string }
     | { __typename: "FootballGameMetadata"; footballSubtype: string }
     | { __typename: "PickleballGameMetadata"; pickleballSubtype: string },
-): SportSubtype {
+): SportSubtype | null {
   switch (metadata.__typename) {
+    case "BaseballGameMetadata":
+      return null;
     case "BasketballGameMetadata":
       return metadata.basketballSubtype as SportSubtype;
     case "TennisGameMetadata":
@@ -217,4 +227,22 @@ export function getSubtypeFromMetadata(
     case "PickleballGameMetadata":
       return metadata.pickleballSubtype as SportSubtype;
   }
+}
+
+export function getSportParticipationType(
+  sportType: SportType,
+  subtype: SportSubtype | null,
+): ParticipationType {
+  if (subtype != null) return SportSubtypeConfig[subtype].participation;
+  const config = SportTypeConfig[sportType];
+  return "participation" in config ? config.participation : ParticipationType.TEAM;
+}
+
+export function getSportMaxParticipants(
+  sportType: SportType,
+  subtype: SportSubtype | null,
+): number {
+  if (subtype != null) return SportSubtypeConfig[subtype].maxParticipants;
+  const config = SportTypeConfig[sportType];
+  return "maxParticipants" in config ? config.maxParticipants : 2;
 }
