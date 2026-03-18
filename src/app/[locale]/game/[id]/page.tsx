@@ -23,6 +23,11 @@ import type {
 } from "@/lib/types/stats/football";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
+import type {
+  BaseballBattingStatsNode,
+  BaseballPitchingStatsNode,
+  BaseballFieldingStatsNode,
+} from "@/lib/types/stats/baseball";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -276,6 +281,10 @@ export default async function GameDetailPage({ params }: PageProps) {
   let initialFootballDefensiveStats: { node: FootballDefensiveStatsNode }[] = [];
   let initialFootballSpecialTeamsStats: { node: FootballSpecialTeamsStatsNode }[] = [];
 
+  let initialBaseballBattingStats: { node: BaseballBattingStatsNode }[] = [];
+  let initialBaseballPitchingStats: { node: BaseballPitchingStatsNode }[] = [];
+  let initialBaseballFieldingStats: { node: BaseballFieldingStatsNode }[] = [];
+
   if (
     game.sportType === SportType.FOOTBALL &&
     game.gameStatus !== GameStatus.SCHEDULED
@@ -364,6 +373,83 @@ export default async function GameDetailPage({ params }: PageProps) {
     initialFootballSpecialTeamsStats = stResponse.data?.footballSpecialTeamsStats?.edges ?? [];
   }
 
+  if (
+    game.sportType === SportType.BASEBALL &&
+    game.gameStatus !== GameStatus.SCHEDULED
+  ) {
+    const [batResponse, pitchResponse, fieldResponse] = await Promise.all([
+      authQuery({
+        baseballBattingStats: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              atBats: true,
+              runs: true,
+              hits: true,
+              doubles: true,
+              triples: true,
+              homeRuns: true,
+              rbi: true,
+              walks: true,
+              strikeouts: true,
+              stolenBases: true,
+              caughtStealing: true,
+              hitByPitch: true,
+              sacrifices: true,
+              battingAverage: true,
+            },
+          },
+        },
+      }),
+      authQuery({
+        baseballPitchingStats: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              inningsPitched: true,
+              hitsAllowed: true,
+              runsAllowed: true,
+              earnedRuns: true,
+              walks: true,
+              strikeouts: true,
+              homeRunsAllowed: true,
+              hitBatsmen: true,
+              wildPitches: true,
+              pitchCount: true,
+              win: true,
+              loss: true,
+              creditedSave: true,
+              era: true,
+            },
+          },
+        },
+      }),
+      authQuery({
+        baseballFieldingStats: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              putouts: true,
+              assists: true,
+              errors: true,
+              fieldingPercentage: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    initialBaseballBattingStats = batResponse.data?.baseballBattingStats?.edges ?? [];
+    initialBaseballPitchingStats = pitchResponse.data?.baseballPitchingStats?.edges ?? [];
+    initialBaseballFieldingStats = fieldResponse.data?.baseballFieldingStats?.edges ?? [];
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6">
@@ -378,6 +464,9 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialFootballDefensiveStats={initialFootballDefensiveStats}
         initialFootballSpecialTeamsStats={initialFootballSpecialTeamsStats}
         initialTennisStats={initialTennisStats}
+        initialBaseballBattingStats={initialBaseballBattingStats}
+        initialBaseballPitchingStats={initialBaseballPitchingStats}
+        initialBaseballFieldingStats={initialBaseballFieldingStats}
         playerId={playerId}
         canUpload={canUpload}
       >

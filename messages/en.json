@@ -469,7 +469,8 @@
           "win": "W",
           "loss": "L",
           "creditedSave": "SV",
-          "era": "ERA"
+          "era": "ERA",
+          "decisionFlags": "Decision"
         },
         "fielding": {
           "putouts": "PO",
