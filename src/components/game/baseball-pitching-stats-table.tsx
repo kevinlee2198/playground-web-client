@@ -194,6 +194,20 @@ export function BaseballPitchingStatsTable({
       };
     }
 
+    function booleanStatColumn(
+      key: "win" | "loss" | "creditedSave",
+    ): ColumnDef<BaseballPitchingStatsNode> {
+      return {
+        accessorKey: key,
+        header: t(key),
+        cell: ({ row }) => (
+          <span className="tabular-nums">
+            {row.original[key] === true ? "✓" : "-"}
+          </span>
+        ),
+      };
+    }
+
     return [
       {
         accessorKey: "player",
@@ -218,30 +232,9 @@ export function BaseballPitchingStatsTable({
       plainStatColumn("hitBatsmen"),
       plainStatColumn("wildPitches"),
       plainStatColumn("pitchCount"),
-      {
-        accessorKey: "win",
-        header: t("win"),
-        cell: ({ row }) => {
-          const val = row.original.win;
-          return <span className="tabular-nums">{val === true ? "\u2713" : "-"}</span>;
-        },
-      },
-      {
-        accessorKey: "loss",
-        header: t("loss"),
-        cell: ({ row }) => {
-          const val = row.original.loss;
-          return <span className="tabular-nums">{val === true ? "\u2713" : "-"}</span>;
-        },
-      },
-      {
-        accessorKey: "creditedSave",
-        header: t("creditedSave"),
-        cell: ({ row }) => {
-          const val = row.original.creditedSave;
-          return <span className="tabular-nums">{val === true ? "\u2713" : "-"}</span>;
-        },
-      },
+      booleanStatColumn("win"),
+      booleanStatColumn("loss"),
+      booleanStatColumn("creditedSave"),
       {
         accessorKey: "era",
         header: t("era"),

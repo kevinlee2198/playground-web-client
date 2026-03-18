@@ -242,7 +242,6 @@ export function BaseballPitchingStatsForm({
             </form.Field>
           </FieldGroup>
 
-          {/* Decision flags */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium">
               {t("game.boxScore.baseball.pitching.decisionFlags")}
