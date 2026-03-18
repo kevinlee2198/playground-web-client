@@ -198,6 +198,11 @@ export async function updateGame(
         if (input.metadata.pickleball.scoringType !== undefined)
           p.scoringType = new EnumType(input.metadata.pickleball.scoringType);
         metadataInput.pickleball = p;
+      } else if (input.metadata.baseball) {
+        const bb: Record<string, unknown> = {};
+        if (input.metadata.baseball.innings !== undefined)
+          bb.innings = input.metadata.baseball.innings;
+        metadataInput.baseball = bb;
       }
       mutationInput.metadata = metadataInput;
     }
