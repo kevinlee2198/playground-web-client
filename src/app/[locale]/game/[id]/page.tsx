@@ -11,6 +11,7 @@ import {
   participantDetailNodeFragment,
   playerRefFragment,
   resourceFragment,
+  viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
@@ -105,6 +106,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       resultsFinalized: true,
       viewerGameRole: true,
       visibility: true,
+      viewerInvitation: viewerInvitationFragment,
       location: locationFragment,
       participants: {
         __args: { first: 50 },

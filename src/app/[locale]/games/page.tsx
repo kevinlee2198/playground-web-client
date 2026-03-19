@@ -21,6 +21,7 @@ import {
 import {
   gameMetadataFragment,
   participantNodeFragment,
+  viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { GameFilterParams } from "@/lib/types/game";
@@ -92,7 +93,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     gameStatus: isValidGameStatus(gameStatusParam)
       ? gameStatusParam
       : undefined,
-    organizedByMe: queryParams.myGames === "true" ? true : undefined,
+    myGames: queryParams.myGames === "true" ? true : undefined,
+    invitedToMe: queryParams.invitedToMe === "true" ? true : undefined,
   };
 
   // Parse sort from URL
@@ -115,7 +117,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     filterInput.sportType = new EnumType(filters.sportType);
   if (filters.gameStatus)
     filterInput.gameStatus = new EnumType(filters.gameStatus);
-  if (filters.organizedByMe) filterInput.organizedByMe = filters.organizedByMe;
+  if (filters.myGames) filterInput.myGames = filters.myGames;
+  if (filters.invitedToMe) filterInput.invitedToMe = filters.invitedToMe;
 
   // Fetch games
   const gamesResponse = await authQuery({
@@ -141,6 +144,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           gameStatus: true,
           viewerGameRole: true,
           visibility: true,
+          viewerInvitation: viewerInvitationFragment,
           location: {
             name: true,
             address: {
@@ -204,7 +208,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         <div className="flex-1">
           <GameListSort
             currentSort={{ field: sortField, direction: sortDirection }}
-            myGames={filters.organizedByMe === true}
+            myGames={filters.myGames === true}
           />
 
           {games.edges.length === 0 ? (

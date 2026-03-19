@@ -6,6 +6,7 @@ import {
   gameMetadataFragment,
   participantNodeFragment,
   resourceFragment,
+  viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
@@ -110,6 +111,10 @@ export async function createGame(
       };
     }
 
+    if (input.visibility !== undefined) {
+      sportInput.visibility = new EnumType(input.visibility);
+    }
+
     const mutationInput = { [sportKey]: sportInput };
 
     const response = await authMutate({
@@ -209,6 +214,10 @@ export async function updateGame(
 
     if (input.location !== undefined) {
       mutationInput.location = input.location;
+    }
+
+    if (input.visibility !== undefined) {
+      mutationInput.visibility = new EnumType(input.visibility);
     }
 
     const response = await authMutate({
@@ -384,6 +393,8 @@ export async function loadMoreGames(
     if (filters.gameStatus)
       filterInput.gameStatus = new EnumType(filters.gameStatus);
     if (filters.organizedByMe) filterInput.organizedByMe = filters.organizedByMe;
+    if (filters.invitedToMe) filterInput.invitedToMe = filters.invitedToMe;
+    if (filters.myGames) filterInput.myGames = filters.myGames;
 
     const response = await authQuery({
       games: {
@@ -409,6 +420,7 @@ export async function loadMoreGames(
             gameStatus: true,
             viewerGameRole: true,
             visibility: true,
+            viewerInvitation: viewerInvitationFragment,
             location: {
               name: true,
               address: {
