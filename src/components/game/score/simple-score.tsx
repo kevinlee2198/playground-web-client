@@ -9,6 +9,7 @@ function getSimpleScore(
 ): number | null {
   if (!metadata) return null;
   if (
+    metadata.__typename === "BaseballParticipantMetadata" ||
     metadata.__typename === "BasketballParticipantMetadata" ||
     metadata.__typename === "FootballParticipantMetadata"
   ) {

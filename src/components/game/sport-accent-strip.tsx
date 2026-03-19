@@ -6,6 +6,7 @@ const sportColorClass: Record<SportType, string> = {
   TENNIS: "bg-sport-tennis-foreground",
   FOOTBALL: "bg-sport-football-foreground",
   PICKLEBALL: "bg-sport-pickleball-foreground",
+  BASEBALL: "bg-sport-baseball-foreground",
 };
 
 interface SportAccentStripProps {

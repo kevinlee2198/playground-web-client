@@ -57,6 +57,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       pointsPerGame: undefined as number | undefined,
       winByTwo: undefined as boolean | undefined,
       scoringType: undefined as PickleballScoringType | undefined,
+      innings: undefined as number | undefined,
       location: undefined as LocationValue | undefined,
     },
     validators: {
@@ -77,7 +78,15 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
 
         let input: CreateGameInput;
 
-        if (sportType === SportType.BASKETBALL) {
+        if (sportType === SportType.BASEBALL) {
+          input = {
+            sportType: SportType.BASEBALL,
+            startDate: value.startDate.toISOString(),
+            metadata: {
+              ...(value.innings !== undefined && { innings: value.innings }),
+            },
+          };
+        } else if (sportType === SportType.BASKETBALL) {
           input = {
             sportType: SportType.BASKETBALL,
             startDate: value.startDate.toISOString(),
@@ -199,21 +208,23 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
         )}
       </form.Field>
 
-      <form.Field name="subtype">
-        {(field) => (
-          <FormComboboxField
-            field={field}
-            label={t("game.form.sportSubtype")}
-            required
-            disabled={isPending || !selectedSportType}
-            placeholder={t("game.form.selectFormat")}
-            options={availableSubtypes.map((subtype) => ({
-              value: subtype,
-              label: t(`sportSubtypes.${subtype}`),
-            }))}
-          />
-        )}
-      </form.Field>
+      {availableSubtypes.length > 0 && (
+        <form.Field name="subtype">
+          {(field) => (
+            <FormComboboxField
+              field={field}
+              label={t("game.form.sportSubtype")}
+              required
+              disabled={isPending || !selectedSportType}
+              placeholder={t("game.form.selectFormat")}
+              options={availableSubtypes.map((subtype) => ({
+                value: subtype,
+                label: t(`sportSubtypes.${subtype}`),
+              }))}
+            />
+          )}
+        </form.Field>
+      )}
 
       <form.Field name="startDate">
         {(field) => (
@@ -455,6 +466,20 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                   )}
                 </form.Field>
               </>
+            )}
+
+            {selectedSportType === SportType.BASEBALL && (
+              <form.Field name="innings">
+                {(field) => (
+                  <FormTextField
+                    field={field}
+                    label={t("game.form.innings")}
+                    type="number"
+                    disabled={isPending}
+                    placeholder={t("game.form.inningsPlaceholder")}
+                  />
+                )}
+              </form.Field>
             )}
           </CollapsibleContent>
         </Collapsible>

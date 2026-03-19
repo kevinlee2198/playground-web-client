@@ -1,4 +1,4 @@
-import { getSubtypes, PickleballScoringType, SportSubtype, SportType } from "@/lib/constants";
+import { getSubtypes, PickleballScoringType, SportSubtype, SportType, SportTypeConfig } from "@/lib/constants";
 import type { LocationValue } from "@/lib/types/location";
 import { z } from "zod";
 
@@ -24,7 +24,7 @@ const locationSchema = z
 export const createGameFormSchema = z
   .object({
     sportType: z.enum(SportType, { message: "Required" }),
-    subtype: z.enum(SportSubtype, { message: "Required" }),
+    subtype: z.enum(SportSubtype, { message: "Required" }).optional(),
     startDate: z.date({ message: "Required" }),
     periods: z.number().int().positive("Must be positive").optional(),
     bestOf: z.number().int().positive("Must be positive").optional(),
@@ -35,11 +35,15 @@ export const createGameFormSchema = z
       .optional(),
     winByTwo: z.boolean().optional(),
     scoringType: z.enum(PickleballScoringType).optional(),
+    innings: z.number().int().positive("Must be positive").optional(),
     location: locationSchema,
   })
   .refine(
     (data) => {
-      if (!data.sportType || !data.subtype) return true;
+      if (!data.sportType) return true;
+      const sportConfig = SportTypeConfig[data.sportType];
+      if (sportConfig.subtypes.length === 0) return true;
+      if (!data.subtype) return false;
       const validSubtypes = getSubtypes(data.sportType);
       return (validSubtypes as readonly SportSubtype[]).includes(data.subtype);
     },
@@ -63,7 +67,7 @@ export const createGameFormSchema = z
 
 export interface CreateGameFormValues {
   sportType: SportType;
-  subtype: SportSubtype;
+  subtype?: SportSubtype;
   startDate: Date;
   periods?: number;
   bestOf?: number;
@@ -71,6 +75,7 @@ export interface CreateGameFormValues {
   pointsPerGame?: number;
   winByTwo?: boolean;
   scoringType?: PickleballScoringType;
+  innings?: number;
   location?: LocationValue;
 }
 
@@ -85,6 +90,7 @@ export const updateGameFormSchema = z.object({
     .optional(),
   winByTwo: z.boolean().optional(),
   scoringType: z.enum(PickleballScoringType).optional(),
+  innings: z.number().int().positive("Must be positive").optional(),
   location: locationSchema.nullable(),
 });
 
@@ -96,5 +102,6 @@ export interface UpdateGameFormValues {
   pointsPerGame?: number;
   winByTwo?: boolean;
   scoringType?: PickleballScoringType;
+  innings?: number;
   location?: LocationValue | null;
 }

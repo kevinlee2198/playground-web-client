@@ -47,6 +47,7 @@ function buildDefaultValues(
   metadata: GameMetadata,
   currentLocation?: Location | null,
 ) {
+  const isBaseball = metadata.__typename === "BaseballGameMetadata";
   const hasPeriods =
     metadata.__typename === "BasketballGameMetadata" ||
     metadata.__typename === "FootballGameMetadata";
@@ -79,6 +80,7 @@ function buildDefaultValues(
     scoringType: isPickleball
       ? (metadata.scoringType ?? undefined)
       : (undefined as PickleballScoringType | undefined),
+    innings: isBaseball ? (metadata.innings ?? undefined) : (undefined as number | undefined),
     location: (currentLocation
       ? locationToValue(currentLocation)
       : undefined) as LocationValue | null | undefined,
@@ -149,6 +151,10 @@ export function UpdateGameForm({
           metadata.__typename === "PickleballGameMetadata"
             ? metadata.scoringType
             : null;
+        const originalInnings =
+          metadata.__typename === "BaseballGameMetadata"
+            ? metadata.innings
+            : null;
 
         const periodsChanged = value.periods !== originalPeriods;
         const bestOfChanged = value.bestOf !== originalBestOf;
@@ -158,6 +164,7 @@ export function UpdateGameForm({
           value.pointsPerGame !== originalPointsPerGame;
         const winByTwoChanged = value.winByTwo !== originalWinByTwo;
         const scoringTypeChanged = value.scoringType !== originalScoringType;
+        const inningsChanged = value.innings !== originalInnings;
 
         if (
           periodsChanged ||
@@ -165,7 +172,8 @@ export function UpdateGameForm({
           tiebreakChanged ||
           pointsPerGameChanged ||
           winByTwoChanged ||
-          scoringTypeChanged
+          scoringTypeChanged ||
+          inningsChanged
         ) {
           input.metadata = {};
 
@@ -200,6 +208,11 @@ export function UpdateGameForm({
             }
             if (scoringTypeChanged && value.scoringType !== undefined) {
               input.metadata.pickleball.scoringType = value.scoringType;
+            }
+          } else if (sportType === SportType.BASEBALL) {
+            input.metadata.baseball = {};
+            if (inningsChanged && value.innings !== undefined) {
+              input.metadata.baseball.innings = value.innings;
             }
           }
         }
@@ -484,6 +497,20 @@ export function UpdateGameForm({
                 )}
               </form.Field>
             </>
+          )}
+
+          {sportType === SportType.BASEBALL && (
+            <form.Field name="innings">
+              {(field) => (
+                <FormTextField
+                  field={field}
+                  label={t("game.form.innings")}
+                  type="number"
+                  disabled={isPending}
+                  placeholder={t("game.form.inningsPlaceholder")}
+                />
+              )}
+            </form.Field>
           )}
         </CollapsibleContent>
       </Collapsible>

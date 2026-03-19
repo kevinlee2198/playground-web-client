@@ -28,6 +28,16 @@ export interface PlayerRef {
 
 // ---------- Game Metadata (response types -- fields are T | null for nullable) ----------
 
+export interface BaseballGameMetadata {
+  __typename: "BaseballGameMetadata";
+  innings: number | null;
+}
+
+export interface BaseballParticipantMetadata {
+  __typename: "BaseballParticipantMetadata";
+  score: number;
+}
+
 export interface BasketballGameMetadata {
   __typename: "BasketballGameMetadata";
   basketballSubtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
@@ -57,6 +67,7 @@ export interface PickleballGameMetadata {
 }
 
 export type GameMetadata =
+  | BaseballGameMetadata
   | BasketballGameMetadata
   | TennisGameMetadata
   | FootballGameMetadata
@@ -96,6 +107,7 @@ export interface PickleballParticipantMetadata {
 }
 
 export type ParticipantMetadata =
+  | BaseballParticipantMetadata
   | BasketballParticipantMetadata
   | TennisParticipantMetadata
   | FootballParticipantMetadata
@@ -218,6 +230,31 @@ export interface GameDetail {
 }
 
 /**
+ * Input for creating a baseball game
+ */
+export interface CreateBaseballGameInput {
+  sportType: SportType.BASEBALL;
+  startDate: string;
+  description?: string;
+  location?: {
+    address: {
+      street?: string;
+      city: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  metadata: {
+    innings?: number;
+  };
+}
+
+/**
  * Input for creating a basketball game
  */
 export interface CreateBasketballGameInput {
@@ -329,6 +366,7 @@ export interface CreatePickleballGameInput {
  * Union type for creating a game
  */
 export type CreateGameInput =
+  | CreateBaseballGameInput
   | CreateBasketballGameInput
   | CreateTennisGameInput
   | CreateFootballGameInput
@@ -361,6 +399,9 @@ export interface UpdateGameInput {
     };
   } | null;
   metadata?: {
+    baseball?: {
+      innings?: number;
+    };
     basketball?: {
       subtype?: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
       periods?: number;
@@ -405,6 +446,7 @@ export interface AddIndividualParticipantInput {
 // ---------- Participant Metadata Input (@oneOf -- exactly one key) ----------
 
 export interface ParticipantMetadataInput {
+  baseball?: { score: number };
   basketball?: { score: number };
   tennis?: {
     setsWon: number;

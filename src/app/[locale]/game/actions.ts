@@ -49,13 +49,18 @@ export async function createGame(
   try {
     // Build @oneOf input based on sport type — the key must be the lowercase sport name
     const sportKey = input.sportType.toLowerCase() as
+      | "baseball"
       | "basketball"
       | "football"
       | "tennis"
       | "pickleball";
-    const metadata: Record<string, unknown> = {
-      subtype: new EnumType(input.metadata.subtype),
-    };
+    const metadata: Record<string, unknown> = {};
+    if ("subtype" in input.metadata && input.metadata.subtype !== undefined) {
+      metadata.subtype = new EnumType(input.metadata.subtype);
+    }
+    if ("innings" in input.metadata && input.metadata.innings !== undefined) {
+      metadata.innings = input.metadata.innings;
+    }
     if ("periods" in input.metadata && input.metadata.periods !== undefined) {
       metadata.periods = input.metadata.periods;
     }
@@ -193,6 +198,11 @@ export async function updateGame(
         if (input.metadata.pickleball.scoringType !== undefined)
           p.scoringType = new EnumType(input.metadata.pickleball.scoringType);
         metadataInput.pickleball = p;
+      } else if (input.metadata.baseball) {
+        const bb: Record<string, unknown> = {};
+        if (input.metadata.baseball.innings !== undefined)
+          bb.innings = input.metadata.baseball.innings;
+        metadataInput.baseball = bb;
       }
       mutationInput.metadata = metadataInput;
     }

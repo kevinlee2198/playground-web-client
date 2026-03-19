@@ -19,6 +19,7 @@ export function GameScore({ sportType, participants, statusPill, size = "sm" }: 
   if (!a.metadata && !b.metadata) return null;
 
   switch (sportType) {
+    case SportType.BASEBALL:
     case SportType.BASKETBALL:
     case SportType.FOOTBALL:
       return <SimpleScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;

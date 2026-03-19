@@ -5,6 +5,9 @@ import { CollapsibleBoxScore } from "@/components/game/collapsible-box-score";
 import { FootballDefensiveStatsTable } from "@/components/game/football-defensive-stats-table";
 import { FootballOffensiveStatsTable } from "@/components/game/football-offensive-stats-table";
 import { FootballSpecialTeamsStatsTable } from "@/components/game/football-special-teams-stats-table";
+import { BaseballBattingStatsTable } from "@/components/game/baseball-batting-stats-table";
+import { BaseballPitchingStatsTable } from "@/components/game/baseball-pitching-stats-table";
+import { BaseballFieldingStatsTable } from "@/components/game/baseball-fielding-stats-table";
 import { PickleballStatsTable } from "@/components/game/pickleball-stats-table";
 import { TennisStatsTable } from "@/components/game/tennis-stats-table";
 import { TypographyH4 } from "@/components/ui/typography";
@@ -24,6 +27,11 @@ import type {
   FootballOffensiveStatsNode,
   FootballSpecialTeamsStatsNode,
 } from "@/lib/types/stats/football";
+import type {
+  BaseballBattingStatsNode,
+  BaseballPitchingStatsNode,
+  BaseballFieldingStatsNode,
+} from "@/lib/types/stats/baseball";
 import { useTranslations } from "next-intl";
 
 interface GameBoxScoresProps {
@@ -34,6 +42,9 @@ interface GameBoxScoresProps {
   footballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
   footballDefensiveStats?: { node: FootballDefensiveStatsNode }[];
   footballSpecialTeamsStats?: { node: FootballSpecialTeamsStatsNode }[];
+  baseballBattingStats?: { node: BaseballBattingStatsNode }[];
+  baseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
+  baseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
 }
 
 interface TeamBoxScoreGroup<T extends BoxScoreNode> {
@@ -98,6 +109,9 @@ export function GameBoxScores({
   footballOffensiveStats,
   footballDefensiveStats,
   footballSpecialTeamsStats,
+  baseballBattingStats,
+  baseballPitchingStats,
+  baseballFieldingStats,
 }: GameBoxScoresProps) {
   const t = useTranslations();
 
@@ -105,7 +119,8 @@ export function GameBoxScores({
     game.sportType !== SportType.BASKETBALL &&
     game.sportType !== SportType.PICKLEBALL &&
     game.sportType !== SportType.TENNIS &&
-    game.sportType !== SportType.FOOTBALL
+    game.sportType !== SportType.FOOTBALL &&
+    game.sportType !== SportType.BASEBALL
   ) {
     return null;
   }
@@ -119,6 +134,79 @@ export function GameBoxScores({
     game.viewerGameRole != null && game.gameStatus === GameStatus.COMPLETE;
 
   const fallbackGroupName = t("game.boxScore.title");
+
+  if (game.sportType === SportType.BASEBALL) {
+    return (
+      <div className="space-y-6">
+        {baseballBattingStats && baseballBattingStats.length > 0 && (
+          <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
+            <TypographyH4>{t("game.boxScore.baseball.sections.batting")}</TypographyH4>
+            {groupByTeam(game, baseballBattingStats, fallbackGroupName).map((group) => (
+              <CollapsibleBoxScore
+                key={group.teamName}
+                teamName={group.teamName}
+                playerCount={group.boxScores.length || group.players.length}
+                defaultOpen={defaultOpen}
+              >
+                <BaseballBattingStatsTable
+                  gameId={game.id}
+                  teamName={group.teamName}
+                  boxScores={group.boxScores}
+                  gameStatus={game.gameStatus}
+                  availablePlayers={group.players}
+                  viewerGameRole={game.viewerGameRole}
+                />
+              </CollapsibleBoxScore>
+            ))}
+          </div>
+        )}
+        {baseballPitchingStats && baseballPitchingStats.length > 0 && (
+          <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
+            <TypographyH4>{t("game.boxScore.baseball.sections.pitching")}</TypographyH4>
+            {groupByTeam(game, baseballPitchingStats, fallbackGroupName).map((group) => (
+              <CollapsibleBoxScore
+                key={group.teamName}
+                teamName={group.teamName}
+                playerCount={group.boxScores.length || group.players.length}
+                defaultOpen={defaultOpen}
+              >
+                <BaseballPitchingStatsTable
+                  gameId={game.id}
+                  teamName={group.teamName}
+                  boxScores={group.boxScores}
+                  gameStatus={game.gameStatus}
+                  availablePlayers={group.players}
+                  viewerGameRole={game.viewerGameRole}
+                />
+              </CollapsibleBoxScore>
+            ))}
+          </div>
+        )}
+        {baseballFieldingStats && baseballFieldingStats.length > 0 && (
+          <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
+            <TypographyH4>{t("game.boxScore.baseball.sections.fielding")}</TypographyH4>
+            {groupByTeam(game, baseballFieldingStats, fallbackGroupName).map((group) => (
+              <CollapsibleBoxScore
+                key={group.teamName}
+                teamName={group.teamName}
+                playerCount={group.boxScores.length || group.players.length}
+                defaultOpen={defaultOpen}
+              >
+                <BaseballFieldingStatsTable
+                  gameId={game.id}
+                  teamName={group.teamName}
+                  boxScores={group.boxScores}
+                  gameStatus={game.gameStatus}
+                  availablePlayers={group.players}
+                  viewerGameRole={game.viewerGameRole}
+                />
+              </CollapsibleBoxScore>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (game.sportType === SportType.FOOTBALL) {
     return (
