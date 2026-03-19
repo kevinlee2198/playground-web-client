@@ -300,25 +300,27 @@ export const locationFragment = {
 };
 
 /**
+ * User reference fragment with id, username, and displayName.
+ * Shared across notification and invitation fragments.
+ */
+const userRefFragment = {
+  id: true,
+  username: true,
+  displayName: true,
+};
+
+/**
  * Inline fragments for Notification types.
  * Use as: __on: notificationInlineFragments
  */
 export const notificationInlineFragments = [
   {
     __typeName: "FriendRequestReceivedNotification",
-    sender: {
-      id: true,
-      username: true,
-      displayName: true,
-    },
+    sender: userRefFragment,
   },
   {
     __typeName: "FriendRequestAcceptedNotification",
-    accepter: {
-      id: true,
-      username: true,
-      displayName: true,
-    },
+    accepter: userRefFragment,
   },
   {
     __typeName: "GameStartedNotification",
@@ -327,7 +329,41 @@ export const notificationInlineFragments = [
       sportType: true,
     },
   },
+  {
+    __typeName: "GameInvitationReceivedNotification",
+    inviter: userRefFragment,
+    game: {
+      id: true,
+      sportType: true,
+    },
+    invitation: {
+      id: true,
+    },
+  },
 ];
+
+/**
+ * Full game invitation node for the organizer's invitation list.
+ * Use as: node: gameInvitationFragment
+ */
+export const gameInvitationFragment = {
+  id: true,
+  invitee: userRefFragment,
+  invitedBy: userRefFragment,
+  status: true,
+  acceptedDate: true,
+  createdDate: true,
+};
+
+/**
+ * Minimal invitation shape for Game.viewerInvitation.
+ * Use as: viewerInvitation: viewerInvitationFragment
+ */
+export const viewerInvitationFragment = {
+  id: true,
+  status: true,
+  invitedBy: { id: true, displayName: true },
+};
 
 /**
  * Catch-all fragment for the Error interface in union result types.

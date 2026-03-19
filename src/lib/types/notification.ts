@@ -14,7 +14,7 @@ export interface NotificationUser {
   displayName: string;
 }
 
-/** Game fields needed for game started notifications */
+/** Game fields needed for game-related notifications */
 export interface NotificationGame {
   id: string;
   sportType: SportType;
@@ -35,11 +35,19 @@ export interface GameStartedNotification extends BaseNotification {
   game: NotificationGame;
 }
 
+export interface GameInvitationReceivedNotification extends BaseNotification {
+  __typename: "GameInvitationReceivedNotification";
+  inviter: NotificationUser;
+  game: NotificationGame;
+  invitation: { id: string } | null;
+}
+
 /** Known notification types that the frontend can render with full content */
 export type KnownNotification =
   | FriendRequestReceivedNotification
   | FriendRequestAcceptedNotification
-  | GameStartedNotification;
+  | GameStartedNotification
+  | GameInvitationReceivedNotification;
 
 /**
  * Discriminated union of all known notification types plus a catch-all.
@@ -58,7 +66,8 @@ export function isKnownNotificationType(
   return (
     n.__typename === "FriendRequestReceivedNotification" ||
     n.__typename === "FriendRequestAcceptedNotification" ||
-    n.__typename === "GameStartedNotification"
+    n.__typename === "GameStartedNotification" ||
+    n.__typename === "GameInvitationReceivedNotification"
   );
 }
 

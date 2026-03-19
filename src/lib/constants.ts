@@ -157,7 +157,14 @@ export enum GameRole {
 
 export enum GameVisibility {
   PUBLIC = "PUBLIC",
+  PROTECTED = "PROTECTED",
   PRIVATE = "PRIVATE",
+}
+
+export enum GameInvitationStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  CANCELLED = "CANCELLED",
 }
 
 export enum ChatRoomRole {

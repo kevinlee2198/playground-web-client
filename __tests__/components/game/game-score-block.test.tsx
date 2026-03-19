@@ -125,6 +125,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     resultsFinalized: false,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
+    viewerInvitation: null,
     location: null,
     participants: {
       edges: [

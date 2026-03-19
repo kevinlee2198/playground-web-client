@@ -61,6 +61,7 @@ function makeGame(overrides: Partial<GameNode> = {}): GameNode {
     gameStatus: GameStatus.COMPLETE,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
+    viewerInvitation: null,
     location: {
       name: "Court 1",
       address: { city: "Los Angeles", state: "CA", country: "US" },

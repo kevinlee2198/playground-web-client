@@ -619,6 +619,64 @@
       "participantError": "Failed to update participants",
       "boxScoreError": "Failed to save box scores",
       "retry": "Retry"
+    },
+    "visibility": {
+      "label": "Who can see this game?",
+      "public": "Public",
+      "publicDescription": "Anyone can find and join this game",
+      "protected": "Protected",
+      "protectedDescription": "Anyone can find this game, but joining requires an invitation",
+      "private": "Private",
+      "privateDescription": "Only invited players can find or join this game"
+    },
+    "badges": {
+      "invited": "Invited"
+    },
+    "invitations": {
+      "invitePlayers": "Invite Players",
+      "dialogTitle": "Invite Players",
+      "searchPlaceholder": "Search users to invite...",
+      "stagedCount": "{count, plural, one {# player selected} other {# players selected}}",
+      "sendInvitations": "Send Invitations",
+      "sending": "Sending...",
+      "cancelInvitation": "Cancel",
+      "noResults": "No users found",
+      "existingTitle": "Sent Invitations",
+      "noExisting": "No invitations sent yet",
+      "pendingBadge": "Pending",
+      "acceptedBadge": "Accepted",
+      "cancelledBadge": "Cancelled",
+      "pendingTitle": "You've been invited!",
+      "invitedBy": "Invited by {name}",
+      "accept": "Accept",
+      "decline": "Decline",
+      "accepting": "Accepting...",
+      "declining": "Declining...",
+      "acceptedGuidanceTeam": "Invitation accepted \u2014 join a team below to participate",
+      "acceptedGuidanceIndividual": "Invitation accepted \u2014 join the game below to participate",
+      "inviteMore": "Invite More",
+      "done": "Done",
+      "resultSuccess": "Invited",
+      "resultError": "Failed",
+      "success": {
+        "sent": "Invitations sent",
+        "accepted": "Invitation accepted",
+        "declined": "Invitation declined",
+        "cancelled": "Invitation cancelled"
+      },
+      "errors": {
+        "sendFailed": "Failed to send invitations",
+        "acceptFailed": "Failed to accept invitation",
+        "declineFailed": "Failed to decline invitation",
+        "cancelFailed": "Failed to cancel invitation",
+        "loadFailed": "Failed to load invitations"
+      }
+    },
+    "myGamesFilter": {
+      "all": "All",
+      "playing": "Playing",
+      "managing": "Managing",
+      "invited": "Invited"
     }
   },
   "units": {
@@ -670,6 +728,10 @@
     "gameStarted": {
       "title": "Game Started",
       "body": "A <link>{sportType}</link> game has started"
+    },
+    "gameInvitationReceived": {
+      "title": "Game Invitation",
+      "body": "<link>{inviterName}</link> invited you to a {sportType} game"
     },
     "unknown": {
       "body": "You have a new notification"
