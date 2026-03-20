@@ -1,4 +1,4 @@
-import { getSubtypes, PickleballScoringType, SportSubtype, SportType, SportTypeConfig } from "@/lib/constants";
+import { GameVisibility, getSubtypes, PickleballScoringType, SportSubtype, SportType, SportTypeConfig } from "@/lib/constants";
 import type { LocationValue } from "@/lib/types/location";
 import { z } from "zod";
 
@@ -37,6 +37,7 @@ export const createGameFormSchema = z
     scoringType: z.enum(PickleballScoringType).optional(),
     innings: z.number().int().positive("Must be positive").optional(),
     location: locationSchema,
+    visibility: z.enum(GameVisibility).default(GameVisibility.PUBLIC),
   })
   .refine(
     (data) => {
@@ -77,6 +78,7 @@ export interface CreateGameFormValues {
   scoringType?: PickleballScoringType;
   innings?: number;
   location?: LocationValue;
+  visibility: GameVisibility;
 }
 
 export const updateGameFormSchema = z.object({
@@ -92,6 +94,7 @@ export const updateGameFormSchema = z.object({
   scoringType: z.enum(PickleballScoringType).optional(),
   innings: z.number().int().positive("Must be positive").optional(),
   location: locationSchema.nullable(),
+  visibility: z.enum(GameVisibility).optional(),
 });
 
 export interface UpdateGameFormValues {
@@ -104,4 +107,5 @@ export interface UpdateGameFormValues {
   scoringType?: PickleballScoringType;
   innings?: number;
   location?: LocationValue | null;
+  visibility?: GameVisibility;
 }

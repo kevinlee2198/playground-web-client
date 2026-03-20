@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PickleballScoringType, SportType } from "@/lib/constants";
+import { GameVisibility, PickleballScoringType, SportType } from "@/lib/constants";
 import { locationToValue } from "@/lib/location-utils";
 import type { GameMetadata, UpdateGameInput } from "@/lib/types/game";
 import type { Location, LocationValue } from "@/lib/types/location";
@@ -32,6 +32,7 @@ import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateGameFormSchema } from "./game-form-fields";
+import { VisibilityRadioGroup } from "./visibility-radio-group";
 
 interface UpdateGameFormProps {
   gameId: number;
@@ -39,12 +40,14 @@ interface UpdateGameFormProps {
   metadata: GameMetadata;
   sportType: SportType;
   currentLocation?: Location | null;
+  currentVisibility: GameVisibility;
   onSuccess?: () => void;
 }
 
 function buildDefaultValues(
   currentStartDate: string,
   metadata: GameMetadata,
+  currentVisibility: GameVisibility,
   currentLocation?: Location | null,
 ) {
   const isBaseball = metadata.__typename === "BaseballGameMetadata";
@@ -84,6 +87,7 @@ function buildDefaultValues(
     location: (currentLocation
       ? locationToValue(currentLocation)
       : undefined) as LocationValue | null | undefined,
+    visibility: currentVisibility,
   };
 }
 
@@ -93,6 +97,7 @@ export function UpdateGameForm({
   metadata,
   sportType,
   currentLocation,
+  currentVisibility,
   onSuccess,
 }: UpdateGameFormProps) {
   const t = useTranslations();
@@ -104,6 +109,7 @@ export function UpdateGameForm({
     defaultValues: buildDefaultValues(
       currentStartDate,
       metadata,
+      currentVisibility,
       currentLocation,
     ),
     validators: {
@@ -230,6 +236,10 @@ export function UpdateGameForm({
           }
         }
 
+        if (value.visibility !== undefined && value.visibility !== currentVisibility) {
+          input.visibility = value.visibility;
+        }
+
         const result = await updateGame(input);
 
         if (result.success) {
@@ -260,6 +270,17 @@ export function UpdateGameForm({
             required
             disabled={isPending}
             placeholder={t("game.form.selectDate")}
+          />
+        )}
+      </form.Field>
+
+      <form.Field name="visibility">
+        {(field) => (
+          <VisibilityRadioGroup
+            value={field.state.value ?? currentVisibility}
+            onChange={field.handleChange}
+            onBlur={field.handleBlur}
+            disabled={isPending}
           />
         )}
       </form.Field>

@@ -158,6 +158,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
             metadata={game.metadata}
             sportType={game.sportType}
             currentLocation={game.location}
+            currentVisibility={game.visibility}
             onSuccess={() => setShowUpdateDialog(false)}
           />
         </DialogContent>
