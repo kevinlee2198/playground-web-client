@@ -26,7 +26,6 @@
     "pricing": "Pricing",
     "statTracking": "Stat Tracking",
     "gettingStarted": "Getting Started",
-    "privacyPolicy": "Privacy",
     "faq": "FAQ",
     "allRightsReserved": "© {currentDate, date, ::yyyy} Playground. All rights reserved."
   },
@@ -863,23 +862,5 @@
     "title": "Contact Us",
     "email": "Email: playgroundsocool@gmail.com",
     "phone": "Phone: (Mr.)-Telephone-Man"
-  },
-  "privacyPolicy": {
-    "title": "Privacy Policy",
-    "lastUpdated": "Last updated: {updatedDate, date, medium}",
-    "summary": "This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You. We use Your Personal data to provide and improve the Service. By using the Service, You agree to the collection and use of information in accordance with this Privacy Policy.",
-    "interpretationsAndDefinitions": {
-      "title": "Interpretation and Definitions",
-      "interpretationSubtitle": "Interpretation",
-      "interpretationDefinition": "The words of which the initial letter is capitalized have meanings defined under the following conditions. The following definitions shall have the same meaning regardless of whether they appear in singular or in plural.",
-      "definitionsSubtitle": "Definitions",
-      "accountDefinition": "<strong>Account</strong> means a unique account created for You to access our Service or parts of our Service.",
-      "affiliateDefinition": "<strong>Affiliate</strong> means an entity that controls, is controlled by or is under common control with a party, where \"control\" means ownership of 50% or more of the shares, equity interest or other securities entitled to vote for election of directors or other managing authority.",
-      "applicationDefinition": "<strong>Application</strong> refers to Playground - be the best, the software program provided by the Company.",
-      "companyDefinition": "<strong>Company</strong> (referred to as either \"the Company\", \"We\", \"Us\" or \"Our\" in this Agreement) refers to Playground - be the best.",
-      "countryDefinition": "<strong>Country</strong> refers to: California, United States",
-      "deviceDefinition": "<strong>Device</strong> means any device that can access the Service such as a computer, a cellphone or a digital tablet.",
-      "personalDataDefinition": "<strong>Personal Data</strong> is any information that relates to an identified or identifiable individual."
-    }
   }
 }

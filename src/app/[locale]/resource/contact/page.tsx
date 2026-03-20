@@ -1,3 +1,4 @@
+// TODO: Replace placeholder content with real Contact page copy and layout
 import { useTranslations } from "next-intl";
 
 export default function ContactPage() {
