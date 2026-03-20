@@ -1,7 +1,7 @@
 import { buildConnection, emptyConnection } from "./connection";
 import { mockGame } from "./games";
 
-export function mockFeedResponse(games?: Record<string, unknown>[]) {
+export function mockFeedResponse(games?: (Record<string, unknown> & { id?: string })[]) {
   const nodes = (games ?? [mockGame()]).map((game) => ({
     ...game,
     viewerFriendPlayers: { nodes: [], totalCount: 0 },

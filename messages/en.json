@@ -858,9 +858,56 @@
       "unblockError": "Failed to unblock user"
     }
   },
+  "about": {
+    "title": "About",
+    "hero": {
+      "title": "Where Friends Come to Play",
+      "subtitle": "Playground is your excuse to ditch the group chat and actually do something together. Pickup games, friendly competition, zero screen time required."
+    },
+    "features": {
+      "title": "What You Can Do",
+      "organize": {
+        "title": "Organize Pickup Games",
+        "description": "Stop texting \u201Cwho\u2019s in?\u201D into the void. Create a game, pick a sport, set a time, and watch your crew show up. It\u2019s like a group chat that actually leads somewhere."
+      },
+      "stats": {
+        "title": "Track Your Stats",
+        "description": "Every point, every assist, every questionable foul call \u2014 tracked. Build your player profile and finally settle who\u2019s really the best on the court."
+      },
+      "friends": {
+        "title": "Play With Friends",
+        "description": "Find your people, add them as friends, and never wonder who\u2019s free to play again. Teams form fast when everyone\u2019s already connected."
+      },
+      "memories": {
+        "title": "Capture the Moments",
+        "description": "Upload photos, videos, and links from your games. Your best plays deserve more than a fading memory \u2014 save them for the highlight reel."
+      }
+    },
+    "team": {
+      "title": "The Crew",
+      "captain": {
+        "name": "Captain Kickball",
+        "role": "Chief Fun Officer",
+        "bio": "Hasn\u2019t lost a game of rock-paper-scissors since 2019."
+      },
+      "commissioner": {
+        "name": "The Commissioner",
+        "role": "Head of Making Things Happen",
+        "bio": "Will organize a tournament for literally anything."
+      },
+      "benchwarmer": {
+        "name": "Benchwarmer Prime",
+        "role": "Director of Moral Support",
+        "bio": "Undefeated at cheering from the sidelines."
+      }
+    }
+  },
   "contact": {
-    "title": "Contact Us",
-    "email": "Email: playgroundsocool@gmail.com",
-    "phone": "Phone: (Mr.)-Telephone-Man"
+    "hero": {
+      "title": "Say Hi",
+      "subtitle": "We\u2019d love to hear from you. Unless you\u2019re here to complain about losing \u2014 that\u2019s between you and the scoreboard."
+    },
+    "email": "playgroundsocool@gmail.com",
+    "phone": "(Mr.)-Telephone-Man"
   }
 }

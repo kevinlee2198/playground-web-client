@@ -4,7 +4,7 @@ test.describe("Contact Page", () => {
   test("renders without auth", async ({ unauthenticatedPage }) => {
     await unauthenticatedPage.goto("/en/resource/contact");
     await expect(
-      unauthenticatedPage.getByRole("heading", { name: "Contact Us" }),
+      unauthenticatedPage.getByRole("heading", { name: "Say Hi" }),
     ).toBeVisible();
   });
 

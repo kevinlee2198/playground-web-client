@@ -5,14 +5,19 @@ test.describe("About Page", () => {
     await unauthenticatedPage.goto("/en/resource/about");
     await expect(unauthenticatedPage).not.toHaveURL(/\/en\/?$/);
     await expect(
-      unauthenticatedPage.getByRole("heading", { name: "About" }),
+      unauthenticatedPage.getByRole("heading", {
+        name: "Where Friends Come to Play",
+      }),
     ).toBeVisible();
   });
 
-  test("shows Mission heading", async ({ unauthenticatedPage }) => {
+  test("shows feature and team sections", async ({ unauthenticatedPage }) => {
     await unauthenticatedPage.goto("/en/resource/about");
     await expect(
-      unauthenticatedPage.getByRole("heading", { name: "Mission" }),
+      unauthenticatedPage.getByRole("heading", { name: "What You Can Do" }),
+    ).toBeVisible();
+    await expect(
+      unauthenticatedPage.getByRole("heading", { name: "The Crew" }),
     ).toBeVisible();
   });
 });

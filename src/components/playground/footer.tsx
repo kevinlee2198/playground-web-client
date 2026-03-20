@@ -19,8 +19,6 @@ function MeadowWave() {
 
 const FOOTER_LINKS = [
   { href: "/resources/get-started", labelKey: "footer.gettingStarted" },
-  { href: "/stat-tracking", labelKey: "footer.statTracking" },
-  { href: "/pricing", labelKey: "footer.pricing" },
   { href: "/resource/about", labelKey: "footer.about" },
   { href: "/resource/contact", labelKey: "footer.contact" },
   {
