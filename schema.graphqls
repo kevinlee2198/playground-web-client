@@ -643,10 +643,11 @@ enum GameStatus {
 }
 
 """
-Whether a game is open for self-joining or invite-only.
+Controls who can discover, view, and join a game.
 """
 enum GameVisibility {
   PUBLIC
+  PROTECTED
   PRIVATE
 }
 
@@ -662,31 +663,29 @@ enum StatEntryMode {
 Different sport types supported by Playground
 """
 enum SportType {
+  BASEBALL
   BASKETBALL
   FOOTBALL
   TENNIS
   PICKLEBALL
 }
 
-"""
-Subtypes of the main sport type
-"""
-enum BasketballSubtype {
+enum BasketballFormat {
   FIVE_ON_FIVE
   THREE_ON_THREE
 }
 
-enum TennisSubtype {
+enum TennisFormat {
   SINGLES
   DOUBLES
 }
 
-enum FootballSubtype {
+enum FootballFormat {
   FLAG_FOOTBALL
   AMERICAN_FOOTBALL
 }
 
-enum PickleballSubtype {
+enum PickleballFormat {
   SINGLES
   DOUBLES
 }
@@ -705,13 +704,21 @@ Sport-specific game configuration and rules.
 Clients branch on Game.sportType and use inline fragments for sport-specific fields.
 """
 union GameMetadata =
+  | BaseballGameMetadata
   | BasketballGameMetadata
   | TennisGameMetadata
   | FootballGameMetadata
   | PickleballGameMetadata
 
+type BaseballGameMetadata {
+  """
+  Number of innings
+  """
+  innings: Int
+}
+
 type BasketballGameMetadata {
-  subtype: BasketballSubtype!
+  format: BasketballFormat!
   """
   Number of periods (e.g. 4 for quarters, 2 for halves)
   """
@@ -719,7 +726,7 @@ type BasketballGameMetadata {
 }
 
 type TennisGameMetadata {
-  subtype: TennisSubtype!
+  format: TennisFormat!
   """
   Number of sets to win the match (3 or 5)
   """
@@ -731,7 +738,7 @@ type TennisGameMetadata {
 }
 
 type FootballGameMetadata {
-  subtype: FootballSubtype!
+  format: FootballFormat!
   """
   Number of periods (e.g. 4 for quarters, 2 for halves)
   """
@@ -739,7 +746,7 @@ type FootballGameMetadata {
 }
 
 type PickleballGameMetadata {
-  subtype: PickleballSubtype!
+  format: PickleballFormat!
   """
   Number of games in match (1, 3, or 5)
   """
@@ -767,10 +774,15 @@ Sport-specific participant result data (scores, set wins, etc.).
 Clients branch on Game.sportType and use inline fragments for sport-specific fields.
 """
 union ParticipantMetadata =
+  | BaseballParticipantMetadata
   | BasketballParticipantMetadata
   | TennisParticipantMetadata
   | FootballParticipantMetadata
   | PickleballParticipantMetadata
+
+type BaseballParticipantMetadata {
+  score: Int!
+}
 
 type BasketballParticipantMetadata {
   score: Int!
@@ -904,6 +916,23 @@ type Game implements Node & HasLocation {
     last: Int
     before: String
   ): GameMemberConnection!
+  """
+  Invitations to this game. Only visible to organizers (owner/editor).
+  Returns empty connection for non-managers.
+  """
+  invitations(
+    status: GameInvitationStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GameInvitationConnection!
+  """
+  The current viewer's invitation to this game, if any.
+  Null if the viewer has no invitation (or is unauthenticated).
+  Only returns PENDING or ACCEPTED invitations.
+  """
+  viewerInvitation: GameInvitation
 }
 
 type ViewerFriendPlayers {
@@ -956,6 +985,16 @@ input GameFilterInput {
   When true, only returns games where the current viewer is an OWNER or EDITOR.
   """
   organizedByMe: Boolean
+  """
+  When true, only returns games where the current viewer has a PENDING invitation (i.e., "needs response" filter).
+  Does NOT include ACCEPTED invitations -- use myGames for the broader view.
+  """
+  invitedToMe: Boolean
+  """
+  When true, returns games where the current viewer is a participant, organizer, or has a PENDING/ACCEPTED invitation.
+  Combines the effects of organizedByMe, playerId (for own player), and invitedToMe into a single unified filter.
+  """
+  myGames: Boolean
 }
 
 """
@@ -1000,9 +1039,9 @@ input AddIndividualParticipantInput {
 
 """
 Add a participant to a game.
-The participant type must match the game's sport subtype:
-- Team sports (5v5 basketball, doubles tennis, football): use teamInstance
-- Individual sports (singles tennis, 3v3 basketball): use individual
+The participant type must match the game's format:
+- Team sports (basketball, football, doubles tennis/pball, baseball): use teamInstance
+- Individual sports (singles tennis, singles pball): use individual
 """
 input AddGameParticipantInput @oneOf {
   teamInstance: AddTeamInstanceInput
@@ -1044,7 +1083,7 @@ input AddIndividualParticipantsInput {
 
 """
 Add multiple participants to a game.
-The participant type must match the game's sport subtype.
+The participant type must match the game's format.
 Schema enforces that all participants in a batch are the same type.
 """
 input AddGameParticipantsInput @oneOf {
@@ -1264,27 +1303,32 @@ type RemovePlayersFromTeamInstanceResponse {
 # Game Metadata Inputs
 # ============================================================================
 
-"""
-Create inputs require subtype. Update inputs (below) make subtype optional.
-"""
+input CreateBaseballGameMetadataInput {
+  innings: Int
+}
+
+input BaseballGameMetadataInput {
+  innings: Int
+}
+
 input CreateBasketballGameMetadataInput {
-  subtype: BasketballSubtype!
+  format: BasketballFormat!
   periods: Int
 }
 
 input CreateTennisGameMetadataInput {
-  subtype: TennisSubtype!
+  format: TennisFormat!
   bestOf: Int
   tiebreakFinalSet: Boolean
 }
 
 input CreateFootballGameMetadataInput {
-  subtype: FootballSubtype!
+  format: FootballFormat!
   periods: Int
 }
 
 input CreatePickleballGameMetadataInput {
-  subtype: PickleballSubtype!
+  format: PickleballFormat!
   bestOf: Int
   pointsPerGame: Int
   winByTwo: Boolean
@@ -1292,23 +1336,23 @@ input CreatePickleballGameMetadataInput {
 }
 
 input BasketballGameMetadataInput {
-  subtype: BasketballSubtype
+  format: BasketballFormat
   periods: Int
 }
 
 input TennisGameMetadataInput {
-  subtype: TennisSubtype
+  format: TennisFormat
   bestOf: Int
   tiebreakFinalSet: Boolean
 }
 
 input FootballGameMetadataInput {
-  subtype: FootballSubtype
+  format: FootballFormat
   periods: Int
 }
 
 input PickleballGameMetadataInput {
-  subtype: PickleballSubtype
+  format: PickleballFormat
   bestOf: Int
   pointsPerGame: Int
   winByTwo: Boolean
@@ -1318,6 +1362,10 @@ input PickleballGameMetadataInput {
 # ============================================================================
 # Participant Metadata Inputs
 # ============================================================================
+
+input BaseballParticipantMetadataInput {
+  score: Int!
+}
 
 input BasketballParticipantMetadataInput {
   score: Int!
@@ -1351,6 +1399,7 @@ Sport-specific participant metadata. Exactly one must be provided.
 Must match the game's sport type.
 """
 input ParticipantMetadataInput @oneOf {
+  baseball: BaseballParticipantMetadataInput
   basketball: BasketballParticipantMetadataInput
   tennis: TennisParticipantMetadataInput
   football: FootballParticipantMetadataInput
@@ -1366,10 +1415,29 @@ Sport-specific game configuration. Exactly one must be provided.
 The main SportType is derived from the sport config chosen.
 """
 input CreateGameInput @oneOf {
+  baseball: CreateBaseballGameInput
   basketball: CreateBasketballGameInput
   football: CreateFootballGameInput
   tennis: CreateTennisGameInput
   pickleball: CreatePickleballGameInput
+}
+
+"""
+Create a baseball game
+"""
+input CreateBaseballGameInput {
+  startDate: DateTime!
+  description: String
+  location: LocationInput
+  metadata: CreateBaseballGameMetadataInput!
+  """
+  Defaults to PUBLIC if not provided.
+  """
+  visibility: GameVisibility
+  """
+  Defaults to OPEN if not provided.
+  """
+  statEntryMode: StatEntryMode
 }
 
 """
@@ -1398,7 +1466,13 @@ input CreateFootballGameInput {
   description: String
   location: LocationInput
   metadata: CreateFootballGameMetadataInput!
+  """
+  Defaults to PUBLIC if not provided.
+  """
   visibility: GameVisibility
+  """
+  Defaults to OPEN if not provided.
+  """
   statEntryMode: StatEntryMode
 }
 
@@ -1410,7 +1484,13 @@ input CreateTennisGameInput {
   description: String
   location: LocationInput
   metadata: CreateTennisGameMetadataInput!
+  """
+  Defaults to PUBLIC if not provided.
+  """
   visibility: GameVisibility
+  """
+  Defaults to OPEN if not provided.
+  """
   statEntryMode: StatEntryMode
 }
 
@@ -1422,7 +1502,13 @@ input CreatePickleballGameInput {
   description: String
   location: LocationInput
   metadata: CreatePickleballGameMetadataInput!
+  """
+  Defaults to PUBLIC if not provided.
+  """
   visibility: GameVisibility
+  """
+  Defaults to OPEN if not provided.
+  """
   statEntryMode: StatEntryMode
 }
 
@@ -1451,6 +1537,7 @@ Sport-specific game configuration for updates. Exactly one must be provided.
 Must match the game's sport type.
 """
 input GameMetadataInput @oneOf {
+  baseball: BaseballGameMetadataInput
   basketball: BasketballGameMetadataInput
   tennis: TennisGameMetadataInput
   football: FootballGameMetadataInput
@@ -1728,6 +1815,163 @@ type BoxScoreSavedEvent implements GameEvent {
   occurredAt: DateTime!
   basketballBoxScores: [BasketballBoxScore!]!
 }
+
+# ============================================================================
+# Game Invitations
+# ============================================================================
+
+enum GameInvitationStatus {
+  PENDING
+  ACCEPTED
+  CANCELLED
+}
+
+type GameInvitation implements Node {
+  id: ID!
+  game: Game!
+  """
+  The user who sent the invitation.
+  """
+  inviter: User!
+  """
+  The user being invited.
+  """
+  invitee: User!
+  status: GameInvitationStatus!
+  """
+  When the invitation was accepted. Null if not yet accepted.
+  """
+  acceptedDate: DateTime
+  createdDate: DateTime!
+}
+
+type GameInvitationEdge implements Edge {
+  cursor: String!
+  node: GameInvitation!
+}
+
+type GameInvitationConnection implements Connection {
+  edges: [GameInvitationEdge!]!
+  pageInfo: PageInfo!
+}
+
+# --- Invitation Mutations ---
+
+input SendGameInvitationInput {
+  gameId: ID!
+  userId: ID!
+}
+
+input SendGameInvitationsInput {
+  gameId: ID!
+  userIds: [ID!]!
+}
+
+input AcceptGameInvitationInput {
+  invitationId: ID!
+}
+
+input DeclineGameInvitationInput {
+  invitationId: ID!
+}
+
+input CancelGameInvitationInput {
+  invitationId: ID!
+}
+
+type SendGameInvitationResponse {
+  """
+  Null when the invitation was silently skipped (self-invite or invitee is already a manager).
+  """
+  invitation: GameInvitation
+}
+
+"""
+Per-invitee result for bulk invitation sending.
+"""
+type SendGameInvitationItemResult {
+  """
+  The user ID this result corresponds to.
+  """
+  userId: ID!
+  """
+  The created/updated invitation, if successful.
+  """
+  invitation: GameInvitation
+  """
+  The error, if this invitee could not be invited.
+  """
+  error: Error
+}
+
+type SendGameInvitationsResponse {
+  results: [SendGameInvitationItemResult!]!
+}
+
+type AcceptGameInvitationResponse {
+  invitation: GameInvitation!
+}
+
+type DeclineGameInvitationResponse {
+  """
+  The ID of the deleted invitation.
+  """
+  id: ID!
+}
+
+type CancelGameInvitationResponse {
+  invitation: GameInvitation!
+}
+
+# --- Invitation Errors ---
+# Note: UserBlockedError already exists in errors.graphqls and is reused here.
+
+type AlreadyInvitedError implements Error {
+  message: String!
+}
+
+type AlreadyParticipantError implements Error {
+  message: String!
+}
+
+type InvitationNotFoundError implements Error {
+  message: String!
+}
+
+type InvalidInvitationStatusError implements Error {
+  message: String!
+}
+
+type GameCompleteError implements Error {
+  message: String!
+}
+
+# --- Invitation Result Unions ---
+
+union SendGameInvitationResult =
+  | SendGameInvitationResponse
+  | GameNotFoundError
+  | UserNotFoundError
+  | AlreadyInvitedError
+  | AlreadyParticipantError
+  | UserBlockedError
+  | GameCompleteError
+union SendGameInvitationsResult =
+  | SendGameInvitationsResponse
+  | GameNotFoundError
+  | GameCompleteError
+union AcceptGameInvitationResult =
+  | AcceptGameInvitationResponse
+  | InvitationNotFoundError
+  | InvalidInvitationStatusError
+union DeclineGameInvitationResult =
+  | DeclineGameInvitationResponse
+  | InvitationNotFoundError
+  | InvalidInvitationStatusError
+union CancelGameInvitationResult =
+  | CancelGameInvitationResponse
+  | InvitationNotFoundError
+  | InvalidInvitationStatusError
 enum LivestreamProvider {
   YOUTUBE
   TWITCH
@@ -2265,6 +2509,39 @@ type Query {
     last: Int
     before: String
   ): TennisStatisticsConnection!
+  """
+  Query and filter baseball batting stats
+  """
+  baseballBattingStats(
+    input: BaseballBattingStatsFilterInput!
+    sort: [BaseballBattingStatsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): BaseballBattingStatsConnection!
+  """
+  Query and filter baseball pitching stats
+  """
+  baseballPitchingStats(
+    input: BaseballPitchingStatsFilterInput!
+    sort: [BaseballPitchingStatsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): BaseballPitchingStatsConnection!
+  """
+  Query and filter baseball fielding stats
+  """
+  baseballFieldingStats(
+    input: BaseballFieldingStatsFilterInput!
+    sort: [BaseballFieldingStatsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): BaseballFieldingStatsConnection!
 }
 
 """
@@ -2577,6 +2854,76 @@ type Mutation {
   saveTennisStatisticsBulk(
     input: SaveTennisStatisticsBulkInput!
   ): SaveTennisStatisticsBulkResult!
+  """
+  Save batting stats for a baseball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveBaseballBattingStats(
+    input: SaveBaseballBattingStatsInput!
+  ): SaveBaseballBattingStatsResult!
+  """
+  Save batting stats for multiple players in a baseball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveBaseballBattingStatsBulk(
+    input: SaveBaseballBattingStatsBulkInput!
+  ): SaveBaseballBattingStatsBulkResult!
+  """
+  Save pitching stats for a baseball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveBaseballPitchingStats(
+    input: SaveBaseballPitchingStatsInput!
+  ): SaveBaseballPitchingStatsResult!
+  """
+  Save pitching stats for multiple players in a baseball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveBaseballPitchingStatsBulk(
+    input: SaveBaseballPitchingStatsBulkInput!
+  ): SaveBaseballPitchingStatsBulkResult!
+  """
+  Save fielding stats for a baseball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveBaseballFieldingStats(
+    input: SaveBaseballFieldingStatsInput!
+  ): SaveBaseballFieldingStatsResult!
+  """
+  Save fielding stats for multiple players in a baseball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveBaseballFieldingStatsBulk(
+    input: SaveBaseballFieldingStatsBulkInput!
+  ): SaveBaseballFieldingStatsBulkResult!
+  """
+  Send a game invitation to a user. Only managers (owner/editor) can send.
+  """
+  sendGameInvitation(input: SendGameInvitationInput!): SendGameInvitationResult!
+  """
+  Send game invitations to multiple users. Partial-failure semantics.
+  """
+  sendGameInvitations(
+    input: SendGameInvitationsInput!
+  ): SendGameInvitationsResult!
+  """
+  Accept a game invitation. Only the invitee can accept.
+  """
+  acceptGameInvitation(
+    input: AcceptGameInvitationInput!
+  ): AcceptGameInvitationResult!
+  """
+  Decline a game invitation. Deletes the invitation. Only the invitee can decline.
+  """
+  declineGameInvitation(
+    input: DeclineGameInvitationInput!
+  ): DeclineGameInvitationResult!
+  """
+  Cancel a pending game invitation. Any manager of the game can cancel.
+  """
+  cancelGameInvitation(
+    input: CancelGameInvitationInput!
+  ): CancelGameInvitationResult!
   """
   Request a presigned upload URL. Phase 1 of the upload flow.
   """
@@ -3401,6 +3748,332 @@ union SaveTennisStatisticsBulkResult =
   | SaveTennisStatisticsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+
+# ============================================================================
+# Baseball Batting Stats
+# ============================================================================
+
+"""
+Filter for baseball batting stats by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input BaseballBattingStatsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Baseball batting statistics for a single player in a game.
+"""
+type BaseballBattingStats implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  atBats: Int
+  runs: Int
+  hits: Int
+  doubles: Int
+  triples: Int
+  homeRuns: Int
+  rbi: Int
+  walks: Int
+  strikeouts: Int
+  stolenBases: Int
+  caughtStealing: Int
+  hitByPitch: Int
+  sacrifices: Int
+  battingAverage: Float
+}
+
+type BaseballBattingStatsEdge implements Edge {
+  node: BaseballBattingStats!
+  cursor: String!
+}
+
+type BaseballBattingStatsConnection implements Connection {
+  edges: [BaseballBattingStatsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum BaseballBattingStatsSortField {
+  HITS
+  HOME_RUNS
+  RBI
+  BATTING_AVERAGE
+  RUNS
+}
+
+input BaseballBattingStatsSortInput {
+  field: BaseballBattingStatsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveBaseballBattingStatsInput {
+  playerId: ID!
+  gameId: ID!
+  atBats: Int
+  runs: Int
+  hits: Int
+  doubles: Int
+  triples: Int
+  homeRuns: Int
+  rbi: Int
+  walks: Int
+  strikeouts: Int
+  stolenBases: Int
+  caughtStealing: Int
+  hitByPitch: Int
+  sacrifices: Int
+}
+
+"""
+Batting stats data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveBaseballBattingStatsData {
+  playerId: ID!
+  atBats: Int
+  runs: Int
+  hits: Int
+  doubles: Int
+  triples: Int
+  homeRuns: Int
+  rbi: Int
+  walks: Int
+  strikeouts: Int
+  stolenBases: Int
+  caughtStealing: Int
+  hitByPitch: Int
+  sacrifices: Int
+}
+
+input SaveBaseballBattingStatsBulkInput {
+  gameId: ID!
+  battingStats: [SaveBaseballBattingStatsData!]!
+}
+
+type SaveBaseballBattingStatsResponse {
+  baseballBattingStats: BaseballBattingStats!
+}
+
+type SaveBaseballBattingStatsBulkResponse {
+  battingStats: [BaseballBattingStats!]!
+}
+
+union SaveBaseballBattingStatsResult =
+  | SaveBaseballBattingStatsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveBaseballBattingStatsBulkResult =
+  | SaveBaseballBattingStatsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Baseball Pitching Stats
+# ============================================================================
+
+"""
+Filter for baseball pitching stats by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input BaseballPitchingStatsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Baseball pitching statistics for a single player in a game.
+inningsPitched uses standard baseball notation: 6.1 = 6⅓ innings, 6.2 = 6⅔ innings.
+"""
+type BaseballPitchingStats implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  inningsPitched: Float
+  hitsAllowed: Int
+  runsAllowed: Int
+  earnedRuns: Int
+  walks: Int
+  strikeouts: Int
+  homeRunsAllowed: Int
+  hitBatsmen: Int
+  wildPitches: Int
+  pitchCount: Int
+  win: Boolean
+  loss: Boolean
+  creditedSave: Boolean
+  era: Float
+}
+
+type BaseballPitchingStatsEdge implements Edge {
+  node: BaseballPitchingStats!
+  cursor: String!
+}
+
+type BaseballPitchingStatsConnection implements Connection {
+  edges: [BaseballPitchingStatsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum BaseballPitchingStatsSortField {
+  INNINGS_PITCHED
+  STRIKEOUTS
+  ERA
+  WALKS
+}
+
+input BaseballPitchingStatsSortInput {
+  field: BaseballPitchingStatsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveBaseballPitchingStatsInput {
+  playerId: ID!
+  gameId: ID!
+  inningsPitched: Float
+  hitsAllowed: Int
+  runsAllowed: Int
+  earnedRuns: Int
+  walks: Int
+  strikeouts: Int
+  homeRunsAllowed: Int
+  hitBatsmen: Int
+  wildPitches: Int
+  pitchCount: Int
+  win: Boolean
+  loss: Boolean
+  creditedSave: Boolean
+}
+
+"""
+Pitching stats data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveBaseballPitchingStatsData {
+  playerId: ID!
+  inningsPitched: Float
+  hitsAllowed: Int
+  runsAllowed: Int
+  earnedRuns: Int
+  walks: Int
+  strikeouts: Int
+  homeRunsAllowed: Int
+  hitBatsmen: Int
+  wildPitches: Int
+  pitchCount: Int
+  win: Boolean
+  loss: Boolean
+  creditedSave: Boolean
+}
+
+input SaveBaseballPitchingStatsBulkInput {
+  gameId: ID!
+  pitchingStats: [SaveBaseballPitchingStatsData!]!
+}
+
+type SaveBaseballPitchingStatsResponse {
+  baseballPitchingStats: BaseballPitchingStats!
+}
+
+type SaveBaseballPitchingStatsBulkResponse {
+  pitchingStats: [BaseballPitchingStats!]!
+}
+
+union SaveBaseballPitchingStatsResult =
+  | SaveBaseballPitchingStatsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveBaseballPitchingStatsBulkResult =
+  | SaveBaseballPitchingStatsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+
+# ============================================================================
+# Baseball Fielding Stats
+# ============================================================================
+
+"""
+Filter for baseball fielding stats by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input BaseballFieldingStatsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Baseball fielding statistics for a single player in a game.
+"""
+type BaseballFieldingStats implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  putouts: Int
+  assists: Int
+  errors: Int
+  fieldingPercentage: Float
+}
+
+type BaseballFieldingStatsEdge implements Edge {
+  node: BaseballFieldingStats!
+  cursor: String!
+}
+
+type BaseballFieldingStatsConnection implements Connection {
+  edges: [BaseballFieldingStatsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum BaseballFieldingStatsSortField {
+  PUTOUTS
+  ASSISTS
+  ERRORS
+  FIELDING_PERCENTAGE
+}
+
+input BaseballFieldingStatsSortInput {
+  field: BaseballFieldingStatsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveBaseballFieldingStatsInput {
+  playerId: ID!
+  gameId: ID!
+  putouts: Int
+  assists: Int
+  errors: Int
+}
+
+"""
+Fielding stats data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveBaseballFieldingStatsData {
+  playerId: ID!
+  putouts: Int
+  assists: Int
+  errors: Int
+}
+
+input SaveBaseballFieldingStatsBulkInput {
+  gameId: ID!
+  fieldingStats: [SaveBaseballFieldingStatsData!]!
+}
+
+type SaveBaseballFieldingStatsResponse {
+  baseballFieldingStats: BaseballFieldingStats!
+}
+
+type SaveBaseballFieldingStatsBulkResponse {
+  fieldingStats: [BaseballFieldingStats!]!
+}
+
+union SaveBaseballFieldingStatsResult =
+  | SaveBaseballFieldingStatsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveBaseballFieldingStatsBulkResult =
+  | SaveBaseballFieldingStatsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
 """
 A Playground user
 """
@@ -3614,6 +4287,24 @@ type GameStartedNotification implements Notification & Node {
   The game that started.
   """
   game: Game!
+}
+
+type GameInvitationReceivedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The user who sent the invitation.
+  """
+  inviter: User!
+  """
+  The game the invitation is for.
+  """
+  game: Game!
+  """
+  The invitation itself. Null if the invitation was declined (deleted) after the notification was created.
+  """
+  invitation: GameInvitation
 }
 
 type NotificationEdge implements Edge {
