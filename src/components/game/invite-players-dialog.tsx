@@ -69,7 +69,11 @@ export function InvitePlayersDialog({
     try {
       const result = await loadGameInvitations(gameId);
       if (result) {
-        setExistingInvitations(result.edges.map((e) => e.node));
+        setExistingInvitations(
+          result.edges
+            .map((e) => e.node)
+            .filter((inv) => inv.status !== GameInvitationStatus.CANCELLED),
+        );
       }
     } finally {
       setIsLoadingInvitations(false);
@@ -278,7 +282,7 @@ export function InvitePlayersDialog({
                   <button
                     key={user.id}
                     type="button"
-                    className="flex w-full items-center justify-between rounded-md p-2 text-left hover:bg-accent"
+                    className="flex w-full min-h-11 items-center justify-between rounded-md p-2 text-left hover:bg-accent"
                     onClick={() => handleStageUser(user)}
                   >
                     <div>
@@ -360,6 +364,7 @@ export function InvitePlayersDialog({
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="min-h-11 min-w-11"
                           onClick={() =>
                             handleCancelInvitation(invitation.id)
                           }

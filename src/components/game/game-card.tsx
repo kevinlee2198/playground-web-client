@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { TypographyMuted } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import {
+  GameInvitationStatus,
   GameStatus,
   GameStatusAriaLabelKey,
   GameStatusBadgeVariant,
@@ -108,7 +109,7 @@ export function GameCard({ game }: GameCardProps) {
                 {t(`sportSubtypes.${subtype}`)}
               </Badge>
             )}
-            {game.viewerInvitation?.status === "PENDING" && (
+            {game.viewerInvitation?.status === GameInvitationStatus.PENDING && (
               <Badge variant="secondary" className="text-xs">
                 {t("game.badges.invited")}
               </Badge>

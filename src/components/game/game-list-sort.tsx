@@ -73,7 +73,7 @@ export function GameListSort({ currentSort, myGames, myGamesFilter }: GameListSo
       {/* My Games Sub-Filters */}
       {myGames && (
         <div className="flex flex-wrap gap-2">
-          {(["all", "playing", "managing", "invited"] as const).map((filter) => (
+          {(["all", "managing", "invited"] as const).map((filter) => (
             <Button
               key={filter}
               variant={(!myGamesFilter && filter === "all") || myGamesFilter === filter ? "default" : "outline"}

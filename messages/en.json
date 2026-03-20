@@ -674,7 +674,6 @@
     },
     "myGamesFilter": {
       "all": "All",
-      "playing": "Playing",
       "managing": "Managing",
       "invited": "Invited"
     }
