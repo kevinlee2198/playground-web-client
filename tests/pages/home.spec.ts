@@ -23,7 +23,9 @@ test.describe("Home / Feed Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en");
-    const btn = authenticatedPage.getByRole("link", { name: "Create Game" });
+    const btn = authenticatedPage
+      .locator("main")
+      .getByRole("link", { name: "Create Game" });
     await expect(btn).toBeVisible();
     await expect(btn).toHaveAttribute("href", /\/games\/new/);
   });
@@ -33,7 +35,7 @@ test.describe("Home / Feed Page", () => {
   }) => {
     await authenticatedPage.goto("/en");
     await expect(
-      authenticatedPage.getByText("Test Court").first(),
+      authenticatedPage.getByText("Test City, TS").first(),
     ).toBeVisible();
   });
 
@@ -55,8 +57,9 @@ test.describe("Home / Feed Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en");
+    // GameCard renders as a link wrapping the entire card article
     const gameLink = authenticatedPage
-      .getByRole("link", { name: /test court/i })
+      .locator("main a[href*='/game/']")
       .first();
     await expect(gameLink).toBeVisible();
     await expect(gameLink).toHaveAttribute("href", /\/game\//);

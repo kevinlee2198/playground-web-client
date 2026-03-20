@@ -54,6 +54,6 @@ test.describe("Tab Bar", () => {
     await authenticatedPage.goto("/en");
     const feedTab = authenticatedPage.getByRole("link", { name: "Feed" });
     await expect(feedTab).toBeVisible();
-    await expect(feedTab).toHaveAttribute("aria-current", /.*/);
+    await expect(feedTab).toHaveAttribute("aria-current", "page");
   });
 });

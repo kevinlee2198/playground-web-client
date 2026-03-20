@@ -35,10 +35,7 @@ test.describe("Navbar", () => {
   }) => {
     await authenticatedPage.goto("/en");
     await expect(
-      authenticatedPage
-        .getByRole("button", { name: /avatar|user|menu/i })
-        .or(authenticatedPage.locator("[data-testid='user-avatar']"))
-        .first(),
+      authenticatedPage.locator('[data-slot="dropdown-menu-trigger"]'),
     ).toBeVisible();
   });
 
@@ -47,7 +44,9 @@ test.describe("Navbar", () => {
   }) => {
     await authenticatedPage.goto("/en");
     await expect(
-      authenticatedPage.getByRole("link", { name: "Create Game" }),
+      authenticatedPage
+        .locator("nav")
+        .getByRole("link", { name: "Create Game" }),
     ).toBeVisible();
   });
 
@@ -66,25 +65,23 @@ test.describe("Navbar", () => {
   }) => {
     await authenticatedPage.goto("/en");
     // Open the avatar menu
-    const avatarButton = authenticatedPage
-      .getByRole("button", { name: /avatar|user|menu/i })
-      .or(authenticatedPage.locator("[data-testid='user-avatar']"))
-      .first();
+    const avatarButton = authenticatedPage.locator(
+      '[data-slot="dropdown-menu-trigger"]',
+    );
     await avatarButton.click();
+    // Wait for the dropdown popup to appear (base-ui uses a portal)
     await expect(
-      authenticatedPage.getByRole("menuitem", { name: /profile/i }).or(
-        authenticatedPage.getByRole("link", { name: /profile/i }),
-      ),
+      authenticatedPage.locator('[data-slot="dropdown-menu-content"]'),
+    ).toBeVisible();
+    // Menu items are rendered as base-ui Menu.Item with role="menuitem"
+    await expect(
+      authenticatedPage.locator('[data-slot="dropdown-menu-item"]', { hasText: /profile/i }),
     ).toBeVisible();
     await expect(
-      authenticatedPage.getByRole("menuitem", { name: /settings/i }).or(
-        authenticatedPage.getByRole("link", { name: /settings/i }),
-      ),
+      authenticatedPage.locator('[data-slot="dropdown-menu-item"]', { hasText: /settings/i }),
     ).toBeVisible();
     await expect(
-      authenticatedPage.getByRole("menuitem", { name: /sign out/i }).or(
-        authenticatedPage.getByRole("button", { name: /sign out/i }),
-      ),
+      authenticatedPage.locator('[data-slot="dropdown-menu-item"]', { hasText: /sign out/i }),
     ).toBeVisible();
   });
 });

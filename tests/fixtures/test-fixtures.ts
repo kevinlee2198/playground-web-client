@@ -15,7 +15,10 @@ type TestFixtures = {
 };
 
 export const test = base.extend<TestFixtures>({
-  mswHandlers: defaultGraphQLHandlers,
+  // Override the mswHandlers option fixture with our default GraphQL handlers.
+  // Must use the [value, {option: true}] tuple format for Playwright option fixtures.
+  // @ts-expect-error — TS type is RequestHandler[] but runtime accepts the tuple
+  mswHandlers: [defaultGraphQLHandlers, { option: true }],
 
   authenticatedPage: async ({ page, context }, use) => {
     await setAuthCookies(context);
@@ -37,7 +40,7 @@ export function withMeGuard(
 ): ReturnType<typeof http.post> {
   return http.post("*/graphql", async ({ request }) => {
     const body = (await request.json()) as { query: string };
-    if (body.query.includes("me")) {
+    if (/\bme\s*\{/.test(body.query)) {
       return HttpResponse.json(mockMeResponse());
     }
     return HttpResponse.json(responseFactory() as Record<string, unknown>);

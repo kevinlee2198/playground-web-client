@@ -12,7 +12,7 @@ test.describe("User Profile Page", () => {
     unauthenticatedPage,
   }) => {
     await unauthenticatedPage.goto("/en/user/otheruser");
-    await expect(unauthenticatedPage.getByText("Other User")).toBeVisible();
+    await expect(unauthenticatedPage.getByRole("heading", { name: "Other User" })).toBeVisible();
     await expect(unauthenticatedPage.getByText("@otheruser")).toBeVisible();
   });
 
@@ -23,20 +23,20 @@ test.describe("User Profile Page", () => {
     msw.use(
       http.post("*/graphql", async ({ request }) => {
         const body = (await request.json()) as { query: string };
-        if (body.query.includes("me")) return HttpResponse.json(mockMeResponse());
-        if (body.query.includes("user")) return HttpResponse.json(mockOwnUserResponse());
+        if (/\bme\s*\{/.test(body.query)) return HttpResponse.json(mockMeResponse());
+        if (/\buser\s*[\({]/.test(body.query)) return HttpResponse.json(mockOwnUserResponse());
         return HttpResponse.json({ data: {} });
       }),
     );
     await authenticatedPage.goto("/en/user/testuser");
-    await expect(authenticatedPage.getByText("Test User")).toBeVisible();
+    await expect(authenticatedPage.getByRole("heading", { name: "Test User" })).toBeVisible();
   });
 
   test("authenticated other profile: renders", async ({
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/user/otheruser");
-    await expect(authenticatedPage.getByText("Other User")).toBeVisible();
+    await expect(authenticatedPage.getByRole("heading", { name: "Other User" })).toBeVisible();
   });
 
   test("[CRITICAL] profile not found: shows 404", async ({

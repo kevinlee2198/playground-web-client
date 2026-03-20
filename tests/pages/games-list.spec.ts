@@ -32,8 +32,9 @@ test.describe("Games List Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/games");
+    // GameCard uses getLocationText() which formats as "city, state"
     await expect(
-      authenticatedPage.getByText("Test Court").first(),
+      authenticatedPage.getByText("Test City, TS").first(),
     ).toBeVisible();
   });
 

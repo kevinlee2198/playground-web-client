@@ -4,7 +4,7 @@ import { mockGame } from "./games";
 export function mockFeedResponse(games?: Record<string, unknown>[]) {
   const nodes = (games ?? [mockGame()]).map((game) => ({
     ...game,
-    friendPlayers: [],
+    viewerFriendPlayers: { nodes: [], totalCount: 0 },
   }));
   return {
     data: {

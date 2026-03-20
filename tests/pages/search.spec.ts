@@ -15,10 +15,11 @@ test.describe("Search Page", () => {
     unauthenticatedPage,
   }) => {
     await unauthenticatedPage.goto("/en/search");
+    // The Input component uses base-ui InputPrimitive without type="search",
+    // so searchbox role is not available. Use placeholder instead.
+    // Use .first() in case both the navbar and page search inputs are visible.
     await expect(
-      unauthenticatedPage
-        .getByRole("searchbox")
-        .or(unauthenticatedPage.getByPlaceholder(/search/i)),
+      unauthenticatedPage.getByPlaceholder(/search/i).first(),
     ).toBeVisible();
   });
 
@@ -37,6 +38,7 @@ test.describe("Search Page", () => {
       http.post("*/graphql", () => HttpResponse.json(mockEmptySearchResponse())),
     );
     await unauthenticatedPage.goto("/en/search?q=nonexistent");
-    await expect(unauthenticatedPage.getByText(/no.*result/i)).toBeVisible();
+    // The i18n key search.noResults resolves to "No users found"
+    await expect(unauthenticatedPage.getByText(/no users found/i)).toBeVisible();
   });
 });

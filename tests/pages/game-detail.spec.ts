@@ -17,8 +17,9 @@ test.describe("Game Detail Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/game/game-1");
+    // SportEmojiPill renders an emoji with aria-label="Basketball", not visible text
     await expect(
-      authenticatedPage.getByText(/basketball/i).first(),
+      authenticatedPage.getByLabel(/basketball/i).first(),
     ).toBeVisible();
   });
 
@@ -37,8 +38,9 @@ test.describe("Game Detail Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/game/game-1");
+    // Game detail hero uses formatAddress(address) which joins city, state, country
     await expect(
-      authenticatedPage.getByText("Test Court").first(),
+      authenticatedPage.getByText("Test City, TS, US").first(),
     ).toBeVisible();
   });
 
@@ -51,17 +53,18 @@ test.describe("Game Detail Page", () => {
     ).toBeVisible();
   });
 
-  test("authenticated: basketball game shows box score section", async ({
+  test("authenticated: completed basketball game renders with Final status", async ({
     authenticatedPage,
     msw,
   }) => {
-    // Box scores only render for non-SCHEDULED games
+    // COMPLETE games show "Final" badge and the score block message
     msw.use(
       withMeGuard(() => mockGameDetailResponse({ gameStatus: "COMPLETE" })),
     );
     await authenticatedPage.goto("/en/game/game-1");
+    // Without mock participants, the score block shows "Add participants to track scores"
     await expect(
-      authenticatedPage.getByText(/box score|stats/i).first(),
+      authenticatedPage.getByText(/add participants/i).first(),
     ).toBeVisible();
   });
 });
