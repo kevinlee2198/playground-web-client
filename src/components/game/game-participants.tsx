@@ -10,6 +10,7 @@ import {
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographyH4 } from "@/components/ui/typography";
 import {
+  GameInvitationStatus,
   GameVisibility,
   getSportMaxParticipants,
   getSportParticipationType,
@@ -61,7 +62,8 @@ export function GameParticipants({
         {isTeamBased &&
           !atParticipantLimit &&
           (game.viewerGameRole != null ||
-            game.visibility === GameVisibility.PUBLIC) && (
+            game.visibility === GameVisibility.PUBLIC ||
+            game.viewerInvitation?.status === GameInvitationStatus.ACCEPTED) && (
             <Button
               variant="outline"
               size="sm"
@@ -103,6 +105,7 @@ export function GameParticipants({
                   viewerGameRole={game.viewerGameRole}
                   visibility={game.visibility}
                   participantIndex={index}
+                  viewerInvitation={game.viewerInvitation}
                 />
               );
             }
@@ -119,6 +122,7 @@ export function GameParticipants({
           atParticipantLimit={atParticipantLimit}
           viewerGameRole={game.viewerGameRole}
           visibility={game.visibility}
+          viewerInvitation={game.viewerInvitation}
         />
       )}
 
