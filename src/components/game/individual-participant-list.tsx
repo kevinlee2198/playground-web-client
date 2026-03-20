@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographySmall } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
-import { GameRole, GameVisibility } from "@/lib/constants";
+import { GameInvitationStatus, GameRole, GameVisibility } from "@/lib/constants";
 import type {
   GameParticipantDetail,
   IndividualParticipantNode,
 } from "@/lib/types/game";
+import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,6 +28,7 @@ interface IndividualParticipantListProps {
   atParticipantLimit: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
+  viewerInvitation: ViewerGameInvitation | null;
 }
 
 export function IndividualParticipantList({
@@ -36,6 +38,7 @@ export function IndividualParticipantList({
   atParticipantLimit,
   viewerGameRole,
   visibility,
+  viewerInvitation,
 }: IndividualParticipantListProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
@@ -51,7 +54,9 @@ export function IndividualParticipantList({
   const canJoin =
     !atParticipantLimit &&
     !currentPlayerParticipant &&
-    (viewerGameRole != null || visibility === GameVisibility.PUBLIC);
+    (viewerGameRole != null ||
+      visibility === GameVisibility.PUBLIC ||
+      viewerInvitation?.status === GameInvitationStatus.ACCEPTED);
 
   function handleJoinGame(): void {
     startTransition(async () => {

@@ -25,8 +25,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
-import { GameRole, GameStatus, GameVisibility } from "@/lib/constants";
+import { GameInvitationStatus, GameRole, GameStatus, GameVisibility } from "@/lib/constants";
 import type { PlayerRef, TeamInstanceDetail } from "@/lib/types/game";
+import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
 import { ChevronRight, MoreHorizontal, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -49,6 +50,7 @@ interface TeamCardProps {
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
   participantIndex: number;
+  viewerInvitation: ViewerGameInvitation | null;
 }
 
 export function TeamCard({
@@ -59,6 +61,7 @@ export function TeamCard({
   viewerGameRole,
   visibility,
   participantIndex,
+  viewerInvitation,
 }: TeamCardProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
@@ -72,7 +75,9 @@ export function TeamCard({
     gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
   const canJoinOrLeave =
-    viewerGameRole != null || visibility === GameVisibility.PUBLIC;
+    viewerGameRole != null ||
+    visibility === GameVisibility.PUBLIC ||
+    viewerInvitation?.status === GameInvitationStatus.ACCEPTED;
   const showJoinButton =
     !isPlayerOnTeam && !isPlayerOnAnyTeam && canJoinOrLeave;
   const showLeaveButton = isPlayerOnTeam;

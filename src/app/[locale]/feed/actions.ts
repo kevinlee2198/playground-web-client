@@ -5,6 +5,7 @@ import {
   gameMetadataFragment,
   participantNodeFragment,
   viewerFriendPlayersFragment,
+  viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
 import type { FeedGameNode } from "@/lib/types/feed";
@@ -42,6 +43,7 @@ export async function loadFeedGames(
             resultsFinalized: true,
             viewerGameRole: true,
             visibility: true,
+            viewerInvitation: viewerInvitationFragment,
             metadata: gameMetadataFragment,
             location: {
               name: true,

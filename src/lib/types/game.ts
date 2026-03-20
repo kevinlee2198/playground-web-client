@@ -9,6 +9,7 @@ import {
   SportType,
 } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import type { Location } from "@/lib/types/location";
 
 /**
@@ -191,6 +192,7 @@ export interface GameNode {
   resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
+  viewerInvitation: ViewerGameInvitation | null;
   location: {
     name: string | null;
     address: {
@@ -218,6 +220,7 @@ export interface GameDetail {
   resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
+  viewerInvitation: ViewerGameInvitation | null;
   location: Location | null;
   participants: {
     edges: Edge<GameParticipantDetail>[];
@@ -249,6 +252,7 @@ export interface CreateBaseballGameInput {
       longitude: number;
     };
   };
+  visibility?: GameVisibility;
   metadata: {
     innings?: number;
   };
@@ -274,6 +278,7 @@ export interface CreateBasketballGameInput {
       longitude: number;
     };
   };
+  visibility?: GameVisibility;
   metadata: {
     subtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
     periods?: number;
@@ -300,6 +305,7 @@ export interface CreateTennisGameInput {
       longitude: number;
     };
   };
+  visibility?: GameVisibility;
   metadata: {
     subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
     bestOf?: number;
@@ -327,6 +333,7 @@ export interface CreateFootballGameInput {
       longitude: number;
     };
   };
+  visibility?: GameVisibility;
   metadata: {
     subtype: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
     periods?: number;
@@ -353,6 +360,7 @@ export interface CreatePickleballGameInput {
       longitude: number;
     };
   };
+  visibility?: GameVisibility;
   metadata: {
     subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
     bestOf?: number;
@@ -423,6 +431,7 @@ export interface UpdateGameInput {
       scoringType?: PickleballScoringType;
     };
   };
+  visibility?: GameVisibility;
 }
 
 /**
@@ -537,6 +546,8 @@ export interface GameFilterParams {
   playerId?: number;
   gameStatus?: GameStatus;
   organizedByMe?: boolean;
+  invitedToMe?: boolean;
+  myGames?: boolean;
 }
 
 /**

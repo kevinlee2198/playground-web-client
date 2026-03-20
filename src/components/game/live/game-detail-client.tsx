@@ -2,11 +2,17 @@
 
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
+import { InvitationActionCard } from "@/components/game/invitation-action-card";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameParticipants } from "@/components/game/game-participants";
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
+import {
+  getSportParticipationType,
+  getSubtypeFromMetadata,
+  ParticipationType,
+} from "@/lib/constants";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 import type {
   FootballDefensiveStatsNode,
@@ -165,6 +171,11 @@ export function GameDetailClient({
     return false;
   });
 
+  const subtype = getSubtypeFromMetadata(state.game.metadata);
+  const isTeamBased =
+    getSportParticipationType(state.game.sportType, subtype) ===
+    ParticipationType.TEAM;
+
   return (
     <GameLiveContext.Provider value={state}>
       {!state.isConnected && (
@@ -178,6 +189,14 @@ export function GameDetailClient({
       )}
 
       {children}
+
+      {state.game.viewerInvitation && (
+        <InvitationActionCard
+          invitation={state.game.viewerInvitation}
+          isParticipant={isParticipant}
+          isTeamBased={isTeamBased}
+        />
+      )}
 
       <GameDetailActions game={state.game} />
 

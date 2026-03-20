@@ -51,6 +51,16 @@ function getKnownNotificationContent(
         href: `/game/${notification.game.id}`,
         richParams: { sportType: tSports(notification.game.sportType) },
       };
+    case "GameInvitationReceivedNotification":
+      if (!notification.game || !notification.inviter) return FALLBACK_CONTENT;
+      return {
+        templateKey: "gameInvitationReceived",
+        href: `/game/${notification.game.id}`,
+        richParams: {
+          inviterName: notification.inviter.displayName,
+          sportType: tSports(notification.game.sportType),
+        },
+      };
   }
 }
 

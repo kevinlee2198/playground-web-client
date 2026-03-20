@@ -56,6 +56,7 @@ function makeGameDetail(overrides: Partial<GameDetail> = {}): GameDetail {
     resultsFinalized: false,
     viewerGameRole: null,
     visibility: GameVisibility.PUBLIC,
+    viewerInvitation: null,
     location: null,
     participants: { edges: [], pageInfo: emptyPageInfo },
     media: { edges: [], pageInfo: emptyPageInfo },

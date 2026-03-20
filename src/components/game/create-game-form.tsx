@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "@/i18n/navigation";
-import { getSubtypes, PickleballScoringType, SportSubtype, SportType } from "@/lib/constants";
+import { GameVisibility, getSubtypes, PickleballScoringType, SportSubtype, SportType } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
 import type { LocationValue } from "@/lib/types/location";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -33,6 +33,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createGameFormSchema } from "./game-form-fields";
+import { VisibilityRadioGroup } from "./visibility-radio-group";
 
 const sportTypeOptions = Object.values(SportType);
 
@@ -59,6 +60,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       scoringType: undefined as PickleballScoringType | undefined,
       innings: undefined as number | undefined,
       location: undefined as LocationValue | undefined,
+      visibility: GameVisibility.PUBLIC,
     },
     validators: {
       onBlur: ({ value }) => {
@@ -82,6 +84,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
           input = {
             sportType: SportType.BASEBALL,
             startDate: value.startDate.toISOString(),
+            visibility: value.visibility,
             metadata: {
               ...(value.innings !== undefined && { innings: value.innings }),
             },
@@ -90,6 +93,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
           input = {
             sportType: SportType.BASKETBALL,
             startDate: value.startDate.toISOString(),
+            visibility: value.visibility,
             metadata: {
               subtype: value.subtype as
                 | SportSubtype.FIVE_ON_FIVE
@@ -101,6 +105,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
           input = {
             sportType: SportType.FOOTBALL,
             startDate: value.startDate.toISOString(),
+            visibility: value.visibility,
             metadata: {
               subtype: value.subtype as
                 | SportSubtype.FLAG_FOOTBALL
@@ -112,6 +117,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
           input = {
             sportType: SportType.PICKLEBALL,
             startDate: value.startDate.toISOString(),
+            visibility: value.visibility,
             metadata: {
               subtype: value.subtype as
                 | SportSubtype.SINGLES
@@ -132,6 +138,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
           input = {
             sportType: SportType.TENNIS,
             startDate: value.startDate.toISOString(),
+            visibility: value.visibility,
             metadata: {
               subtype: value.subtype as
                 | SportSubtype.SINGLES
@@ -234,6 +241,17 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             required
             disabled={isPending}
             placeholder={t("game.form.selectDate")}
+          />
+        )}
+      </form.Field>
+
+      <form.Field name="visibility">
+        {(field) => (
+          <VisibilityRadioGroup
+            value={field.state.value}
+            onChange={field.handleChange}
+            onBlur={field.handleBlur}
+            disabled={isPending}
           />
         )}
       </form.Field>

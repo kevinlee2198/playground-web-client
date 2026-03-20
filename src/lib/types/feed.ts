@@ -1,6 +1,7 @@
 import type { GameRole, GameStatus, GameVisibility, SportType } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type { GameMetadata, GameParticipant } from "@/lib/types/game";
+import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 
 /**
  * Minimal user info nested inside a Player for feed display.
@@ -64,6 +65,7 @@ export interface FeedGameNode {
   resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
+  viewerInvitation: ViewerGameInvitation | null;
   location: FeedLocation | null;
   participants: {
     edges: Edge<GameParticipant>[];
