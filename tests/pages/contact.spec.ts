@@ -1,4 +1,3 @@
-// tests/pages/contact.spec.ts
 import { test, expect } from "../fixtures/test-fixtures";
 
 test.describe("Contact Page", () => {

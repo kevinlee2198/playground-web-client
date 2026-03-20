@@ -1,4 +1,3 @@
-// tests/pages/user-profile.spec.ts
 import { http, HttpResponse } from "msw";
 import { test, expect } from "../fixtures/test-fixtures";
 import { mockMeResponse } from "../fixtures/mock-data/me";

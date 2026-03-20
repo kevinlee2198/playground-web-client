@@ -1,4 +1,3 @@
-// tests/navigation/navbar.spec.ts
 import { test, expect } from "../fixtures/test-fixtures";
 
 test.describe("Navbar", () => {
@@ -64,16 +63,13 @@ test.describe("Navbar", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en");
-    // Open the avatar menu
     const avatarButton = authenticatedPage.locator(
       '[data-slot="dropdown-menu-trigger"]',
     );
     await avatarButton.click();
-    // Wait for the dropdown popup to appear (base-ui uses a portal)
     await expect(
       authenticatedPage.locator('[data-slot="dropdown-menu-content"]'),
     ).toBeVisible();
-    // Menu items are rendered as base-ui Menu.Item with role="menuitem"
     await expect(
       authenticatedPage.locator('[data-slot="dropdown-menu-item"]', { hasText: /profile/i }),
     ).toBeVisible();

@@ -1,4 +1,3 @@
-// tests/pages/game-new.spec.ts
 import { test, expect } from "../fixtures/test-fixtures";
 
 test.describe("Create Game Page", () => {
@@ -22,7 +21,6 @@ test.describe("Create Game Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/games/new");
-    // BackButton renders a <button>, not a <link>
     const back = authenticatedPage.getByRole("button", {
       name: /back to games/i,
     });

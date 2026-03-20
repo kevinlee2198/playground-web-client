@@ -1,4 +1,3 @@
-// tests/pages/game-detail.spec.ts
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import {
   mockGameNotFoundResponse,

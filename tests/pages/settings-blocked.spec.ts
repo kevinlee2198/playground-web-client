@@ -1,4 +1,3 @@
-// tests/pages/settings-blocked.spec.ts
 import { http, HttpResponse } from "msw";
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import { mockBlockedUsersResponse } from "../fixtures/mock-data/friendships";

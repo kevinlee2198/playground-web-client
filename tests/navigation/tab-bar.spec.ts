@@ -1,4 +1,3 @@
-// tests/navigation/tab-bar.spec.ts
 import { test, expect } from "../fixtures/test-fixtures";
 
 test.describe("Tab Bar", () => {

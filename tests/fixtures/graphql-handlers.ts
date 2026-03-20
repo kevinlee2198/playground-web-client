@@ -23,6 +23,21 @@ function extractOperationField(queryString: string): string | null {
   return match?.[1] ?? null;
 }
 
+const EMPTY_STAT_FIELDS = [
+  "pickleballStatistics",
+  "tennisStatistics",
+  "footballOffensiveStats",
+  "footballDefensiveStats",
+  "footballSpecialTeamsStats",
+  "baseballBattingStats",
+  "baseballPitchingStats",
+  "baseballFieldingStats",
+] as const;
+
+const emptyStatResponses = Object.fromEntries(
+  EMPTY_STAT_FIELDS.map((field) => [field, { data: { [field]: [] } }]),
+);
+
 const defaultResponses: Record<string, unknown> = {
   me: mockMeResponse(),
   games: mockGamesListResponse(),
@@ -33,14 +48,7 @@ const defaultResponses: Record<string, unknown> = {
   user: mockUserResponse(),
   friendships: mockEmptyBlockedResponse(),
   basketballBoxScores: mockBasketballBoxScoresResponse(),
-  pickleballStatistics: { data: { pickleballStatistics: [] } },
-  tennisStatistics: { data: { tennisStatistics: [] } },
-  footballOffensiveStats: { data: { footballOffensiveStats: [] } },
-  footballDefensiveStats: { data: { footballDefensiveStats: [] } },
-  footballSpecialTeamsStats: { data: { footballSpecialTeamsStats: [] } },
-  baseballBattingStats: { data: { baseballBattingStats: [] } },
-  baseballPitchingStats: { data: { baseballPitchingStats: [] } },
-  baseballFieldingStats: { data: { baseballFieldingStats: [] } },
+  ...emptyStatResponses,
 };
 
 export const defaultGraphQLHandlers = [

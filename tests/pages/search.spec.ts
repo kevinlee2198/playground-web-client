@@ -1,4 +1,3 @@
-// tests/pages/search.spec.ts
 import { http, HttpResponse } from "msw";
 import { test, expect } from "../fixtures/test-fixtures";
 import { mockEmptySearchResponse } from "../fixtures/mock-data/search";

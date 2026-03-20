@@ -1,4 +1,3 @@
-// tests/pages/home.spec.ts
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import { mockEmptyFeedResponse } from "../fixtures/mock-data/feed";
 
@@ -57,7 +56,6 @@ test.describe("Home / Feed Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en");
-    // GameCard renders as a link wrapping the entire card article
     const gameLink = authenticatedPage
       .locator("main a[href*='/game/']")
       .first();

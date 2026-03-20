@@ -1,4 +1,3 @@
-// tests/navigation/footer.spec.ts
 import { test, expect } from "../fixtures/test-fixtures";
 
 test.describe("Footer", () => {
@@ -20,7 +19,7 @@ test.describe("Footer", () => {
     await unauthenticatedPage.goto("/en/resource/about");
     const year = new Date().getFullYear().toString();
     await expect(
-      unauthenticatedPage.getByText(new RegExp(`${year}`)),
+      unauthenticatedPage.getByText(year),
     ).toBeVisible();
   });
 });

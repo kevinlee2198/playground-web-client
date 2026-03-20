@@ -19,10 +19,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "PLAYWRIGHT=1 npm run dev",
+    command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     env: {
+      PLAYWRIGHT: "1",
       BETTER_AUTH_SECRET: "test-secret-for-playwright-integ-tests-32chars!!",
       BETTER_AUTH_URL: "http://localhost:3000",
       KEYCLOAK_CLIENT_ID: "test-client",

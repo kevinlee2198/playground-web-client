@@ -114,30 +114,16 @@ export async function setAuthCookies(
     signCookieValue(TEST_SESSION.token, SECRET),
   ]);
 
+  const cookieDefaults = {
+    domain: "localhost",
+    path: "/",
+    httpOnly: true,
+    sameSite: "Lax" as const,
+  };
+
   await context.addCookies([
-    {
-      name: "better-auth.session_token",
-      value: signedSessionToken,
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-    {
-      name: "better-auth.session_data",
-      value: sessionData,
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-    {
-      name: "better-auth.account_data",
-      value: accountData,
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
+    { ...cookieDefaults, name: "better-auth.session_token", value: signedSessionToken },
+    { ...cookieDefaults, name: "better-auth.session_data", value: sessionData },
+    { ...cookieDefaults, name: "better-auth.account_data", value: accountData },
   ]);
 }

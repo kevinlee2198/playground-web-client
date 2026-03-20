@@ -1,4 +1,3 @@
-// tests/pages/chat.spec.ts
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import { mockEmptyChatRoomsResponse } from "../fixtures/mock-data/chat";
 

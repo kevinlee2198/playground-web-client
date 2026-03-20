@@ -1,4 +1,3 @@
-// tests/pages/games-list.spec.ts
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import { mockEmptyGamesResponse } from "../fixtures/mock-data/games";
 

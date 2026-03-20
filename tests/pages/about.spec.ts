@@ -1,4 +1,3 @@
-// tests/pages/about.spec.ts
 import { test, expect } from "../fixtures/test-fixtures";
 
 test.describe("About Page", () => {
