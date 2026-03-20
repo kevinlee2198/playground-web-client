@@ -1,4 +1,7 @@
+// tests/pages/search.spec.ts
+import { http, HttpResponse } from "msw";
 import { test, expect } from "../fixtures/test-fixtures";
+import { mockEmptySearchResponse } from "../fixtures/mock-data/search";
 
 test.describe("Search Page", () => {
   test("[CRITICAL] renders without auth", async ({ unauthenticatedPage }) => {
@@ -23,27 +26,17 @@ test.describe("Search Page", () => {
     unauthenticatedPage,
   }) => {
     await unauthenticatedPage.goto("/en/search?q=found");
-    await expect(
-      unauthenticatedPage.getByText("Found User"),
-    ).toBeVisible();
+    await expect(unauthenticatedPage.getByText("Found User")).toBeVisible();
   });
 
   test("empty results show no results message", async ({
     unauthenticatedPage,
     msw,
   }) => {
-    const { mockEmptySearchResponse } = await import(
-      "../fixtures/mock-data/search"
-    );
-    const { http, HttpResponse } = await import("msw");
     msw.use(
-      http.post("*/graphql", () =>
-        HttpResponse.json(mockEmptySearchResponse()),
-      ),
+      http.post("*/graphql", () => HttpResponse.json(mockEmptySearchResponse())),
     );
     await unauthenticatedPage.goto("/en/search?q=nonexistent");
-    await expect(
-      unauthenticatedPage.getByText(/no.*result/i),
-    ).toBeVisible();
+    await expect(unauthenticatedPage.getByText(/no.*result/i)).toBeVisible();
   });
 });
