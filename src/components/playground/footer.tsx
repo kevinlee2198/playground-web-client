@@ -23,7 +23,6 @@ const FOOTER_LINKS = [
   { href: "/pricing", labelKey: "footer.pricing" },
   { href: "/resource/about", labelKey: "footer.about" },
   { href: "/resource/contact", labelKey: "footer.contact" },
-  { href: "/resource/privacy-policy", labelKey: "footer.privacyPolicy" },
   {
     href: "/resource/frequently-asked-questions",
     labelKey: "footer.faq",
