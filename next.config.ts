@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    testProxy: !!process.env.PLAYWRIGHT,
+  },
 };
 
 const withNextIntl = createNextIntlPlugin();
