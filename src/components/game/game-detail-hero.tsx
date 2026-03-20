@@ -3,11 +3,11 @@ import { GameHeroContent } from "@/components/game/live/game-hero-content";
 import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
 import { Badge } from "@/components/ui/badge";
 import { TypographyMuted } from "@/components/ui/typography";
-import { getSubtypeFromMetadata } from "@/lib/constants";
+import { GameVisibility, getSubtypeFromMetadata } from "@/lib/constants";
 import type { SportType } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, Lock, MapPin } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 
 interface GameDetailHeroProps {
@@ -54,6 +54,12 @@ export async function GameDetailHero({
           {subtype != null && (
             <Badge variant="outline" className="text-xs">
               {t(`sportSubtypes.${subtype}`)}
+            </Badge>
+          )}
+          {game.visibility !== GameVisibility.PUBLIC && (
+            <Badge variant="outline" className="text-xs gap-1">
+              <Lock className="size-3" aria-hidden="true" />
+              {t(`game.visibility.${game.visibility.toLowerCase()}`)}
             </Badge>
           )}
         </div>

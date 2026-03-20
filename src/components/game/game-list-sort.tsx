@@ -20,9 +20,10 @@ import { useSearchParams } from "next/navigation";
 interface GameListSortProps {
   currentSort: GameSortParams;
   myGames: boolean;
+  myGamesFilter?: string;
 }
 
-export function GameListSort({ currentSort, myGames }: GameListSortProps) {
+export function GameListSort({ currentSort, myGames, myGamesFilter }: GameListSortProps) {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
@@ -44,6 +45,17 @@ export function GameListSort({ currentSort, myGames }: GameListSortProps) {
       params.set("myGames", "true");
     } else {
       params.delete("myGames");
+      params.delete("myGamesFilter");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const updateMyGamesFilter = (filter: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (filter === "all") {
+      params.delete("myGamesFilter");
+    } else {
+      params.set("myGamesFilter", filter);
     }
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -57,6 +69,22 @@ export function GameListSort({ currentSort, myGames }: GameListSortProps) {
           <TabsTrigger value="my">{t("game.myGames")}</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      {/* My Games Sub-Filters */}
+      {myGames && (
+        <div className="flex flex-wrap gap-2">
+          {(["all", "playing", "managing", "invited"] as const).map((filter) => (
+            <Button
+              key={filter}
+              variant={(!myGamesFilter && filter === "all") || myGamesFilter === filter ? "default" : "outline"}
+              size="sm"
+              onClick={() => updateMyGamesFilter(filter)}
+            >
+              {t(`game.myGamesFilter.${filter}`)}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Sort Controls */}
       <div className="flex flex-wrap items-end gap-4">

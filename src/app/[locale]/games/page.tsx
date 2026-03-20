@@ -97,6 +97,12 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     invitedToMe: queryParams.invitedToMe === "true" ? true : undefined,
   };
 
+  // Parse myGamesFilter from URL
+  const myGamesFilter =
+    typeof queryParams.myGamesFilter === "string"
+      ? queryParams.myGamesFilter
+      : undefined;
+
   // Parse sort from URL
   const sortField = (
     typeof queryParams.sortField === "string"
@@ -119,6 +125,16 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     filterInput.gameStatus = new EnumType(filters.gameStatus);
   if (filters.myGames) filterInput.myGames = filters.myGames;
   if (filters.invitedToMe) filterInput.invitedToMe = filters.invitedToMe;
+
+  if (myGamesFilter === "invited") {
+    filterInput.invitedToMe = true;
+    // Clear myGames when a specific sub-filter is active
+    delete filterInput.myGames;
+  } else if (myGamesFilter === "managing") {
+    filterInput.organizedByMe = true;
+    delete filterInput.myGames;
+  }
+  // "playing" and "all" just use the myGames filter as-is
 
   // Fetch games
   const gamesResponse = await authQuery({
@@ -209,6 +225,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
           <GameListSort
             currentSort={{ field: sortField, direction: sortDirection }}
             myGames={filters.myGames === true}
+            myGamesFilter={myGamesFilter}
           />
 
           {games.edges.length === 0 ? (

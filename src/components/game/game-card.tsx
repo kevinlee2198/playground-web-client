@@ -14,12 +14,13 @@ import {
   GameStatusAriaLabelKey,
   GameStatusBadgeVariant,
   GameStatusLabelKey,
+  GameVisibility,
   getSubtypeFromMetadata,
 } from "@/lib/constants";
 import type { ViewerFriendPlayers } from "@/lib/types/feed";
 import type { GameNode } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, Lock, MapPin } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 
 function getLocationText(location: {
@@ -105,6 +106,17 @@ export function GameCard({ game }: GameCardProps) {
             {subtype != null && (
               <Badge variant="outline" className="text-xs">
                 {t(`sportSubtypes.${subtype}`)}
+              </Badge>
+            )}
+            {game.viewerInvitation?.status === "PENDING" && (
+              <Badge variant="secondary" className="text-xs">
+                {t("game.badges.invited")}
+              </Badge>
+            )}
+            {game.visibility !== GameVisibility.PUBLIC && (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Lock className="size-3" aria-hidden="true" />
+                {t(`game.visibility.${game.visibility.toLowerCase()}`)}
               </Badge>
             )}
           </div>
