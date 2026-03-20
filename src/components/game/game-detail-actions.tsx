@@ -18,11 +18,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GameRole, GameStatus } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
-import { MoreHorizontal, Pencil, Play, Square, Trash2, Users } from "lucide-react";
+import { MoreHorizontal, Pencil, Play, Square, Trash2, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { DeleteGameDialog } from "./delete-game-dialog";
+import { InvitePlayersDialog } from "./invite-players-dialog";
 import { ManageEditorsDialog } from "./manage-editors-dialog";
 import { UpdateGameForm } from "./update-game-form";
 
@@ -36,6 +37,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [showEditorsDialog, setShowEditorsDialog] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   if (game.viewerGameRole == null) return null;
 
@@ -111,6 +113,12 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
               <Pencil className="h-4 w-4" />
               {t("game.actions.edit")}
             </DropdownMenuItem>
+            {game.gameStatus !== GameStatus.COMPLETE && (
+              <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
+                <UserPlus className="h-4 w-4" />
+                {t("game.invitations.invitePlayers")}
+              </DropdownMenuItem>
+            )}
             {isOwner && (
               <>
                 <DropdownMenuItem onClick={() => setShowEditorsDialog(true)}>
@@ -142,6 +150,12 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
         gameId={game.id}
         open={showEditorsDialog}
         onOpenChange={setShowEditorsDialog}
+      />
+
+      <InvitePlayersDialog
+        gameId={game.id}
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
       />
 
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
