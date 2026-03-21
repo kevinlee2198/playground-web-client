@@ -12,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { TypographyH1, TypographyP } from "@/components/ui/typography";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import {
@@ -189,18 +190,18 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       return (
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <TypographyH1 className="text-3xl">
               {t("game.title")}
-            </h1>
+            </TypographyH1>
             <Link href="/game" className={buttonVariants()}>
               {t("game.actions.create")}
             </Link>
           </div>
           <GamePageTabs activeTab={activeTab} />
           <div className="mt-6 rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
-            <p className="text-lg font-semibold text-destructive">
+            <TypographyP className="text-lg font-semibold text-destructive">
               {t("game.errors.loadError")}
-            </p>
+            </TypographyP>
             <Link
               href="/games"
               className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
@@ -215,9 +216,9 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <TypographyH1 className="text-3xl">
             {t("game.title")}
-          </h1>
+          </TypographyH1>
           <Link href="/game" className={buttonVariants()}>
             {t("game.actions.create")}
           </Link>
@@ -375,18 +376,18 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <TypographyH1 className="text-3xl">
             {t("game.title")}
-          </h1>
+          </TypographyH1>
           <Link href="/game" className={buttonVariants()}>
             {t("game.actions.create")}
           </Link>
         </div>
         <GamePageTabs activeTab={activeTab} />
         <div className="mt-6 rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
-          <p className="text-lg font-semibold text-destructive">
+          <TypographyP className="text-lg font-semibold text-destructive">
             {t("game.errors.loadError")}
-          </p>
+          </TypographyP>
           <Link
             href="/games"
             className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
@@ -401,7 +402,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">{t("game.title")}</h1>
+        <TypographyH1 className="text-3xl">{t("game.title")}</TypographyH1>
         <Link href="/game" className={buttonVariants()}>
           {t("game.actions.create")}
         </Link>
