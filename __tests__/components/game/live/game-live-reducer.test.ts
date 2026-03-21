@@ -4,7 +4,7 @@ import {
   gameLiveReducer,
   type LiveGameState,
 } from "@/components/game/live/game-live-reducer";
-import { GameStatus, GameVisibility, SportSubtype, SportType } from "@/lib/constants";
+import { GameStatus, GameVisibility, SportFormat, SportType } from "@/lib/constants";
 import type { GameDetail, GameParticipantDetail, TeamInstanceDetail } from "@/lib/types/game";
 import type {
   BoxScoreSavedEvent,
@@ -33,7 +33,7 @@ function makeGameEventGame(overrides: Partial<GameEventGame> = {}): GameEventGam
     participants: { edges: [] },
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: SportSubtype.FIVE_ON_FIVE,
+      basketballFormat: SportFormat.FIVE_ON_FIVE,
       periods: null,
     },
     ...overrides,
@@ -49,7 +49,7 @@ function makeGameDetail(overrides: Partial<GameDetail> = {}): GameDetail {
     sportType: SportType.BASKETBALL,
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: SportSubtype.FIVE_ON_FIVE,
+      basketballFormat: SportFormat.FIVE_ON_FIVE,
       periods: null,
     },
     gameStatus: GameStatus.SCHEDULED,

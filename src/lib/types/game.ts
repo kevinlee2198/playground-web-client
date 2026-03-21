@@ -5,7 +5,7 @@ import {
   type GameVisibility,
   type PickleballScoringType,
   type SortDirection,
-  SportSubtype,
+  SportFormat,
   SportType,
 } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
@@ -62,26 +62,26 @@ export interface BaseballParticipantMetadata {
 
 export interface BasketballGameMetadata {
   __typename: "BasketballGameMetadata";
-  basketballSubtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
+  basketballFormat: SportFormat.FIVE_ON_FIVE | SportFormat.THREE_ON_THREE;
   periods: number | null;
 }
 
 export interface TennisGameMetadata {
   __typename: "TennisGameMetadata";
-  tennisSubtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+  tennisFormat: SportFormat.SINGLES | SportFormat.DOUBLES;
   bestOf: number;
   tiebreakFinalSet: boolean;
 }
 
 export interface FootballGameMetadata {
   __typename: "FootballGameMetadata";
-  footballSubtype: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
+  footballFormat: SportFormat.FLAG_FOOTBALL | SportFormat.AMERICAN_FOOTBALL;
   periods: number | null;
 }
 
 export interface PickleballGameMetadata {
   __typename: "PickleballGameMetadata";
-  pickleballSubtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+  pickleballFormat: SportFormat.SINGLES | SportFormat.DOUBLES;
   bestOf: number | null;
   pointsPerGame: number | null;
   winByTwo: boolean | null;
@@ -301,7 +301,7 @@ export interface CreateBasketballGameInput {
   };
   visibility?: GameVisibility;
   metadata: {
-    subtype: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
+    format: SportFormat.FIVE_ON_FIVE | SportFormat.THREE_ON_THREE;
     periods?: number;
   };
 }
@@ -328,7 +328,7 @@ export interface CreateTennisGameInput {
   };
   visibility?: GameVisibility;
   metadata: {
-    subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+    format: SportFormat.SINGLES | SportFormat.DOUBLES;
     bestOf?: number;
     tiebreakFinalSet?: boolean;
   };
@@ -356,7 +356,7 @@ export interface CreateFootballGameInput {
   };
   visibility?: GameVisibility;
   metadata: {
-    subtype: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
+    format: SportFormat.FLAG_FOOTBALL | SportFormat.AMERICAN_FOOTBALL;
     periods?: number;
   };
 }
@@ -383,7 +383,7 @@ export interface CreatePickleballGameInput {
   };
   visibility?: GameVisibility;
   metadata: {
-    subtype: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+    format: SportFormat.SINGLES | SportFormat.DOUBLES;
     bestOf?: number;
     pointsPerGame?: number;
     winByTwo?: boolean;
@@ -432,20 +432,20 @@ export interface UpdateGameInput {
       innings?: number;
     };
     basketball?: {
-      subtype?: SportSubtype.FIVE_ON_FIVE | SportSubtype.THREE_ON_THREE;
+      format?: SportFormat.FIVE_ON_FIVE | SportFormat.THREE_ON_THREE;
       periods?: number;
     };
     tennis?: {
-      subtype?: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+      format?: SportFormat.SINGLES | SportFormat.DOUBLES;
       bestOf?: number;
       tiebreakFinalSet?: boolean;
     };
     football?: {
-      subtype?: SportSubtype.FLAG_FOOTBALL | SportSubtype.AMERICAN_FOOTBALL;
+      format?: SportFormat.FLAG_FOOTBALL | SportFormat.AMERICAN_FOOTBALL;
       periods?: number;
     };
     pickleball?: {
-      subtype?: SportSubtype.SINGLES | SportSubtype.DOUBLES;
+      format?: SportFormat.SINGLES | SportFormat.DOUBLES;
       bestOf?: number;
       pointsPerGame?: number;
       winByTwo?: boolean;

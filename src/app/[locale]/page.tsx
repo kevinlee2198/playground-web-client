@@ -221,6 +221,10 @@ async function PublicHomePage({
 
   const games = gamesResponse.data?.games;
 
+  if (gamesResponse.errors?.length > 0) {
+    console.error("Public feed query errors:", gamesResponse.errors);
+  }
+
   // Error state
   if (!games) {
     return (

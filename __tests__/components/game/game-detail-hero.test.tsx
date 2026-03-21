@@ -11,12 +11,12 @@ vi.mock("next-intl/server", () => ({
         "game.status.upcoming": "Upcoming",
         "game.status.final": "Final",
         "game.detail.hero.scheduled": "Scheduled for",
-        "sportSubtypes.FIVE_ON_FIVE": "5v5",
-        "sportSubtypes.THREE_ON_THREE": "3v3",
-        "sportSubtypes.SINGLES": "Singles",
-        "sportSubtypes.DOUBLES": "Doubles",
-        "sportSubtypes.FLAG_FOOTBALL": "Flag Football",
-        "sportSubtypes.AMERICAN_FOOTBALL": "American Football",
+        "sportFormats.FIVE_ON_FIVE": "5v5",
+        "sportFormats.THREE_ON_THREE": "3v3",
+        "sportFormats.SINGLES": "Singles",
+        "sportFormats.DOUBLES": "Doubles",
+        "sportFormats.FLAG_FOOTBALL": "Flag Football",
+        "sportFormats.AMERICAN_FOOTBALL": "American Football",
         "sports.BASKETBALL": "Basketball",
         "sports.TENNIS": "Tennis",
         "sports.FOOTBALL": "Football",
@@ -58,7 +58,7 @@ import {
   GameRole,
   GameStatus,
   GameVisibility,
-  SportSubtype,
+  SportFormat,
   SportType,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
@@ -74,7 +74,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     sportType: SportType.BASKETBALL,
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: SportSubtype.FIVE_ON_FIVE,
+      basketballFormat: SportFormat.FIVE_ON_FIVE,
       periods: 4,
     },
     gameStatus: GameStatus.IN_PROGRESS,
@@ -151,7 +151,7 @@ async function renderHero(
 // ---- Tests ----
 
 describe("GameDetailHero", () => {
-  it("renders sport emoji pill and subtype badge centered", async () => {
+  it("renders sport emoji pill and format badge centered", async () => {
     await renderHero();
 
     expect(screen.getByTestId("sport-emoji-pill")).toBeInTheDocument();
@@ -216,7 +216,7 @@ describe("GameDetailHero", () => {
       gameStatus: GameStatus.COMPLETE,
       metadata: {
         __typename: "TennisGameMetadata",
-        tennisSubtype: SportSubtype.SINGLES,
+        tennisFormat: SportFormat.SINGLES,
         bestOf: 3,
         tiebreakFinalSet: false,
       },
@@ -232,7 +232,7 @@ describe("GameDetailHero", () => {
       gameStatus: GameStatus.COMPLETE,
       metadata: {
         __typename: "FootballGameMetadata",
-        footballSubtype: SportSubtype.FLAG_FOOTBALL,
+        footballFormat: SportFormat.FLAG_FOOTBALL,
         periods: 4,
       },
     });

@@ -32,7 +32,7 @@ export enum ParticipationType {
   INDIVIDUAL = "INDIVIDUAL",
 }
 
-export enum SportSubtype {
+export enum SportFormat {
   FIVE_ON_FIVE = "FIVE_ON_FIVE",
   THREE_ON_THREE = "THREE_ON_THREE",
   FLAG_FOOTBALL = "FLAG_FOOTBALL",
@@ -42,11 +42,11 @@ export enum SportSubtype {
 }
 
 /**
- * Configuration for each sport subtype including participation type and limits.
+ * Configuration for each sport format including participation type and limits.
  * maxTeamSize is only defined for team sports and includes bench players.
  * maxParticipants is the max number of teams (team sports) or individual players (individual sports).
  */
-export const SportSubtypeConfig = {
+export const SportFormatConfig = {
   FIVE_ON_FIVE: {
     participation: ParticipationType.TEAM,
     maxTeamSize: 15,
@@ -90,58 +90,58 @@ export enum PickleballScoringType {
 
 export const SportTypeConfig = {
   BASEBALL: {
-    subtypes: [],
+    formats: [],
     icon: "/sports/baseball.svg",
     participation: ParticipationType.TEAM,
     maxTeamSize: 25,
     maxParticipants: 2,
   },
   BASKETBALL: {
-    subtypes: [SportSubtype.FIVE_ON_FIVE, SportSubtype.THREE_ON_THREE],
+    formats: [SportFormat.FIVE_ON_FIVE, SportFormat.THREE_ON_THREE],
     icon: "/sports/basketball.svg",
   },
   FOOTBALL: {
-    subtypes: [SportSubtype.FLAG_FOOTBALL, SportSubtype.AMERICAN_FOOTBALL],
+    formats: [SportFormat.FLAG_FOOTBALL, SportFormat.AMERICAN_FOOTBALL],
     icon: "/sports/football.svg",
   },
   TENNIS: {
-    subtypes: [SportSubtype.SINGLES, SportSubtype.DOUBLES],
+    formats: [SportFormat.SINGLES, SportFormat.DOUBLES],
     icon: "/sports/tennis.svg",
   },
   PICKLEBALL: {
-    subtypes: [SportSubtype.SINGLES, SportSubtype.DOUBLES],
+    formats: [SportFormat.SINGLES, SportFormat.DOUBLES],
     icon: "/sports/pickleball.svg",
   },
   //   SOFTBALL: [],
   //   SWIM: [],
 } as const;
 
-export function getSubtypes(sport: SportType) {
-  return SportTypeConfig[sport].subtypes;
+export function getFormats(sport: SportType) {
+  return SportTypeConfig[sport].formats;
 }
 
 export function getSportIconPath(sport: SportType) {
   return SportTypeConfig[sport].icon;
 }
 
-export function getParticipationType(sportSubtype: SportSubtype) {
-  return SportSubtypeConfig[sportSubtype].participation;
+export function getParticipationType(sportFormat: SportFormat) {
+  return SportFormatConfig[sportFormat].participation;
 }
 
 /**
- * Get the maximum team size for a given sport subtype.
+ * Get the maximum team size for a given sport format.
  * Returns undefined for individual sports.
  */
-export function getMaxTeamSize(sportSubtype: SportSubtype): number | undefined {
-  const config = SportSubtypeConfig[sportSubtype];
+export function getMaxTeamSize(sportFormat: SportFormat): number | undefined {
+  const config = SportFormatConfig[sportFormat];
   return "maxTeamSize" in config ? config.maxTeamSize : undefined;
 }
 
 /**
- * Get the maximum number of participants (teams or individuals) for a given sport subtype.
+ * Get the maximum number of participants (teams or individuals) for a given sport format.
  */
-export function getMaxParticipants(sportSubtype: SportSubtype): number {
-  return SportSubtypeConfig[sportSubtype].maxParticipants;
+export function getMaxParticipants(sportFormat: SportFormat): number {
+  return SportFormatConfig[sportFormat].maxParticipants;
 }
 
 export enum GameSortField {
@@ -211,46 +211,46 @@ export const GameStatusAriaLabelKey: Record<GameStatus, string> = {
 };
 
 /**
- * Extract the SportSubtype value from a GameMetadata union member.
+ * Extract the SportFormat value from a GameMetadata union member.
  * Due to GraphQL field conflict resolution, each metadata type uses
- * an aliased subtype field (basketballSubtype, tennisSubtype, footballSubtype).
+ * an aliased format field (basketballFormat, tennisFormat, etc.).
  */
-export function getSubtypeFromMetadata(
+export function getFormatFromMetadata(
   metadata:
     | { __typename: "BaseballGameMetadata" }
-    | { __typename: "BasketballGameMetadata"; basketballSubtype: string }
-    | { __typename: "TennisGameMetadata"; tennisSubtype: string }
-    | { __typename: "FootballGameMetadata"; footballSubtype: string }
-    | { __typename: "PickleballGameMetadata"; pickleballSubtype: string },
-): SportSubtype | null {
+    | { __typename: "BasketballGameMetadata"; basketballFormat: string }
+    | { __typename: "TennisGameMetadata"; tennisFormat: string }
+    | { __typename: "FootballGameMetadata"; footballFormat: string }
+    | { __typename: "PickleballGameMetadata"; pickleballFormat: string },
+): SportFormat | null {
   switch (metadata.__typename) {
     case "BaseballGameMetadata":
       return null;
     case "BasketballGameMetadata":
-      return metadata.basketballSubtype as SportSubtype;
+      return metadata.basketballFormat as SportFormat;
     case "TennisGameMetadata":
-      return metadata.tennisSubtype as SportSubtype;
+      return metadata.tennisFormat as SportFormat;
     case "FootballGameMetadata":
-      return metadata.footballSubtype as SportSubtype;
+      return metadata.footballFormat as SportFormat;
     case "PickleballGameMetadata":
-      return metadata.pickleballSubtype as SportSubtype;
+      return metadata.pickleballFormat as SportFormat;
   }
 }
 
 export function getSportParticipationType(
   sportType: SportType,
-  subtype: SportSubtype | null,
+  format: SportFormat | null,
 ): ParticipationType {
-  if (subtype != null) return SportSubtypeConfig[subtype].participation;
+  if (format != null) return SportFormatConfig[format].participation;
   const config = SportTypeConfig[sportType];
   return "participation" in config ? config.participation : ParticipationType.TEAM;
 }
 
 export function getSportMaxParticipants(
   sportType: SportType,
-  subtype: SportSubtype | null,
+  format: SportFormat | null,
 ): number {
-  if (subtype != null) return SportSubtypeConfig[subtype].maxParticipants;
+  if (format != null) return SportFormatConfig[format].maxParticipants;
   const config = SportTypeConfig[sportType];
   return "maxParticipants" in config ? config.maxParticipants : 2;
 }

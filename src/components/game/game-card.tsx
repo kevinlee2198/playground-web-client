@@ -16,7 +16,7 @@ import {
   GameStatusBadgeVariant,
   GameStatusLabelKey,
   GameVisibility,
-  getSubtypeFromMetadata,
+  getFormatFromMetadata,
 } from "@/lib/constants";
 import type { ViewerFriendPlayers } from "@/lib/types/feed";
 import type { GameNode } from "@/lib/types/game";
@@ -63,7 +63,7 @@ export function GameCard({ game, distance }: GameCardProps) {
   const locationText = game.location ? getLocationText(game.location) : null;
   const distanceText =
     distance != null && distance > 0 ? formatDistance(distance, "IMPERIAL") : null;
-  const subtype = getSubtypeFromMetadata(game.metadata);
+  const sportFormat = getFormatFromMetadata(game.metadata);
 
   const statusPill = (
     <Badge
@@ -106,12 +106,12 @@ export function GameCard({ game, distance }: GameCardProps) {
             />
           ) : null}
 
-          {/* Sport info row: emoji pill + subtype */}
+          {/* Sport info row: emoji pill + format */}
           <div className="flex items-center gap-2">
             <SportEmojiPill sportType={game.sportType} />
-            {subtype != null && (
+            {sportFormat != null && (
               <Badge variant="outline" className="text-xs">
-                {t(`sportSubtypes.${subtype}`)}
+                {t(`sportFormats.${sportFormat}`)}
               </Badge>
             )}
             {game.viewerInvitation?.status === GameInvitationStatus.PENDING && (

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MutationErrorType } from "@/lib/graphql-result";
-import { SportType, SportSubtype, GameSortField, SortDirection, GameStatus } from "@/lib/constants";
+import { SportType, SportFormat, GameSortField, SortDirection, GameStatus } from "@/lib/constants";
 
 const { mockAuthMutate, mockAuthQuery, mockQuery } = vi.hoisted(() => ({
   mockAuthMutate: vi.fn(),
@@ -100,7 +100,7 @@ describe("createGame", () => {
     const result = await createGame({
       sportType: SportType.BASKETBALL,
       startDate: "2025-01-01",
-      metadata: { subtype: SportSubtype.FIVE_ON_FIVE, periods: 4 },
+      metadata: { format: SportFormat.FIVE_ON_FIVE, periods: 4 },
     });
 
     expect(result).toEqual({ success: true, gameId: 42 });
@@ -115,7 +115,7 @@ describe("createGame", () => {
     await createGame({
       sportType: SportType.TENNIS,
       startDate: "2025-06-01",
-      metadata: { subtype: SportSubtype.SINGLES, bestOf: 3, tiebreakFinalSet: true },
+      metadata: { format: SportFormat.SINGLES, bestOf: 3, tiebreakFinalSet: true },
     });
 
     const mutInput = getMutationInput("createGame");
@@ -131,7 +131,7 @@ describe("createGame", () => {
     await createGame({
       sportType: SportType.FOOTBALL,
       startDate: "2025-03-01",
-      metadata: { subtype: SportSubtype.FLAG_FOOTBALL },
+      metadata: { format: SportFormat.FLAG_FOOTBALL },
       location: {
         address: { city: "Boston", country: "USA" },
         coordinates: { latitude: 42.36, longitude: -71.06 },
@@ -157,7 +157,7 @@ describe("createGame", () => {
     await createGame({
       sportType: SportType.FOOTBALL,
       startDate: "2025-03-01",
-      metadata: { subtype: SportSubtype.FLAG_FOOTBALL },
+      metadata: { format: SportFormat.FLAG_FOOTBALL },
       location: {
         address: { city: "Boston", country: "USA" },
       },
@@ -177,7 +177,7 @@ describe("createGame", () => {
     const result = await createGame({
       sportType: SportType.BASKETBALL,
       startDate: "2025-01-01",
-      metadata: { subtype: SportSubtype.FIVE_ON_FIVE },
+      metadata: { format: SportFormat.FIVE_ON_FIVE },
     });
 
     expect(result).toEqual({
@@ -194,7 +194,7 @@ describe("createGame", () => {
     const result = await createGame({
       sportType: SportType.BASKETBALL,
       startDate: "2025-01-01",
-      metadata: { subtype: SportSubtype.FIVE_ON_FIVE },
+      metadata: { format: SportFormat.FIVE_ON_FIVE },
     });
 
     expect(result).toEqual({
@@ -211,7 +211,7 @@ describe("createGame", () => {
     const result = await createGame({
       sportType: SportType.BASKETBALL,
       startDate: "2025-01-01",
-      metadata: { subtype: SportSubtype.FIVE_ON_FIVE },
+      metadata: { format: SportFormat.FIVE_ON_FIVE },
     });
 
     expect(result).toEqual({
@@ -257,14 +257,14 @@ describe("updateGame", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
   });
 
-  it("sends metadata with basketball subtype when basketball metadata provided", async () => {
+  it("sends metadata with basketball format when basketball metadata provided", async () => {
     mockMutateSuccess("updateGame", "UpdateGameResponse", {
       game: { id: 9, startDate: "2025-04-01", metadata: {} },
     });
 
     await updateGame({
       id: 9,
-      metadata: { basketball: { subtype: SportSubtype.THREE_ON_THREE, periods: 2 } },
+      metadata: { basketball: { format: SportFormat.THREE_ON_THREE, periods: 2 } },
     });
 
     const mutInput = getMutationInput("updateGame");

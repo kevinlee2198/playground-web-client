@@ -102,7 +102,7 @@ import {
   GameRole,
   GameStatus,
   GameVisibility,
-  SportSubtype,
+  SportFormat,
   SportType,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
@@ -118,7 +118,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     sportType: SportType.BASKETBALL,
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: SportSubtype.FIVE_ON_FIVE,
+      basketballFormat: SportFormat.FIVE_ON_FIVE,
       periods: 4,
     },
     gameStatus: GameStatus.IN_PROGRESS,
@@ -323,7 +323,7 @@ describe("GameScoreBlock", () => {
           sportType: SportType.FOOTBALL,
           metadata: {
             __typename: "FootballGameMetadata",
-            footballSubtype: SportSubtype.FLAG_FOOTBALL,
+            footballFormat: SportFormat.FLAG_FOOTBALL,
             periods: 4,
           },
         })}
@@ -343,7 +343,7 @@ describe("GameScoreBlock", () => {
           sportType: SportType.TENNIS,
           metadata: {
             __typename: "TennisGameMetadata",
-            tennisSubtype: SportSubtype.SINGLES,
+            tennisFormat: SportFormat.SINGLES,
             bestOf: 3,
             tiebreakFinalSet: true,
           },

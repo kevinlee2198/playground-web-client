@@ -10,7 +10,7 @@ import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
 import {
   getSportParticipationType,
-  getSubtypeFromMetadata,
+  getFormatFromMetadata,
   ParticipationType,
 } from "@/lib/constants";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
@@ -171,9 +171,9 @@ export function GameDetailClient({
     return false;
   });
 
-  const subtype = getSubtypeFromMetadata(state.game.metadata);
+  const sportFormat = getFormatFromMetadata(state.game.metadata);
   const isTeamBased =
-    getSportParticipationType(state.game.sportType, subtype) ===
+    getSportParticipationType(state.game.sportType, sportFormat) ===
     ParticipationType.TEAM;
 
   return (

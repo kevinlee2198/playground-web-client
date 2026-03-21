@@ -151,30 +151,30 @@ export const gameMetadataFragment = {
     },
     {
       __typeName: "BasketballGameMetadata",
-      basketballSubtype: {
-        __aliasFor: "subtype",
+      basketballFormat: {
+        __aliasFor: "format",
       },
       periods: true,
     },
     {
       __typeName: "TennisGameMetadata",
-      tennisSubtype: {
-        __aliasFor: "subtype",
+      tennisFormat: {
+        __aliasFor: "format",
       },
       bestOf: true,
       tiebreakFinalSet: true,
     },
     {
       __typeName: "FootballGameMetadata",
-      footballSubtype: {
-        __aliasFor: "subtype",
+      footballFormat: {
+        __aliasFor: "format",
       },
       periods: true,
     },
     {
       __typeName: "PickleballGameMetadata",
-      pickleballSubtype: {
-        __aliasFor: "subtype",
+      pickleballFormat: {
+        __aliasFor: "format",
       },
       bestOf: true,
       pointsPerGame: true,
