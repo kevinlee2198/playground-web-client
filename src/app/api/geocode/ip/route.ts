@@ -19,7 +19,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     const forwarded = request.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : null;
 
-    if (!ip) {
+    // Validate IP format to prevent URL injection via crafted x-forwarded-for
+    const IP_REGEX = /^(?:\d{1,3}\.){3}\d{1,3}$|^[0-9a-fA-F:]+$/;
+    if (!ip || !IP_REGEX.test(ip)) {
       return NextResponse.json(
         { error: "Could not determine client IP" },
         { status: 400 },

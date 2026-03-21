@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { TypographyMuted } from "@/components/ui/typography";
 import { DISTANCE_PRESETS_MILES } from "@/lib/location-detection";
 import { useTranslations } from "next-intl";
 
@@ -14,9 +15,9 @@ export function DistancePresets({ selected, onSelect }: DistancePresetsProps) {
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-1">
-      <span className="shrink-0 text-sm text-muted-foreground">
+      <TypographyMuted className="shrink-0 text-sm">
         {t("game.discover.distancePresets.label")}
-      </span>
+      </TypographyMuted>
       {DISTANCE_PRESETS_MILES.map((miles) => (
         <Button
           key={miles}
