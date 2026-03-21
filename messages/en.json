@@ -694,13 +694,6 @@
       "all": "All",
       "managing": "Managing",
       "invited": "Invited"
-    },
-    "discover": {
-      "detectingLocation": "Finding your location\u2026",
-      "gamesNear": "Games near {location}",
-      "gamesEverywhere": "Games everywhere",
-      "changeLocation": "Change",
-      "setLocation": "Set location"
     }
   },
   "units": {
