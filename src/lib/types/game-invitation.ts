@@ -10,8 +10,8 @@ export interface InvitationUserRef {
 /** Full invitation record for the organizer's invitation list */
 export interface GameInvitation {
   id: string;
+  inviter: InvitationUserRef;
   invitee: InvitationUserRef;
-  invitedBy: InvitationUserRef;
   status: GameInvitationStatus;
   acceptedDate: string | null;
   createdDate: string;
@@ -21,7 +21,7 @@ export interface GameInvitation {
 export interface ViewerGameInvitation {
   id: string;
   status: GameInvitationStatus;
-  invitedBy: {
+  inviter: {
     id: string;
     displayName: string;
   };

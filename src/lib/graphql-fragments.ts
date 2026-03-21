@@ -352,8 +352,8 @@ export const notificationInlineFragments = [
  */
 export const gameInvitationFragment = {
   id: true,
+  inviter: userRefFragment,
   invitee: userRefFragment,
-  invitedBy: userRefFragment,
   status: true,
   acceptedDate: true,
   createdDate: true,
@@ -366,7 +366,7 @@ export const gameInvitationFragment = {
 export const viewerInvitationFragment = {
   id: true,
   status: true,
-  invitedBy: { id: true, displayName: true },
+  inviter: { id: true, displayName: true },
 };
 
 /**
