@@ -2,14 +2,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MutationErrorType } from "@/lib/graphql-result";
 import { SportType, SportSubtype, GameSortField, SortDirection, GameStatus } from "@/lib/constants";
 
-const { mockAuthMutate, mockAuthQuery } = vi.hoisted(() => ({
+const { mockAuthMutate, mockAuthQuery, mockQuery } = vi.hoisted(() => ({
   mockAuthMutate: vi.fn(),
   mockAuthQuery: vi.fn(),
+  mockQuery: vi.fn(),
 }));
 
 vi.mock("@/lib/graphql-request", () => ({
   authMutate: mockAuthMutate,
   authQuery: mockAuthQuery,
+  query: mockQuery,
+}));
+
+vi.mock("@/lib/auth", () => ({
+  auth: {
+    api: {
+      getSession: vi.fn().mockResolvedValue({ user: { id: "u1" } }),
+    },
+  },
+}));
+
+vi.mock("next/headers", () => ({
+  headers: vi.fn().mockResolvedValue(new Headers()),
 }));
 
 vi.mock("next/cache", () => ({
