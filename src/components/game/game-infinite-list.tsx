@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { GameCard } from "./game-card";
 
 interface GameInfiniteListProps {
-  initialEdges: Edge<GameNode>[];
+  initialEdges: (Edge<GameNode> & { distance?: number | null })[];
   initialPageInfo: PageInfo;
   filters: GameFilterParams;
   sort: GameSortParams;
@@ -74,7 +74,7 @@ export function GameInfiniteList({
     <>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         {edges.map((edge) => (
-          <GameCard key={edge.node.id} game={edge.node} />
+          <GameCard key={edge.node.id} game={edge.node} distance={edge.distance} />
         ))}
       </div>
 
