@@ -1,5 +1,5 @@
 import { loadFeedGames } from "@/app/[locale]/feed/actions";
-import { ComponentExample } from "@/components/component-example";
+import { DiscoverFeed } from "@/components/game/discover-feed";
 import { ActivityFeed } from "@/components/feed/activity-feed";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
@@ -13,22 +13,44 @@ import {
 import { TypographyH1, TypographyP } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
+import { GameSortField, SortDirection } from "@/lib/constants";
+import {
+  gameMetadataFragment,
+  participantNodeFragment,
+} from "@/lib/graphql-fragments";
+import { query } from "@/lib/graphql-request";
+import {
+  milesToMeters,
+  parseLocationParams,
+  parseRadiusParam,
+} from "@/lib/location-detection";
+import type { GameFilterParams } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
+import { EnumType } from "json-to-graphql-query";
 import { Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  // Unauthenticated: show current stub
   if (!session?.user) {
-    return <ComponentExample />;
+    return <PublicHomePage searchParams={searchParams} />;
   }
 
-  const t = await getTranslations();
+  return <AuthenticatedHomePage />;
+}
 
-  // Fetch initial feed data
+// ---------------------------------------------------------------------------
+// Authenticated home page -- friends activity feed (unchanged behavior)
+// ---------------------------------------------------------------------------
+
+async function AuthenticatedHomePage() {
+  const t = await getTranslations();
   const feedData = await loadFeedGames(10);
 
   // Error state
@@ -94,6 +116,148 @@ export default async function HomePage() {
           initialPageInfo={feedData.pageInfo}
         />
       )}
+    </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Public home page -- game discovery feed for unauthenticated visitors
+// ---------------------------------------------------------------------------
+
+async function PublicHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const queryParams = await searchParams;
+  const t = await getTranslations();
+
+  // Parse location from URL
+  const parsedLocation = parseLocationParams(queryParams);
+  const distanceMiles = parseRadiusParam(queryParams.radius);
+  const hasNearLocation = !!parsedLocation;
+
+  // Date bounds: 7 days ago to (optionally) 30 days out
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const thirtyDaysOut = new Date();
+  thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
+
+  // Build filters
+  const filters: GameFilterParams = {
+    startAfter: sevenDaysAgo.toISOString(),
+    nearLocation: parsedLocation
+      ? {
+          latitude: parsedLocation.latitude,
+          longitude: parsedLocation.longitude,
+          radiusMeters: milesToMeters(distanceMiles),
+        }
+      : undefined,
+  };
+
+  // Without location, cap results to 30 days out
+  if (!parsedLocation) {
+    filters.startBefore = thirtyDaysOut.toISOString();
+  }
+
+  // Sort: DISTANCE ASC with location, START_DATE DESC without
+  const sortField = hasNearLocation
+    ? GameSortField.DISTANCE
+    : GameSortField.START_DATE;
+  const sortDirection = hasNearLocation
+    ? SortDirection.ASC
+    : SortDirection.DESC;
+
+  // Build GraphQL filter input
+  const filterInput: Record<string, unknown> = {};
+  if (filters.startAfter) filterInput.startAfter = filters.startAfter;
+  if (filters.startBefore) filterInput.startBefore = filters.startBefore;
+  if (filters.nearLocation) {
+    filterInput.nearLocation = {
+      latitude: filters.nearLocation.latitude,
+      longitude: filters.nearLocation.longitude,
+      radiusMeters: filters.nearLocation.radiusMeters,
+    };
+  }
+
+  // Unauthenticated query -- omits viewerGameRole, viewerInvitation, viewerFriendPlayers
+  const gamesResponse = await query({
+    games: {
+      __args: {
+        input: filterInput,
+        sort: [
+          {
+            field: new EnumType(sortField),
+            direction: new EnumType(sortDirection),
+          },
+        ],
+        first: 20,
+      },
+      edges: {
+        cursor: true,
+        ...(hasNearLocation ? { distance: true } : {}),
+        node: {
+          id: true,
+          startDate: true,
+          endDate: true,
+          sportType: true,
+          metadata: gameMetadataFragment,
+          gameStatus: true,
+          visibility: true,
+          location: {
+            name: true,
+            address: { city: true, state: true, country: true },
+          },
+          participants: {
+            __args: { first: 10 },
+            edges: { node: participantNodeFragment },
+          },
+        },
+      },
+      pageInfo: { hasNextPage: true, endCursor: true },
+    },
+  });
+
+  const games = gamesResponse.data?.games;
+
+  // Error state
+  if (!games) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
+          <TypographyP className="text-lg font-semibold text-destructive">
+            {t("game.errors.loadError")}
+          </TypographyP>
+          <Link
+            href="/"
+            className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
+          >
+            {t("game.errors.retry")}
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <TypographyH1 className="text-3xl">
+          {t("game.discover.title")}
+        </TypographyH1>
+      </div>
+
+      <DiscoverFeed
+        initialEdges={games.edges}
+        initialPageInfo={games.pageInfo}
+        initialFilters={filters}
+        initialSort={{ field: sortField, direction: sortDirection }}
+        locationName={parsedLocation?.locationName ?? null}
+        hasLocation={hasNearLocation}
+        distanceMiles={distanceMiles}
+        showDistancePresets={false}
+      />
     </main>
   );
 }
