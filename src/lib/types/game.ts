@@ -69,7 +69,7 @@ export interface BasketballGameMetadata {
 export interface TennisGameMetadata {
   __typename: "TennisGameMetadata";
   tennisFormat: SportFormat.SINGLES | SportFormat.DOUBLES;
-  bestOf: number;
+  tennisBestOf: number;
   tiebreakFinalSet: boolean;
 }
 
@@ -82,7 +82,7 @@ export interface FootballGameMetadata {
 export interface PickleballGameMetadata {
   __typename: "PickleballGameMetadata";
   pickleballFormat: SportFormat.SINGLES | SportFormat.DOUBLES;
-  bestOf: number | null;
+  pickleballBestOf: number | null;
   pointsPerGame: number | null;
   winByTwo: boolean | null;
   scoringType: PickleballScoringType | null;

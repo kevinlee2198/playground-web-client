@@ -161,7 +161,9 @@ export const gameMetadataFragment = {
       tennisFormat: {
         __aliasFor: "format",
       },
-      bestOf: true,
+      tennisBestOf: {
+        __aliasFor: "bestOf",
+      },
       tiebreakFinalSet: true,
     },
     {
@@ -176,7 +178,9 @@ export const gameMetadataFragment = {
       pickleballFormat: {
         __aliasFor: "format",
       },
-      bestOf: true,
+      pickleballBestOf: {
+        __aliasFor: "bestOf",
+      },
       pointsPerGame: true,
       winByTwo: true,
       scoringType: true,

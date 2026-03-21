@@ -217,7 +217,7 @@ describe("GameDetailHero", () => {
       metadata: {
         __typename: "TennisGameMetadata",
         tennisFormat: SportFormat.SINGLES,
-        bestOf: 3,
+        tennisBestOf: 3,
         tiebreakFinalSet: false,
       },
     });

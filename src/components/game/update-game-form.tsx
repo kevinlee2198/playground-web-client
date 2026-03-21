@@ -60,9 +60,9 @@ function buildDefaultValues(
 
   let bestOf: number | undefined;
   if (isTennis) {
-    bestOf = metadata.bestOf;
+    bestOf = metadata.tennisBestOf;
   } else if (isPickleball) {
-    bestOf = metadata.bestOf ?? undefined;
+    bestOf = metadata.pickleballBestOf ?? undefined;
   }
 
   return {
@@ -136,11 +136,12 @@ export function UpdateGameForm({
           metadata.__typename === "FootballGameMetadata"
             ? metadata.periods
             : null;
-        const originalBestOf =
-          metadata.__typename === "TennisGameMetadata" ||
-          metadata.__typename === "PickleballGameMetadata"
-            ? metadata.bestOf
-            : null;
+        let originalBestOf: number | null = null;
+        if (metadata.__typename === "TennisGameMetadata") {
+          originalBestOf = metadata.tennisBestOf;
+        } else if (metadata.__typename === "PickleballGameMetadata") {
+          originalBestOf = metadata.pickleballBestOf;
+        }
         const originalTiebreakFinalSet =
           metadata.__typename === "TennisGameMetadata"
             ? metadata.tiebreakFinalSet

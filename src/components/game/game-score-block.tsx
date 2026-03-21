@@ -120,7 +120,7 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
             nameB={nameB}
             bestOf={
               game.metadata.__typename === "TennisGameMetadata"
-                ? game.metadata.bestOf
+                ? game.metadata.tennisBestOf
                 : 3
             }
             onSuccess={handleClose}
@@ -136,8 +136,8 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
             nameB={nameB}
             bestOf={
               game.metadata.__typename === "PickleballGameMetadata" &&
-              game.metadata.bestOf != null
-                ? game.metadata.bestOf
+              game.metadata.pickleballBestOf != null
+                ? game.metadata.pickleballBestOf
                 : 3
             }
             onSuccess={handleClose}
