@@ -6,9 +6,12 @@ import {
   gameMetadataFragment,
   participantNodeFragment,
   resourceFragment,
+  viewerFriendPlayersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
-import { authMutate, authQuery } from "@/lib/graphql-request";
+import { authMutate, authQuery, query } from "@/lib/graphql-request";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   CreateGameInput,
@@ -381,6 +384,9 @@ export async function loadMoreGames(
   after: string,
 ) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    const isAuthenticated = !!session?.user;
+
     const filterInput: Record<string, unknown> = {};
 
     if (filters.startAfter) filterInput.startAfter = filters.startAfter;
@@ -396,7 +402,41 @@ export async function loadMoreGames(
     if (filters.invitedToMe) filterInput.invitedToMe = filters.invitedToMe;
     if (filters.myGames) filterInput.myGames = filters.myGames;
 
-    const response = await authQuery({
+    if (filters.nearLocation) {
+      filterInput.nearLocation = {
+        latitude: filters.nearLocation.latitude,
+        longitude: filters.nearLocation.longitude,
+        radiusMeters: filters.nearLocation.radiusMeters,
+      };
+    }
+
+    const hasNearLocation = !!filters.nearLocation;
+
+    const nodeSelection: Record<string, unknown> = {
+      id: true,
+      startDate: true,
+      endDate: true,
+      sportType: true,
+      metadata: gameMetadataFragment,
+      gameStatus: true,
+      visibility: true,
+      location: {
+        name: true,
+        address: { city: true, state: true, country: true },
+      },
+      participants: {
+        __args: { first: 10 },
+        edges: { node: participantNodeFragment },
+      },
+    };
+
+    if (isAuthenticated) {
+      nodeSelection.viewerGameRole = true;
+      nodeSelection.viewerInvitation = viewerInvitationFragment;
+      nodeSelection.viewerFriendPlayers = viewerFriendPlayersFragment;
+    }
+
+    const gamesQuery = {
       games: {
         __args: {
           input: filterInput,
@@ -411,38 +451,18 @@ export async function loadMoreGames(
         },
         edges: {
           cursor: true,
-          node: {
-            id: true,
-            startDate: true,
-            endDate: true,
-            sportType: true,
-            metadata: gameMetadataFragment,
-            gameStatus: true,
-            viewerGameRole: true,
-            visibility: true,
-            viewerInvitation: viewerInvitationFragment,
-            location: {
-              name: true,
-              address: {
-                city: true,
-                state: true,
-                country: true,
-              },
-            },
-            participants: {
-              __args: { first: 10 },
-              edges: {
-                node: participantNodeFragment,
-              },
-            },
-          },
+          ...(hasNearLocation ? { distance: true } : {}),
+          node: nodeSelection,
         },
         pageInfo: {
           hasNextPage: true,
           endCursor: true,
         },
       },
-    });
+    };
+
+    const queryFn = isAuthenticated ? authQuery : query;
+    const response = await queryFn(gamesQuery);
 
     return response.data?.games;
   } catch (error) {
