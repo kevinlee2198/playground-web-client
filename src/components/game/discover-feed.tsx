@@ -68,6 +68,15 @@ export function DiscoverFeed({
   const isDetecting = isMounted && !hasLocation && !detectionCompleted;
 
   const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const locationSearchRef = useRef<HTMLDivElement>(null);
+
+  // Focus management: move focus to autocomplete input when overlay opens
+  useEffect(() => {
+    if (showLocationSearch) {
+      const input = locationSearchRef.current?.querySelector("input");
+      input?.focus();
+    }
+  }, [showLocationSearch]);
 
   // --- Infinite scroll state ---
   const [edges, setEdges] = useState(initialEdges);
@@ -183,7 +192,7 @@ export function DiscoverFeed({
 
       {/* Location search overlay */}
       {showLocationSearch && (
-        <div className="rounded-lg border bg-card p-4 space-y-2">
+        <div ref={locationSearchRef} className="rounded-lg border bg-card p-4 space-y-2">
           <LocationAutocomplete
             value={null}
             onSelect={handleLocationSelect}
@@ -233,7 +242,7 @@ export function DiscoverFeed({
             className="mt-8 flex h-10 items-center justify-center"
           >
             {isPending && (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+              <Loader2 className="h-6 w-6 motion-safe:animate-spin text-muted-foreground" aria-hidden="true" />
             )}
             {!pageInfo.hasNextPage && edges.length > 0 && (
               <TypographyMuted>
