@@ -1,6 +1,8 @@
+import { DiscoverFeed } from "@/components/game/discover-feed";
 import { GameInfiniteList } from "@/components/game/game-infinite-list";
 import { GameListFilters } from "@/components/game/game-list-filters";
 import { GameListSort } from "@/components/game/game-list-sort";
+import { GamePageTabs } from "@/components/game/game-page-tabs";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Empty,
@@ -21,9 +23,15 @@ import {
 import {
   gameMetadataFragment,
   participantNodeFragment,
+  viewerFriendPlayersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
+import {
+  milesToMeters,
+  parseLocationParams,
+  parseRadiusParam,
+} from "@/lib/location-detection";
 import type { GameFilterParams } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
 import { EnumType } from "json-to-graphql-query";
@@ -54,22 +62,198 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     redirect({ href: "/", locale });
   }
 
-  // Parse filters from URL
+  // Parse active tab from URL
+  const activeTab =
+    typeof queryParams.tab === "string" &&
+    (queryParams.tab === "discover" || queryParams.tab === "my")
+      ? queryParams.tab
+      : "my";
+
+  // Parse sportType (shared across both tabs)
   const sportTypeParam =
     typeof queryParams.sportType === "string"
       ? queryParams.sportType
       : undefined;
+
+  const isValidSportType = (type: string | undefined): type is SportType => {
+    return type !== undefined && type in SportType;
+  };
+
+  const validSportType = isValidSportType(sportTypeParam)
+    ? sportTypeParam
+    : undefined;
+
+  // -------------------------------------------------------------------------
+  // Discover tab
+  // -------------------------------------------------------------------------
+  if (activeTab === "discover") {
+    // Parse location from URL
+    const parsedLocation = parseLocationParams(queryParams);
+    const distanceMiles = parseRadiusParam(queryParams.radius);
+    const hasNearLocation = !!parsedLocation;
+
+    // Date bounds: 7 days ago to (optionally) 30 days out
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const thirtyDaysOut = new Date();
+    thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
+
+    // Build discover-specific filters
+    const discoverFilters: GameFilterParams = {
+      startAfter: sevenDaysAgo.toISOString(),
+      sportType: validSportType,
+      nearLocation: parsedLocation
+        ? {
+            latitude: parsedLocation.latitude,
+            longitude: parsedLocation.longitude,
+            radiusMeters: milesToMeters(distanceMiles),
+          }
+        : undefined,
+    };
+
+    // Without location, cap results to 30 days out
+    if (!parsedLocation) {
+      discoverFilters.startBefore = thirtyDaysOut.toISOString();
+    }
+
+    // Sort: DISTANCE ASC with location, START_DATE DESC without
+    const discoverSortField = hasNearLocation
+      ? GameSortField.DISTANCE
+      : GameSortField.START_DATE;
+    const discoverSortDirection = hasNearLocation
+      ? SortDirection.ASC
+      : SortDirection.DESC;
+
+    // Build GraphQL filter input
+    const discoverFilterInput: Record<string, unknown> = {};
+    if (discoverFilters.startAfter)
+      discoverFilterInput.startAfter = discoverFilters.startAfter;
+    if (discoverFilters.startBefore)
+      discoverFilterInput.startBefore = discoverFilters.startBefore;
+    if (discoverFilters.sportType)
+      discoverFilterInput.sportType = new EnumType(discoverFilters.sportType);
+    if (discoverFilters.nearLocation) {
+      discoverFilterInput.nearLocation = {
+        latitude: discoverFilters.nearLocation.latitude,
+        longitude: discoverFilters.nearLocation.longitude,
+        radiusMeters: discoverFilters.nearLocation.radiusMeters,
+      };
+    }
+
+    // Authenticated query -- includes viewer-specific fields
+    const discoverResponse = await authQuery({
+      games: {
+        __args: {
+          input: discoverFilterInput,
+          sort: [
+            {
+              field: new EnumType(discoverSortField),
+              direction: new EnumType(discoverSortDirection),
+            },
+          ],
+          first: 20,
+        },
+        edges: {
+          cursor: true,
+          ...(hasNearLocation ? { distance: true } : {}),
+          node: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            sportType: true,
+            metadata: gameMetadataFragment,
+            gameStatus: true,
+            viewerGameRole: true,
+            visibility: true,
+            viewerInvitation: viewerInvitationFragment,
+            viewerFriendPlayers: viewerFriendPlayersFragment,
+            location: {
+              name: true,
+              address: { city: true, state: true, country: true },
+            },
+            participants: {
+              __args: { first: 10 },
+              edges: { node: participantNodeFragment },
+            },
+          },
+        },
+        pageInfo: { hasNextPage: true, endCursor: true },
+      },
+    });
+
+    const discoverGames = discoverResponse.data?.games;
+
+    // Handle error state
+    if (!discoverGames) {
+      return (
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t("game.title")}
+            </h1>
+            <Link href="/game" className={buttonVariants()}>
+              {t("game.actions.create")}
+            </Link>
+          </div>
+          <GamePageTabs activeTab={activeTab} />
+          <div className="mt-6 rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
+            <p className="text-lg font-semibold text-destructive">
+              {t("game.errors.loadError")}
+            </p>
+            <Link
+              href="/games"
+              className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
+            >
+              {t("game.errors.retry")}
+            </Link>
+          </div>
+        </main>
+      );
+    }
+
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("game.title")}
+          </h1>
+          <Link href="/game" className={buttonVariants()}>
+            {t("game.actions.create")}
+          </Link>
+        </div>
+
+        <GamePageTabs activeTab={activeTab} />
+
+        <div className="mt-6">
+          <DiscoverFeed
+            initialEdges={discoverGames.edges}
+            initialPageInfo={discoverGames.pageInfo}
+            initialFilters={discoverFilters}
+            initialSort={{
+              field: discoverSortField,
+              direction: discoverSortDirection,
+            }}
+            locationName={parsedLocation?.locationName ?? null}
+            hasLocation={hasNearLocation}
+            distanceMiles={distanceMiles}
+            showDistancePresets={true}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // My Games tab (default) -- existing logic unchanged
+  // -------------------------------------------------------------------------
+
+  // Parse filters from URL
   const gameStatusParam =
     typeof queryParams.gameStatus === "string"
       ? queryParams.gameStatus
       : undefined;
 
-  // Validate sportType
-  const isValidSportType = (type: string | undefined): type is SportType => {
-    return type !== undefined && type in SportType;
-  };
-
-  // Validate gameStatus
   const isValidGameStatus = (
     status: string | undefined,
   ): status is GameStatus => {
@@ -89,7 +273,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       typeof queryParams.startBefore === "string"
         ? queryParams.startBefore
         : undefined,
-    sportType: isValidSportType(sportTypeParam) ? sportTypeParam : undefined,
+    sportType: validSportType,
     gameStatus: isValidGameStatus(gameStatusParam)
       ? gameStatusParam
       : undefined,
@@ -190,7 +374,16 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
   if (!games) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("game.title")}
+          </h1>
+          <Link href="/game" className={buttonVariants()}>
+            {t("game.actions.create")}
+          </Link>
+        </div>
+        <GamePageTabs activeTab={activeTab} />
+        <div className="mt-6 rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
           <p className="text-lg font-semibold text-destructive">
             {t("game.errors.loadError")}
           </p>
@@ -214,7 +407,9 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         </Link>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <GamePageTabs activeTab={activeTab} />
+
+      <div className="mt-6 flex flex-col lg:flex-row gap-6">
         {/* Filters Sidebar */}
         <aside className="lg:w-64 shrink-0">
           <GameListFilters currentFilters={filters} />
