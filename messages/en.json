@@ -526,8 +526,27 @@
       "title": "Sort",
       "startDate": "Start Date",
       "gameStatus": "Status",
+      "distance": "Distance",
       "ascending": "Oldest First",
       "descending": "Newest First"
+    },
+    "discover": {
+      "title": "Discover",
+      "gamesNear": "Games near {location}",
+      "gamesEverywhere": "Games everywhere",
+      "changeLocation": "Change",
+      "setLocation": "Set location",
+      "detectingLocation": "Finding your location\u2026",
+      "noGamesNear": "No games near {location}",
+      "noGamesNearDescription": "Try expanding your search radius or create a game.",
+      "noGamesEverywhere": "No games found",
+      "noGamesEverywhereDescription": "Be the first to create a game!",
+      "showAllGames": "Show all games",
+      "distancePresets": {
+        "label": "Distance",
+        "miles": "{distance} mi",
+        "allDistances": "Any distance"
+      }
     },
     "validation": {
       "sportTypeRequired": "Sport type is required",
