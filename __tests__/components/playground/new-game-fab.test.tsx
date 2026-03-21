@@ -83,14 +83,14 @@ describe("NewGameFab", () => {
   });
 
   it("renders on a game detail page", () => {
-    setup({ pathname: "/games/abc-123" });
+    setup({ pathname: "/game/abc-123" });
 
     render(<NewGameFab />);
     expect(screen.getByLabelText("New Game")).toBeInTheDocument();
   });
 
   it("renders null on the create game page", () => {
-    setup({ pathname: "/games/new" });
+    setup({ pathname: "/game" });
 
     const { container } = render(<NewGameFab />);
     expect(container.firstChild).toBeNull();

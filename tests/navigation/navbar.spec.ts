@@ -33,9 +33,11 @@ test.describe("Navbar", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en");
+    // Avatar appears after fetchCurrentUser server action resolves — allow
+    // extra time under load (8 parallel workers sharing the dev server).
     await expect(
       authenticatedPage.locator('[data-slot="dropdown-menu-trigger"]'),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("authenticated: Create Game button visible on desktop", async ({
@@ -46,7 +48,7 @@ test.describe("Navbar", () => {
       authenticatedPage
         .locator("nav")
         .getByRole("link", { name: "Create Game" }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("desktop: search bar is visible", async ({ unauthenticatedPage }) => {
@@ -66,6 +68,7 @@ test.describe("Navbar", () => {
     const avatarButton = authenticatedPage.locator(
       '[data-slot="dropdown-menu-trigger"]',
     );
+    await expect(avatarButton).toBeVisible({ timeout: 10_000 });
     await avatarButton.click();
     await expect(
       authenticatedPage.locator('[data-slot="dropdown-menu-content"]'),

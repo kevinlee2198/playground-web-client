@@ -18,13 +18,13 @@ test.describe("Games List Page", () => {
     ).toBeVisible();
   });
 
-  test("authenticated: Create Game button links to /games/new", async ({
+  test("authenticated: Create Game button links to /game", async ({
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/games");
     const btn = authenticatedPage.getByRole("link", { name: "Create Game" });
     await expect(btn).toBeVisible();
-    await expect(btn).toHaveAttribute("href", /\/games\/new/);
+    await expect(btn).toHaveAttribute("href", /\/game$/);
   });
 
   test("authenticated: game cards render with mock data", async ({

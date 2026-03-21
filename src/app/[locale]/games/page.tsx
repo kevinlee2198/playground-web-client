@@ -209,7 +209,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{t("game.title")}</h1>
-        <Link href="/games/new" className={buttonVariants()}>
+        <Link href="/game" className={buttonVariants()}>
           {t("game.actions.create")}
         </Link>
       </div>

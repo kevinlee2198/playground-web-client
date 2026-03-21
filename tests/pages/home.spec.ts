@@ -18,7 +18,7 @@ test.describe("Home / Feed Page", () => {
     ).toBeVisible();
   });
 
-  test("authenticated: Create Game button links to /games/new", async ({
+  test("authenticated: Create Game button links to /game", async ({
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en");
@@ -26,7 +26,7 @@ test.describe("Home / Feed Page", () => {
       .locator("main")
       .getByRole("link", { name: "Create Game" });
     await expect(btn).toBeVisible();
-    await expect(btn).toHaveAttribute("href", /\/games\/new/);
+    await expect(btn).toHaveAttribute("href", /\/game$/);
   });
 
   test("authenticated: feed displays game cards", async ({

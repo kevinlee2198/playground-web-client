@@ -43,7 +43,7 @@ export function Navbar() {
           {/* New Game button — desktop only, auth only */}
           {session?.user && (
             <Link
-              href="/games/new"
+              href="/game"
               className={buttonVariants({ variant: "default", className: "hidden lg:inline-flex" })}
             >
               {t("game.actions.create")}

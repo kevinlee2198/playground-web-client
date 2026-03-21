@@ -55,7 +55,7 @@ export default async function HomePage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <TypographyH1 className="text-3xl">{t("feed.title")}</TypographyH1>
-        <Link href="/games/new" className={buttonVariants()}>
+        <Link href="/game" className={buttonVariants()}>
           {t("game.actions.create")}
         </Link>
       </div>

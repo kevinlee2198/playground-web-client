@@ -10,8 +10,8 @@ import { useScrollDirectionContext } from "./scroll-direction-provider";
 
 function isFabPage(pathname: string): boolean {
   if (pathname === "/" || pathname === "" || pathname === "/games") return true;
-  if (pathname === "/games/new") return false;
-  return pathname.startsWith("/games/");
+  if (pathname === "/game") return false;
+  return pathname.startsWith("/game/");
 }
 
 export function NewGameFab(): ReactNode {
@@ -37,7 +37,7 @@ export function NewGameFab(): ReactNode {
       )}
     >
       <Link
-        href="/games/new"
+        href="/game"
         aria-label={t("nav.newGame")}
         className={cn(
           "flex h-14 w-14 items-center justify-center rounded-full",
