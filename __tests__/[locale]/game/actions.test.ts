@@ -540,6 +540,10 @@ describe("loadMoreGames", () => {
     return (callArg.games as { __args: { input: Record<string, unknown> } }).__args.input;
   }
 
+  function getGamesQuerySelection(mock: typeof mockAuthQuery | typeof mockQuery = mockAuthQuery): Record<string, unknown> {
+    return (mock.mock.calls[0][0] as Record<string, unknown>).games as Record<string, unknown>;
+  }
+
   it("returns games connection on success", async () => {
     const mockGames = {
       edges: [{ cursor: "c1", node: { id: 1 } }],
@@ -611,6 +615,74 @@ describe("loadMoreGames", () => {
 
     expect(result).toBeNull();
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("includes nearLocation filter when provided", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames(
+      { nearLocation: { latitude: 30.27, longitude: -97.74, radiusMeters: 40234 } },
+      defaultSort,
+      "",
+    );
+
+    const gamesArgs = getQueryInput();
+    expect(gamesArgs).toHaveProperty("nearLocation");
+    expect(gamesArgs.nearLocation).toEqual({
+      latitude: 30.27,
+      longitude: -97.74,
+      radiusMeters: 40234,
+    });
+  });
+
+  it("includes distance field on edges when nearLocation filter is present", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames(
+      { nearLocation: { latitude: 30.27, longitude: -97.74, radiusMeters: 40234 } },
+      defaultSort,
+      "",
+    );
+
+    const edgesSelection = getGamesQuerySelection().edges as Record<string, unknown>;
+    expect(edgesSelection).toHaveProperty("distance", true);
+  });
+
+  it("omits distance field on edges when nearLocation filter is absent", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames({}, defaultSort, "");
+
+    const edgesSelection = getGamesQuerySelection().edges as Record<string, unknown>;
+    expect(edgesSelection).not.toHaveProperty("distance");
+  });
+
+  it("includes viewer-specific fields when authenticated", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames({}, defaultSort, "");
+
+    const gamesQuery = getGamesQuerySelection();
+    const nodeSelection = (gamesQuery.edges as { node: Record<string, unknown> }).node;
+    expect(nodeSelection).toHaveProperty("viewerGameRole");
+    expect(nodeSelection).toHaveProperty("viewerInvitation");
+    expect(nodeSelection).toHaveProperty("viewerFriendPlayers");
+  });
+
+  it("uses unauthenticated query and omits viewer fields when no session", async () => {
+    const { auth: authMod } = await import("@/lib/auth");
+    vi.mocked(authMod.api.getSession).mockResolvedValueOnce(null);
+    mockQuery.mockResolvedValueOnce({ data: { games: emptyConnection } });
+
+    await loadMoreGames({}, defaultSort, "");
+
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(mockAuthQuery).not.toHaveBeenCalled();
+    const gamesQuery = getGamesQuerySelection(mockQuery);
+    const nodeSelection = (gamesQuery.edges as { node: Record<string, unknown> }).node;
+    expect(nodeSelection).not.toHaveProperty("viewerGameRole");
+    expect(nodeSelection).not.toHaveProperty("viewerInvitation");
+    expect(nodeSelection).not.toHaveProperty("viewerFriendPlayers");
   });
 });
 
