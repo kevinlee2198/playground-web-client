@@ -76,9 +76,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       ? queryParams.sportType
       : undefined;
 
-  const isValidSportType = (type: string | undefined): type is SportType => {
-    return type !== undefined && type in SportType;
-  };
+  const isValidSportType = (type: string | undefined): type is SportType =>
+    type !== undefined && type in SportType;
 
   const validSportType = isValidSportType(sportTypeParam)
     ? sportTypeParam
@@ -93,17 +92,39 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     const distanceMiles = parseRadiusParam(queryParams.radius);
     const hasNearLocation = !!parsedLocation;
 
-    // Date bounds: 7 days ago to (optionally) 30 days out
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Parse gameStatus for discover tab
+    const discoverGameStatusParam =
+      typeof queryParams.gameStatus === "string"
+        ? queryParams.gameStatus
+        : undefined;
+
+    const isValidDiscoverGameStatus = (
+      status: string | undefined,
+    ): status is GameStatus =>
+      status !== undefined && status in GameStatus;
+
+    const validDiscoverGameStatus = isValidDiscoverGameStatus(
+      discoverGameStatusParam,
+    )
+      ? discoverGameStatusParam
+      : undefined;
+
+    // Date lookback: 30 days for completed games, 7 days otherwise
+    const lookbackDays =
+      validDiscoverGameStatus === GameStatus.COMPLETE ? 30 : 7;
+    const discoverStartAfterDate = new Date();
+    discoverStartAfterDate.setDate(
+      discoverStartAfterDate.getDate() - lookbackDays,
+    );
 
     const thirtyDaysOut = new Date();
     thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
 
     // Build discover-specific filters
     const discoverFilters: GameFilterParams = {
-      startAfter: sevenDaysAgo.toISOString(),
+      startAfter: discoverStartAfterDate.toISOString(),
       sportType: validSportType,
+      gameStatus: validDiscoverGameStatus,
       nearLocation: parsedLocation
         ? {
             latitude: parsedLocation.latitude,
@@ -134,6 +155,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       discoverFilterInput.startBefore = discoverFilters.startBefore;
     if (discoverFilters.sportType)
       discoverFilterInput.sportType = new EnumType(discoverFilters.sportType);
+    if (discoverFilters.gameStatus)
+      discoverFilterInput.gameStatus = new EnumType(discoverFilters.gameStatus);
     if (discoverFilters.nearLocation) {
       discoverFilterInput.nearLocation = {
         latitude: discoverFilters.nearLocation.latitude,

@@ -1,6 +1,7 @@
 import { loadFeedGames } from "@/app/[locale]/feed/actions";
 import { DiscoverFeed } from "@/components/game/discover-feed";
 import { ActivityFeed } from "@/components/feed/activity-feed";
+import { IntegratedHero } from "@/components/home/integrated-hero";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Empty,
@@ -13,7 +14,7 @@ import {
 import { TypographyH1, TypographyP } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameSortField, SortDirection } from "@/lib/constants";
+import { GameSortField, GameStatus, SortDirection, SportType } from "@/lib/constants";
 import {
   gameMetadataFragment,
   participantNodeFragment,
@@ -137,16 +138,43 @@ async function PublicHomePage({
   const distanceMiles = parseRadiusParam(queryParams.radius);
   const hasNearLocation = !!parsedLocation;
 
-  // Date bounds: 7 days ago to (optionally) 30 days out
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // Parse sportType from URL
+  const sportTypeParam =
+    typeof queryParams.sportType === "string"
+      ? queryParams.sportType
+      : undefined;
+  const isValidSportType = (type: string | undefined): type is SportType =>
+    type !== undefined && type in SportType;
+  const validSportType = isValidSportType(sportTypeParam)
+    ? sportTypeParam
+    : undefined;
+
+  // Parse gameStatus from URL
+  const gameStatusParam =
+    typeof queryParams.gameStatus === "string"
+      ? queryParams.gameStatus
+      : undefined;
+  const isValidGameStatus = (
+    status: string | undefined,
+  ): status is GameStatus =>
+    status !== undefined && status in GameStatus;
+  const validGameStatus = isValidGameStatus(gameStatusParam)
+    ? gameStatusParam
+    : undefined;
+
+  // Date lookback: 30 days for completed games, 7 days otherwise
+  const lookbackDays = validGameStatus === GameStatus.COMPLETE ? 30 : 7;
+  const startAfterDate = new Date();
+  startAfterDate.setDate(startAfterDate.getDate() - lookbackDays);
 
   const thirtyDaysOut = new Date();
   thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
 
   // Build filters
   const filters: GameFilterParams = {
-    startAfter: sevenDaysAgo.toISOString(),
+    startAfter: startAfterDate.toISOString(),
+    sportType: validSportType,
+    gameStatus: validGameStatus,
     nearLocation: parsedLocation
       ? {
           latitude: parsedLocation.latitude,
@@ -173,6 +201,10 @@ async function PublicHomePage({
   const filterInput: Record<string, unknown> = {};
   if (filters.startAfter) filterInput.startAfter = filters.startAfter;
   if (filters.startBefore) filterInput.startBefore = filters.startBefore;
+  if (filters.sportType)
+    filterInput.sportType = new EnumType(filters.sportType);
+  if (filters.gameStatus)
+    filterInput.gameStatus = new EnumType(filters.gameStatus);
   if (filters.nearLocation) {
     filterInput.nearLocation = {
       latitude: filters.nearLocation.latitude,
@@ -246,22 +278,19 @@ async function PublicHomePage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6">
-        <TypographyH1 className="text-3xl">
-          {t("game.discover.title")}
-        </TypographyH1>
-      </div>
-
-      <DiscoverFeed
-        initialEdges={games.edges}
-        initialPageInfo={games.pageInfo}
-        initialFilters={filters}
-        initialSort={{ field: sortField, direction: sortDirection }}
-        locationName={parsedLocation?.locationName ?? null}
-        hasLocation={hasNearLocation}
-        distanceMiles={distanceMiles}
-        showDistancePresets={false}
-      />
+      <IntegratedHero>
+        <DiscoverFeed
+          initialEdges={games.edges}
+          initialPageInfo={games.pageInfo}
+          initialFilters={filters}
+          initialSort={{ field: sortField, direction: sortDirection }}
+          locationName={parsedLocation?.locationName ?? null}
+          hasLocation={hasNearLocation}
+          distanceMiles={distanceMiles}
+          showDistancePresets={false}
+          showInlineCta={true}
+        />
+      </IntegratedHero>
     </main>
   );
 }

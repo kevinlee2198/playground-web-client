@@ -608,6 +608,50 @@ describe("loadMoreGames", () => {
     expect(typeof (sortArgs[0] as Record<string, unknown>).direction).toBe("object");
   });
 
+  it("includes sportType filter value in query when provided", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames(
+      { sportType: SportType.BASKETBALL, startAfter: "2026-01-01T00:00:00Z" },
+      { field: GameSortField.START_DATE, direction: SortDirection.DESC },
+      "cursor123",
+    );
+
+    const input = getQueryInput();
+    expect((input.sportType as { value: string }).value).toBe("BASKETBALL");
+  });
+
+  it("includes gameStatus filter value in query when provided", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames(
+      { gameStatus: GameStatus.SCHEDULED, startAfter: "2026-01-01T00:00:00Z" },
+      { field: GameSortField.START_DATE, direction: SortDirection.DESC },
+      "cursor123",
+    );
+
+    const input = getQueryInput();
+    expect((input.gameStatus as { value: string }).value).toBe("SCHEDULED");
+  });
+
+  it("includes both sportType and gameStatus values when both provided", async () => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames(
+      {
+        sportType: SportType.TENNIS,
+        gameStatus: GameStatus.COMPLETE,
+        startAfter: "2026-01-01T00:00:00Z",
+      },
+      { field: GameSortField.START_DATE, direction: SortDirection.DESC },
+      "cursor123",
+    );
+
+    const input = getQueryInput();
+    expect((input.sportType as { value: string }).value).toBe("TENNIS");
+    expect((input.gameStatus as { value: string }).value).toBe("COMPLETE");
+  });
+
   it("returns null on network failure", async () => {
     mockAuthQuery.mockRejectedValueOnce(new Error("Network error"));
 

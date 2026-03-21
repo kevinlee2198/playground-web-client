@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import type { SportType } from "@/lib/constants";
 import { useTranslations } from "next-intl";
 
-const sportEmoji: Record<SportType, string> = {
+export const sportEmoji: Record<SportType, string> = {
   BASKETBALL: "🏀",
   TENNIS: "🎾",
   FOOTBALL: "🏈",
@@ -12,7 +12,7 @@ const sportEmoji: Record<SportType, string> = {
   BASEBALL: "⚾",
 };
 
-const sportBgClass: Record<SportType, string> = {
+export const sportBgClass: Record<SportType, string> = {
   BASKETBALL: "bg-sport-basketball",
   TENNIS: "bg-sport-tennis",
   FOOTBALL: "bg-sport-football",

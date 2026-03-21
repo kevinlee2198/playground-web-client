@@ -546,7 +546,17 @@
         "label": "Distance",
         "miles": "{distance} mi",
         "allDistances": "Any distance"
-      }
+      },
+      "allSports": "All Sports",
+      "statusFilter": "Game status filter",
+      "upcoming": "Upcoming",
+      "live": "Live",
+      "completed": "Completed",
+      "noGamesNearWithSport": "No {sport} games near {location}",
+      "noGamesEverywhereWithSport": "No {sport} games found",
+      "noGamesWithStatus": "No {status} games found",
+      "noGamesNearWithStatus": "No {status} games near {location}",
+      "noGamesNearWithSportAndStatus": "No {status} {sport} games near {location}"
     },
     "validation": {
       "sportTypeRequired": "Sport type is required",
@@ -990,5 +1000,17 @@
     },
     "email": "playgroundsocool@gmail.com",
     "phone": "(Mr.)-Telephone-Man"
+  },
+  "home": {
+    "hero": {
+      "tagline": "Where Friends Come to Play",
+      "description": "Organize pickup games, track scores, and play with people near you."
+    },
+    "cta": {
+      "getStarted": "Get Started",
+      "inlineTitle": "Want to join a game?",
+      "inlineDescription": "Sign up to play with people near you",
+      "inlineButton": "Create Account"
+    }
   }
 }

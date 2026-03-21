@@ -3,12 +3,12 @@ import { mockEmptyGamesResponse } from "../fixtures/mock-data/games";
 
 test.describe("Discover Feed", () => {
   test.describe("Public Home Page (unauthenticated)", () => {
-    test("[CRITICAL] renders Discover heading", async ({
+    test("[CRITICAL] renders hero tagline heading", async ({
       unauthenticatedPage,
     }) => {
       await unauthenticatedPage.goto("/en");
       await expect(
-        unauthenticatedPage.getByRole("heading", { name: "Discover" }),
+        unauthenticatedPage.getByRole("heading", { name: "Where Friends Come to Play" }),
       ).toBeVisible();
     });
 

@@ -5,6 +5,9 @@ import { DistancePresets } from "@/components/game/distance-presets";
 import { GameCard } from "@/components/game/game-card";
 import { LocationAutocomplete } from "@/components/location/location-autocomplete";
 import { LocationIndicator } from "@/components/game/location-indicator";
+import { SportFilterPills } from "@/components/game/sport-filter-pills";
+import { StatusFilterChips } from "@/components/game/status-filter-chips";
+import { GetStartedLink, InlineCta } from "@/components/home/inline-cta";
 import { Button } from "@/components/ui/button";
 import { TypographyMuted, TypographyP } from "@/components/ui/typography";
 import { useUserLocation } from "@/hooks/use-user-location";
@@ -16,6 +19,7 @@ import type {
   GameFilterParams,
   GameSortParams,
 } from "@/lib/types/game";
+import { GameStatus, SportType } from "@/lib/constants";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -28,6 +32,12 @@ import {
   useTransition,
 } from "react";
 
+const GAME_STATUS_LABEL_KEY: Record<GameStatus, string> = {
+  [GameStatus.SCHEDULED]: "upcoming",
+  [GameStatus.IN_PROGRESS]: "live",
+  [GameStatus.COMPLETE]: "completed",
+};
+
 interface DiscoverFeedProps {
   initialEdges: GameEdgeWithDistance[];
   initialPageInfo: PageInfo;
@@ -37,6 +47,7 @@ interface DiscoverFeedProps {
   hasLocation: boolean;
   distanceMiles: number;
   showDistancePresets?: boolean;
+  showInlineCta?: boolean;
 }
 
 export function DiscoverFeed({
@@ -48,8 +59,10 @@ export function DiscoverFeed({
   hasLocation,
   distanceMiles,
   showDistancePresets = false,
+  showInlineCta = false,
 }: DiscoverFeedProps) {
   const t = useTranslations();
+  const tSports = useTranslations("sports");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -152,6 +165,26 @@ export function DiscoverFeed({
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  function updateSportTypeInUrl(sportType: SportType | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (sportType) {
+      params.set("sportType", sportType);
+    } else {
+      params.delete("sportType");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function updateGameStatusInUrl(gameStatus: GameStatus | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (gameStatus) {
+      params.set("gameStatus", gameStatus);
+    } else {
+      params.delete("gameStatus");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   // --- Location autocomplete handlers ---
 
   function handleLocationSelect(loc: LocationValue) {
@@ -168,6 +201,54 @@ export function DiscoverFeed({
   function handleLocationClear() {
     clearLocationInUrl();
     setShowLocationSearch(false);
+  }
+
+  // --- Derive active filter values from initialFilters ---
+  const activeSportType = initialFilters.sportType ?? null;
+  const activeGameStatus = initialFilters.gameStatus ?? null;
+
+  function buildEmptyMessage(): string {
+    const sportName = activeSportType ? tSports(activeSportType) : null;
+    const statusLabel = activeGameStatus
+      ? t(`game.discover.${GAME_STATUS_LABEL_KEY[activeGameStatus]}`)
+      : null;
+
+    if (sportName && statusLabel && hasLocation) {
+      return t("game.discover.noGamesNearWithSportAndStatus", {
+        sport: sportName,
+        status: statusLabel,
+        location: locationName ?? "",
+      });
+    }
+    if (sportName && hasLocation) {
+      return t("game.discover.noGamesNearWithSport", {
+        sport: sportName,
+        location: locationName ?? "",
+      });
+    }
+    if (statusLabel && hasLocation) {
+      return t("game.discover.noGamesNearWithStatus", {
+        status: statusLabel,
+        location: locationName ?? "",
+      });
+    }
+    if (sportName) {
+      return t("game.discover.noGamesEverywhereWithSport", { sport: sportName });
+    }
+    if (statusLabel) {
+      return t("game.discover.noGamesWithStatus", { status: statusLabel });
+    }
+    if (hasLocation) {
+      return t("game.discover.noGamesNear", { location: locationName ?? "" });
+    }
+    return t("game.discover.noGamesEverywhere");
+  }
+
+  function buildEmptyDescription(): string {
+    if (hasLocation) {
+      return t("game.discover.noGamesNearDescription");
+    }
+    return t("game.discover.noGamesEverywhereDescription");
   }
 
   return (
@@ -210,24 +291,38 @@ export function DiscoverFeed({
         </div>
       )}
 
+      {/* Sport + Status filters */}
+      <div className="flex flex-col gap-3">
+        <SportFilterPills
+          selected={activeSportType}
+          onSelect={updateSportTypeInUrl}
+          disabled={isDetecting}
+        />
+        <StatusFilterChips
+          selected={activeGameStatus}
+          onSelect={updateGameStatusInUrl}
+          disabled={isDetecting}
+        />
+      </div>
+
+      {/* Get Started row (only on public home) */}
+      {showInlineCta && <GetStartedLink />}
+
       {/* Game grid or empty state */}
       {edges.length === 0 ? (
         <div className="py-12 text-center">
           <TypographyP className="text-lg font-semibold text-muted-foreground">
-            {hasLocation
-              ? t("game.discover.noGamesNear", { location: locationName ?? "" })
-              : t("game.discover.noGamesEverywhere")}
+            {buildEmptyMessage()}
           </TypographyP>
           <TypographyMuted className="mt-2">
-            {hasLocation
-              ? t("game.discover.noGamesNearDescription")
-              : t("game.discover.noGamesEverywhereDescription")}
+            {buildEmptyDescription()}
           </TypographyMuted>
         </div>
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
-            {edges.map((edge) => (
+          {/* First batch */}
+          <div className="grid gap-6 sm:grid-cols-2">
+            {edges.slice(0, showInlineCta ? 4 : edges.length).map((edge) => (
               <GameCard
                 key={edge.node.id}
                 game={edge.node}
@@ -235,6 +330,18 @@ export function DiscoverFeed({
               />
             ))}
           </div>
+          {showInlineCta && edges.length >= 4 && <InlineCta />}
+          {showInlineCta && edges.length > 4 && (
+            <div className="grid gap-6 sm:grid-cols-2">
+              {edges.slice(4).map((edge) => (
+                <GameCard
+                  key={edge.node.id}
+                  game={edge.node}
+                  distance={edge.distance}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Infinite scroll trigger */}
           <div
