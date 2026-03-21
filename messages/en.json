@@ -902,6 +902,68 @@
       }
     }
   },
+  "getStarted": {
+    "hero": {
+      "title": "Get in the Game",
+      "subtitle": "Five steps between you and never being bored on a Saturday again."
+    },
+    "steps": {
+      "title": "How It Works",
+      "signUp": {
+        "title": "1. Sign Up",
+        "description": "Create your account in about 10 seconds. We\u2019ll even let you skip the part where you pretend to read the terms of service."
+      },
+      "findFriends": {
+        "title": "2. Find Your People",
+        "description": "Search for friends, send requests, and build your crew. Pro tip: add that one friend who always brings snacks."
+      },
+      "createGame": {
+        "title": "3. Create a Game",
+        "description": "Pick a sport, set a time and place, and invite your friends. No more endless \u201Cwhen works for everyone?\u201D threads."
+      },
+      "trackScores": {
+        "title": "4. Track Scores & Stats",
+        "description": "Keep score in real time and build your player stats over time. Finally, proof that you\u2019re not as bad as your friends say."
+      },
+      "shareMemories": {
+        "title": "5. Share the Moments",
+        "description": "Upload photos and videos from your games. Because if it\u2019s not on Playground, did it even happen?"
+      }
+    }
+  },
+  "faq": {
+    "hero": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you wanted to know but were too busy playing to ask."
+    },
+    "questions": {
+      "title": "The Answers",
+      "free": {
+        "question": "Is Playground free?",
+        "answer": "Yep. Free as in free. Free as in the water fountain at the park. We\u2019re not here to charge you for having fun with your friends."
+      },
+      "sports": {
+        "question": "What sports are supported?",
+        "answer": "Basketball, football, tennis, pickleball, and baseball so far. We\u2019re adding more all the time \u2014 if your sport isn\u2019t here yet, it probably will be soon."
+      },
+      "competitive": {
+        "question": "Is this for competitive players?",
+        "answer": "It\u2019s for everyone. Whether you\u2019re training for a league or just trying to remember which end of the racket to hold, Playground is your spot."
+      },
+      "strangers": {
+        "question": "Can I play with strangers?",
+        "answer": "Public games are open to anyone. Protected games need an invite to join. Private games are invisible to non-members. You pick the vibe."
+      },
+      "intramural": {
+        "question": "Do you support intramural leagues?",
+        "answer": "Not yet, but it\u2019s coming. We\u2019re working on league support so you can run your own season with standings, schedules, and bragging rights."
+      },
+      "data": {
+        "question": "What happens to my stats?",
+        "answer": "They\u2019re yours forever. Every game, every stat, every highlight \u2014 all saved to your profile. Build your legacy one pickup game at a time."
+      }
+    }
+  },
   "contact": {
     "hero": {
       "title": "Say Hi",
