@@ -148,6 +148,7 @@ export enum GameSortField {
   START_DATE = "START_DATE",
   END_DATE = "END_DATE",
   GAME_STATUS = "GAME_STATUS",
+  DISTANCE = "DISTANCE",
 }
 
 export enum GameRole {

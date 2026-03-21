@@ -13,6 +13,27 @@ import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import type { Location } from "@/lib/types/location";
 
 /**
+ * Input for location-based game search.
+ * Coordinates define the search center; radiusMeters defines the search area.
+ * The backend uses ST_DWithin with these values.
+ */
+export interface NearLocationInput {
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+}
+
+/**
+ * Game edge with optional distance from search center.
+ * Distance is present only when the nearLocation filter was used.
+ * Returned in meters — frontend converts to mi/km for display.
+ * Defined as an intersection type so it stays in sync if Edge<T> changes.
+ */
+export type GameEdgeWithDistance = Edge<GameNode> & {
+  distance: number | null;
+};
+
+/**
  * Player reference used in game participants
  */
 export interface PlayerRef {
@@ -548,6 +569,7 @@ export interface GameFilterParams {
   organizedByMe?: boolean;
   invitedToMe?: boolean;
   myGames?: boolean;
+  nearLocation?: NearLocationInput;
 }
 
 /**
