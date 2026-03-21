@@ -1,4 +1,4 @@
-import { GameVisibility, getSubtypes, PickleballScoringType, SportSubtype, SportType, SportTypeConfig } from "@/lib/constants";
+import { GameVisibility, getFormats, PickleballScoringType, SportFormat, SportType, SportTypeConfig } from "@/lib/constants";
 import type { LocationValue } from "@/lib/types/location";
 import { z } from "zod";
 
@@ -24,7 +24,7 @@ const locationSchema = z
 export const createGameFormSchema = z
   .object({
     sportType: z.enum(SportType, { message: "Required" }),
-    subtype: z.enum(SportSubtype, { message: "Required" }).optional(),
+    format: z.enum(SportFormat, { message: "Required" }).optional(),
     startDate: z.date({ message: "Required" }),
     periods: z.number().int().positive("Must be positive").optional(),
     bestOf: z.number().int().positive("Must be positive").optional(),
@@ -43,14 +43,14 @@ export const createGameFormSchema = z
     (data) => {
       if (!data.sportType) return true;
       const sportConfig = SportTypeConfig[data.sportType];
-      if (sportConfig.subtypes.length === 0) return true;
-      if (!data.subtype) return false;
-      const validSubtypes = getSubtypes(data.sportType);
-      return (validSubtypes as readonly SportSubtype[]).includes(data.subtype);
+      if (sportConfig.formats.length === 0) return true;
+      if (!data.format) return false;
+      const validFormats = getFormats(data.sportType);
+      return (validFormats as readonly SportFormat[]).includes(data.format);
     },
     {
-      message: "Invalid subtype for selected sport",
-      path: ["subtype"],
+      message: "Invalid format for selected sport",
+      path: ["format"],
     },
   )
   .refine(
@@ -68,7 +68,7 @@ export const createGameFormSchema = z
 
 export interface CreateGameFormValues {
   sportType: SportType;
-  subtype?: SportSubtype;
+  format?: SportFormat;
   startDate: Date;
   periods?: number;
   bestOf?: number;

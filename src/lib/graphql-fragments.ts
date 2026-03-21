@@ -151,32 +151,36 @@ export const gameMetadataFragment = {
     },
     {
       __typeName: "BasketballGameMetadata",
-      basketballSubtype: {
-        __aliasFor: "subtype",
+      basketballFormat: {
+        __aliasFor: "format",
       },
       periods: true,
     },
     {
       __typeName: "TennisGameMetadata",
-      tennisSubtype: {
-        __aliasFor: "subtype",
+      tennisFormat: {
+        __aliasFor: "format",
       },
-      bestOf: true,
+      tennisBestOf: {
+        __aliasFor: "bestOf",
+      },
       tiebreakFinalSet: true,
     },
     {
       __typeName: "FootballGameMetadata",
-      footballSubtype: {
-        __aliasFor: "subtype",
+      footballFormat: {
+        __aliasFor: "format",
       },
       periods: true,
     },
     {
       __typeName: "PickleballGameMetadata",
-      pickleballSubtype: {
-        __aliasFor: "subtype",
+      pickleballFormat: {
+        __aliasFor: "format",
       },
-      bestOf: true,
+      pickleballBestOf: {
+        __aliasFor: "bestOf",
+      },
       pointsPerGame: true,
       winByTwo: true,
       scoringType: true,
@@ -348,8 +352,8 @@ export const notificationInlineFragments = [
  */
 export const gameInvitationFragment = {
   id: true,
+  inviter: userRefFragment,
   invitee: userRefFragment,
-  invitedBy: userRefFragment,
   status: true,
   acceptedDate: true,
   createdDate: true,
@@ -362,7 +366,7 @@ export const gameInvitationFragment = {
 export const viewerInvitationFragment = {
   id: true,
   status: true,
-  invitedBy: { id: true, displayName: true },
+  inviter: { id: true, displayName: true },
 };
 
 /**

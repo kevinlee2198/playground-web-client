@@ -3,7 +3,7 @@ import { GameHeroContent } from "@/components/game/live/game-hero-content";
 import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
 import { Badge } from "@/components/ui/badge";
 import { TypographyMuted } from "@/components/ui/typography";
-import { GameVisibility, getSubtypeFromMetadata } from "@/lib/constants";
+import { GameVisibility, getFormatFromMetadata } from "@/lib/constants";
 import type { SportType } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ export async function GameDetailHero({
   const t = await getTranslations();
   const format = await getFormatter();
 
-  const subtype = getSubtypeFromMetadata(game.metadata);
+  const sportFormat = getFormatFromMetadata(game.metadata);
 
   const formattedDate = format.dateTime(new Date(game.startDate), {
     year: "numeric",
@@ -48,12 +48,12 @@ export async function GameDetailHero({
       )}
     >
       <div className="flex flex-col items-center gap-4">
-        {/* Sport info row: emoji pill + subtype badge */}
+        {/* Sport info row: emoji pill + format badge */}
         <div className="flex items-center justify-center gap-2">
           <SportEmojiPill sportType={game.sportType} />
-          {subtype != null && (
+          {sportFormat != null && (
             <Badge variant="outline" className="text-xs">
-              {t(`sportSubtypes.${subtype}`)}
+              {t(`sportFormats.${sportFormat}`)}
             </Badge>
           )}
           {game.visibility !== GameVisibility.PUBLIC && (

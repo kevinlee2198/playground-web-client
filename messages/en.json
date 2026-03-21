@@ -36,7 +36,7 @@
     "PICKLEBALL": "Pickleball",
     "BASEBALL": "Baseball"
   },
-  "sportSubtypes": {
+  "sportFormats": {
     "FIVE_ON_FIVE": "5v5",
     "THREE_ON_THREE": "3v3",
     "FLAG_FOOTBALL": "Flag Football",
@@ -181,7 +181,7 @@
     "endDate": "End Date",
     "form": {
       "sportType": "Sport",
-      "sportSubtype": "Format",
+      "sportFormat": "Format",
       "startDate": "Start Date",
       "selectSport": "Select a sport",
       "selectFormat": "Select a format",
@@ -526,15 +526,34 @@
       "title": "Sort",
       "startDate": "Start Date",
       "gameStatus": "Status",
+      "distance": "Distance",
       "ascending": "Oldest First",
       "descending": "Newest First"
     },
+    "discover": {
+      "title": "Discover",
+      "gamesNear": "Games near {location}",
+      "gamesEverywhere": "Games everywhere",
+      "changeLocation": "Change",
+      "setLocation": "Set location",
+      "detectingLocation": "Finding your location\u2026",
+      "noGamesNear": "No games near {location}",
+      "noGamesNearDescription": "Try expanding your search radius or create a game.",
+      "noGamesEverywhere": "No games found",
+      "noGamesEverywhereDescription": "Be the first to create a game!",
+      "showAllGames": "Show all games",
+      "distancePresets": {
+        "label": "Distance",
+        "miles": "{distance} mi",
+        "allDistances": "Any distance"
+      }
+    },
     "validation": {
       "sportTypeRequired": "Sport type is required",
-      "subtypeRequired": "Sport format is required",
+      "formatRequired": "Sport format is required",
       "startDateRequired": "Start date is required",
       "teamNameRequired": "Team name is required",
-      "invalidSubtype": "Invalid format for selected sport",
+      "invalidFormat": "Invalid format for selected sport",
       "periodsPositive": "Periods must be a positive number",
       "bestOfRequired": "Best of must be 3 or 5",
       "scoreNonNegative": "Score must be 0 or greater",

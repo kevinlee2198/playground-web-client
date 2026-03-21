@@ -61,7 +61,7 @@ export function InvitationActionCard({
               {t("pendingTitle")}
             </TypographySmall>
             <TypographyMuted className="text-sm">
-              {t("invitedBy", { name: invitation.invitedBy.displayName })}
+              {t("invitedBy", { name: invitation.inviter.displayName })}
             </TypographyMuted>
           </div>
         </div>

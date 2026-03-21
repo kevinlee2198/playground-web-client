@@ -8,7 +8,7 @@ export function mockGame(overrides?: Record<string, unknown>) {
     sportType: "BASKETBALL",
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: "FIVE_ON_FIVE",
+      basketballFormat: "FIVE_ON_FIVE",
       periods: null,
     },
     gameStatus: "SCHEDULED",

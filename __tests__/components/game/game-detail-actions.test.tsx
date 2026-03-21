@@ -55,7 +55,7 @@ import {
   GameRole,
   GameStatus,
   GameVisibility,
-  SportSubtype,
+  SportFormat,
   SportType,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
@@ -71,7 +71,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     sportType: SportType.BASKETBALL,
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: SportSubtype.FIVE_ON_FIVE,
+      basketballFormat: SportFormat.FIVE_ON_FIVE,
       periods: 4,
     },
     gameStatus: GameStatus.SCHEDULED,

@@ -4,7 +4,7 @@ import { GameDetailHero } from "@/components/game/game-detail-hero";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameStatus, getSubtypeFromMetadata, SportType } from "@/lib/constants";
+import { GameStatus, getFormatFromMetadata, SportType } from "@/lib/constants";
 import {
   gameMetadataFragment,
   locationFragment,
@@ -55,10 +55,10 @@ export async function generateMetadata({
     const game = response.data?.game;
 
     if (game) {
-      const subtype = getSubtypeFromMetadata(game.metadata);
+      const sportFormat = getFormatFromMetadata(game.metadata);
       return {
         title: `${game.sportType} Game | Playground`,
-        description: subtype ? `${game.sportType} - ${subtype}` : `${game.sportType}`,
+        description: sportFormat ? `${game.sportType} - ${sportFormat}` : `${game.sportType}`,
       };
     }
   } catch (error) {

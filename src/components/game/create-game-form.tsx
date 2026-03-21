@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "@/i18n/navigation";
-import { GameVisibility, getSubtypes, PickleballScoringType, SportSubtype, SportType } from "@/lib/constants";
+import { GameVisibility, getFormats, PickleballScoringType, SportFormat, SportType } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
 import type { LocationValue } from "@/lib/types/location";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -50,7 +50,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
   const form = useForm({
     defaultValues: {
       sportType: undefined as unknown as SportType,
-      subtype: undefined as unknown as SportSubtype,
+      format: undefined as unknown as SportFormat,
       startDate: new Date(),
       periods: undefined as number | undefined,
       bestOf: undefined as number | undefined,
@@ -95,9 +95,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
             metadata: {
-              subtype: value.subtype as
-                | SportSubtype.FIVE_ON_FIVE
-                | SportSubtype.THREE_ON_THREE,
+              format: value.format as
+                | SportFormat.FIVE_ON_FIVE
+                | SportFormat.THREE_ON_THREE,
               ...(value.periods !== undefined && { periods: value.periods }),
             },
           };
@@ -107,9 +107,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
             metadata: {
-              subtype: value.subtype as
-                | SportSubtype.FLAG_FOOTBALL
-                | SportSubtype.AMERICAN_FOOTBALL,
+              format: value.format as
+                | SportFormat.FLAG_FOOTBALL
+                | SportFormat.AMERICAN_FOOTBALL,
               ...(value.periods !== undefined && { periods: value.periods }),
             },
           };
@@ -119,9 +119,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
             metadata: {
-              subtype: value.subtype as
-                | SportSubtype.SINGLES
-                | SportSubtype.DOUBLES,
+              format: value.format as
+                | SportFormat.SINGLES
+                | SportFormat.DOUBLES,
               ...(value.bestOf !== undefined && { bestOf: value.bestOf }),
               ...(value.pointsPerGame !== undefined && {
                 pointsPerGame: value.pointsPerGame,
@@ -140,9 +140,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
             metadata: {
-              subtype: value.subtype as
-                | SportSubtype.SINGLES
-                | SportSubtype.DOUBLES,
+              format: value.format as
+                | SportFormat.SINGLES
+                | SportFormat.DOUBLES,
               ...(value.bestOf !== undefined && { bestOf: value.bestOf }),
               ...(value.tiebreakFinalSet !== undefined && {
                 tiebreakFinalSet: value.tiebreakFinalSet,
@@ -179,9 +179,9 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
 
   const selectedSportType = useStore(form.store, (s) => s.values.sportType);
 
-  const availableSubtypes =
+  const availableFormats =
     selectedSportType && selectedSportType in SportType
-      ? getSubtypes(selectedSportType)
+      ? getFormats(selectedSportType)
       : [];
 
   return (
@@ -196,7 +196,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
         name="sportType"
         listeners={{
           onChange: () => {
-            form.setFieldValue("subtype", undefined as unknown as SportSubtype);
+            form.setFieldValue("format", undefined as unknown as SportFormat);
           },
         }}
       >
@@ -215,18 +215,18 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
         )}
       </form.Field>
 
-      {availableSubtypes.length > 0 && (
-        <form.Field name="subtype">
+      {availableFormats.length > 0 && (
+        <form.Field name="format">
           {(field) => (
             <FormComboboxField
               field={field}
-              label={t("game.form.sportSubtype")}
+              label={t("game.form.sportFormat")}
               required
               disabled={isPending || !selectedSportType}
               placeholder={t("game.form.selectFormat")}
-              options={availableSubtypes.map((subtype) => ({
-                value: subtype,
-                label: t(`sportSubtypes.${subtype}`),
+              options={availableFormats.map((fmt) => ({
+                value: fmt,
+                label: t(`sportFormats.${fmt}`),
               }))}
             />
           )}

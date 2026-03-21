@@ -9,9 +9,28 @@ npm run dev      # Start development server at localhost:3000
 npm run build    # Production build
 npm run lint     # Run ESLint
 npm test         # Run Vitest tests
+npx playwright test                        # Run all Playwright integration tests
+npx playwright test tests/pages/about.spec.ts  # Run a single spec file
 ```
 
-Tests use Vitest with `@testing-library/react` and jsdom. Avoid installing additional test packages — use what's already available (e.g., `fireEvent` from `@testing-library/react` instead of `@testing-library/user-event`).
+### Unit Tests (Vitest)
+
+Tests use Vitest with `@testing-library/react` and jsdom. Avoid installing additional test packages — use what's already available (e.g., `fireEvent` from `@testing-library/react` instead of `@testing-library/user-event`). Test files live in `__tests__/` and use `.test.ts(x)`.
+
+### Integration Tests (Playwright)
+
+End-to-end tests use Playwright with Next.js experimental `testProxy` mode (`next/experimental/testmode/playwright/msw`). No real backend needed — MSW intercepts server-side `fetch()` calls via a proxy.
+
+- **Config**: `playwright.config.ts` — imports `defineConfig` from `next/experimental/testmode/playwright`
+- **Test files**: `tests/**/*.spec.ts`
+- **Fixtures**: `tests/fixtures/` — auth cookie forging, MSW GraphQL handlers, mock data factories
+- **Auth mocking**: Forges real Better Auth JWE cookies so server components authenticate correctly
+- **MSW handlers**: `tests/fixtures/graphql-handlers.ts` routes GraphQL operations by field name to mock responses
+- **`withMeGuard()`**: Helper for per-test MSW overrides that preserve the `me` query routing
+
+**How testProxy works**: When a test runs, the Playwright fixture injects `Next-Test-Proxy-Port` headers into browser requests. Next.js sees these headers and routes its server-side fetches through a proxy where MSW intercepts them.
+
+**Critical limitation**: The proxy only intercepts fetches for requests with the test header. Playwright's `webServer.url` health check does NOT go through the proxy. If the health check URL hits a page that makes server-side fetches to an unavailable backend, it returns 500 and Playwright times out (it requires 2xx/3xx/400-403). The `webServer.url` must point to an endpoint that responds without a backend (e.g., `/api/health`).
 
 ## Spec-Driven Development
 

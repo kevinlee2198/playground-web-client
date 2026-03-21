@@ -21,9 +21,15 @@ interface GameListSortProps {
   currentSort: GameSortParams;
   myGames: boolean;
   myGamesFilter?: string;
+  hasLocation?: boolean;
 }
 
-export function GameListSort({ currentSort, myGames, myGamesFilter }: GameListSortProps) {
+export function GameListSort({
+  currentSort,
+  myGames,
+  myGamesFilter,
+  hasLocation = false,
+}: GameListSortProps) {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
@@ -104,6 +110,11 @@ export function GameListSort({ currentSort, myGames, myGamesFilter }: GameListSo
               <SelectItem value={GameSortField.GAME_STATUS}>
                 {t("game.sort.gameStatus")}
               </SelectItem>
+              {hasLocation && (
+                <SelectItem value={GameSortField.DISTANCE}>
+                  {t("game.sort.distance")}
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

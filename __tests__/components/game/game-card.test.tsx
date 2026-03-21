@@ -28,9 +28,9 @@ vi.mock("next-intl", () => ({
       "sports.BASKETBALL": "Basketball",
       "sports.TENNIS": "Tennis",
       "sports.FOOTBALL": "Football",
-      "sportSubtypes.FIVE_ON_FIVE": "5v5",
-      "sportSubtypes.THREE_ON_THREE": "3v3",
-      "sportSubtypes.SINGLES": "Singles",
+      "sportFormats.FIVE_ON_FIVE": "5v5",
+      "sportFormats.THREE_ON_THREE": "3v3",
+      "sportFormats.SINGLES": "Singles",
     };
     return map[key] ?? key;
   },
@@ -44,7 +44,7 @@ vi.mock("next/image", () => ({
 }));
 
 import { GameCard } from "@/components/game/game-card";
-import { GameStatus, GameRole, GameVisibility, SportType, SportSubtype } from "@/lib/constants";
+import { GameStatus, GameRole, GameVisibility, SportType, SportFormat } from "@/lib/constants";
 import type { GameNode } from "@/lib/types/game";
 
 function makeGame(overrides: Partial<GameNode> = {}): GameNode {
@@ -55,7 +55,7 @@ function makeGame(overrides: Partial<GameNode> = {}): GameNode {
     sportType: SportType.BASKETBALL,
     metadata: {
       __typename: "BasketballGameMetadata",
-      basketballSubtype: SportSubtype.FIVE_ON_FIVE,
+      basketballFormat: SportFormat.FIVE_ON_FIVE,
       periods: 4,
     },
     gameStatus: GameStatus.COMPLETE,
@@ -166,7 +166,7 @@ describe("GameCard", () => {
     expect(screen.getByText("Los Angeles, CA")).toBeInTheDocument();
   });
 
-  it("shows subtype badge", () => {
+  it("shows format badge", () => {
     render(<GameCard game={makeGame()} />);
     expect(screen.getByText("5v5")).toBeInTheDocument();
   });

@@ -6,9 +6,12 @@ import {
   gameMetadataFragment,
   participantNodeFragment,
   resourceFragment,
+  viewerFriendPlayersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
-import { authMutate, authQuery } from "@/lib/graphql-request";
+import { authMutate, authQuery, query } from "@/lib/graphql-request";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type {
   CreateGameInput,
@@ -56,8 +59,8 @@ export async function createGame(
       | "tennis"
       | "pickleball";
     const metadata: Record<string, unknown> = {};
-    if ("subtype" in input.metadata && input.metadata.subtype !== undefined) {
-      metadata.subtype = new EnumType(input.metadata.subtype);
+    if ("format" in input.metadata && input.metadata.format !== undefined) {
+      metadata.format = new EnumType(input.metadata.format);
     }
     if ("innings" in input.metadata && input.metadata.innings !== undefined) {
       metadata.innings = input.metadata.innings;
@@ -165,19 +168,19 @@ export async function updateGame(
     if (input.description !== undefined) mutationInput.description = input.description;
 
     if (input.metadata) {
-      // Build @oneOf GameMetadataInput with EnumType for subtype values
+      // Build @oneOf GameMetadataInput with EnumType for format values
       const metadataInput: Record<string, unknown> = {};
       if (input.metadata.basketball) {
         const b: Record<string, unknown> = {};
-        if (input.metadata.basketball.subtype)
-          b.subtype = new EnumType(input.metadata.basketball.subtype);
+        if (input.metadata.basketball.format)
+          b.format = new EnumType(input.metadata.basketball.format);
         if (input.metadata.basketball.periods !== undefined)
           b.periods = input.metadata.basketball.periods;
         metadataInput.basketball = b;
       } else if (input.metadata.tennis) {
         const t: Record<string, unknown> = {};
-        if (input.metadata.tennis.subtype)
-          t.subtype = new EnumType(input.metadata.tennis.subtype);
+        if (input.metadata.tennis.format)
+          t.format = new EnumType(input.metadata.tennis.format);
         if (input.metadata.tennis.bestOf !== undefined)
           t.bestOf = input.metadata.tennis.bestOf;
         if (input.metadata.tennis.tiebreakFinalSet !== undefined)
@@ -185,15 +188,15 @@ export async function updateGame(
         metadataInput.tennis = t;
       } else if (input.metadata.football) {
         const f: Record<string, unknown> = {};
-        if (input.metadata.football.subtype)
-          f.subtype = new EnumType(input.metadata.football.subtype);
+        if (input.metadata.football.format)
+          f.format = new EnumType(input.metadata.football.format);
         if (input.metadata.football.periods !== undefined)
           f.periods = input.metadata.football.periods;
         metadataInput.football = f;
       } else if (input.metadata.pickleball) {
         const p: Record<string, unknown> = {};
-        if (input.metadata.pickleball.subtype)
-          p.subtype = new EnumType(input.metadata.pickleball.subtype);
+        if (input.metadata.pickleball.format)
+          p.format = new EnumType(input.metadata.pickleball.format);
         if (input.metadata.pickleball.bestOf !== undefined)
           p.bestOf = input.metadata.pickleball.bestOf;
         if (input.metadata.pickleball.pointsPerGame !== undefined)
@@ -381,6 +384,9 @@ export async function loadMoreGames(
   after: string,
 ) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    const isAuthenticated = !!session?.user;
+
     const filterInput: Record<string, unknown> = {};
 
     if (filters.startAfter) filterInput.startAfter = filters.startAfter;
@@ -396,7 +402,41 @@ export async function loadMoreGames(
     if (filters.invitedToMe) filterInput.invitedToMe = filters.invitedToMe;
     if (filters.myGames) filterInput.myGames = filters.myGames;
 
-    const response = await authQuery({
+    if (filters.nearLocation) {
+      filterInput.nearLocation = {
+        latitude: filters.nearLocation.latitude,
+        longitude: filters.nearLocation.longitude,
+        radiusMeters: filters.nearLocation.radiusMeters,
+      };
+    }
+
+    const hasNearLocation = !!filters.nearLocation;
+
+    const nodeSelection: Record<string, unknown> = {
+      id: true,
+      startDate: true,
+      endDate: true,
+      sportType: true,
+      metadata: gameMetadataFragment,
+      gameStatus: true,
+      visibility: true,
+      location: {
+        name: true,
+        address: { city: true, state: true, country: true },
+      },
+      participants: {
+        __args: { first: 10 },
+        edges: { node: participantNodeFragment },
+      },
+    };
+
+    if (isAuthenticated) {
+      nodeSelection.viewerGameRole = true;
+      nodeSelection.viewerInvitation = viewerInvitationFragment;
+      nodeSelection.viewerFriendPlayers = viewerFriendPlayersFragment;
+    }
+
+    const gamesQuery = {
       games: {
         __args: {
           input: filterInput,
@@ -411,38 +451,18 @@ export async function loadMoreGames(
         },
         edges: {
           cursor: true,
-          node: {
-            id: true,
-            startDate: true,
-            endDate: true,
-            sportType: true,
-            metadata: gameMetadataFragment,
-            gameStatus: true,
-            viewerGameRole: true,
-            visibility: true,
-            viewerInvitation: viewerInvitationFragment,
-            location: {
-              name: true,
-              address: {
-                city: true,
-                state: true,
-                country: true,
-              },
-            },
-            participants: {
-              __args: { first: 10 },
-              edges: {
-                node: participantNodeFragment,
-              },
-            },
-          },
+          ...(hasNearLocation ? { distance: true } : {}),
+          node: nodeSelection,
         },
         pageInfo: {
           hasNextPage: true,
           endCursor: true,
         },
       },
-    });
+    };
+
+    const queryFn = isAuthenticated ? authQuery : query;
+    const response = await queryFn(gamesQuery);
 
     return response.data?.games;
   } catch (error) {

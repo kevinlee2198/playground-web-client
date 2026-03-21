@@ -16,10 +16,11 @@ import {
   GameStatusBadgeVariant,
   GameStatusLabelKey,
   GameVisibility,
-  getSubtypeFromMetadata,
+  getFormatFromMetadata,
 } from "@/lib/constants";
 import type { ViewerFriendPlayers } from "@/lib/types/feed";
 import type { GameNode } from "@/lib/types/game";
+import { formatDistance } from "@/lib/location-detection";
 import { cn } from "@/lib/utils";
 import { Calendar, Lock, MapPin } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -38,9 +39,11 @@ interface GameCardProps {
   game: GameNode & {
     viewerFriendPlayers?: ViewerFriendPlayers;
   };
+  /** Distance in meters from the search center. Null when not in a location search. */
+  distance?: number | null;
 }
 
-export function GameCard({ game }: GameCardProps) {
+export function GameCard({ game, distance }: GameCardProps) {
   const t = useTranslations();
   const format = useFormatter();
 
@@ -58,7 +61,9 @@ export function GameCard({ game }: GameCardProps) {
 
   const participants = game.participants.edges.map((e) => e.node);
   const locationText = game.location ? getLocationText(game.location) : null;
-  const subtype = getSubtypeFromMetadata(game.metadata);
+  const distanceText =
+    distance != null && distance > 0 ? formatDistance(distance, "IMPERIAL") : null;
+  const sportFormat = getFormatFromMetadata(game.metadata);
 
   const statusPill = (
     <Badge
@@ -101,12 +106,12 @@ export function GameCard({ game }: GameCardProps) {
             />
           ) : null}
 
-          {/* Sport info row: emoji pill + subtype */}
+          {/* Sport info row: emoji pill + format */}
           <div className="flex items-center gap-2">
             <SportEmojiPill sportType={game.sportType} />
-            {subtype != null && (
+            {sportFormat != null && (
               <Badge variant="outline" className="text-xs">
-                {t(`sportSubtypes.${subtype}`)}
+                {t(`sportFormats.${sportFormat}`)}
               </Badge>
             )}
             {game.viewerInvitation?.status === GameInvitationStatus.PENDING && (
@@ -168,18 +173,29 @@ export function GameCard({ game }: GameCardProps) {
               {locationText ? (
                 <TypographyMuted className="flex items-center gap-1 min-w-0">
                   <MapPin className="size-3.5 shrink-0" />
-                  <span className="truncate">{locationText}</span>
+                  <span className="truncate">
+                    {distanceText ? <>{locationText}{"\u00A0\u00B7\u00A0"}<span className="tabular-nums">{distanceText}</span></> : locationText}
+                  </span>
+                </TypographyMuted>
+              ) : distanceText ? (
+                <TypographyMuted className="flex items-center gap-1">
+                  <MapPin className="size-3.5 shrink-0" />
+                  <span className="tabular-nums">{distanceText}</span>
                 </TypographyMuted>
               ) : null}
             </div>
           ) : null}
 
           {/* Location for upcoming (date is already shown) */}
-          {isUpcoming && locationText ? (
+          {isUpcoming && (locationText || distanceText) ? (
             <div className="flex items-center justify-center">
               <TypographyMuted className="flex items-center gap-1">
                 <MapPin className="size-3.5 shrink-0" />
-                <span className="truncate">{locationText}</span>
+                <span className="truncate">
+                  {locationText && distanceText
+                    ? <>{locationText}{"\u00A0\u00B7\u00A0"}<span className="tabular-nums">{distanceText}</span></>
+                    : locationText ?? distanceText}
+                </span>
               </TypographyMuted>
             </div>
           ) : null}

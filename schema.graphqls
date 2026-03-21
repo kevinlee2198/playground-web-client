@@ -949,11 +949,32 @@ type ViewerFriendPlayers {
 type GameEdge implements Edge {
   cursor: String!
   node: Game!
+  """
+  Distance in meters from the search center point to this game's location.
+  Only present when the nearLocation filter was used in the query.
+  Null on edges from queries that do not use nearLocation.
+  """
+  distance: Float
 }
 
 type GameConnection implements Connection {
   edges: [GameEdge!]!
   pageInfo: PageInfo!
+}
+
+input NearLocationInput {
+  """
+  Latitude of the search center point.
+  """
+  latitude: Float!
+  """
+  Longitude of the search center point.
+  """
+  longitude: Float!
+  """
+  Search radius in meters. Min: 160 (~0.1 mi). Max: 160934 (~100 mi).
+  """
+  radiusMeters: Float!
 }
 
 """
@@ -995,6 +1016,12 @@ input GameFilterInput {
   Combines the effects of organizedByMe, playerId (for own player), and invitedToMe into a single unified filter.
   """
   myGames: Boolean
+  """
+  Filter games by proximity to a geographic point.
+  Only games with coordinates within the specified radius are returned.
+  Games without coordinates are excluded when this filter is active.
+  """
+  nearLocation: NearLocationInput
 }
 
 """
@@ -1003,6 +1030,11 @@ Fields to sort a game by
 enum GameSortField {
   START_DATE
   GAME_STATUS
+  """
+  Sort by distance from the search center point (nearest first).
+  Only valid when the nearLocation filter is provided.
+  """
+  DISTANCE
 }
 
 """

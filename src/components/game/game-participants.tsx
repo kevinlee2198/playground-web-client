@@ -14,7 +14,7 @@ import {
   GameVisibility,
   getSportMaxParticipants,
   getSportParticipationType,
-  getSubtypeFromMetadata,
+  getFormatFromMetadata,
   ParticipationType,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
@@ -37,11 +37,11 @@ export function GameParticipants({
   const t = useTranslations();
   const [showAddTeamDialog, setShowAddTeamDialog] = useState(false);
 
-  const subtype = getSubtypeFromMetadata(game.metadata);
-  const participationType = getSportParticipationType(game.sportType, subtype);
+  const sportFormat = getFormatFromMetadata(game.metadata);
+  const participationType = getSportParticipationType(game.sportType, sportFormat);
   const isTeamBased = participationType === ParticipationType.TEAM;
   const hasParticipants = game.participants.edges.length > 0;
-  const maxParticipants = getSportMaxParticipants(game.sportType, subtype);
+  const maxParticipants = getSportMaxParticipants(game.sportType, sportFormat);
   const atParticipantLimit = game.participants.edges.length >= maxParticipants;
 
   const isPlayerOnAnyTeam =
