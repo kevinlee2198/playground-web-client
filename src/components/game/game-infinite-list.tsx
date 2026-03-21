@@ -1,10 +1,10 @@
 "use client";
 
 import { loadMoreGames } from "@/app/[locale]/game/actions";
-import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import type { PageInfo } from "@/lib/graphql-connection";
 import type {
+  GameEdgeWithDistance,
   GameFilterParams,
-  GameNode,
   GameSortParams,
 } from "@/lib/types/game";
 import { Loader2 } from "lucide-react";
@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { GameCard } from "./game-card";
 
 interface GameInfiniteListProps {
-  initialEdges: (Edge<GameNode> & { distance?: number | null })[];
+  initialEdges: GameEdgeWithDistance[];
   initialPageInfo: PageInfo;
   filters: GameFilterParams;
   sort: GameSortParams;
