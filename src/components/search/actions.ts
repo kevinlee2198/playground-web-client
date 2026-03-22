@@ -29,6 +29,8 @@ function buildSearchUsersQuery(
           firstName: true,
           lastName: true,
           displayName: true,
+          viewerFollowsUser: true,
+          userFollowsViewer: true,
         },
       },
       pageInfo: {

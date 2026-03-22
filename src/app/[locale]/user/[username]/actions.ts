@@ -1,28 +1,25 @@
 "use server";
 
-import { errorFragment } from "@/lib/graphql-fragments";
-import { authMutate } from "@/lib/graphql-request";
+import {
+  errorFragment,
+  followUserRefFragment,
+  followUserStateFragment,
+} from "@/lib/graphql-fragments";
+import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
-const friendshipSelection = {
-  id: true,
-  status: true,
-  requester: { id: true },
-  addressee: { id: true },
-};
-
-export async function sendFriendRequest(userId: string) {
+export async function followUser(userId: string) {
   try {
     const response = await authMutate({
-      sendFriendRequest: {
+      followUser: {
         __args: { input: { userId } },
         __typename: true,
         __on: [
           {
-            __typeName: "SendFriendRequestResponse",
-            friendship: friendshipSelection,
+            __typeName: "FollowUserResponse",
+            user: followUserStateFragment,
           },
           errorFragment,
         ],
@@ -33,25 +30,26 @@ export async function sendFriendRequest(userId: string) {
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.sendFriendRequest, "SendFriendRequestResponse");
+    const result = extractMutationResult(response.data.followUser, "FollowUserResponse");
     if (!result.success) return result;
 
-    return { success: true, friendship: result.data.friendship };
+    return { success: true, user: result.data.user };
   } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to send friend request" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to follow user" };
   }
 }
 
-export async function acceptFriendRequest(requesterId: string) {
+export async function unfollowUser(userId: string) {
   try {
     const response = await authMutate({
-      acceptFriendRequest: {
-        __args: { input: { requesterId } },
+      unfollowUser: {
+        __args: { input: { userId } },
         __typename: true,
         __on: [
           {
-            __typeName: "AcceptFriendRequestResponse",
-            friendship: friendshipSelection,
+            __typeName: "UnfollowUserResponse",
+            user: followUserStateFragment,
+            wasMutualFollow: true,
           },
           errorFragment,
         ],
@@ -62,12 +60,41 @@ export async function acceptFriendRequest(requesterId: string) {
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.acceptFriendRequest, "AcceptFriendRequestResponse");
+    const result = extractMutationResult(response.data.unfollowUser, "UnfollowUserResponse");
     if (!result.success) return result;
 
-    return { success: true, friendship: result.data.friendship };
+    return { success: true, user: result.data.user, wasMutualFollow: result.data.wasMutualFollow };
   } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to accept friend request" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to unfollow user" };
+  }
+}
+
+export async function removeFollower(userId: string) {
+  try {
+    const response = await authMutate({
+      removeFollower: {
+        __args: { input: { userId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "RemoveFollowerResponse",
+            userId: true,
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.removeFollower, "RemoveFollowerResponse");
+    if (!result.success) return result;
+
+    return { success: true, userId: result.data.userId };
+  } catch {
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to remove follower" };
   }
 }
 
@@ -80,7 +107,7 @@ export async function blockUser(userId: string) {
         __on: [
           {
             __typeName: "BlockUserResponse",
-            friendship: friendshipSelection,
+            userId: true,
           },
           errorFragment,
         ],
@@ -94,7 +121,7 @@ export async function blockUser(userId: string) {
     const result = extractMutationResult(response.data.blockUser, "BlockUserResponse");
     if (!result.success) return result;
 
-    return { success: true, friendship: result.data.friendship };
+    return { success: true, userId: result.data.userId };
   } catch {
     return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to block user" };
   }
@@ -109,7 +136,7 @@ export async function unblockUser(userId: string) {
         __on: [
           {
             __typeName: "UnblockUserResponse",
-            friendship: friendshipSelection,
+            userId: true,
           },
           errorFragment,
         ],
@@ -123,9 +150,81 @@ export async function unblockUser(userId: string) {
     const result = extractMutationResult(response.data.unblockUser, "UnblockUserResponse");
     if (!result.success) return result;
 
-    return { success: true };
+    return { success: true, userId: result.data.userId };
   } catch {
     return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to unblock user" };
+  }
+}
+
+export async function loadFollowers(userId: string, first: number, after?: string) {
+  try {
+    const response = await authQuery({
+      followers: {
+        __args: {
+          userId,
+          first,
+          ...(after ? { after } : {}),
+        },
+        edges: {
+          cursor: true,
+          node: {
+            id: true,
+            follower: followUserRefFragment,
+            following: { id: true },
+            createdDate: true,
+          },
+        },
+        pageInfo: {
+          hasNextPage: true,
+          endCursor: true,
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return null;
+    }
+
+    return response.data?.followers || null;
+  } catch (error) {
+    console.error("Failed to load followers:", error);
+    return null;
+  }
+}
+
+export async function loadFollowing(userId: string, first: number, after?: string) {
+  try {
+    const response = await authQuery({
+      following: {
+        __args: {
+          userId,
+          first,
+          ...(after ? { after } : {}),
+        },
+        edges: {
+          cursor: true,
+          node: {
+            id: true,
+            follower: { id: true },
+            following: followUserRefFragment,
+            createdDate: true,
+          },
+        },
+        pageInfo: {
+          hasNextPage: true,
+          endCursor: true,
+        },
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return null;
+    }
+
+    return response.data?.following || null;
+  } catch (error) {
+    console.error("Failed to load following:", error);
+    return null;
   }
 }
 

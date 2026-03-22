@@ -1,15 +1,12 @@
 "use server";
 
-import { chatUserFragment } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
-import { EnumType } from "json-to-graphql-query";
 
 export async function loadBlockedUsers(first: number, after?: string) {
   try {
     const response = await authQuery({
-      friendships: {
+      blockedUsers: {
         __args: {
-          input: { status: new EnumType("BLOCKED") },
           first,
           ...(after ? { after } : {}),
         },
@@ -17,8 +14,8 @@ export async function loadBlockedUsers(first: number, after?: string) {
           cursor: true,
           node: {
             id: true,
-            requester: chatUserFragment,
-            addressee: chatUserFragment,
+            displayName: true,
+            username: true,
           },
         },
         pageInfo: {
@@ -32,7 +29,7 @@ export async function loadBlockedUsers(first: number, after?: string) {
       return null;
     }
 
-    return response.data?.friendships || null;
+    return response.data?.blockedUsers || null;
   } catch (error) {
     console.error("Failed to load blocked users:", error);
     return null;

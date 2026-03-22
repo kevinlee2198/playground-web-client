@@ -366,6 +366,32 @@ export const viewerInvitationFragment = {
 };
 
 /**
+ * Follow state fields returned by followUser / unfollowUser mutations.
+ * Use as: user: followUserStateFragment
+ */
+export const followUserStateFragment = {
+  id: true,
+  viewerFollowsUser: true,
+  userFollowsViewer: true,
+  followerCount: true,
+  followingCount: true,
+};
+
+/**
+ * User reference fields inside a Follow edge node (follower / following).
+ * Includes follow relationship fields visible to the viewer.
+ * Use as: follower: followUserRefFragment  or  following: followUserRefFragment
+ */
+export const followUserRefFragment = {
+  id: true,
+  username: true,
+  displayName: true,
+  profilePicture: profilePictureThumbnailFragment,
+  viewerFollowsUser: true,
+  userFollowsViewer: true,
+};
+
+/**
  * Catch-all fragment for the Error interface in union result types.
  * Every error type implements this interface, so this matches all errors.
  * The __typename at the union level still gives the specific error type.
