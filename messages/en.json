@@ -114,7 +114,9 @@
       "notFollowingAnyone": "Not following anyone yet",
       "nowFollowing": "Now following {name}",
       "unfollowedName": "Unfollowed {name}",
-      "moreOptionsFor": "More options for {name}"
+      "moreOptionsFor": "More options for {name}",
+      "loadError": "Something went wrong",
+      "retry": "Try again"
     },
     "moreOptions": "More options",
     "messageDisabled": {
