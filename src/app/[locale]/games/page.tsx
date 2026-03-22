@@ -3,7 +3,7 @@ import { GameInfiniteList } from "@/components/game/game-infinite-list";
 import { GameListFilters } from "@/components/game/game-list-filters";
 import { GameListSort } from "@/components/game/game-list-sort";
 import { GamePageTabs } from "@/components/game/game-page-tabs";
-import { buttonVariants } from "@/components/ui/button-variants";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,

@@ -2,7 +2,7 @@ import { loadFeedGames } from "@/app/[locale]/feed/actions";
 import { DiscoverFeed } from "@/components/game/discover-feed";
 import { ActivityFeed } from "@/components/feed/activity-feed";
 import { IntegratedHero } from "@/components/home/integrated-hero";
-import { buttonVariants } from "@/components/ui/button-variants";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,

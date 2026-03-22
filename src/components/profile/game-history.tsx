@@ -1,5 +1,5 @@
 import { GameCard } from "@/components/game/game-card";
-import { buttonVariants } from "@/components/ui/button-variants";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,
