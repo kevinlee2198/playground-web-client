@@ -199,7 +199,7 @@ export function MutualFollowSelector({
 
           {!isSearching &&
             nonMutualSearchResults.map((user) => (
-              <NonMutualSearchResultItem key={user.id} user={user} />
+              <NonMutualSearchResultItem key={user.id} user={user} onFollowSuccess={fetchMutualFollows} />
             ))}
 
           {noResults && (
@@ -253,9 +253,10 @@ function MutualFollowItem({ user, isSelected, onToggle }: MutualFollowItemProps)
 
 interface NonMutualSearchResultItemProps {
   user: UserSearchNode;
+  onFollowSuccess: () => void;
 }
 
-function NonMutualSearchResultItem({ user }: NonMutualSearchResultItemProps) {
+function NonMutualSearchResultItem({ user, onFollowSuccess }: NonMutualSearchResultItemProps) {
   const t = useTranslations("chat");
 
   return (
@@ -277,7 +278,7 @@ function NonMutualSearchResultItem({ user }: NonMutualSearchResultItemProps) {
         displayName={user.displayName}
         initialViewerFollowsUser={user.viewerFollowsUser ?? false}
         onFollowChange={(isFollowing) => {
-          if (isFollowing) fetchMutualFollows();
+          if (isFollowing) onFollowSuccess();
         }}
       />
     </div>

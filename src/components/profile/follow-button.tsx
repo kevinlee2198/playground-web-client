@@ -29,7 +29,7 @@ export function FollowButton({
   const [isHovered, setIsHovered] = useState(false);
   const [announcement, setAnnouncement] = useState("");
 
-  const announcementTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const announcementTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     return () => {

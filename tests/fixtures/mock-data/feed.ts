@@ -4,15 +4,15 @@ import { mockGame } from "./games";
 export function mockFeedResponse(games?: (Record<string, unknown> & { id?: string })[]) {
   const nodes = (games ?? [mockGame()]).map((game) => ({
     ...game,
-    viewerFriendPlayers: { nodes: [], totalCount: 0 },
+    viewerFollowingPlayers: { nodes: [], totalCount: 0 },
   }));
   return {
     data: {
-      friendsActivityFeed: buildConnection(nodes),
+      followingActivityFeed: buildConnection(nodes),
     },
   };
 }
 
 export function mockEmptyFeedResponse() {
-  return { data: { friendsActivityFeed: emptyConnection() } };
+  return { data: { followingActivityFeed: emptyConnection() } };
 }

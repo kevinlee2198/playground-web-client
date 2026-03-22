@@ -42,7 +42,7 @@ const defaultResponses: Record<string, unknown> = {
   me: mockMeResponse(),
   games: mockGamesListResponse(),
   game: mockGameDetailResponse(),
-  friendsActivityFeed: mockFeedResponse(),
+  followingActivityFeed: mockFeedResponse(),
   chatRooms: mockChatRoomsResponse(),
   searchUsers: mockSearchUsersResponse(),
   user: mockUserResponse(),

@@ -56,13 +56,13 @@ describe("loadFeedGames", () => {
             metadata: {},
             location: null,
             participants: { edges: [] },
-            viewerFriendPlayers: [],
+            viewerFollowingPlayers: [],
           },
         },
       ],
       pageInfo: { hasNextPage: false, endCursor: "c1" },
     };
-    mockQuerySuccess({ friendsActivityFeed: mockFeed });
+    mockQuerySuccess({ followingActivityFeed: mockFeed });
 
     const result = await loadFeedGames();
 
@@ -71,13 +71,13 @@ describe("loadFeedGames", () => {
   });
 
   it("passes pagination cursor when after is provided", async () => {
-    mockQuerySuccess({ friendsActivityFeed: emptyConnection });
+    mockQuerySuccess({ followingActivityFeed: emptyConnection });
 
     await loadFeedGames(10, "cursor123");
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
     const feedArgs = (
-      callArg.friendsActivityFeed as { __args: Record<string, unknown> }
+      callArg.followingActivityFeed as { __args: Record<string, unknown> }
     ).__args;
     expect(feedArgs).toHaveProperty("after", "cursor123");
     expect(feedArgs).toHaveProperty("first", 10);
@@ -85,13 +85,13 @@ describe("loadFeedGames", () => {
   });
 
   it("omits after from args when not provided", async () => {
-    mockQuerySuccess({ friendsActivityFeed: emptyConnection });
+    mockQuerySuccess({ followingActivityFeed: emptyConnection });
 
     await loadFeedGames(10);
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
     const feedArgs = (
-      callArg.friendsActivityFeed as { __args: Record<string, unknown> }
+      callArg.followingActivityFeed as { __args: Record<string, unknown> }
     ).__args;
     expect(feedArgs).not.toHaveProperty("after");
     expect(revalidatePath).not.toHaveBeenCalled();

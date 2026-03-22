@@ -710,7 +710,7 @@ describe("loadMoreGames", () => {
     const nodeSelection = (gamesQuery.edges as { node: Record<string, unknown> }).node;
     expect(nodeSelection).toHaveProperty("viewerGameRole");
     expect(nodeSelection).toHaveProperty("viewerInvitation");
-    expect(nodeSelection).toHaveProperty("viewerFriendPlayers");
+    expect(nodeSelection).toHaveProperty("viewerFollowingPlayers");
   });
 
   it("uses unauthenticated query and omits viewer fields when no session", async () => {
@@ -726,7 +726,7 @@ describe("loadMoreGames", () => {
     const nodeSelection = (gamesQuery.edges as { node: Record<string, unknown> }).node;
     expect(nodeSelection).not.toHaveProperty("viewerGameRole");
     expect(nodeSelection).not.toHaveProperty("viewerInvitation");
-    expect(nodeSelection).not.toHaveProperty("viewerFriendPlayers");
+    expect(nodeSelection).not.toHaveProperty("viewerFollowingPlayers");
   });
 });
 
