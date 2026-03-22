@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
-import { mockBlockedUsersResponse } from "../fixtures/mock-data/friendships";
+import { mockBlockedUsersResponse } from "../fixtures/mock-data/blocked-users";
 
 test.describe("Blocked Users Page", () => {
   test("[CRITICAL] unauthenticated: redirects to /", async ({

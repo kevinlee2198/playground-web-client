@@ -20,7 +20,7 @@ export const metadata: Metadata = { title: "Getting Started | Playground" };
 
 const STEPS = [
   { key: "signUp", icon: UserPlus },
-  { key: "findFriends", icon: Users },
+  { key: "findPeople", icon: Users },
   { key: "createGame", icon: Gamepad2 },
   { key: "trackScores", icon: ChartNoAxesCombined },
   { key: "shareMemories", icon: Camera },

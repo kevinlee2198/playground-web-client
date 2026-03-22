@@ -47,7 +47,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Authenticated home page -- friends activity feed (unchanged behavior)
+// Authenticated home page -- following activity feed (unchanged behavior)
 // ---------------------------------------------------------------------------
 
 async function AuthenticatedHomePage() {
@@ -107,7 +107,7 @@ async function AuthenticatedHomePage() {
               href="/search"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
-              {t("feed.empty.findFriends")}
+              {t("feed.empty.findPeople")}
             </Link>
           </EmptyContent>
         </Empty>

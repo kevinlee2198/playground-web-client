@@ -1,5 +1,6 @@
 "use client";
 
+import { getInitials } from "@/components/game/player-avatar";
 import {
   Avatar,
   AvatarFallback,
@@ -7,20 +8,11 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import { TypographySmall } from "@/components/ui/typography";
-import type { FeedPlayerNode, ViewerFollowingPlayers } from "@/lib/types/feed";
+import type { ViewerFollowingPlayers } from "@/lib/types/feed";
 import { useTranslations } from "next-intl";
 
 interface FollowingAvatarsProps {
   followingPlayers: ViewerFollowingPlayers;
-}
-
-function getInitials(player: FeedPlayerNode): string {
-  const name = player.user.displayName;
-  const parts = name.split(" ");
-  if (parts.length >= 2) {
-    return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
-  }
-  return name.charAt(0).toUpperCase();
 }
 
 export function FollowingAvatars({ followingPlayers }: FollowingAvatarsProps) {
@@ -69,7 +61,7 @@ export function FollowingAvatars({ followingPlayers }: FollowingAvatarsProps) {
                   alt={player.user.displayName}
                 />
               ) : null}
-              <AvatarFallback>{getInitials(player)}</AvatarFallback>
+              <AvatarFallback>{getInitials(player.user.displayName)}</AvatarFallback>
             </Avatar>
           ))}
         </AvatarGroup>

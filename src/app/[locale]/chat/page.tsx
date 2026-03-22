@@ -8,7 +8,7 @@ import { loadChatRooms } from "./actions";
 
 export const metadata: Metadata = {
   title: "Chat | Playground",
-  description: "Chat with your friends",
+  description: "Chat with people you follow",
 };
 
 interface PageProps {

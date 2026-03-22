@@ -205,7 +205,7 @@ export function MutualFollowSelector({
           {noResults && (
             <Empty className="border-none py-8">
               <EmptyHeader>
-                <EmptyDescription>{t("noFriendsFound")}</EmptyDescription>
+                <EmptyDescription>{t("noPeopleFound")}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           )}

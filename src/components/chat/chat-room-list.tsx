@@ -187,7 +187,7 @@ export function ChatRoomList({
           </EmptyHeader>
           <EmptyContent>
             <Link href="/search" className={buttonVariants({ variant: "outline" })}>
-              {t("findFriends")}
+              {t("findPeople")}
             </Link>
           </EmptyContent>
         </Empty>

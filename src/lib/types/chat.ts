@@ -159,10 +159,4 @@ export interface MutualFollowUser {
   } | null;
 }
 
-/** Error returned when a DM or member addition requires mutual follow */
-export interface MutualFollowRequiredError {
-  __typename: "MutualFollowRequiredError";
-  message: string;
-}
-
 export type ChatRoomRole = "OWNER" | "ADMIN" | "MEMBER";

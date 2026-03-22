@@ -8,7 +8,7 @@ import {
 import { mockFeedResponse } from "./mock-data/feed";
 import { mockChatRoomsResponse } from "./mock-data/chat";
 import { mockSearchUsersResponse } from "./mock-data/search";
-import { mockEmptyBlockedResponse } from "./mock-data/friendships";
+import { mockEmptyBlockedResponse } from "./mock-data/blocked-users";
 import { mockUserResponse } from "./mock-data/user";
 
 /**
@@ -46,7 +46,7 @@ const defaultResponses: Record<string, unknown> = {
   chatRooms: mockChatRoomsResponse(),
   searchUsers: mockSearchUsersResponse(),
   user: mockUserResponse(),
-  friendships: mockEmptyBlockedResponse(),
+  blockedUsers: mockEmptyBlockedResponse(),
   basketballBoxScores: mockBasketballBoxScoresResponse(),
   ...emptyStatResponses,
 };

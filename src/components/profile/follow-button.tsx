@@ -94,11 +94,19 @@ export function FollowButton({
     });
   }
 
-  const buttonText = isFollowing
-    ? isHovered
-      ? t("unfollow")
-      : t("following")
-    : t("follow");
+  function getButtonText(): string {
+    if (!isFollowing) return t("follow");
+    if (isHovered) return t("unfollow");
+    return t("following");
+  }
+
+  function getButtonVariant(): "default" | "destructive" | "outline" {
+    if (!isFollowing) return "default";
+    if (isHovered) return "destructive";
+    return "outline";
+  }
+
+  const buttonText = getButtonText();
 
   const ariaLabel = isFollowing
     ? `${t("unfollow")} ${displayName}`
@@ -111,9 +119,7 @@ export function FollowButton({
       </span>
 
       <Button
-        variant={
-          isFollowing ? (isHovered ? "destructive" : "outline") : "default"
-        }
+        variant={getButtonVariant()}
         onClick={isFollowing ? handleUnfollow : handleFollow}
         disabled={isPending}
         aria-label={ariaLabel}
@@ -123,9 +129,7 @@ export function FollowButton({
         className="min-w-[6rem]"
       >
         {isPending ? (
-          <span className="mr-2 inline-flex h-4 w-4 animate-spin">
-            <Loader2 className="h-4 w-4" />
-          </span>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : null}
         {buttonText}
       </Button>

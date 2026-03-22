@@ -153,6 +153,12 @@ export function FollowListDialog({
   }
 
   function handleFollowChange(itemUserId: string, viewerFollowsUser: boolean) {
+    // Own profile following list: unfollowing removes the entry entirely
+    if (isOwnProfile && type === "following" && !viewerFollowsUser) {
+      setItems((prev) => prev.filter((item) => item.user.id !== itemUserId));
+      return;
+    }
+
     setItems((prev) =>
       prev.map((item) =>
         item.user.id === itemUserId
@@ -160,11 +166,6 @@ export function FollowListDialog({
           : item,
       ),
     );
-
-    // Own profile following list: unfollowing removes the entry
-    if (isOwnProfile && type === "following" && !viewerFollowsUser) {
-      setItems((prev) => prev.filter((item) => item.user.id !== itemUserId));
-    }
   }
 
   const title =
