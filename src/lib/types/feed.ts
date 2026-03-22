@@ -22,7 +22,7 @@ export interface FeedProfilePicture {
 }
 
 /**
- * Player node returned within viewerFriendPlayers.
+ * Player node returned within viewerFollowingPlayers.
  * Includes a user reference since Player implements HasUser in the schema.
  */
 export interface FeedPlayerNode {
@@ -31,10 +31,10 @@ export interface FeedPlayerNode {
 }
 
 /**
- * The viewer's friends who are players in a game.
+ * The viewer's followed users who are players in a game.
  * nodes is capped by the server.
  */
-export interface ViewerFriendPlayers {
+export interface ViewerFollowingPlayers {
   nodes: FeedPlayerNode[];
   totalCount: number;
 }
@@ -52,8 +52,8 @@ export interface FeedLocation {
 }
 
 /**
- * Game node returned from the friendsActivityFeed query.
- * A separate type from GameNode — includes location and viewerFriendPlayers.
+ * Game node returned from the followingActivityFeed query.
+ * A separate type from GameNode — includes location and viewerFollowingPlayers.
  */
 export interface FeedGameNode {
   id: number;
@@ -70,7 +70,7 @@ export interface FeedGameNode {
   participants: {
     edges: Edge<GameParticipant>[];
   };
-  viewerFriendPlayers: ViewerFriendPlayers;
+  viewerFollowingPlayers: ViewerFollowingPlayers;
 }
 
 /**

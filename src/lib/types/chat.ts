@@ -58,8 +58,6 @@ export type SystemChatMessageNode =
 /** Discriminated union for ALL chat message types */
 export type ChatMessageNode = UserChatMessageNode | SystemChatMessageNode;
 
-// --- Reply-to types remain unchanged (they only reference UserChatMessage) ---
-
 /** Base fields for reply-to references */
 interface ChatMessageReplyToBase {
   id: string;
@@ -135,6 +133,8 @@ interface ChatRoomDetailBase {
 /** A direct message chat room detail */
 export interface DirectMessageChatRoomDetailNode extends ChatRoomDetailBase {
   __typename: "DirectMessageChatRoom";
+  /** Whether the viewer can send messages (mutual follow check for DMs) */
+  canMessage: boolean;
 }
 
 /** A group chat room detail */
@@ -148,19 +148,21 @@ export type ChatRoomDetailNode =
   | DirectMessageChatRoomDetailNode
   | GroupChatRoomDetailNode;
 
-/** A friendship edge for the friend selector */
-export interface FriendshipNode {
+/** A mutual follow user for the people selector in chat */
+export interface MutualFollowUser {
   id: string;
-  requester: ChatUser;
-  addressee: ChatUser;
-  status: string;
+  displayName: string;
+  username: string;
+  profilePicture: {
+    __typename: "ImageResource";
+    thumbnailUrl: string | null;
+  } | null;
 }
 
-/** Friend item derived from a friendship for easier consumption */
-export interface FriendItem {
-  userId: string;
-  firstName: string;
-  lastName: string;
+/** Error returned when a DM or member addition requires mutual follow */
+export interface MutualFollowRequiredError {
+  __typename: "MutualFollowRequiredError";
+  message: string;
 }
 
 export type ChatRoomRole = "OWNER" | "ADMIN" | "MEMBER";

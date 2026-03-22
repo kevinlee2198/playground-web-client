@@ -131,6 +131,7 @@ export const chatMessageNodeSelection = {
 export const chatRoomInlineFragments = [
   {
     __typeName: "DirectMessageChatRoom",
+    canMessage: true,
   },
   {
     __typeName: "GroupChatRoom",
@@ -244,10 +245,9 @@ export const participantNodeFragment = {
 };
 
 /**
- * Fragment for viewerFriendPlayers on feed game nodes.
- * Fetches user display name and profile picture thumbnail.
+ * Fragment for viewerFollowingPlayers on feed game nodes.
  */
-export const viewerFriendPlayersFragment = {
+export const viewerFollowingPlayersFragment = {
   nodes: {
     id: true,
     user: {
@@ -319,12 +319,8 @@ const userRefFragment = {
  */
 export const notificationInlineFragments = [
   {
-    __typeName: "FriendRequestReceivedNotification",
-    sender: userRefFragment,
-  },
-  {
-    __typeName: "FriendRequestAcceptedNotification",
-    accepter: userRefFragment,
+    __typeName: "NewFollowerNotification",
+    follower: userRefFragment,
   },
   {
     __typeName: "GameStartedNotification",
