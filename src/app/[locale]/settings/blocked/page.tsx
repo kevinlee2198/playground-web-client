@@ -15,11 +15,11 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
-interface BlockedFriendshipEdge {
+interface BlockedUserEdge {
   node: {
     id: string;
-    requester: { id: string; displayName: string };
-    addressee: { id: string; displayName: string };
+    displayName: string;
+    username: string;
   };
 }
 
@@ -33,16 +33,14 @@ export default async function BlockedUsersPage({ params }: PageProps) {
 
   const t = await getTranslations("settings.blocked");
 
-  const blockedFriendships = await loadBlockedUsers(50);
+  const blockedUsers = await loadBlockedUsers(50);
 
   const entries: BlockedUserEntry[] =
-    (blockedFriendships?.edges as BlockedFriendshipEdge[] | undefined)?.map(
-      (edge) => ({
-        friendshipId: edge.node.id,
-        userId: edge.node.addressee.id,
-        displayName: edge.node.addressee.displayName,
-      }),
-    ) ?? [];
+    (blockedUsers?.edges as BlockedUserEdge[] | undefined)?.map((edge) => ({
+      userId: edge.node.id,
+      displayName: edge.node.displayName,
+      username: edge.node.username,
+    })) ?? [];
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">

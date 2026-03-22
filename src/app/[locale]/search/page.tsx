@@ -1,7 +1,9 @@
 import { searchUsers } from "@/components/search/actions";
 import { SearchResultsList } from "@/components/search/search-results-list";
+import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Search | Playground",
@@ -14,15 +16,18 @@ interface PageProps {
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
+  const sessionPromise = auth.api.getSession({ headers: await headers() });
   const queryParams = await searchParams;
   const t = await getTranslations("search");
 
   const q = typeof queryParams.q === "string" ? queryParams.q.trim() : "";
 
-  let initialResult = null;
-  if (q) {
-    initialResult = await searchUsers(q, 20);
-  }
+  const [session, initialResult] = await Promise.all([
+    sessionPromise,
+    q ? searchUsers(q, 20) : Promise.resolve(null),
+  ]);
+
+  const isAuthenticated = !!session?.user?.id;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -34,6 +39,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         initialError={
           initialResult?.success === false ? initialResult.error : null
         }
+        isAuthenticated={isAuthenticated}
       />
     </main>
   );

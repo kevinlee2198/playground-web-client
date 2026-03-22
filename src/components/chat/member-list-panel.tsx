@@ -32,11 +32,17 @@ import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
 import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
 import { LogOut, UserPlus } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { FriendSelector } from "./friend-selector";
 import { RemoveMemberDialog } from "./remove-member-dialog";
+
+const MutualFollowSelector = dynamic(
+  () =>
+    import("./mutual-follow-selector").then((m) => m.MutualFollowSelector),
+  { ssr: false },
+);
 
 function canRemoveMember(currentUserRole: ChatRoomRoleType | null, targetRole: ChatRoomRoleType): boolean {
   if (currentUserRole === ChatRoomRole.OWNER && targetRole !== ChatRoomRole.OWNER) return true;
@@ -99,7 +105,14 @@ export function MemberListPanel({
         const failedAdds = results.filter((r) => !r.success);
 
         if (failedAdds.length > 0) {
-          toast.error(tChat("errors.addMember"));
+          const hasMutualFollowError = failedAdds.some(
+            (r) => r.errorType === "MutualFollowRequiredError",
+          );
+          toast.error(
+            hasMutualFollowError
+              ? tChat("mutualFollowRequired")
+              : tChat("errors.addMember"),
+          );
         } else {
           // Update members list with new members
           const newMembers = results
@@ -342,7 +355,7 @@ export function MemberListPanel({
             <DialogTitle>{t("add")}</DialogTitle>
           </DialogHeader>
 
-          <FriendSelector
+          <MutualFollowSelector
             selectedIds={selectedFriendIds}
             onSelectionChange={setSelectedFriendIds}
             excludeUserIds={memberUserIds}

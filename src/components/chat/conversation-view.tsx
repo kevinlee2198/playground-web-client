@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConversationHeader } from "./conversation-header";
 import { DeleteMessageDialog } from "./delete-message-dialog";
+import { DmDisabledBanner } from "./dm-disabled-banner";
 import { MessageInput } from "./message-input";
 import { MessageList } from "./message-list";
 
@@ -61,6 +62,7 @@ export function ConversationView({
   );
   const [replyTo, setReplyTo] = useState<UserChatMessageNode | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [canMessage, setCanMessage] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -79,6 +81,7 @@ export function ConversationView({
     setDeleteDialogOpen(false);
     setMessageToDelete(null);
     setIsDeleting(false);
+    setCanMessage(true);
 
     const fetchData = async () => {
       try {
@@ -94,6 +97,11 @@ export function ConversationView({
 
         setRoom(roomData);
         onRoomLoaded(roomData);
+
+        // For DMs, initialize canMessage from the room's canMessage field
+        if (roomData.__typename === "DirectMessageChatRoom") {
+          setCanMessage(roomData.canMessage);
+        }
 
         if (messagesData) {
           setMessages(messagesData.edges);
@@ -211,11 +219,18 @@ export function ConversationView({
     );
   };
 
+  function handleSendError(result: { errorType?: string; message?: string }) {
+    if (result.errorType === "MutualFollowRequiredError") {
+      setCanMessage(false);
+    }
+    toast.error(result.message || t("errors.sendMessage"));
+  }
+
   const handleSendText = async (content: string, replyToId?: string) => {
     const result = await sendMessage(roomId, content, replyToId);
 
     if (!result.success || !result.chatMessage) {
-      toast.error(result.message || t("errors.sendMessage"));
+      handleSendError(result);
       throw new Error("Failed to send message");
     }
 
@@ -264,7 +279,7 @@ export function ConversationView({
     // 3. Send media message (auto-confirms resource -- do NOT call confirmUpload)
     const sendResult = await sendMediaMessage(roomId, uploadResult.resourceId);
     if (!sendResult.success || !sendResult.chatMessage) {
-      toast.error(sendResult.message || t("errors.sendMessage"));
+      handleSendError(sendResult);
       throw new Error("Send message failed");
     }
 
@@ -417,12 +432,16 @@ export function ConversationView({
         onCancelEdit={() => setEditingMessageId(null)}
       />
 
-      <MessageInput
-        onSendText={handleSendText}
-        onSendMedia={handleSendMedia}
-        replyTo={replyTo}
-        onClearReply={() => setReplyTo(null)}
-      />
+      {!canMessage && room.__typename === "DirectMessageChatRoom" ? (
+        <DmDisabledBanner />
+      ) : (
+        <MessageInput
+          onSendText={handleSendText}
+          onSendMedia={handleSendMedia}
+          replyTo={replyTo}
+          onClearReply={() => setReplyTo(null)}
+        />
+      )}
 
       <DeleteMessageDialog
         open={deleteDialogOpen}

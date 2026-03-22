@@ -1,7 +1,7 @@
 "use client";
 
 import { BreathingDot } from "@/components/game/breathing-dot";
-import { FriendAvatars } from "@/components/game/friend-avatars";
+import { FollowingAvatars } from "@/components/game/following-avatars";
 import { GameScore } from "@/components/game/score/game-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { SportAccentStrip } from "@/components/game/sport-accent-strip";
@@ -18,7 +18,7 @@ import {
   GameVisibility,
   getFormatFromMetadata,
 } from "@/lib/constants";
-import type { ViewerFriendPlayers } from "@/lib/types/feed";
+import type { ViewerFollowingPlayers } from "@/lib/types/feed";
 import type { GameNode } from "@/lib/types/game";
 import { formatDistance } from "@/lib/location-detection";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ function getLocationText(location: {
 
 interface GameCardProps {
   game: GameNode & {
-    viewerFriendPlayers?: ViewerFriendPlayers;
+    viewerFollowingPlayers?: ViewerFollowingPlayers;
   };
   /** Distance in meters from the search center. Null when not in a location search. */
   distance?: number | null;
@@ -98,11 +98,10 @@ export function GameCard({ game, distance }: GameCardProps) {
         <SportAccentStrip sportType={game.sportType} />
 
         <div className="space-y-3 p-4 sm:p-5">
-          {/* Friend context — only shown in feed when data is present */}
-          {game.viewerFriendPlayers ? (
-            <FriendAvatars
-              friends={game.viewerFriendPlayers.nodes}
-              totalCount={game.viewerFriendPlayers.totalCount}
+          {/* Following context — only shown in feed when data is present */}
+          {game.viewerFollowingPlayers ? (
+            <FollowingAvatars
+              followingPlayers={game.viewerFollowingPlayers}
             />
           ) : null}
 

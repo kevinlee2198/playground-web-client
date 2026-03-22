@@ -15,10 +15,16 @@ import {
 import { Input } from "@/components/ui/input";
 import type { ChatRoomListNode } from "@/lib/types/chat";
 import { Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { FriendSelector } from "./friend-selector";
+
+const MutualFollowSelector = dynamic(
+  () =>
+    import("./mutual-follow-selector").then((m) => m.MutualFollowSelector),
+  { ssr: false },
+);
 
 interface CreateChatRoomDialogProps {
   open: boolean;
@@ -53,6 +59,8 @@ export function CreateChatRoomDialog({
             onRoomCreated(result.chatRoom);
             onOpenChange(false);
             resetForm();
+          } else if (result.errorType === "MutualFollowRequiredError") {
+            toast.error(t("mutualFollowRequired"));
           } else {
             toast.error(result.message || t("errors.createRoom"));
           }
@@ -107,7 +115,7 @@ export function CreateChatRoomDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <FriendSelector
+          <MutualFollowSelector
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
             currentUserId={currentUserId}

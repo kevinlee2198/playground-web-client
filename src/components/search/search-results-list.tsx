@@ -17,6 +17,7 @@ interface SearchResultsListProps {
   initialEdges: UserSearchEdge[] | null;
   initialPageInfo: SearchPageInfo | null;
   initialError: string | null;
+  isAuthenticated?: boolean;
 }
 
 export function SearchResultsList({
@@ -24,6 +25,7 @@ export function SearchResultsList({
   initialEdges,
   initialPageInfo,
   initialError,
+  isAuthenticated = false,
 }: SearchResultsListProps) {
   const t = useTranslations("search");
   const router = useRouter();
@@ -130,7 +132,11 @@ export function SearchResultsList({
       {!isSearching && edges.length > 0 && (
         <div className="divide-y rounded-lg border">
           {edges.map((edge) => (
-            <UserSearchResult key={edge.node.id} user={edge.node} />
+            <UserSearchResult
+              key={edge.node.id}
+              user={edge.node}
+              isAuthenticated={isAuthenticated}
+            />
           ))}
         </div>
       )}
