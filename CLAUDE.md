@@ -32,6 +32,24 @@ End-to-end tests use Playwright with Next.js experimental `testProxy` mode (`nex
 
 **Critical limitation**: The proxy only intercepts fetches for requests with the test header. Playwright's `webServer.url` health check does NOT go through the proxy. If the health check URL hits a page that makes server-side fetches to an unavailable backend, it returns 500 and Playwright times out (it requires 2xx/3xx/400-403). The `webServer.url` must point to an endpoint that responds without a backend (e.g., `/api/health`).
 
+### Debugging with playwright-cli
+
+Use `npx @playwright/cli` to interactively control a browser for debugging test failures or inspecting page state. No global install needed.
+
+```bash
+# Open a page and inspect it
+npx @playwright/cli open http://localhost:3000/en
+npx @playwright/cli snapshot                    # accessibility tree with element refs
+npx @playwright/cli click e15                   # click element by ref from snapshot
+npx @playwright/cli console                     # view console errors
+npx @playwright/cli network                     # view network requests
+npx @playwright/cli eval "document.title"       # run JS in page context
+npx @playwright/cli screenshot --filename=debug.png
+npx @playwright/cli close
+```
+
+This is invaluable for debugging why a test assertion fails — take a snapshot to see the actual DOM/accessibility tree, check console for errors, inspect network requests, etc. Much faster than re-running tests with different assertions.
+
 ## Spec-Driven Development
 
 For multi-step features, use Plan Mode to create specifications before implementation:
