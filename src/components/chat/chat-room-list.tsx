@@ -3,7 +3,7 @@
 import { loadChatRooms } from "@/app/[locale]/chat/actions";
 import { ChatRoomListItem } from "@/components/chat/chat-room-list-item";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Empty,
   EmptyContent,

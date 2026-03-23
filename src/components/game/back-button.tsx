@@ -1,6 +1,6 @@
 "use client";
 
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";

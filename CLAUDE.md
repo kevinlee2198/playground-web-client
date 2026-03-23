@@ -13,6 +13,8 @@ npx playwright test                        # Run all Playwright integration test
 npx playwright test tests/pages/about.spec.ts  # Run a single spec file
 ```
 
+**Important**: Always capture test output to a file (e.g., `2>&1 | tee /tmp/pw-results.txt`), then read the file for analysis. Never re-run tests just to grep for a different part of the output — tests are expensive.
+
 ### Unit Tests (Vitest)
 
 Tests use Vitest with `@testing-library/react` and jsdom. Avoid installing additional test packages — use what's already available (e.g., `fireEvent` from `@testing-library/react` instead of `@testing-library/user-event`). Test files live in `__tests__/` and use `.test.ts(x)`.

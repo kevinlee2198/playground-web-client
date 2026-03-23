@@ -1,7 +1,7 @@
 import { BackButton } from "@/components/game/back-button";
 import { GameDetailClient } from "@/components/game/live/game-detail-client";
 import { GameDetailHero } from "@/components/game/game-detail-hero";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { GameStatus, getFormatFromMetadata, SportType } from "@/lib/constants";

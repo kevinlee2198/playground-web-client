@@ -10,7 +10,7 @@ import { NotificationBell } from "../notification/notification-bell";
 import { MobileSearchOverlay } from "../search/mobile-search-overlay";
 import { NavbarSearch } from "../search/navbar-search";
 import { Button } from "../ui/button";
-import { buttonVariants } from "../ui/button";
+import { buttonVariants } from "../ui/button-variants";
 import { TypographyH1 } from "../ui/typography";
 import { Search } from "lucide-react";
 

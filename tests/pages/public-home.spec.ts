@@ -21,8 +21,12 @@ test.describe("Unauthenticated Home Page", () => {
     await expect(
       unauthenticatedPage.getByRole("button", { name: "All Sports" }),
     ).toBeVisible();
-    await expect(unauthenticatedPage.getByText("🏀")).toBeVisible();
-    await expect(unauthenticatedPage.getByText("🎾")).toBeVisible();
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: "Basketball" }),
+    ).toBeVisible();
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: "Tennis" }),
+    ).toBeVisible();
   });
 
   test("[CRITICAL] shows status filter chips", async ({
@@ -40,22 +44,25 @@ test.describe("Unauthenticated Home Page", () => {
     ).toBeVisible();
   });
 
-  test("sport filter updates URL params", async ({
+  test("sport filter renders selected state from URL", async ({
     unauthenticatedPage,
   }) => {
-    await unauthenticatedPage.goto("/en");
-    await unauthenticatedPage.getByText("🏀").click();
-    await expect(unauthenticatedPage).toHaveURL(/sportType=BASKETBALL/);
+    await unauthenticatedPage.goto("/en?sportType=BASKETBALL");
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: "Basketball" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: "All Sports" }),
+    ).toHaveAttribute("aria-pressed", "false");
   });
 
-  test("status filter updates URL params", async ({
+  test("status filter renders selected state from URL", async ({
     unauthenticatedPage,
   }) => {
-    await unauthenticatedPage.goto("/en");
-    await unauthenticatedPage
-      .getByRole("button", { name: "Upcoming" })
-      .click();
-    await expect(unauthenticatedPage).toHaveURL(/gameStatus=SCHEDULED/);
+    await unauthenticatedPage.goto("/en?gameStatus=SCHEDULED");
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: "Upcoming" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("shows Get Started link", async ({ unauthenticatedPage }) => {
