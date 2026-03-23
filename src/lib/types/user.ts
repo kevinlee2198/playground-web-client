@@ -5,6 +5,9 @@ export interface UserSearchNode {
   firstName: string;
   lastName: string;
   displayName: string;
+  /** null when unauthenticated */
+  viewerFollowsUser: boolean | null;
+  userFollowsViewer: boolean | null;
 }
 
 /** Result shape returned by the searchUsers server action */

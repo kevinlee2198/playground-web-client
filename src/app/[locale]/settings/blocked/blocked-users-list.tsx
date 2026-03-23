@@ -9,9 +9,9 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export interface BlockedUserEntry {
-  friendshipId: string;
   userId: string;
   displayName: string;
+  username: string;
 }
 
 function BlockedUserItem({ entry }: { entry: BlockedUserEntry }) {
@@ -71,7 +71,7 @@ export function BlockedUsersList({ entries }: BlockedUsersListProps) {
   return (
     <div className="flex flex-col gap-2">
       {entries.map((entry) => (
-        <BlockedUserItem key={entry.friendshipId} entry={entry} />
+        <BlockedUserItem key={entry.userId} entry={entry} />
       ))}
     </div>
   );

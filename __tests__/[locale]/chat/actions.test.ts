@@ -15,7 +15,7 @@ import {
   loadChatRooms,
   loadChatRoom,
   loadMessages,
-  loadFriendships,
+  loadMutualFollows,
   findDirectMessageRoom,
   createDirectMessage,
   createGroupChat,
@@ -258,49 +258,62 @@ describe("loadMessages", () => {
 });
 
 // ---------------------------------------------------------------------------
-// loadFriendships
+// loadMutualFollows
 // ---------------------------------------------------------------------------
 
-describe("loadFriendships", () => {
+describe("loadMutualFollows", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns friendships on success", async () => {
-    const mockFriendships = {
+  it("returns mutual follows on success", async () => {
+    const mockMutualFollows = {
       edges: [
         {
           cursor: "c1",
           node: {
-            id: "f1",
-            requester: { id: "u1", username: "alice" },
-            addressee: { id: "u2", username: "bob" },
+            id: "u1",
+            displayName: "Alice",
+            username: "alice",
+            profilePicture: null,
           },
         },
       ],
       pageInfo: { hasNextPage: false, endCursor: "c1" },
     };
-    mockQuerySuccess({ friendships: mockFriendships });
+    mockQuerySuccess({ mutualFollows: mockMutualFollows });
 
-    const result = await loadFriendships(10);
+    const result = await loadMutualFollows(10);
 
-    expect(result).toEqual(mockFriendships);
+    expect(result).toEqual(mockMutualFollows);
   });
 
   it("passes after cursor when provided", async () => {
-    mockQuerySuccess({ friendships: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } });
+    mockQuerySuccess({ mutualFollows: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } });
 
-    await loadFriendships(10, "cursor456");
+    await loadMutualFollows(10, "cursor456");
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const friendshipsArgs = (
-      callArg.friendships as { __args: Record<string, unknown> }
+    const mutualFollowsArgs = (
+      callArg.mutualFollows as { __args: Record<string, unknown> }
     ).__args;
-    expect(friendshipsArgs).toHaveProperty("after", "cursor456");
+    expect(mutualFollowsArgs).toHaveProperty("after", "cursor456");
+  });
+
+  it("omits after from args when not provided", async () => {
+    mockQuerySuccess({ mutualFollows: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } });
+
+    await loadMutualFollows(10);
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const mutualFollowsArgs = (
+      callArg.mutualFollows as { __args: Record<string, unknown> }
+    ).__args;
+    expect(mutualFollowsArgs).not.toHaveProperty("after");
   });
 
   it("returns null on GraphQL errors", async () => {
     mockQueryGraphqlError("Unauthorized");
 
-    const result = await loadFriendships(10);
+    const result = await loadMutualFollows(10);
 
     expect(result).toBeNull();
   });
@@ -308,7 +321,7 @@ describe("loadFriendships", () => {
   it("returns null on network failure", async () => {
     mockQueryNetworkError();
 
-    const result = await loadFriendships(10);
+    const result = await loadMutualFollows(10);
 
     expect(result).toBeNull();
   });

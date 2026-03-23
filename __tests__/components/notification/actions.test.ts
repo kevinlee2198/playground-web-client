@@ -86,11 +86,11 @@ describe("fetchNotifications", () => {
     {
       cursor: "c1",
       node: {
-        __typename: "FriendRequestReceivedNotification",
+        __typename: "NewFollowerNotification",
         id: "n1",
         isRead: false,
         createdDate: "2025-01-01",
-        sender: { id: "u1", username: "alice", displayName: "Alice" },
+        follower: { id: "u1", username: "alice", displayName: "Alice" },
       },
     },
   ];
@@ -210,11 +210,11 @@ describe("markNotificationsAsRead", () => {
 
   const mockNotifications = [
     {
-      __typename: "FriendRequestReceivedNotification",
+      __typename: "NewFollowerNotification",
       id: "n1",
       isRead: true,
       createdDate: "2025-01-01",
-      sender: { id: "u1", username: "alice", displayName: "Alice" },
+      follower: { id: "u1", username: "alice", displayName: "Alice" },
     },
     {
       __typename: "GameStartedNotification",

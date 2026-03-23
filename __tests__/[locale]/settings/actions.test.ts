@@ -40,51 +40,51 @@ describe("loadBlockedUsers", () => {
   };
 
   it("returns edges and pageInfo on success", async () => {
-    const mockFriendships = {
+    const mockBlockedUsers = {
       edges: [
         {
           cursor: "c1",
           node: {
-            id: "f1",
-            requester: { id: "u1", username: "alice", firstName: "Alice", lastName: "Smith" },
-            addressee: { id: "u2", username: "bob", firstName: "Bob", lastName: "Jones" },
+            id: "u2",
+            displayName: "Bob Jones",
+            username: "bob",
           },
         },
       ],
       pageInfo: { hasNextPage: false, endCursor: "c1" },
     };
-    mockQuerySuccess({ friendships: mockFriendships });
+    mockQuerySuccess({ blockedUsers: mockBlockedUsers });
 
     const result = await loadBlockedUsers(10);
 
-    expect(result).toEqual(mockFriendships);
+    expect(result).toEqual(mockBlockedUsers);
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("passes pagination cursor when after is provided", async () => {
-    mockQuerySuccess({ friendships: emptyConnection });
+    mockQuerySuccess({ blockedUsers: emptyConnection });
 
     await loadBlockedUsers(10, "cursor456");
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const friendshipsArgs = (
-      callArg.friendships as { __args: Record<string, unknown> }
+    const blockedUsersArgs = (
+      callArg.blockedUsers as { __args: Record<string, unknown> }
     ).__args;
-    expect(friendshipsArgs).toHaveProperty("after", "cursor456");
-    expect(friendshipsArgs).toHaveProperty("first", 10);
+    expect(blockedUsersArgs).toHaveProperty("after", "cursor456");
+    expect(blockedUsersArgs).toHaveProperty("first", 10);
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("omits after from args when not provided", async () => {
-    mockQuerySuccess({ friendships: emptyConnection });
+    mockQuerySuccess({ blockedUsers: emptyConnection });
 
     await loadBlockedUsers(10);
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const friendshipsArgs = (
-      callArg.friendships as { __args: Record<string, unknown> }
+    const blockedUsersArgs = (
+      callArg.blockedUsers as { __args: Record<string, unknown> }
     ).__args;
-    expect(friendshipsArgs).not.toHaveProperty("after");
+    expect(blockedUsersArgs).not.toHaveProperty("after");
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 

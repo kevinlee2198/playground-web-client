@@ -217,11 +217,11 @@ describe("useNotificationSubscription", () => {
     expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
     const mockNotification = {
-      __typename: "FriendRequestReceivedNotification",
+      __typename: "NewFollowerNotification",
       id: "n2",
       isRead: false,
       createdDate: "2026-03-16T10:00:00Z",
-      sender: { id: "u1", username: "alice", displayName: "Alice" },
+      follower: { id: "u1", username: "alice", displayName: "Alice" },
     };
     act(() => {
       capturedState.sink?.next({

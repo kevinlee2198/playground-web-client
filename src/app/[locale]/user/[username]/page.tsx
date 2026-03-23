@@ -6,7 +6,6 @@ import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  FriendshipStatus,
   GameSortField,
   SortDirection,
 } from "@/lib/constants";
@@ -62,18 +61,15 @@ function buildUserQuery(username: string) {
       displayName: true,
       biography: true,
       profilePicture: resourceFragment,
+      followerCount: true,
+      followingCount: true,
+      viewerFollowsUser: true,
+      userFollowsViewer: true,
       player: {
         id: true,
         age: true,
         height: true,
         weight: true,
-      },
-      friendship: {
-        id: true,
-        status: true,
-        requester: { id: true },
-        addressee: { id: true },
-        createdDate: true,
       },
     },
   };
@@ -164,20 +160,11 @@ export default async function UserProfilePage({ params }: PageProps) {
       : query(buildUserQuery(username)),
   ]);
 
-  const currentUserId = currentUser?.id;
   const isOwnProfile = currentUser?.username === username;
 
   const user = userResponse.data?.user;
 
   if (!user) {
-    notFound();
-  }
-
-  const friendship = user.friendship;
-  if (
-    friendship?.status === FriendshipStatus.BLOCKED &&
-    friendship.addressee.id === currentUserId
-  ) {
     notFound();
   }
 
@@ -187,8 +174,6 @@ export default async function UserProfilePage({ params }: PageProps) {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <ProfileHeader
         user={user}
-        friendship={friendship}
-        currentUserId={currentUserId}
         isOwnProfile={isOwnProfile}
         isAuthenticated={isAuthenticated}
       />

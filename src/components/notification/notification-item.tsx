@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef } from "react";
 const HOVER_READ_DELAY_MS = 600;
 
 interface NotificationContent {
-  /** i18n key prefix under notificationTemplates, e.g. "friendRequestReceived" */
+  /** i18n key prefix under notificationTemplates, e.g. "newFollower" */
   templateKey: string | null;
   /** The href for the Link wrapper */
   href: string | null;
@@ -30,19 +30,12 @@ function getKnownNotificationContent(
   tSports: (key: string) => string,
 ): NotificationContent {
   switch (notification.__typename) {
-    case "FriendRequestReceivedNotification":
-      if (!notification.sender) return FALLBACK_CONTENT;
+    case "NewFollowerNotification":
+      if (!notification.follower) return FALLBACK_CONTENT;
       return {
-        templateKey: "friendRequestReceived",
-        href: `/user/${notification.sender.username}`,
-        richParams: { displayName: notification.sender.displayName },
-      };
-    case "FriendRequestAcceptedNotification":
-      if (!notification.accepter) return FALLBACK_CONTENT;
-      return {
-        templateKey: "friendRequestAccepted",
-        href: `/user/${notification.accepter.username}`,
-        richParams: { displayName: notification.accepter.displayName },
+        templateKey: "newFollower",
+        href: `/user/${notification.follower.username}`,
+        richParams: { displayName: notification.follower.displayName },
       };
     case "GameStartedNotification":
       if (!notification.game) return FALLBACK_CONTENT;

@@ -6,6 +6,7 @@ import {
   chatRoomInlineFragments,
   chatUserFragment,
   errorFragment,
+  profilePictureThumbnailFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
@@ -180,16 +181,11 @@ export async function loadMessages(
   }
 }
 
-/**
- * Load friendships for the friend selector
- */
-export async function loadFriendships(first: number, after?: string) {
-  const { EnumType } = await import("json-to-graphql-query");
+export async function loadMutualFollows(first: number, after?: string) {
   try {
     const response = await authQuery({
-      friendships: {
+      mutualFollows: {
         __args: {
-          input: { status: new EnumType("ACCEPTED") },
           first,
           ...(after ? { after } : {}),
         },
@@ -197,8 +193,9 @@ export async function loadFriendships(first: number, after?: string) {
           cursor: true,
           node: {
             id: true,
-            requester: chatUserFragment,
-            addressee: chatUserFragment,
+            displayName: true,
+            username: true,
+            profilePicture: profilePictureThumbnailFragment,
           },
         },
         pageInfo: {
@@ -212,9 +209,9 @@ export async function loadFriendships(first: number, after?: string) {
       return null;
     }
 
-    return response.data?.friendships || null;
+    return response.data?.mutualFollows || null;
   } catch (error) {
-    console.error("Failed to load friendships:", error);
+    console.error("Failed to load mutual follows:", error);
     return null;
   }
 }

@@ -48,7 +48,7 @@ test.describe("Home / Feed Page", () => {
       authenticatedPage.getByRole("link", { name: /create a game/i }),
     ).toBeVisible();
     await expect(
-      authenticatedPage.getByRole("link", { name: /find friends/i }),
+      authenticatedPage.getByRole("link", { name: /find people/i }),
     ).toBeVisible();
   });
 

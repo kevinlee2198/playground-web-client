@@ -4,7 +4,7 @@ import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import {
   gameMetadataFragment,
   participantNodeFragment,
-  viewerFriendPlayersFragment,
+  viewerFollowingPlayersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
@@ -30,7 +30,7 @@ export async function loadFeedGames(
     }
 
     const response = await authQuery({
-      friendsActivityFeed: {
+      followingActivityFeed: {
         __args: args,
         edges: {
           cursor: true,
@@ -59,7 +59,7 @@ export async function loadFeedGames(
                 node: participantNodeFragment,
               },
             },
-            viewerFriendPlayers: viewerFriendPlayersFragment,
+            viewerFollowingPlayers: viewerFollowingPlayersFragment,
           },
         },
         pageInfo: {
@@ -74,7 +74,7 @@ export async function loadFeedGames(
       return null;
     }
 
-    return response.data?.friendsActivityFeed ?? null;
+    return response.data?.followingActivityFeed ?? null;
   } catch (error) {
     console.error("Failed to load feed games:", error);
     return null;

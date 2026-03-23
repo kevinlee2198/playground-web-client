@@ -32,11 +32,17 @@ import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
 import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
 import { LogOut, UserPlus } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { FriendSelector } from "./friend-selector";
 import { RemoveMemberDialog } from "./remove-member-dialog";
+
+const MutualFollowSelector = dynamic(
+  () =>
+    import("./mutual-follow-selector").then((m) => m.MutualFollowSelector),
+  { ssr: false },
+);
 
 function canRemoveMember(currentUserRole: ChatRoomRoleType | null, targetRole: ChatRoomRoleType): boolean {
   if (currentUserRole === ChatRoomRole.OWNER && targetRole !== ChatRoomRole.OWNER) return true;
@@ -69,7 +75,7 @@ export function MemberListPanel({
   const t = useTranslations("chat.members");
   const tChat = useTranslations("chat");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedFriendIds, setSelectedFriendIds] = useState<string[]>([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -85,7 +91,7 @@ export function MemberListPanel({
   const memberUserIds = members.map((edge) => edge.node.user.id);
 
   const handleAddMembers = () => {
-    if (selectedFriendIds.length === 0) {
+    if (selectedMemberIds.length === 0) {
       return;
     }
 
@@ -93,13 +99,20 @@ export function MemberListPanel({
       try {
         // Add members one by one
         const results = await Promise.all(
-          selectedFriendIds.map((userId) => addMember(roomId, userId)),
+          selectedMemberIds.map((userId) => addMember(roomId, userId)),
         );
 
         const failedAdds = results.filter((r) => !r.success);
 
         if (failedAdds.length > 0) {
-          toast.error(tChat("errors.addMember"));
+          const hasMutualFollowError = failedAdds.some(
+            (r) => r.errorType === "MutualFollowRequiredError",
+          );
+          toast.error(
+            hasMutualFollowError
+              ? tChat("mutualFollowRequired")
+              : tChat("errors.addMember"),
+          );
         } else {
           // Update members list with new members
           const newMembers = results
@@ -112,7 +125,7 @@ export function MemberListPanel({
           onMembersChange([...members, ...newMembers]);
           toast.success(t("add") + " successful");
           setAddDialogOpen(false);
-          setSelectedFriendIds([]);
+          setSelectedMemberIds([]);
         }
       } catch (error) {
         console.error("Error adding members:", error);
@@ -342,9 +355,9 @@ export function MemberListPanel({
             <DialogTitle>{t("add")}</DialogTitle>
           </DialogHeader>
 
-          <FriendSelector
-            selectedIds={selectedFriendIds}
-            onSelectionChange={setSelectedFriendIds}
+          <MutualFollowSelector
+            selectedIds={selectedMemberIds}
+            onSelectionChange={setSelectedMemberIds}
             excludeUserIds={memberUserIds}
             currentUserId={currentUserId}
           />
@@ -354,7 +367,7 @@ export function MemberListPanel({
               variant="outline"
               onClick={() => {
                 setAddDialogOpen(false);
-                setSelectedFriendIds([]);
+                setSelectedMemberIds([]);
               }}
               disabled={isPending}
             >
@@ -362,7 +375,7 @@ export function MemberListPanel({
             </Button>
             <Button
               onClick={handleAddMembers}
-              disabled={selectedFriendIds.length === 0 || isPending}
+              disabled={selectedMemberIds.length === 0 || isPending}
             >
               {t("add")}
             </Button>

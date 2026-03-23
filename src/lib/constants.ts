@@ -14,13 +14,6 @@ export enum SortDirection {
   DESC = "DESC",
 }
 
-export enum FriendshipStatus {
-  PENDING = "PENDING",
-  ACCEPTED = "ACCEPTED",
-  DECLINED = "DECLINED",
-  BLOCKED = "BLOCKED",
-}
-
 export enum GameStatus {
   SCHEDULED = "SCHEDULED",
   IN_PROGRESS = "IN_PROGRESS",

@@ -6,7 +6,7 @@ import {
   gameMetadataFragment,
   participantNodeFragment,
   resourceFragment,
-  viewerFriendPlayersFragment,
+  viewerFollowingPlayersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery, query } from "@/lib/graphql-request";
@@ -433,7 +433,7 @@ export async function loadMoreGames(
     if (isAuthenticated) {
       nodeSelection.viewerGameRole = true;
       nodeSelection.viewerInvitation = viewerInvitationFragment;
-      nodeSelection.viewerFriendPlayers = viewerFriendPlayersFragment;
+      nodeSelection.viewerFollowingPlayers = viewerFollowingPlayersFragment;
     }
 
     const gamesQuery = {

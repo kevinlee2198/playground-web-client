@@ -1,11 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FriendshipStatus } from "@/lib/constants";
 import type { Resource } from "@/lib/types/resource";
 import { getTranslations } from "next-intl/server";
 import { EditableBiography } from "./editable-biography";
 import { EditableDisplayName } from "./editable-display-name";
-import { FriendActions } from "./friend-actions";
+import { FollowCounts } from "./follow-counts";
 import { ProfileAvatar } from "./profile-avatar";
+import { ProfileInteractiveSection } from "./profile-interactive-section";
 
 interface ProfileHeaderProps {
   user: {
@@ -16,22 +16,17 @@ interface ProfileHeaderProps {
     displayName: string;
     biography: string | null;
     profilePicture?: Resource | null;
+    followerCount: number;
+    followingCount: number;
+    viewerFollowsUser: boolean | null;
+    userFollowsViewer: boolean | null;
   };
-  friendship?: {
-    id: string;
-    status: FriendshipStatus;
-    requester: { id: string };
-    addressee: { id: string };
-  } | null;
-  currentUserId?: string | null;
   isOwnProfile: boolean;
   isAuthenticated: boolean;
 }
 
 export async function ProfileHeader({
   user,
-  friendship,
-  currentUserId,
   isOwnProfile,
   isAuthenticated,
 }: ProfileHeaderProps) {
@@ -97,17 +92,24 @@ export async function ProfileHeader({
             </>
           )}
 
-          {/* Action Buttons */}
-          {!isOwnProfile && isAuthenticated && (
-            <div className="flex gap-3">
-              <FriendActions
-                userId={user.id}
-                friendship={friendship}
-                currentUserId={currentUserId!}
-                showMessageButton
-                displayName={user.displayName}
-              />
-            </div>
+          {/* Follow counts and action buttons */}
+          {!isOwnProfile && isAuthenticated ? (
+            <ProfileInteractiveSection
+              userId={user.id}
+              displayName={user.displayName}
+              initialFollowerCount={user.followerCount}
+              initialFollowingCount={user.followingCount}
+              initialViewerFollowsUser={user.viewerFollowsUser ?? false}
+              initialUserFollowsViewer={user.userFollowsViewer ?? false}
+              isOwnProfile={false}
+            />
+          ) : (
+            <FollowCounts
+              userId={user.id}
+              followerCount={user.followerCount}
+              followingCount={user.followingCount}
+              isOwnProfile={isOwnProfile}
+            />
           )}
         </div>
       </div>

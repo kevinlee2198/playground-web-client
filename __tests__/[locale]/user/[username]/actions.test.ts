@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MutationErrorType } from "@/lib/graphql-result";
 
-const { mockAuthMutate } = vi.hoisted(() => ({
+const { mockAuthMutate, mockAuthQuery } = vi.hoisted(() => ({
   mockAuthMutate: vi.fn(),
+  mockAuthQuery: vi.fn(),
 }));
 
 vi.mock("@/lib/graphql-request", () => ({
   authMutate: mockAuthMutate,
+  authQuery: mockAuthQuery,
 }));
 
 vi.mock("next/cache", () => ({
@@ -15,10 +17,13 @@ vi.mock("next/cache", () => ({
 
 import { revalidatePath } from "next/cache";
 import {
-  sendFriendRequest,
-  acceptFriendRequest,
+  followUser,
+  unfollowUser,
+  removeFollower,
   blockUser,
   unblockUser,
+  loadFollowers,
+  loadFollowing,
   updateUser,
   updatePlayer,
 } from "@/app/[locale]/user/[username]/actions";
@@ -67,150 +72,215 @@ function getMutationInput(key: string): Record<string, unknown> {
 // Shared test data
 // ---------------------------------------------------------------------------
 
-const mockFriendship = {
-  id: "f1",
-  status: "PENDING",
-  requester: { id: "u1" },
-  addressee: { id: "u2" },
+const mockUserFollowData = {
+  id: "u2",
+  viewerFollowsUser: true,
+  userFollowsViewer: false,
+  followerCount: 42,
+  followingCount: 10,
 };
 
 // ---------------------------------------------------------------------------
-// sendFriendRequest
+// followUser
 // ---------------------------------------------------------------------------
 
-describe("sendFriendRequest", () => {
+describe("followUser", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns success with friendship on success", async () => {
-    mockMutateSuccess("sendFriendRequest", "SendFriendRequestResponse", {
-      friendship: mockFriendship,
+  it("returns success with user data on success", async () => {
+    mockMutateSuccess("followUser", "FollowUserResponse", {
+      user: mockUserFollowData,
     });
 
-    const result = await sendFriendRequest("u2");
+    const result = await followUser("u2");
 
-    expect(result).toEqual({ success: true, friendship: mockFriendship });
+    expect(result).toEqual({ success: true, user: mockUserFollowData });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("passes userId in mutation input", async () => {
-    mockMutateSuccess("sendFriendRequest", "SendFriendRequestResponse", {
-      friendship: mockFriendship,
+    mockMutateSuccess("followUser", "FollowUserResponse", {
+      user: mockUserFollowData,
     });
 
-    await sendFriendRequest("user-123");
+    await followUser("user-123");
 
-    const mutInput = getMutationInput("sendFriendRequest");
+    const mutInput = getMutationInput("followUser");
     expect(mutInput).toEqual({ userId: "user-123" });
   });
 
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await sendFriendRequest("u2");
+    const result = await followUser("u2");
 
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Unauthorized",
     });
-    expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("sendFriendRequest", "FriendRequestAlreadySentError", "Already sent");
+    mockMutateUnionError("followUser", "CannotFollowSelfError", "Cannot follow yourself");
 
-    const result = await sendFriendRequest("u2");
+    const result = await followUser("u2");
 
     expect(result).toEqual({
       success: false,
-      errorType: "FriendRequestAlreadySentError",
-      message: "Already sent",
+      errorType: "CannotFollowSelfError",
+      message: "Cannot follow yourself",
     });
-    expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await sendFriendRequest("u2");
+    const result = await followUser("u2");
 
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Failed to send friend request",
+      message: "Failed to follow user",
     });
-    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });
 
 // ---------------------------------------------------------------------------
-// acceptFriendRequest
+// unfollowUser
 // ---------------------------------------------------------------------------
 
-describe("acceptFriendRequest", () => {
+describe("unfollowUser", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  const acceptedFriendship = { ...mockFriendship, status: "ACCEPTED" };
+  const unfollowUserData = {
+    ...mockUserFollowData,
+    viewerFollowsUser: false,
+    followerCount: 41,
+  };
 
-  it("returns success with friendship on success", async () => {
-    mockMutateSuccess("acceptFriendRequest", "AcceptFriendRequestResponse", {
-      friendship: acceptedFriendship,
+  it("returns success with user data and wasMutualFollow on success", async () => {
+    mockMutateSuccess("unfollowUser", "UnfollowUserResponse", {
+      user: unfollowUserData,
+      wasMutualFollow: true,
     });
 
-    const result = await acceptFriendRequest("u1");
+    const result = await unfollowUser("u2");
 
-    expect(result).toEqual({ success: true, friendship: acceptedFriendship });
-    expect(revalidatePath).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: true, user: unfollowUserData, wasMutualFollow: true });
   });
 
-  it("passes requesterId in mutation input", async () => {
-    mockMutateSuccess("acceptFriendRequest", "AcceptFriendRequestResponse", {
-      friendship: acceptedFriendship,
+  it("passes userId in mutation input", async () => {
+    mockMutateSuccess("unfollowUser", "UnfollowUserResponse", {
+      user: unfollowUserData,
+      wasMutualFollow: false,
     });
 
-    await acceptFriendRequest("requester-456");
+    await unfollowUser("user-456");
 
-    const mutInput = getMutationInput("acceptFriendRequest");
-    expect(mutInput).toEqual({ requesterId: "requester-456" });
+    const mutInput = getMutationInput("unfollowUser");
+    expect(mutInput).toEqual({ userId: "user-456" });
   });
 
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
-    mockMutateGraphqlError("Request not found");
+    mockMutateGraphqlError("Not following");
 
-    const result = await acceptFriendRequest("u1");
+    const result = await unfollowUser("u2");
 
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
-      message: "Request not found",
+      message: "Not following",
     });
-    expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("acceptFriendRequest", "FriendRequestNotFoundError", "No request found");
+    mockMutateUnionError("unfollowUser", "NotFollowingError", "You are not following this user");
 
-    const result = await acceptFriendRequest("u1");
+    const result = await unfollowUser("u2");
 
     expect(result).toEqual({
       success: false,
-      errorType: "FriendRequestNotFoundError",
-      message: "No request found",
+      errorType: "NotFollowingError",
+      message: "You are not following this user",
     });
-    expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await acceptFriendRequest("u1");
+    const result = await unfollowUser("u2");
 
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Failed to accept friend request",
+      message: "Failed to unfollow user",
     });
-    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// removeFollower
+// ---------------------------------------------------------------------------
+
+describe("removeFollower", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns success with userId on success", async () => {
+    mockMutateSuccess("removeFollower", "RemoveFollowerResponse", {
+      userId: "u3",
+    });
+
+    const result = await removeFollower("u3");
+
+    expect(result).toEqual({ success: true, userId: "u3" });
+  });
+
+  it("passes userId in mutation input", async () => {
+    mockMutateSuccess("removeFollower", "RemoveFollowerResponse", {
+      userId: "user-789",
+    });
+
+    await removeFollower("user-789");
+
+    const mutInput = getMutationInput("removeFollower");
+    expect(mutInput).toEqual({ userId: "user-789" });
+  });
+
+  it("returns GRAPHQL_ERROR on top-level errors", async () => {
+    mockMutateGraphqlError("User not found");
+
+    const result = await removeFollower("u3");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: MutationErrorType.GRAPHQL_ERROR,
+      message: "User not found",
+    });
+  });
+
+  it("returns union error type on mutation error", async () => {
+    mockMutateUnionError("removeFollower", "NotFollowerError", "User is not a follower");
+
+    const result = await removeFollower("u3");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: "NotFollowerError",
+      message: "User is not a follower",
+    });
+  });
+
+  it("returns UNEXPECTED_ERROR on network failure", async () => {
+    mockMutateNetworkError();
+
+    const result = await removeFollower("u3");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
+      message: "Failed to remove follower",
+    });
   });
 });
 
@@ -221,22 +291,20 @@ describe("acceptFriendRequest", () => {
 describe("blockUser", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  const blockedFriendship = { ...mockFriendship, status: "BLOCKED" };
-
-  it("returns success with friendship on success", async () => {
+  it("returns success with userId on success", async () => {
     mockMutateSuccess("blockUser", "BlockUserResponse", {
-      friendship: blockedFriendship,
+      userId: "u2",
     });
 
     const result = await blockUser("u2");
 
-    expect(result).toEqual({ success: true, friendship: blockedFriendship });
+    expect(result).toEqual({ success: true, userId: "u2" });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("passes userId in mutation input", async () => {
     mockMutateSuccess("blockUser", "BlockUserResponse", {
-      friendship: blockedFriendship,
+      userId: "target-789",
     });
 
     await blockUser("target-789");
@@ -292,17 +360,21 @@ describe("blockUser", () => {
 describe("unblockUser", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns success (no friendship) on success", async () => {
-    mockMutateSuccess("unblockUser", "UnblockUserResponse");
+  it("returns success with userId on success", async () => {
+    mockMutateSuccess("unblockUser", "UnblockUserResponse", {
+      userId: "u2",
+    });
 
     const result = await unblockUser("u2");
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, userId: "u2" });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("passes userId in mutation input", async () => {
-    mockMutateSuccess("unblockUser", "UnblockUserResponse");
+    mockMutateSuccess("unblockUser", "UnblockUserResponse", {
+      userId: "unblock-999",
+    });
 
     await unblockUser("unblock-999");
 
@@ -347,6 +419,150 @@ describe("unblockUser", () => {
       message: "Failed to unblock user",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// loadFollowers
+// ---------------------------------------------------------------------------
+
+describe("loadFollowers", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const mockPageInfo = { hasNextPage: false, endCursor: null };
+  const mockEdge = {
+    cursor: "cursor-1",
+    node: {
+      id: "fr-1",
+      follower: { id: "u-follower", username: "followeruser", displayName: "Follower" },
+      following: { id: "u-target" },
+      createdDate: "2024-01-01T00:00:00Z",
+    },
+  };
+
+  it("returns edges and pageInfo on success", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { followers: { edges: [mockEdge], pageInfo: mockPageInfo } },
+    });
+
+    const result = await loadFollowers("u-target", 10);
+
+    expect(result).toEqual({ edges: [mockEdge], pageInfo: mockPageInfo });
+  });
+
+  it("passes after cursor when provided", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+    });
+
+    await loadFollowers("u-target", 10, "some-cursor");
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const args = (callArg.followers as { __args: Record<string, unknown> }).__args;
+    expect(args).toHaveProperty("after", "some-cursor");
+  });
+
+  it("omits after cursor when not provided", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+    });
+
+    await loadFollowers("u-target", 10);
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const args = (callArg.followers as { __args: Record<string, unknown> }).__args;
+    expect(args).not.toHaveProperty("after");
+  });
+
+  it("returns null on GraphQL error", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: {},
+      errors: [{ message: "Unauthorized" }],
+    });
+
+    const result = await loadFollowers("u-target", 10);
+
+    expect(result).toBeNull();
+  });
+
+  it("returns null on network error", async () => {
+    mockAuthQuery.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await loadFollowers("u-target", 10);
+
+    expect(result).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// loadFollowing
+// ---------------------------------------------------------------------------
+
+describe("loadFollowing", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const mockPageInfo = { hasNextPage: true, endCursor: "cursor-end" };
+  const mockEdge = {
+    cursor: "cursor-2",
+    node: {
+      id: "fr-2",
+      follower: { id: "u-source" },
+      following: { id: "u-followee", username: "followeeuser", displayName: "Followee" },
+      createdDate: "2024-02-01T00:00:00Z",
+    },
+  };
+
+  it("returns edges and pageInfo on success", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { following: { edges: [mockEdge], pageInfo: mockPageInfo } },
+    });
+
+    const result = await loadFollowing("u-source", 10);
+
+    expect(result).toEqual({ edges: [mockEdge], pageInfo: mockPageInfo });
+  });
+
+  it("passes after cursor when provided", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+    });
+
+    await loadFollowing("u-source", 10, "page-cursor");
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const args = (callArg.following as { __args: Record<string, unknown> }).__args;
+    expect(args).toHaveProperty("after", "page-cursor");
+  });
+
+  it("omits after cursor when not provided", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+    });
+
+    await loadFollowing("u-source", 10);
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const args = (callArg.following as { __args: Record<string, unknown> }).__args;
+    expect(args).not.toHaveProperty("after");
+  });
+
+  it("returns null on GraphQL error", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: {},
+      errors: [{ message: "Forbidden" }],
+    });
+
+    const result = await loadFollowing("u-source", 10);
+
+    expect(result).toBeNull();
+  });
+
+  it("returns null on network error", async () => {
+    mockAuthQuery.mockRejectedValueOnce(new Error("Network failure"));
+
+    const result = await loadFollowing("u-source", 10);
+
+    expect(result).toBeNull();
   });
 });
 

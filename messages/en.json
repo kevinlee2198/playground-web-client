@@ -65,7 +65,6 @@
       "wordCount": "{count} / {max} words"
     },
     "message": "Message",
-    "messageFriendsOnly": "You must be friends to send messages",
     "cannotMessageBlocked": "Cannot message this user",
     "stats": {
       "title": "Player Stats",
@@ -98,15 +97,31 @@
         "complete": "Complete"
       }
     },
-    "friends": {
-      "addFriend": "Add Friend",
-      "pending": "Friend Request Pending",
-      "acceptRequest": "Accept Friend Request",
-      "friends": "Friends",
-      "requestSent": "Friend request sent",
-      "requestAccepted": "Friend request accepted",
-      "error": "Failed to process friend request",
-      "cannotAddBlocked": "Cannot send friend request to this user"
+    "follow": {
+      "follow": "Follow",
+      "following": "Following",
+      "unfollow": "Unfollow",
+      "followsYou": "Follows you",
+      "followers": "Followers",
+      "followingLabel": "Following",
+      "error": "Something went wrong. Please try again.",
+      "unfollowedUndo": "Unfollowed {name}. You can no longer message each other.",
+      "undo": "Undo",
+      "removeFollower": "Remove",
+      "removeFollowerSuccess": "Removed from your followers",
+      "removeFollowerError": "Failed to remove follower",
+      "noFollowersYet": "No followers yet",
+      "notFollowingAnyone": "Not following anyone yet",
+      "nowFollowing": "Now following {name}",
+      "unfollowedName": "Unfollowed {name}",
+      "moreOptionsFor": "More options for {name}",
+      "loadError": "Something went wrong",
+      "retry": "Try again"
+    },
+    "moreOptions": "More options",
+    "messageDisabled": {
+      "needsToFollowYou": "This person needs to follow you before you can message them",
+      "followEachOther": "Follow each other to send messages"
     },
     "picture": {
       "changeLabel": "Change profile picture",
@@ -744,13 +759,9 @@
     "retry": "Retry"
   },
   "notificationTemplates": {
-    "friendRequestReceived": {
-      "title": "Friend Request",
-      "body": "<link>{displayName}</link> sent you a friend request"
-    },
-    "friendRequestAccepted": {
-      "title": "Friend Request Accepted",
-      "body": "<link>{displayName}</link> accepted your friend request"
+    "newFollower": {
+      "title": "New Follower",
+      "body": "<link>{displayName}</link> started following you"
     },
     "gameStarted": {
       "title": "Game Started",
@@ -770,14 +781,17 @@
     "newChat": "New Chat",
     "noConversation": "Select a conversation or start a new one",
     "noRooms": "No conversations yet.",
-    "createFirst": "Start a conversation with a friend",
-    "findFriends": "Find friends to message",
-    "noFriends": "You need to add friends before you can start a conversation",
+    "createFirst": "Start a conversation",
+    "findPeople": "Find people to message",
     "groupName": "Group Name",
     "groupNameRequired": "Group name is required",
-    "searchFriends": "Search friends...",
-    "noFriendsFound": "No friends found",
-    "selectedCount": "{count, plural, one {# friend} other {# friends}} selected",
+    "searchPeople": "Search people\u2026",
+    "noPeopleFound": "No people found",
+    "selectedCount": "{count, plural, one {# person} other {# people}} selected",
+    "dmDisabled": "You can no longer send messages to this person",
+    "noMutualFollows": "No mutual follows yet",
+    "cannotMessage": "You need to follow each other before you can message {name}",
+    "mutualFollowRequired": "Mutual follow required to send messages",
     "createRoom": "Create",
     "back": "Back",
     "newMessages": "New messages",
@@ -871,10 +885,10 @@
     "error": "Failed to load activity feed",
     "retry": "Try again",
     "empty": {
-      "title": "Your friends' games will appear here.",
-      "description": "Play together and your activity will show up in this feed.",
+      "title": "See what people are playing",
+      "description": "Follow people to see their games here.",
       "createGame": "Create a game",
-      "findFriends": "Find friends"
+      "findPeople": "Find people"
     }
   },
   "settings": {
@@ -905,7 +919,7 @@
       },
       "friends": {
         "title": "Play With Friends",
-        "description": "Find your people, add them as friends, and never wonder who\u2019s free to play again. Teams form fast when everyone\u2019s already connected."
+        "description": "Find your people, follow them, and never wonder who\u2019s free to play again. Teams form fast when everyone\u2019s already connected."
       },
       "memories": {
         "title": "Capture the Moments",
@@ -942,9 +956,9 @@
         "title": "1. Sign Up",
         "description": "Create your account in about 10 seconds. We\u2019ll even let you skip the part where you pretend to read the terms of service."
       },
-      "findFriends": {
+      "findPeople": {
         "title": "2. Find Your People",
-        "description": "Search for friends, send requests, and build your crew. Pro tip: add that one friend who always brings snacks."
+        "description": "Search for people, follow them, and build your crew. Pro tip: follow that one person who always brings snacks."
       },
       "createGame": {
         "title": "3. Create a Game",
