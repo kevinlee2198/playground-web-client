@@ -143,7 +143,7 @@ export function AddLinkDialog({
       if (result.success && result.gameMedia) {
         onMediaAdded(result.gameMedia);
         handleOpenChange(false);
-        toast.success(t("addLinkDialog.confirm"));
+        toast.success(t("linkAdded"));
       } else if (result.errorType === "RateLimitedError") {
         const seconds = result.retryAfterSeconds ?? 60;
         setRateLimitCountdown(seconds);
