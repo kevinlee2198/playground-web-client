@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { TRUSTED_EMBED_DOMAINS } from "./src/lib/embed-config";
+
+const frameSrc = [
+  "'self'",
+  ...TRUSTED_EMBED_DOMAINS.map((d) => `https://${d}`),
+].join(" ");
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -12,8 +18,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value:
-              "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://www.tiktok.com https://player.twitch.tv https://www.instagram.com",
+            value: `frame-src ${frameSrc}`,
           },
         ],
       },

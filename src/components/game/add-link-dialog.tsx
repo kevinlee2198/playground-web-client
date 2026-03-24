@@ -25,7 +25,7 @@ import type {
 import { useForm } from "@tanstack/react-form";
 import { Link as LinkIcon, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -54,22 +54,27 @@ export function AddLinkDialog({
   >(null);
   const [isPending, startTransition] = useTransition();
 
-  const urlSchema = z.object({
-    url: z
-      .string()
-      .url({ message: t("addLinkDialog.invalidUrl") })
-      .refine((val) => val.startsWith("https://"), {
-        message: t("errors.invalidScheme"),
+  const urlSchema = useMemo(
+    () =>
+      z.object({
+        url: z.url({
+          protocol: /^https$/,
+          error: t("addLinkDialog.invalidUrl"),
+        }),
       }),
-  });
+    [t],
+  );
 
-  const URL_ERROR_MESSAGES: Record<UrlResolutionErrorCode, string> = {
-    INVALID_SCHEME: t("errors.invalidScheme"),
-    SSRF_BLOCKED: t("errors.urlCannotBeAccessed"),
-    TIMEOUT: t("errors.urlTimeout"),
-    UNREACHABLE: t("errors.urlUnreachable"),
-    UNSUPPORTED_FORMAT: t("errors.unsupportedFormat"),
-  };
+  const URL_ERROR_MESSAGES = useMemo<Record<UrlResolutionErrorCode, string>>(
+    () => ({
+      INVALID_SCHEME: t("errors.invalidScheme"),
+      SSRF_BLOCKED: t("errors.urlCannotBeAccessed"),
+      TIMEOUT: t("errors.urlTimeout"),
+      UNREACHABLE: t("errors.urlUnreachable"),
+      UNSUPPORTED_FORMAT: t("errors.unsupportedFormat"),
+    }),
+    [t],
+  );
 
   const form = useForm({
     defaultValues: {

@@ -39,10 +39,10 @@ export function EmbedPlayer({
           src={embedUrl}
           title={title ?? `${source} video`}
           className="h-full w-full transition-opacity motion-safe:duration-300"
-          sandbox="allow-scripts allow-same-origin"
+          sandbox="allow-scripts allow-same-origin allow-popups"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
-          loading="lazy"
+          loading={autoLoad ? "eager" : "lazy"}
           referrerPolicy="no-referrer"
         />
       </div>
