@@ -3,9 +3,9 @@
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import {
   errorFragment,
+  gameMediaFragment,
   gameMetadataFragment,
   participantNodeFragment,
-  resourceFragment,
   viewerFollowingPlayersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
@@ -20,7 +20,7 @@ import type {
   GameSortParams,
   UpdateGameInput,
 } from "@/lib/types/game";
-import type { Resource } from "@/lib/types/resource";
+import type { GameMediaNode } from "@/lib/types/game-media";
 import { EnumType } from "json-to-graphql-query";
 import { revalidatePath } from "next/cache";
 
@@ -622,7 +622,7 @@ export async function loadGameMedia(
   gameId: number,
   first: number,
   after?: string,
-): Promise<{ edges: Edge<Resource>[]; pageInfo: PageInfo } | null> {
+): Promise<{ edges: Edge<GameMediaNode>[]; pageInfo: PageInfo } | null> {
   try {
     const response = await authQuery({
       game: {
@@ -634,7 +634,7 @@ export async function loadGameMedia(
           },
           edges: {
             cursor: true,
-            node: resourceFragment,
+            node: gameMediaFragment,
           },
           pageInfo: {
             hasNextPage: true,

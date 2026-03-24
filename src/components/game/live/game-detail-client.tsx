@@ -60,7 +60,8 @@ interface GameDetailClientProps {
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
   playerId: number;
-  canUpload: boolean;
+  currentUserId: string | null;
+  canContribute: boolean;
   children: ReactNode;
 }
 
@@ -76,7 +77,8 @@ export function GameDetailClient({
   initialBaseballPitchingStats,
   initialBaseballFieldingStats,
   playerId,
-  canUpload,
+  currentUserId: _currentUserId,
+  canContribute,
   children,
 }: GameDetailClientProps) {
   const t = useTranslations();
@@ -209,7 +211,7 @@ export function GameDetailClient({
           gameId={state.game.id}
           initialMedia={game.media.edges}
           initialPageInfo={game.media.pageInfo}
-          canUpload={canUpload}
+          canUpload={canContribute}
           isParticipant={isParticipant}
         />
       </section>

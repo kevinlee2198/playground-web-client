@@ -1,9 +1,9 @@
 "use client";
 
 import { loadGameMedia } from "@/app/[locale]/game/actions";
+import { deleteGameMedia } from "@/app/[locale]/game/media-actions";
 import {
   confirmUpload,
-  deleteResource,
   requestGameMediaUpload,
 } from "@/app/[locale]/upload/actions";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { TypographyH4 } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
-import type { Resource } from "@/lib/types/resource";
+import type { GameMediaNode } from "@/lib/types/game-media";
 import {
   getAcceptAttribute,
   getMaxSizeLabel,
@@ -29,7 +29,7 @@ import { GameMediaUploadPlaceholder } from "./game-media-upload-placeholder";
 
 interface GameMediaGalleryProps {
   gameId: number;
-  initialMedia: Edge<Resource>[];
+  initialMedia: Edge<GameMediaNode>[];
   initialPageInfo: PageInfo;
   canUpload: boolean;
   isParticipant: boolean;
@@ -55,7 +55,7 @@ export function GameMediaGallery({
     Map<string, UploadingFile>
   >(new Map());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [resourceToDelete, setResourceToDelete] = useState<string | null>(null);
+  const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,7 +119,7 @@ export function GameMediaGallery({
 
         // 3. Confirm upload
         const confirmResult = await confirmUpload(requestResult.resourceId);
-        if (!confirmResult.success || confirmResult.kind !== "resource") {
+        if (!confirmResult.success || confirmResult.kind !== "gameMedia") {
           toast.error(t("media.errors.saveFailed", { filename: file.name }));
           setUploadingFiles((prev) => {
             const next = new Map(prev);
@@ -130,13 +130,16 @@ export function GameMediaGallery({
         }
 
         // 4. Success: remove placeholder, add to media
-        const resource = confirmResult.resource;
+        const gameMedia = confirmResult.gameMedia;
         setUploadingFiles((prev) => {
           const next = new Map(prev);
           next.delete(fileId);
           return next;
         });
-        setMedia((prev) => [...prev, { cursor: resource.id, node: resource }]);
+        setMedia((prev) => [
+          ...prev,
+          { cursor: gameMedia.id, node: gameMedia },
+        ]);
         toast.success(t("media.success"));
       } catch {
         setUploadingFiles((prev) => {
@@ -198,16 +201,16 @@ export function GameMediaGallery({
     [t, uploadSingleFile],
   );
 
-  function handleDeleteClick(resourceId: string): void {
-    setResourceToDelete(resourceId);
+  function handleDeleteClick(mediaId: string): void {
+    setMediaToDelete(mediaId);
     setDeleteDialogOpen(true);
   }
 
   async function handleDeleteConfirm(): Promise<void> {
-    if (!resourceToDelete) return;
+    if (!mediaToDelete) return;
 
     setIsDeleting(true);
-    const result = await deleteResource(resourceToDelete);
+    const result = await deleteGameMedia(mediaToDelete);
 
     if (!result.success) {
       toast.error(result.message || t("media.errors.deleteFailed"));
@@ -216,11 +219,11 @@ export function GameMediaGallery({
     }
 
     setMedia((prev) =>
-      prev.filter((edge) => edge.node.id !== resourceToDelete),
+      prev.filter((edge) => edge.node.id !== mediaToDelete),
     );
     toast.success(t("media.deleted"));
     setDeleteDialogOpen(false);
-    setResourceToDelete(null);
+    setMediaToDelete(null);
     setIsDeleting(false);
   }
 
@@ -283,7 +286,7 @@ export function GameMediaGallery({
               {media.map((edge) => (
                 <GameMediaItem
                   key={edge.node.id}
-                  resource={edge.node}
+                  media={edge.node}
                   isParticipant={isParticipant}
                   onDelete={handleDeleteClick}
                 />

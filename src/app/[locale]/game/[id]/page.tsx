@@ -4,16 +4,21 @@ import { GameDetailHero } from "@/components/game/game-detail-hero";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Link, redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameStatus, getFormatFromMetadata, SportType } from "@/lib/constants";
 import {
+  GameStatus,
+  GameVisibility,
+  getFormatFromMetadata,
+  SportType,
+} from "@/lib/constants";
+import {
+  gameMediaFragment,
   gameMetadataFragment,
   locationFragment,
   participantDetailNodeFragment,
   playerRefFragment,
-  resourceFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
-import { authQuery } from "@/lib/graphql-request";
+import { authQuery, query } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
 import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
@@ -70,64 +75,92 @@ export async function generateMetadata({
   };
 }
 
+const gameQueryFields = {
+  id: true,
+  description: true,
+  startDate: true,
+  endDate: true,
+  sportType: true,
+  metadata: gameMetadataFragment,
+  gameStatus: true,
+  resultsFinalized: true,
+  viewerGameRole: true,
+  visibility: true,
+  viewerInvitation: viewerInvitationFragment,
+  location: locationFragment,
+  participants: {
+    __args: { first: 50 },
+    edges: {
+      cursor: true,
+      node: participantDetailNodeFragment,
+    },
+    pageInfo: { hasNextPage: true, endCursor: true },
+  },
+  media: {
+    __args: { first: 12 },
+    edges: {
+      cursor: true,
+      node: gameMediaFragment,
+    },
+    pageInfo: { hasNextPage: true, endCursor: true },
+  },
+};
+
 export default async function GameDetailPage({ params }: PageProps) {
   const { locale, id } = await params;
   const t = await getTranslations();
 
-  // Auth check
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) {
-    redirect({ href: "/", locale });
-  }
 
-  // Fetch current user's player id (player is auto-created, always non-null)
-  const meResponse = await authQuery({
-    me: {
-      id: true,
-      player: {
+  let game: GameDetail | null;
+  let currentUserId: string | null = null;
+  let playerId: number | null = null;
+  let isParticipant = false;
+
+  if (session?.user) {
+    // Authenticated flow: fetch user info and game with auth
+    const meResponse = await authQuery({
+      me: {
         id: true,
-      },
-    },
-  });
-
-  const playerId: number = meResponse.data.me.player.id;
-
-  // Fetch game details
-  const gameResponse = await authQuery({
-    game: {
-      __args: { id },
-      id: true,
-      description: true,
-      startDate: true,
-      endDate: true,
-      sportType: true,
-      metadata: gameMetadataFragment,
-      gameStatus: true,
-      resultsFinalized: true,
-      viewerGameRole: true,
-      visibility: true,
-      viewerInvitation: viewerInvitationFragment,
-      location: locationFragment,
-      participants: {
-        __args: { first: 50 },
-        edges: {
-          cursor: true,
-          node: participantDetailNodeFragment,
+        player: {
+          id: true,
         },
-        pageInfo: { hasNextPage: true, endCursor: true },
       },
-      media: {
-        __args: { first: 12 },
-        edges: {
-          cursor: true,
-          node: resourceFragment,
-        },
-        pageInfo: { hasNextPage: true, endCursor: true },
-      },
-    },
-  });
+    });
 
-  const game: GameDetail | null = gameResponse.data?.game;
+    currentUserId = meResponse.data.me.id;
+    playerId = meResponse.data.me.player.id;
+
+    const gameResponse = await authQuery({
+      game: { ...gameQueryFields, __args: { id } },
+    });
+
+    game = gameResponse.data?.game ?? null;
+
+    if (game && playerId != null) {
+      isParticipant = game.participants.edges.some((edge) => {
+        const node = edge.node;
+        if (node.__typename === "TeamInstance") {
+          return node.players.some((p) => p.id === playerId);
+        }
+        if (node.__typename === "IndividualParticipant") {
+          return node.player.id === playerId;
+        }
+        return false;
+      });
+    }
+  } else {
+    // Unauthenticated flow: fetch game without auth to check visibility
+    const gameResponse = await query({
+      game: { ...gameQueryFields, __args: { id } },
+    });
+
+    game = gameResponse.data?.game ?? null;
+
+    if (!game || game.visibility !== GameVisibility.PUBLIC) {
+      redirect({ href: "/", locale });
+    }
+  }
 
   if (!game) {
     return (
@@ -150,306 +183,307 @@ export default async function GameDetailPage({ params }: PageProps) {
     );
   }
 
-  // Determine if current player is a participant
-  const isParticipant =
-    game.participants.edges.some((edge) => {
-      const node = edge.node;
-      if (node.__typename === "TeamInstance") {
-        return node.players.some((p) => p.id === playerId);
-      }
-      if (node.__typename === "IndividualParticipant") {
-        return node.player.id === playerId;
-      }
-      return false;
-    });
-
-  const canUpload =
-    isParticipant &&
+  const canContribute =
+    (isParticipant || game.viewerGameRole != null) &&
     (game.gameStatus === GameStatus.IN_PROGRESS ||
       game.gameStatus === GameStatus.COMPLETE);
 
-  const locationText = game.location ? formatAddress(game.location.address) : null;
+  const locationText = game.location
+    ? formatAddress(game.location.address)
+    : null;
 
+  // Sport-specific stats (only fetched for authenticated users)
   let initialBoxScores: { node: BasketballBoxScoreNode }[] = [];
-  if (
-    game.sportType === SportType.BASKETBALL &&
-    game.gameStatus !== GameStatus.SCHEDULED
-  ) {
-    const boxScoreResponse = await authQuery({
-      basketballBoxScores: {
-        __args: { input: { gameIds: [game.id] }, first: 50 },
-        edges: {
-          node: {
-            id: true,
-            player: playerRefFragment,
-            points: true,
-            assists: true,
-            totalRebounds: true,
-            offensiveRebounds: true,
-            defensiveRebounds: true,
-            steals: true,
-            blocks: true,
-            turnovers: true,
-            personalFouls: true,
-            fieldGoalsMade: true,
-            fieldGoalsAttempted: true,
-            fieldGoalPercentage: true,
-            threePointersMade: true,
-            threePointersAttempted: true,
-            threePointerPercentage: true,
-            twoPointersMade: true,
-            twoPointersAttempted: true,
-            twoPointerPercentage: true,
-            freeThrowsMade: true,
-            freeThrowsAttempted: true,
-            freeThrowPercentage: true,
-          },
-        },
-      },
-    });
-    initialBoxScores =
-      boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
-  }
-
   let initialPickleballStats: { node: PickleballStatisticsNode }[] = [];
-  if (
-    game.sportType === SportType.PICKLEBALL &&
-    game.gameStatus !== GameStatus.SCHEDULED
-  ) {
-    const statsResponse = await authQuery({
-      pickleballStatistics: {
-        __args: { input: { gameIds: [game.id] }, first: 50 },
-        edges: {
-          node: {
-            id: true,
-            player: playerRefFragment,
-            aces: true,
-            faults: true,
-            doubleFaults: true,
-            pointsWon: true,
-            winners: true,
-            unforcedErrors: true,
-            forcedErrors: true,
-            dinks: true,
-            drives: true,
-            drops: true,
-            lobs: true,
-            volleys: true,
-            overheads: true,
-          },
-        },
-      },
-    });
-    initialPickleballStats =
-      statsResponse.data?.pickleballStatistics?.edges ?? [];
-  }
-
   let initialTennisStats: { node: TennisStatisticsNode }[] = [];
-  if (
-    game.sportType === SportType.TENNIS &&
-    game.gameStatus !== GameStatus.SCHEDULED
-  ) {
-    const tennisStatsResponse = await authQuery({
-      tennisStatistics: {
-        __args: { input: { gameIds: [game.id] }, first: 50 },
-        edges: {
-          node: {
-            id: true,
-            player: playerRefFragment,
-            aces: true,
-            doubleFaults: true,
-            firstServesIn: true,
-            firstServeAttempts: true,
-            firstServePointsWon: true,
-            firstServePointsPlayed: true,
-            secondServePointsWon: true,
-            secondServePointsPlayed: true,
-            breakPointsConverted: true,
-            breakPointsFaced: true,
-            returnPointsWon: true,
-            returnPointsPlayed: true,
-            winners: true,
-            unforcedErrors: true,
-            totalPointsWon: true,
-          },
-        },
-      },
-    });
-    initialTennisStats =
-      tennisStatsResponse.data?.tennisStatistics?.edges ?? [];
-  }
-
-  let initialFootballOffensiveStats: { node: FootballOffensiveStatsNode }[] = [];
-  let initialFootballDefensiveStats: { node: FootballDefensiveStatsNode }[] = [];
-  let initialFootballSpecialTeamsStats: { node: FootballSpecialTeamsStatsNode }[] = [];
-
+  let initialFootballOffensiveStats: { node: FootballOffensiveStatsNode }[] =
+    [];
+  let initialFootballDefensiveStats: { node: FootballDefensiveStatsNode }[] =
+    [];
+  let initialFootballSpecialTeamsStats: {
+    node: FootballSpecialTeamsStatsNode;
+  }[] = [];
   let initialBaseballBattingStats: { node: BaseballBattingStatsNode }[] = [];
   let initialBaseballPitchingStats: { node: BaseballPitchingStatsNode }[] = [];
   let initialBaseballFieldingStats: { node: BaseballFieldingStatsNode }[] = [];
 
-  if (
-    game.sportType === SportType.FOOTBALL &&
-    game.gameStatus !== GameStatus.SCHEDULED
-  ) {
-    const [offResponse, defResponse, stResponse] = await Promise.all([
-      authQuery({
-        footballOffensiveStats: {
+  if (session?.user) {
+    if (
+      game.sportType === SportType.BASKETBALL &&
+      game.gameStatus !== GameStatus.SCHEDULED
+    ) {
+      const boxScoreResponse = await authQuery({
+        basketballBoxScores: {
           __args: { input: { gameIds: [game.id] }, first: 50 },
           edges: {
             node: {
               id: true,
               player: playerRefFragment,
-              completions: true,
-              passAttempts: true,
-              passingYards: true,
-              passingTouchdowns: true,
-              interceptionsThrown: true,
-              sacksTaken: true,
-              sackYardsLost: true,
-              rushAttempts: true,
-              rushingYards: true,
-              rushingTouchdowns: true,
-              fumbles: true,
-              fumblesLost: true,
-              receptions: true,
-              targets: true,
-              receivingYards: true,
-              receivingTouchdowns: true,
-            },
-          },
-        },
-      }),
-      authQuery({
-        footballDefensiveStats: {
-          __args: { input: { gameIds: [game.id] }, first: 50 },
-          edges: {
-            node: {
-              id: true,
-              player: playerRefFragment,
-              soloTackles: true,
-              assistedTackles: true,
-              sacks: true,
-              tacklesForLoss: true,
-              passesDefended: true,
-              interceptions: true,
-              interceptionReturnYards: true,
-              interceptionReturnTouchdowns: true,
-              forcedFumbles: true,
-              fumbleRecoveries: true,
-              fumbleReturnYards: true,
-              fumbleReturnTouchdowns: true,
-              safeties: true,
-            },
-          },
-        },
-      }),
-      authQuery({
-        footballSpecialTeamsStats: {
-          __args: { input: { gameIds: [game.id] }, first: 50 },
-          edges: {
-            node: {
-              id: true,
-              player: playerRefFragment,
+              points: true,
+              assists: true,
+              totalRebounds: true,
+              offensiveRebounds: true,
+              defensiveRebounds: true,
+              steals: true,
+              blocks: true,
+              turnovers: true,
+              personalFouls: true,
               fieldGoalsMade: true,
               fieldGoalsAttempted: true,
-              longestFieldGoal: true,
-              extraPointsMade: true,
-              extraPointsAttempted: true,
-              punts: true,
-              puntYards: true,
-              longestPunt: true,
-              puntReturns: true,
-              puntReturnYards: true,
-              puntReturnTouchdowns: true,
-              kickReturns: true,
-              kickReturnYards: true,
-              kickReturnTouchdowns: true,
+              fieldGoalPercentage: true,
+              threePointersMade: true,
+              threePointersAttempted: true,
+              threePointerPercentage: true,
+              twoPointersMade: true,
+              twoPointersAttempted: true,
+              twoPointerPercentage: true,
+              freeThrowsMade: true,
+              freeThrowsAttempted: true,
+              freeThrowPercentage: true,
             },
           },
         },
-      }),
-    ]);
+      });
+      initialBoxScores =
+        boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+    }
 
-    initialFootballOffensiveStats = offResponse.data?.footballOffensiveStats?.edges ?? [];
-    initialFootballDefensiveStats = defResponse.data?.footballDefensiveStats?.edges ?? [];
-    initialFootballSpecialTeamsStats = stResponse.data?.footballSpecialTeamsStats?.edges ?? [];
-  }
-
-  if (
-    game.sportType === SportType.BASEBALL &&
-    game.gameStatus !== GameStatus.SCHEDULED
-  ) {
-    const [batResponse, pitchResponse, fieldResponse] = await Promise.all([
-      authQuery({
-        baseballBattingStats: {
+    if (
+      game.sportType === SportType.PICKLEBALL &&
+      game.gameStatus !== GameStatus.SCHEDULED
+    ) {
+      const statsResponse = await authQuery({
+        pickleballStatistics: {
           __args: { input: { gameIds: [game.id] }, first: 50 },
           edges: {
             node: {
               id: true,
               player: playerRefFragment,
-              atBats: true,
-              runs: true,
-              hits: true,
-              doubles: true,
-              triples: true,
-              homeRuns: true,
-              rbi: true,
-              walks: true,
-              strikeouts: true,
-              stolenBases: true,
-              caughtStealing: true,
-              hitByPitch: true,
-              sacrifices: true,
-              battingAverage: true,
+              aces: true,
+              faults: true,
+              doubleFaults: true,
+              pointsWon: true,
+              winners: true,
+              unforcedErrors: true,
+              forcedErrors: true,
+              dinks: true,
+              drives: true,
+              drops: true,
+              lobs: true,
+              volleys: true,
+              overheads: true,
             },
           },
         },
-      }),
-      authQuery({
-        baseballPitchingStats: {
-          __args: { input: { gameIds: [game.id] }, first: 50 },
-          edges: {
-            node: {
-              id: true,
-              player: playerRefFragment,
-              inningsPitched: true,
-              hitsAllowed: true,
-              runsAllowed: true,
-              earnedRuns: true,
-              walks: true,
-              strikeouts: true,
-              homeRunsAllowed: true,
-              hitBatsmen: true,
-              wildPitches: true,
-              pitchCount: true,
-              win: true,
-              loss: true,
-              creditedSave: true,
-              era: true,
-            },
-          },
-        },
-      }),
-      authQuery({
-        baseballFieldingStats: {
-          __args: { input: { gameIds: [game.id] }, first: 50 },
-          edges: {
-            node: {
-              id: true,
-              player: playerRefFragment,
-              putouts: true,
-              assists: true,
-              errors: true,
-              fieldingPercentage: true,
-            },
-          },
-        },
-      }),
-    ]);
+      });
+      initialPickleballStats =
+        statsResponse.data?.pickleballStatistics?.edges ?? [];
+    }
 
-    initialBaseballBattingStats = batResponse.data?.baseballBattingStats?.edges ?? [];
-    initialBaseballPitchingStats = pitchResponse.data?.baseballPitchingStats?.edges ?? [];
-    initialBaseballFieldingStats = fieldResponse.data?.baseballFieldingStats?.edges ?? [];
+    if (
+      game.sportType === SportType.TENNIS &&
+      game.gameStatus !== GameStatus.SCHEDULED
+    ) {
+      const tennisStatsResponse = await authQuery({
+        tennisStatistics: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              aces: true,
+              doubleFaults: true,
+              firstServesIn: true,
+              firstServeAttempts: true,
+              firstServePointsWon: true,
+              firstServePointsPlayed: true,
+              secondServePointsWon: true,
+              secondServePointsPlayed: true,
+              breakPointsConverted: true,
+              breakPointsFaced: true,
+              returnPointsWon: true,
+              returnPointsPlayed: true,
+              winners: true,
+              unforcedErrors: true,
+              totalPointsWon: true,
+            },
+          },
+        },
+      });
+      initialTennisStats =
+        tennisStatsResponse.data?.tennisStatistics?.edges ?? [];
+    }
+
+    if (
+      game.sportType === SportType.FOOTBALL &&
+      game.gameStatus !== GameStatus.SCHEDULED
+    ) {
+      const [offResponse, defResponse, stResponse] = await Promise.all([
+        authQuery({
+          footballOffensiveStats: {
+            __args: { input: { gameIds: [game.id] }, first: 50 },
+            edges: {
+              node: {
+                id: true,
+                player: playerRefFragment,
+                completions: true,
+                passAttempts: true,
+                passingYards: true,
+                passingTouchdowns: true,
+                interceptionsThrown: true,
+                sacksTaken: true,
+                sackYardsLost: true,
+                rushAttempts: true,
+                rushingYards: true,
+                rushingTouchdowns: true,
+                fumbles: true,
+                fumblesLost: true,
+                receptions: true,
+                targets: true,
+                receivingYards: true,
+                receivingTouchdowns: true,
+              },
+            },
+          },
+        }),
+        authQuery({
+          footballDefensiveStats: {
+            __args: { input: { gameIds: [game.id] }, first: 50 },
+            edges: {
+              node: {
+                id: true,
+                player: playerRefFragment,
+                soloTackles: true,
+                assistedTackles: true,
+                sacks: true,
+                tacklesForLoss: true,
+                passesDefended: true,
+                interceptions: true,
+                interceptionReturnYards: true,
+                interceptionReturnTouchdowns: true,
+                forcedFumbles: true,
+                fumbleRecoveries: true,
+                fumbleReturnYards: true,
+                fumbleReturnTouchdowns: true,
+                safeties: true,
+              },
+            },
+          },
+        }),
+        authQuery({
+          footballSpecialTeamsStats: {
+            __args: { input: { gameIds: [game.id] }, first: 50 },
+            edges: {
+              node: {
+                id: true,
+                player: playerRefFragment,
+                fieldGoalsMade: true,
+                fieldGoalsAttempted: true,
+                longestFieldGoal: true,
+                extraPointsMade: true,
+                extraPointsAttempted: true,
+                punts: true,
+                puntYards: true,
+                longestPunt: true,
+                puntReturns: true,
+                puntReturnYards: true,
+                puntReturnTouchdowns: true,
+                kickReturns: true,
+                kickReturnYards: true,
+                kickReturnTouchdowns: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+      initialFootballOffensiveStats =
+        offResponse.data?.footballOffensiveStats?.edges ?? [];
+      initialFootballDefensiveStats =
+        defResponse.data?.footballDefensiveStats?.edges ?? [];
+      initialFootballSpecialTeamsStats =
+        stResponse.data?.footballSpecialTeamsStats?.edges ?? [];
+    }
+
+    if (
+      game.sportType === SportType.BASEBALL &&
+      game.gameStatus !== GameStatus.SCHEDULED
+    ) {
+      const [batResponse, pitchResponse, fieldResponse] = await Promise.all([
+        authQuery({
+          baseballBattingStats: {
+            __args: { input: { gameIds: [game.id] }, first: 50 },
+            edges: {
+              node: {
+                id: true,
+                player: playerRefFragment,
+                atBats: true,
+                runs: true,
+                hits: true,
+                doubles: true,
+                triples: true,
+                homeRuns: true,
+                rbi: true,
+                walks: true,
+                strikeouts: true,
+                stolenBases: true,
+                caughtStealing: true,
+                hitByPitch: true,
+                sacrifices: true,
+                battingAverage: true,
+              },
+            },
+          },
+        }),
+        authQuery({
+          baseballPitchingStats: {
+            __args: { input: { gameIds: [game.id] }, first: 50 },
+            edges: {
+              node: {
+                id: true,
+                player: playerRefFragment,
+                inningsPitched: true,
+                hitsAllowed: true,
+                runsAllowed: true,
+                earnedRuns: true,
+                walks: true,
+                strikeouts: true,
+                homeRunsAllowed: true,
+                hitBatsmen: true,
+                wildPitches: true,
+                pitchCount: true,
+                win: true,
+                loss: true,
+                creditedSave: true,
+                era: true,
+              },
+            },
+          },
+        }),
+        authQuery({
+          baseballFieldingStats: {
+            __args: { input: { gameIds: [game.id] }, first: 50 },
+            edges: {
+              node: {
+                id: true,
+                player: playerRefFragment,
+                putouts: true,
+                assists: true,
+                errors: true,
+                fieldingPercentage: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+      initialBaseballBattingStats =
+        batResponse.data?.baseballBattingStats?.edges ?? [];
+      initialBaseballPitchingStats =
+        pitchResponse.data?.baseballPitchingStats?.edges ?? [];
+      initialBaseballFieldingStats =
+        fieldResponse.data?.baseballFieldingStats?.edges ?? [];
+    }
   }
 
   return (
@@ -469,8 +503,9 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialBaseballBattingStats={initialBaseballBattingStats}
         initialBaseballPitchingStats={initialBaseballPitchingStats}
         initialBaseballFieldingStats={initialBaseballFieldingStats}
-        playerId={playerId}
-        canUpload={canUpload}
+        playerId={playerId ?? 0}
+        currentUserId={currentUserId}
+        canContribute={canContribute}
       >
         <GameDetailHero game={game} locationText={locationText} />
       </GameDetailClient>
