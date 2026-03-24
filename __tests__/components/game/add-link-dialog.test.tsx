@@ -210,7 +210,9 @@ describe("AddLinkDialog", () => {
       expect(screen.getByText("Sample Video Title")).toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    const addButton = screen.getByRole("button", { name: /add/i });
+    await waitFor(() => expect(addButton).toBeEnabled());
+    fireEvent.click(addButton);
 
     await waitFor(() => {
       expect(addGameMediaLink).toHaveBeenCalledWith(
@@ -251,7 +253,9 @@ describe("AddLinkDialog", () => {
       expect(screen.getByText("Sample Video Title")).toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    const addButton = screen.getByRole("button", { name: /add/i });
+    await waitFor(() => expect(addButton).toBeEnabled());
+    fireEvent.click(addButton);
 
     await waitFor(() => {
       expect(onMediaAdded).toHaveBeenCalledWith(media);
@@ -280,8 +284,10 @@ describe("AddLinkDialog", () => {
       expect(screen.getByText("Sample Video Title")).toBeInTheDocument(),
     );
 
-    // Close the dialog
-    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+    // Wait for transition to settle before clicking Cancel
+    const cancelButton = screen.getByRole("button", { name: /cancel/i });
+    await waitFor(() => expect(cancelButton).toBeEnabled());
+    fireEvent.click(cancelButton);
     expect(onOpenChange).toHaveBeenCalledWith(false);
 
     // Rerender as closed then open again to check state reset
