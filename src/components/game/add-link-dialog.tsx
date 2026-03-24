@@ -84,19 +84,7 @@ export function AddLinkDialog({
   });
 
   useEffect(() => {
-    if (rateLimitCountdown === null || rateLimitCountdown <= 0) {
-      if (rateLimitCountdown === null) {
-        setRateLimitAnnouncement(null);
-      }
-      return;
-    }
-
-    if (rateLimitCountdown === Math.ceil(rateLimitCountdown)) {
-      // Only announce once at the start, not every tick
-      setRateLimitAnnouncement(
-        t("errors.rateLimited", { seconds: rateLimitCountdown }),
-      );
-    }
+    if (rateLimitCountdown === null || rateLimitCountdown <= 0) return;
 
     const timer = setTimeout(() => {
       setRateLimitCountdown((prev) => {
@@ -129,7 +117,9 @@ export function AddLinkDialog({
       if (result.success && result.data) {
         setPreview(result.data);
       } else if (result.errorType === "RateLimitedError") {
-        setRateLimitCountdown(result.retryAfterSeconds ?? 60);
+        const seconds = result.retryAfterSeconds ?? 60;
+        setRateLimitCountdown(seconds);
+        setRateLimitAnnouncement(t("errors.rateLimited", { seconds }));
       } else if (result.errorType === "DuplicateMediaError") {
         setPreview(null);
         setErrorMessage(t("errors.duplicateLink"));
@@ -150,7 +140,9 @@ export function AddLinkDialog({
         handleOpenChange(false);
         toast.success(t("addLinkDialog.confirm"));
       } else if (result.errorType === "RateLimitedError") {
-        setRateLimitCountdown(result.retryAfterSeconds ?? 60);
+        const seconds = result.retryAfterSeconds ?? 60;
+        setRateLimitCountdown(seconds);
+        setRateLimitAnnouncement(t("errors.rateLimited", { seconds }));
       } else if (result.errorType === "DuplicateMediaError") {
         setPreview(null);
         toast.error(t("errors.duplicateLink"));
