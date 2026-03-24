@@ -4,7 +4,7 @@
 
 **Goal:** Evolve the existing photo/video upload gallery into a unified content hub supporting direct uploads, external video embeds, livestreams, and rich link previews.
 
-**Architecture:** Replace `Resource`-based gallery with a `GameMedia` GraphQL interface using four concrete types (`ImageMedia`, `VideoMedia`, `LivestreamMedia`, `LinkMedia`) discriminated by `__typename`. Add a two-phase "Add Link" flow (resolve URL → preview → confirm), embedded video players with click-to-play, and a pinned live stream section. All gallery components remain client components; the page remains a server component for initial data fetch.
+**Architecture:** Replace `Resource`-based gallery with a `GameMedia` GraphQL interface using four concrete types (`ImageMedia`, `VideoMedia`, `LivestreamMedia`, `LinkMedia`) discriminated by `__typename`. Add a two-phase "Add Link" flow (resolve URL -> preview -> confirm), embedded video players with click-to-play, and a pinned live stream section. All gallery components remain client components; the page remains a server component for initial data fetch.
 
 **Tech Stack:** Next.js 16 (App Router), TypeScript strict, React 19 (useTransition), shadcn/ui, Tailwind CSS v4, json-to-graphql-query, next-intl, TanStack Form, Zod v4, Sonner toasts
 
@@ -107,7 +107,7 @@ describe("isEmbeddable", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `npm test -- __tests__/lib/embed-config.test.ts 2>&1 | tee /tmp/embed-test.txt`
-Expected: FAIL — module not found
+Expected: FAIL -- module not found
 
 - [ ] **Step 3: Create game media types**
 
@@ -304,7 +304,7 @@ export const gameMediaFragment = {
 
 - [ ] **Step 2: Add i18n keys to `messages/en.json`**
 
-Replace the existing `game.media` section with the expanded keys from the design doc section 12. Key additions:
+**Merge** the new keys into the existing `game.media` section. Keep existing keys that may still be referenced until their consumers are updated in later tasks. Key additions:
 - `emptyTitle`, `playVideo`, `opensInNewTab`, `privacyDisclosure`, `authRequiredNote`, `rateLimitCleared`
 - `addLinkDialog.*` (title, urlLabel, urlPlaceholder, invalidUrl, resolve, resolving, confirm, adding, cancel, previewTitle, rateLimitCountdown)
 - `delete.noPermission`
@@ -544,33 +544,37 @@ Update the `ConfirmUploadResult` type to a discriminated union and handle `Confi
 3. Add `ConfirmGameMediaUploadResponse` to the `__on` array in the mutation
 4. Handle the new response type in the return logic
 
-- [ ] **Step 3: Update `loadGameMedia` in `game/actions.ts`**
+- [ ] **Step 3: Update `profile-avatar.tsx` for new ConfirmUploadResult**
 
-Change the return type from `Edge<Resource>[]` to `Edge<GameMediaNode>[]`:
-1. Import `gameMediaFragment` instead of `resourceFragment` for the media query
-2. Import `GameMediaNode` from `@/lib/types/game-media`
-3. Update the return type signature
-4. Update the query to use `gameMediaFragment` instead of `resourceFragment`
+`src/components/profile/profile-avatar.tsx` also calls `confirmUpload()` (around line 117-134). Update it to handle the discriminated union:
+```ts
+if (!confirmResult.success) { /* handle error */ return; }
+if (confirmResult.kind !== "resource") { /* unexpected kind */ return; }
+setProfilePicture(confirmResult.resource);
+```
 
 - [ ] **Step 4: Verify build passes**
 
 Run: `npm run build 2>&1 | tee /tmp/build.txt`
-Expected: Build succeeds (server actions are not yet called from any component)
+Expected: Build succeeds
+
+**Note:** `loadGameMedia` return type is NOT changed here — it stays as `Edge<Resource>[]` to keep the existing `GameMediaGallery` consumer working. The return type will be changed atomically with the gallery refactor in Task 11.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/app/[locale]/game/media-actions.ts src/app/[locale]/upload/actions.ts src/app/[locale]/game/actions.ts
-git commit -m "feat(game-media): add media server actions, update confirmUpload and loadGameMedia"
+git add src/app/[locale]/game/media-actions.ts src/app/[locale]/upload/actions.ts src/components/profile/profile-avatar.tsx
+git commit -m "feat(game-media): add media server actions, update confirmUpload discriminated union"
 ```
 
 ---
 
-## Task 4: Update GameDetail type and game page query
+## Task 4: Update GameDetail type, game page query, and GameDetailClient props
 
 **Files:**
 - Modify: `src/lib/types/game.ts`
 - Modify: `src/app/[locale]/game/[id]/page.tsx`
+- Modify: `src/components/game/live/game-detail-client.tsx`
 
 - [ ] **Step 1: Update `GameDetail.media` type in `game.ts`**
 
@@ -586,9 +590,9 @@ media: {
 
 Import `GameMediaNode` from `@/lib/types/game-media`.
 
-- [ ] **Step 2: Update page.tsx — media query**
+- [ ] **Step 2: Update page.tsx -- media query**
 
-Replace `resourceFragment` with `gameMediaFragment` in the game query (around line 119-126):
+Replace `resourceFragment` with `gameMediaFragment` in the game query:
 
 ```ts
 media: {
@@ -603,10 +607,31 @@ media: {
 
 Import `gameMediaFragment` from `@/lib/graphql-fragments`.
 
-- [ ] **Step 3: Update page.tsx — canContribute logic**
+- [ ] **Step 3: Update page.tsx -- unauthenticated access for PUBLIC games**
 
-Replace the existing `canUpload` logic (lines 166-169) with:
+The current page redirects ALL unauthenticated users. Update to allow unauthenticated access for PUBLIC games:
 
+1. First fetch the game with `query()` (unauthenticated) to get `visibility`
+2. If unauthenticated AND `visibility !== "PUBLIC"`, redirect to `/`
+3. If unauthenticated AND `visibility === "PUBLIC"`, render read-only (skip `meResponse` query)
+4. Set `currentUserId = null`, `playerId = null`, `canContribute = false`, `isParticipant = false`
+5. Use `query()` instead of `authQuery()` for the media connection when unauthenticated
+
+- [ ] **Step 4: Update page.tsx -- pass `currentUserId` to GameDetailClient**
+
+For authenticated users, pass `currentUserId`. Keep `canUpload` as before (backward-compatible):
+
+```tsx
+<GameDetailClient
+  game={game}
+  // ... existing sport stats props ...
+  playerId={playerId ?? 0}
+  currentUserId={currentUserId}
+  canUpload={canContribute}
+>
+```
+
+Where `canContribute` replaces the old `canUpload` computation:
 ```ts
 const canContribute =
   (isParticipant || game.viewerGameRole != null) &&
@@ -614,33 +639,29 @@ const canContribute =
     game.gameStatus === GameStatus.COMPLETE);
 ```
 
-- [ ] **Step 4: Update page.tsx — pass new props to GameDetailClient**
+- [ ] **Step 5: Update GameDetailClientProps -- add `currentUserId`**
 
-Update the `GameDetailClient` usage (around line 461-476) to pass new props:
+Add `currentUserId: string | null` to the `GameDetailClientProps` interface. Keep all existing props to avoid breaking anything:
 
-```tsx
-<GameDetailClient
-  game={game}
-  // ... existing sport stats props ...
-  playerId={playerId}
-  currentUserId={meResponse.data.me.id}
-  canContribute={canContribute}
-  isParticipant={isParticipant}
->
+```ts
+interface GameDetailClientProps {
+  // ... all existing props ...
+  currentUserId: string | null;  // NEW -- Keycloak user ID, null for unauthenticated
+}
 ```
 
-Remove `canUpload` prop (replaced by `canContribute`).
+Do NOT pass `isParticipant` as a prop -- `GameDetailClient` already computes it live from `state.game.participants.edges` via the WebSocket reducer, keeping it reactive to live events. `canContribute` will also be computed live inside `GameDetailClient` in Task 12.
 
-- [ ] **Step 5: Verify lint passes**
+- [ ] **Step 6: Verify build passes**
 
-Run: `npm run lint 2>&1 | tee /tmp/lint.txt`
-Expected: TypeScript errors expected in `game-detail-client.tsx` (props mismatch — will be fixed in next task)
+Run: `npm run build 2>&1 | tee /tmp/build.txt`
+Expected: Build succeeds (all props are backward-compatible)
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/lib/types/game.ts src/app/[locale]/game/[id]/page.tsx
-git commit -m "feat(game-media): update GameDetail type and page query for GameMediaNode"
+git add src/lib/types/game.ts src/app/[locale]/game/[id]/page.tsx src/components/game/live/game-detail-client.tsx
+git commit -m "feat(game-media): update GameDetail type, page query, and public game access"
 ```
 
 ---
@@ -762,7 +783,7 @@ describe("EmbedPlayer", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `npm test -- __tests__/components/game/embed-player.test.tsx 2>&1 | tee /tmp/embed-player-test.txt`
-Expected: FAIL — module not found
+Expected: FAIL -- module not found
 
 - [ ] **Step 3: Implement EmbedPlayer**
 
@@ -775,6 +796,7 @@ Create `src/components/game/embed-player.tsx`. Key implementation details:
 - TikTok: `aspect-[9/16] max-w-sm mx-auto` instead of `aspect-video`
 - Fade transition: `motion-safe:duration-300` opacity transition between thumbnail and iframe
 - Comment on sandbox explaining security implications
+- Privacy disclosure shows when `gameVisibility !== "PUBLIC"` (i.e., both PRIVATE and PROTECTED games show the disclosure)
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -848,7 +870,7 @@ Test that:
 
 Create `src/components/game/live-stream-section.tsx`:
 - Props: `media: LivestreamMediaNode`, `gameVisibility: GameVisibility`
-- Uses `BreathingDot` (existing) in the LIVE badge — NOT `animate-pulse`
+- Uses `BreathingDot` (existing) in the LIVE badge -- NOT `animate-pulse`
 - `<Badge variant="destructive">` with `<BreathingDot />` and sr-only "Currently " prefix
 - `EmbedPlayer` with `autoLoad={true}`
 - `max-w-3xl mx-auto` container
@@ -874,7 +896,7 @@ git commit -m "feat(game-media): add LiveStreamSection with BreathingDot and aut
 - [ ] **Step 1: Write failing tests**
 
 Test the key flows:
-- URL input validation (Zod — empty, invalid URL)
+- URL input validation (Zod -- empty, invalid URL)
 - Resolve button triggers `resolveUrl` server action
 - Preview renders on success
 - Confirm button triggers `addGameMediaLink` server action
@@ -896,15 +918,15 @@ Create `src/components/game/add-link-dialog.tsx`:
 - Uses `Dialog`/`DialogContent`/`DialogHeader`/`DialogTitle` from shadcn/ui
 - `DialogContent className="max-w-md"` per existing pattern
 - URL input with TanStack Form + Zod validation (see design doc for form setup)
-- Phase 1: `handleResolve` → `resolveUrl` server action → set preview or error
-- Phase 2: `handleConfirm` → `addGameMediaLink` server action → `onMediaAdded` + close + toast
+- Phase 1: `handleResolve` -> `resolveUrl` server action -> set preview or error
+- Phase 2: `handleConfirm` -> `addGameMediaLink` server action -> `onMediaAdded` + close + toast
 - `LinkPreviewCard` sub-section: thumbnail, title, description, type/source badges
 - Auth-required note for HUDL source: `t("media.authRequiredNote", { provider: "Hudl" })`
 - Rate limit countdown: `setTimeout` approach (NOT `setInterval`), `rateLimitCountdown` in dependency array
 - sr-only `aria-live="assertive"` region for rate limit start/end announcements
 - State reset on dialog close (`handleOpenChange`)
 - Clear preview on `DuplicateMediaError`
-- Phase 2 errors: `UrlResolutionError` → toast, `DuplicateMediaError` → toast, `RateLimitedError` → countdown
+- Phase 2 errors: `UrlResolutionError` -> toast, `DuplicateMediaError` -> toast, `RateLimitedError` -> countdown
 - Focus management: focus moves to "Add" button after preview renders
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -927,12 +949,12 @@ git commit -m "feat(game-media): add AddLinkDialog with two-phase resolve/confir
 - [ ] **Step 1: Write/update tests**
 
 Test that `GameMediaItem` renders the correct sub-component for each `__typename`:
-- `ImageMedia` → image with thumbnail
-- `VideoMedia` with `source === "UPLOAD"` → video player
-- `VideoMedia` with `embedUrl` and embeddable source → `EmbedMediaItem` (click-to-play)
-- `VideoMedia` with non-embeddable `embedUrl` → fallback `LinkCardMediaItem`
-- `LinkMedia` → `LinkCardMediaItem`
-- `LivestreamMedia` → should NOT render in the grid (filtered out upstream)
+- `ImageMedia` -> image with thumbnail
+- `VideoMedia` with `source === "UPLOAD"` -> video player
+- `VideoMedia` with `embedUrl` and embeddable source -> `EmbedMediaItem` (click-to-play)
+- `VideoMedia` with non-embeddable `embedUrl` -> fallback `LinkCardMediaItem`
+- `LinkMedia` -> `LinkCardMediaItem`
+- `LivestreamMedia` -> should NOT render in the grid (filtered out upstream)
 - Delete button visible when `canDelete === true`
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -946,7 +968,7 @@ Update `src/components/game/game-media-item.tsx`:
 - Switch on `media.__typename`:
   - `"ImageMedia"`: Render image (use `media.url` for src, `media.thumbnailUrl` for thumbnail)
   - `"VideoMedia"` with `source === "UPLOAD"`: Render native `<video>` (use `media.url`)
-  - `"VideoMedia"` with `embedUrl`: Check `isEmbeddable(embedUrl)` — if true, render `EmbedPlayer`; if false, render `LinkCardMediaItem`
+  - `"VideoMedia"` with `embedUrl`: Check `isEmbeddable(embedUrl)` -- if true, render `EmbedPlayer`; if false, render `LinkCardMediaItem`
   - `"LinkMedia"`: Render `LinkCardMediaItem`
 - Delete button: position absolute, shown on hover/focus, always visible on touch devices
 
@@ -978,6 +1000,7 @@ interface GameMediaSectionProps {
   initialPageInfo: PageInfo;
   canContribute: boolean;
   currentUserId: string | null;
+  viewerGameRole: GameRole | null;
   gameVisibility: GameVisibility;
 }
 ```
@@ -987,7 +1010,7 @@ Responsibilities:
 - Filters `LivestreamMedia` from the media list for separate rendering
 - Computes `gridMedia` (all non-livestream items) and uses it for the gallery count
 - Renders `LiveStreamSection` above `GameMediaGallery` when a `LivestreamMedia` exists
-- Passes `canContribute`, `currentUserId`, `gameVisibility` through to child components
+- Passes `canContribute`, `currentUserId`, `viewerGameRole`, `gameVisibility` through to child components
 - Renders `MediaControls` (Upload + Add Link buttons) when `canContribute`
 - Manages `AddLinkDialog` open state
 - `onMediaAdded` callback: prepends new media to state
@@ -1011,23 +1034,24 @@ git commit -m "feat(game-media): add GameMediaSection orchestrator"
 - Modify: `src/components/game/game-media-gallery.tsx`
 - Modify: `src/components/game/game-media-upload-placeholder.tsx`
 - Modify: `src/components/game/delete-media-dialog.tsx`
+- Modify: `src/app/[locale]/game/actions.ts` (update `loadGameMedia` return type)
 
 - [ ] **Step 1: Update GameMediaGallery**
 
 Major changes:
-1. **Props**: Change `initialMedia: Edge<Resource>[]` → `initialMedia: Edge<GameMediaNode>[]`, add `currentUserId: string | null`, `gameVisibility: GameVisibility`, remove `isParticipant` (replaced by `canContribute` passed from section)
+1. **Props**: Change `initialMedia: Edge<Resource>[]` -> `initialMedia: Edge<GameMediaNode>[]`, add `currentUserId: string | null`, `viewerGameRole: GameRole | null`, `gameVisibility: GameVisibility`, remove `isParticipant` (replaced by `canContribute` passed from section)
 2. **State**: Change `media` type from `Edge<Resource>[]` to `Edge<GameMediaNode>[]`
-3. **Delete flow**: Change `deleteResource` → `deleteGameMedia` (from `media-actions.ts`)
+3. **Delete flow**: Change `deleteResource` -> `deleteGameMedia` (from `media-actions.ts`)
 4. **Media count**: Use `gridMedia.length` (excluding livestream) for the badge count
 5. **Upload confirm handler**: Check `confirmResult.kind === "gameMedia"` before accessing `confirmResult.gameMedia`
 6. **canDelete computation**: For each item, `canDelete = addedBy.id === currentUserId || viewerGameRole === "OWNER" || viewerGameRole === "EDITOR"`
 7. **Render items**: Pass `GameMediaNode` to `GameMediaItem`, pass `canDelete`, `gameVisibility`
 8. **Empty state**: Use `Empty` component from `src/components/ui/empty.tsx`
-9. **Load more**: Update `loadGameMedia` call (already returns `GameMediaNode[]` from Task 3)
+9. **Load more**: Update `loadGameMedia` in `game/actions.ts` to use `gameMediaFragment` and return `Edge<GameMediaNode>[]` (this change is deferred to this task to keep the build green — see Task 3 note)
 
 - [ ] **Step 2: Update GameMediaUploadPlaceholder**
 
-Change the `onConfirm` callback signature from `(resource: Resource)` to `(gameMedia: GameMediaNode)`. The placeholder itself doesn't change (it shows spinner/error) — the parent gallery handles the confirmed media differently.
+The `GameMediaUploadPlaceholder` component itself does not need props changes -- it still accepts `{ filename, status, onDismiss }`. The upload confirm handling in `GameMediaGallery.uploadSingleFile` must be updated to check `confirmResult.kind === "gameMedia"` and construct the `Edge<GameMediaNode>` from `confirmResult.gameMedia` instead of `confirmResult.resource`.
 
 - [ ] **Step 3: Update DeleteMediaDialog**
 
@@ -1041,8 +1065,8 @@ Expected: Some existing tests may need updates for the new prop types. Fix any f
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/game/game-media-gallery.tsx src/components/game/game-media-upload-placeholder.tsx src/components/game/delete-media-dialog.tsx
-git commit -m "refactor(game-media): update gallery, placeholder, and delete dialog for GameMediaNode"
+git add src/components/game/game-media-gallery.tsx src/components/game/game-media-upload-placeholder.tsx src/components/game/delete-media-dialog.tsx src/app/[locale]/game/actions.ts
+git commit -m "refactor(game-media): update gallery, placeholder, delete dialog, and loadGameMedia for GameMediaNode"
 ```
 
 ---
@@ -1052,21 +1076,18 @@ git commit -m "refactor(game-media): update gallery, placeholder, and delete dia
 **Files:**
 - Modify: `src/components/game/live/game-detail-client.tsx`
 
-- [ ] **Step 1: Update GameDetailClientProps**
+- [ ] **Step 1: Compute `canContribute` live inside GameDetailClient**
+
+Remove the `canUpload` prop from `GameDetailClientProps`. Compute `canContribute` from live state so it reacts to WebSocket events (participants joining/leaving, game status changes):
 
 ```ts
-interface GameDetailClientProps {
-  game: GameDetail;
-  // ... existing sport stats props ...
-  playerId: number;
-  currentUserId: string;
-  canContribute: boolean;
-  isParticipant: boolean;
-  children: ReactNode;
-}
+const canContribute =
+  (isParticipant || state.game.viewerGameRole != null) &&
+  (state.game.gameStatus === GameStatus.IN_PROGRESS ||
+    state.game.gameStatus === GameStatus.COMPLETE);
 ```
 
-Remove `canUpload` prop (replaced by `canContribute`).
+This uses the existing live `isParticipant` (already computed from `state.game.participants.edges`) and `state.game.viewerGameRole` / `state.game.gameStatus` from the WebSocket reducer.
 
 - [ ] **Step 2: Replace GameMediaGallery with GameMediaSection**
 
@@ -1080,6 +1101,7 @@ Replace the gallery section (around lines 207-215):
     initialPageInfo={game.media.pageInfo}
     canContribute={canContribute}
     currentUserId={currentUserId}
+    viewerGameRole={state.game.viewerGameRole}
     gameVisibility={state.game.visibility}
   />
 </section>
@@ -1088,7 +1110,7 @@ Replace the gallery section (around lines 207-215):
 - [ ] **Step 3: Verify build passes**
 
 Run: `npm run build 2>&1 | tee /tmp/build.txt`
-Expected: Build succeeds — the full component tree is now wired up
+Expected: Build succeeds -- the full component tree is now wired up
 
 - [ ] **Step 4: Run all tests**
 
@@ -1111,8 +1133,11 @@ git commit -m "feat(game-media): wire GameMediaSection into GameDetailClient"
 
 - [ ] **Step 1: Add CSP headers**
 
+**Important:** Preserve the existing `createNextIntlPlugin` / `withNextIntl` wrapper. Only add the `headers()` function to the `nextConfig` object:
+
 ```ts
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -1134,7 +1159,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);
 ```
 
 - [ ] **Step 2: Verify dev server starts**
@@ -1253,3 +1279,220 @@ Run: `npx playwright test 2>&1 | tee /tmp/pw-results.txt`
 - [ ] **Step 5: Fix any failures, commit**
 
 All four checks (test, lint, build, Playwright) must pass before the feature is considered complete.
+
+---
+
+## Plan Review (Resolved)
+
+All critical and high issues from the adversarial review have been addressed in the plan above. See below for the original findings and how they were resolved.
+
+### CRITICAL Issues
+
+#### 1. Task 13 CSP config destroys next-intl plugin wrapper (CRITICAL, Confidence: 98%)
+
+**Problem:** Task 13's `next.config.ts` code replaces the entire file with `export default nextConfig`, which removes the `createNextIntlPlugin` / `withNextIntl` wrapper. The current file at `/home/kevinlee/workspace/playground/playground-web-client/next.config.ts` (line 10-11) uses:
+```ts
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);
+```
+The plan's code overwrites this with `export default nextConfig;`, which will break all i18n functionality -- every page using `getTranslations`, `useTranslations`, or locale-based routing will fail.
+
+**Impact:** Complete application breakage. No pages will render correctly.
+
+**Fix:** Preserve the `withNextIntl` wrapper:
+```ts
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    testProxy: !!process.env.PLAYWRIGHT,
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://www.tiktok.com https://player.twitch.tv https://www.instagram.com",
+          },
+        ],
+      },
+    ];
+  },
+};
+
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);
+```
+
+#### 2. Task 3 ConfirmUploadResult change breaks profile-avatar.tsx (CRITICAL, Confidence: 95%)
+
+**Problem:** Task 3 Step 2 changes `ConfirmUploadResult` from `{ success: boolean; resource?: Resource; ... }` to a discriminated union with a `kind` field. This breaks `src/components/profile/profile-avatar.tsx` at lines 118 and 134, which check `confirmResult.resource` directly. The plan does not list `profile-avatar.tsx` as a modified file, and no task addresses this breakage.
+
+The current code at `profile-avatar.tsx:118`:
+```ts
+if (!confirmResult.success || !confirmResult.resource) {
+```
+After the discriminated union change, `resource` is only available on the `kind: "resource"` variant, so `confirmResult.resource` will be a TypeScript error on the union type.
+
+**Impact:** TypeScript compilation failure after Task 3. The build will fail until `profile-avatar.tsx` is updated.
+
+**Fix:** Either:
+- (a) Add `profile-avatar.tsx` to Task 3's modified files list and update it to check `confirmResult.kind === "resource"` before accessing `.resource`, OR
+- (b) Make `ConfirmUploadResult` backward-compatible by keeping `resource?: Resource` alongside the new `kind` and `gameMedia` fields (less clean but avoids cross-file breakage).
+
+### HIGH Issues
+
+#### 3. Task 4 commits with known TypeScript errors, blocking build (HIGH, Confidence: 90%)
+
+**Problem:** Task 4 Step 5 says "Expected: TypeScript errors expected in `game-detail-client.tsx` (props mismatch -- will be fixed in next task)". But Task 5-8 create new standalone components that do NOT fix `game-detail-client.tsx`. The fix comes in Task 12. This means Tasks 4 through 11 (8 tasks) have a broken build.
+
+The plan says to verify the build in Task 10 Step 2, but the build will fail because:
+- `page.tsx` passes `canContribute` and `currentUserId` to `GameDetailClient` (Task 4)
+- `GameDetailClient` still expects `canUpload` (not updated until Task 12)
+
+**Impact:** Cannot verify correctness of Tasks 5-11 with a build check. Any typo or logic error in those tasks won't be caught until Task 12.
+
+**Fix:** Reorder Task 12 (wire up GameDetailClient) immediately after Task 4. Tasks 5-11 create new components that can be committed independently -- they don't need the build to pass to be written/tested in isolation. But wiring up `GameDetailClient` before those tasks will also fail because it references `GameMediaSection` which doesn't exist yet.
+
+Better approach: In Task 4, simultaneously update `GameDetailClientProps` to accept the new props (adding `currentUserId`, `canContribute`; keeping `canUpload` temporarily as optional). This keeps the build green through all tasks.
+
+#### 4. Missing viewerGameRole prop threading for delete permissions (HIGH, Confidence: 92%)
+
+**Problem:** Task 11 Step 1 item 6 says to compute `canDelete = addedBy.id === currentUserId || viewerGameRole === "OWNER" || viewerGameRole === "EDITOR"`. But `viewerGameRole` is never passed as a prop to `GameMediaSection` (Task 10 props interface), `GameMediaGallery` (Task 11), or `GameMediaItem` (Task 9).
+
+The design doc File Changes Summary line 1041 explicitly says "pass `viewerGameRole`", but the implementation plan's `GameMediaSectionProps` (Task 10) does not include it, and no task threads it from `GameDetailClient` through the component tree.
+
+**Impact:** Editors and owners will not be able to delete other users' media items. The `canDelete` computation will only check `addedBy.id === currentUserId`, making the second half of the condition dead code.
+
+**Fix:** Add `viewerGameRole: GameRole | null` to `GameMediaSectionProps` in Task 10 and thread it through to `GameMediaGallery`. The gallery computes `canDelete` using both `currentUserId` and `viewerGameRole`. Alternatively, compute `canDeleteAny: boolean` in `GameMediaSection` from `viewerGameRole` and pass that simpler boolean down.
+
+#### 5. Task 3 loadGameMedia return type change breaks GameMediaGallery at build time (HIGH, Confidence: 88%)
+
+**Problem:** Task 3 Step 3 changes `loadGameMedia` to return `Edge<GameMediaNode>[]` instead of `Edge<Resource>[]`. But `GameMediaGallery` (which calls `loadGameMedia` at line 67-76) still expects `Edge<Resource>[]` and won't be updated until Task 11. This means the build will break after Task 3 -- the plan says "Build succeeds (server actions are not yet called from any component)" but `loadGameMedia` IS already called from `GameMediaGallery`.
+
+Current code at `game-media-gallery.tsx:67`:
+```ts
+const result = await loadGameMedia(gameId, 12, pageInfo.endCursor ?? undefined);
+```
+After changing the return type, `result.edges` will be `Edge<GameMediaNode>[]` but the component's state is `Edge<Resource>[]`. TypeScript will error on the assignment `setMedia((prev) => [...prev, ...result.edges])`.
+
+**Impact:** Build breaks after Task 3, not recoverable until Task 11.
+
+**Fix:** Either:
+- (a) Move the `loadGameMedia` return type change to Task 11 when `GameMediaGallery` is also updated, OR
+- (b) Keep the old `loadGameMedia` signature and create a new `loadGameMediaV2` in Task 3, switching `GameMediaGallery` to use it in Task 11.
+
+#### 6. Plan omits PUBLIC game unauthenticated access changes (HIGH, Confidence: 95%)
+
+**Problem:** The design doc (section 7, "Unauthenticated access for PUBLIC games") requires:
+- Removing the auth redirect for PUBLIC games (`page.tsx` lines 78-81)
+- Using `query()` instead of `authQuery()` when unauthenticated
+- Rendering the gallery as read-only for unauthenticated users
+
+The design doc's File Changes Summary also lists "remove auth redirect for PUBLIC games" for `page.tsx`. No task in the plan addresses any of these requirements.
+
+**Impact:** PUBLIC games will remain inaccessible to unauthenticated users, contradicting the design spec. This is a significant feature gap.
+
+**Fix:** Add a step to Task 4 (or a new task) that:
+1. Removes the hard redirect at `page.tsx:78-81`
+2. Conditionally uses `query()` vs `authQuery()` based on session presence
+3. Sets `currentUserId` to `null` and `canContribute` to `false` when unauthenticated
+4. Passes `playerId` as `null` (or 0) when unauthenticated and skips the `meResponse` query
+
+### MEDIUM Issues
+
+#### 7. isParticipant prop duplication creates stale data risk (MEDIUM, Confidence: 85%)
+
+**Problem:** Task 4 passes `isParticipant` from `page.tsx` as a prop to `GameDetailClient`, but `GameDetailClient` currently computes `isParticipant` live from `state.game.participants.edges` (line 163). The live computation uses the WebSocket-updated reducer state, which means it updates in real-time when participants join/leave. Passing it as a static prop from the server would be stale.
+
+The plan's Task 12 adds `isParticipant` to `GameDetailClientProps`, but doesn't say whether to remove the existing live computation. If both exist, which value should `GameMediaSection` use?
+
+**Impact:** If the server-computed `isParticipant` is used instead of the live-computed one, the media section won't update when a user joins a game via WebSocket. Upload/add-link controls might not appear until page refresh.
+
+**Fix:** Do NOT pass `isParticipant` as a prop. Keep the existing live computation inside `GameDetailClient` and compute `canContribute` there too (using the live `isParticipant` and `state.game.viewerGameRole` and `state.game.gameStatus`). This ensures the media section reacts to live game events.
+
+#### 8. GameMediaUploadPlaceholder has no onConfirm prop (MEDIUM, Confidence: 95%)
+
+**Problem:** Task 11 Step 2 says "Change the `onConfirm` callback signature from `(resource: Resource)` to `(gameMedia: GameMediaNode)`." But the actual `GameMediaUploadPlaceholder` component has no `onConfirm` callback -- its props are `{ filename, status, onDismiss }`. The upload confirm logic is entirely in `GameMediaGallery.uploadSingleFile`.
+
+**Impact:** Implementer confusion. The step describes a change to a prop that doesn't exist.
+
+**Fix:** Rewrite Task 11 Step 2 to: "The `GameMediaUploadPlaceholder` component itself does not need props changes -- it still accepts `{ filename, status, onDismiss }`. The upload confirm handling in `GameMediaGallery.uploadSingleFile` must be updated to check `confirmResult.kind === 'gameMedia'` and construct the `Edge<GameMediaNode>` from `confirmResult.gameMedia` instead of `confirmResult.resource`."
+
+#### 9. PROTECTED game visibility not addressed for privacy disclosure (MEDIUM, Confidence: 80%)
+
+**Problem:** The `GameVisibility` enum has three values: `PUBLIC`, `PROTECTED`, and `PRIVATE`. The design doc and plan only discuss privacy disclosure behavior for `PUBLIC` (no disclosure) and `PRIVATE` (show disclosure). `PROTECTED` visibility is not mentioned.
+
+**Impact:** `PROTECTED` games will either show or not show the privacy disclosure depending on which branch the implementer defaults to. Inconsistent user experience for protected games.
+
+**Fix:** Clarify in the `EmbedPlayer` implementation that `PROTECTED` games should show the privacy disclosure (same as `PRIVATE`), since `PROTECTED` games have restricted access and the same privacy concerns apply. The condition should be `gameVisibility !== "PUBLIC"`.
+
+#### 10. Task 4 line references may be inaccurate (MEDIUM, Confidence: 75%)
+
+**Problem:** Task 4 references specific line numbers in `page.tsx`: "lines 166-169" for `canUpload` logic and "around line 461-476" for `GameDetailClient` usage, and "around line 119-126" for the media query. However, these line numbers are based on the current file state and may shift after Task 2 and Task 3 modify other files. More importantly, the actual current `canUpload` logic is at lines 166-169 (confirmed), the media query is at lines 119-126 (confirmed), and the `GameDetailClient` usage is at lines 461-476 (confirmed).
+
+These are currently accurate but fragile -- if any earlier task adds imports to `page.tsx` (e.g., Task 4 Step 2 imports `gameMediaFragment`), the line numbers shift.
+
+**Impact:** Minor confusion for implementers relying on line numbers.
+
+**Fix:** Use code patterns instead of line numbers (e.g., "Replace the `canUpload` assignment" rather than "lines 166-169"). Or note these are approximate.
+
+### LOW Issues
+
+#### 11. Task 2 i18n key update says "replace" but should "merge" (LOW, Confidence: 85%)
+
+**Problem:** Task 2 Step 2 says "Replace the existing `game.media` section with the expanded keys." The existing section has keys like `upload`, `uploading`, `empty`, `emptyParticipant` that may still be used by other components or the gallery during the intermediate state before Task 11 completes. Replacing (instead of merging) risks removing keys that are still referenced.
+
+**Impact:** If existing keys are removed before their consumers are updated, i18n lookups will return key paths as strings.
+
+**Fix:** Change "Replace" to "Merge the new keys into the existing `game.media` section. Keep existing keys that may still be referenced until their consumers are updated."
+
+#### 12. Test import path for messages uses unusual relative path (LOW, Confidence: 90%)
+
+**Problem:** Task 5's test file imports messages as `import messages from "@/../../messages/en.json"`. This path works but is unusual and fragile. The `@/` prefix maps to `./src/`, so `@/../../messages/en.json` resolves to `./messages/en.json` via `../../` from `src/`.
+
+**Impact:** Functional but non-standard. May confuse other developers.
+
+**Fix:** This is an existing pattern in the codebase (if it exists elsewhere). If not, consider using a direct relative path or verifying this import pattern works with Vitest's module resolution.
+
+### Summary
+
+| # | Issue | Severity | Confidence | Impact |
+|---|-------|----------|------------|--------|
+| 1 | CSP config destroys next-intl plugin | CRITICAL | 98% | All pages break -- no i18n |
+| 2 | ConfirmUploadResult change breaks profile-avatar.tsx | CRITICAL | 95% | Build fails -- unrelated file breaks |
+| 3 | Task 4 commits with known TS errors, 8 tasks with broken build | HIGH | 90% | Cannot verify correctness of Tasks 5-11 |
+| 4 | viewerGameRole not threaded for delete permissions | HIGH | 92% | Editors/owners cannot delete others' media |
+| 5 | loadGameMedia return type change breaks gallery | HIGH | 88% | Build fails after Task 3 |
+| 6 | PUBLIC game unauthenticated access not implemented | HIGH | 95% | Feature gap: public games still auth-gated |
+| 7 | isParticipant prop duplication creates stale data | MEDIUM | 85% | Media controls won't react to live events |
+| 8 | Placeholder has no onConfirm prop (plan describes non-existent change) | MEDIUM | 95% | Implementer confusion |
+| 9 | PROTECTED visibility unaddressed for privacy disclosure | MEDIUM | 80% | Inconsistent UX for protected games |
+| 10 | Line number references fragile | MEDIUM | 75% | Minor implementer confusion |
+| 11 | i18n "replace" should be "merge" | LOW | 85% | Temporary i18n breakage possible |
+| 12 | Unusual test import path for messages | LOW | 90% | Non-standard but functional |
+
+### Recommended Fixes
+
+**For Critical issues:**
+
+1. **CSP config (Issue 1):** Update Task 13's code block to preserve `createNextIntlPlugin` import and `withNextIntl` wrapper. The `headers()` function goes inside `nextConfig`, but the export must remain `withNextIntl(nextConfig)`.
+
+2. **ConfirmUploadResult (Issue 2):** Add `src/components/profile/profile-avatar.tsx` to Task 3's modified files. Update `profile-avatar.tsx` to handle the new discriminated union:
+   ```ts
+   if (!confirmResult.success) { ... }
+   if (confirmResult.kind !== "resource") { ... }
+   setProfilePicture(confirmResult.resource);
+   ```
+
+**For High issues:**
+
+3. **Build breakage ordering (Issues 3 and 5):** Restructure the task ordering so that type changes and their consumers are updated atomically. The safest approach: defer `loadGameMedia` return type change from Task 3 to Task 11, and update `GameDetailClientProps` in Task 4 to accept BOTH old and new props temporarily (add `currentUserId?`, `canContribute?` as optional; keep `canUpload?` as optional). Task 12 then removes the deprecated optional props.
+
+4. **viewerGameRole threading (Issue 4):** Add `viewerGameRole: GameRole | null` to `GameMediaSectionProps` in Task 10 and to `GameMediaGalleryProps` in Task 11. Pass it from `GameDetailClient` via `state.game.viewerGameRole`.
+
+5. **Unauthenticated access (Issue 6):** Add a new step to Task 4 that conditionally skips the auth redirect and `meResponse` query for PUBLIC game visibility. This is a non-trivial change that may warrant its own task.
