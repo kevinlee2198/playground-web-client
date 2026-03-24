@@ -60,7 +60,7 @@ interface GameDetailClientProps {
   initialBaseballBattingStats?: { node: BaseballBattingStatsNode }[];
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
-  playerId: number;
+  playerId: number | null;
   currentUserId: string | null;
   children: ReactNode;
 }
@@ -161,16 +161,18 @@ export function GameDetailClient({
     onReconnect: () => dispatch({ type: "RECONNECTED" }),
   });
 
-  const isParticipant = state.game.participants.edges.some((edge) => {
-    const node = edge.node;
-    if (node.__typename === "TeamInstance") {
-      return node.players.some((p) => p.id === playerId);
-    }
-    if (node.__typename === "IndividualParticipant") {
-      return node.player.id === playerId;
-    }
-    return false;
-  });
+  const isParticipant =
+    playerId != null &&
+    state.game.participants.edges.some((edge) => {
+      const node = edge.node;
+      if (node.__typename === "TeamInstance") {
+        return node.players.some((p) => p.id === playerId);
+      }
+      if (node.__typename === "IndividualParticipant") {
+        return node.player.id === playerId;
+      }
+      return false;
+    });
 
   const canContribute =
     (isParticipant || state.game.viewerGameRole != null) &&
@@ -207,7 +209,9 @@ export function GameDetailClient({
       <GameDetailActions game={state.game} />
 
       <section className="mt-8">
-        <GameParticipants game={state.game} currentPlayerId={playerId} />
+        {playerId != null && (
+          <GameParticipants game={state.game} currentPlayerId={playerId} />
+        )}
       </section>
 
       <section className="mt-8">

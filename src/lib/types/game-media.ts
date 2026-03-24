@@ -44,7 +44,6 @@ export interface VideoMediaNode extends GameMediaBase {
   embedHeight: number | null;
 }
 
-/** When a livestream ends the backend transitions the entity to VideoMedia. */
 export interface LivestreamMediaNode extends GameMediaBase {
   __typename: "LivestreamMedia";
   description: string | null;

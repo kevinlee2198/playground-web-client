@@ -512,6 +512,7 @@
       "addLink": "Add Link",
       "linkAdded": "Link added",
       "live": "LIVE",
+      "addedBy": "Added by @{username}",
       "playVideo": "Play {title}",
       "openInProvider": "Open in {provider}",
       "opensInNewTab": "(opens in new tab)",

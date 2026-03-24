@@ -624,7 +624,10 @@ export async function loadGameMedia(
   after?: string,
 ): Promise<{ edges: Edge<GameMediaNode>[]; pageInfo: PageInfo } | null> {
   try {
-    const response = await authQuery({
+    const session = await auth.api.getSession({ headers: await headers() });
+    const queryFn = session ? authQuery : query;
+
+    const response = await queryFn({
       game: {
         __args: { id: gameId },
         media: {

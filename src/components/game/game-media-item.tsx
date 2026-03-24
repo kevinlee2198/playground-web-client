@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import type { GameVisibility } from "@/lib/constants";
+import { isEmbeddable } from "@/lib/embed-config";
 import type { GameMediaNode } from "@/lib/types/game-media";
 import { Film, Link as LinkIcon, Play, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { EmbedPlayer } from "./embed-player";
 
@@ -18,10 +20,12 @@ function DeleteButton({
   onDelete,
   mediaId,
   stopPropagation,
+  ariaLabel,
 }: {
   onDelete: (id: string) => void;
   mediaId: string;
   stopPropagation?: boolean;
+  ariaLabel: string;
 }) {
   return (
     <Button
@@ -32,7 +36,7 @@ function DeleteButton({
         if (stopPropagation) e.stopPropagation();
         onDelete(mediaId);
       }}
-      aria-label="Delete media"
+      aria-label={ariaLabel}
     >
       <Trash2 className="h-4 w-4" />
     </Button>
@@ -47,6 +51,7 @@ function VideoMediaItem({
 }: GameMediaItemProps & {
   media: Extract<GameMediaNode, { __typename: "VideoMedia" | "LivestreamMedia" }>;
 }) {
+  const t = useTranslations("game.media");
   const [isPlaying, setIsPlaying] = useState(false);
 
   function renderPlayback() {
@@ -55,7 +60,7 @@ function VideoMediaItem({
         <button
           onClick={() => setIsPlaying(true)}
           className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted"
-          aria-label="Play video"
+          aria-label={t("playVideo", { title: media.title ?? media.source })}
         >
           {media.thumbnailUrl ? (
             <img
@@ -110,7 +115,51 @@ function VideoMediaItem({
           onDelete={onDelete}
           mediaId={media.id}
           stopPropagation
+          ariaLabel={t("delete.title")}
         />
+      )}
+    </div>
+  );
+}
+
+function LinkCardFallback({
+  media,
+  canDelete,
+  onDelete,
+  t,
+}: {
+  media: GameMediaNode;
+  canDelete: boolean;
+  onDelete: (id: string) => void;
+  t: ReturnType<typeof useTranslations<"game.media">>;
+}) {
+  return (
+    <div className="group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow">
+      <a
+        href={media.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-4"
+      >
+        {media.thumbnailUrl ? (
+          <img
+            src={media.thumbnailUrl}
+            alt={media.title ?? t("opensInNewTab")}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <>
+            <LinkIcon className="h-10 w-10 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground text-center line-clamp-2">
+              {media.title ?? media.url}
+            </span>
+          </>
+        )}
+      </a>
+
+      {canDelete && (
+        <DeleteButton onDelete={onDelete} mediaId={media.id} ariaLabel={t("delete.title")} />
       )}
     </div>
   );
@@ -122,10 +171,26 @@ export function GameMediaItem({
   gameVisibility,
   onDelete,
 }: GameMediaItemProps) {
+  const t = useTranslations("game.media");
+
   if (
     media.__typename === "VideoMedia" ||
     media.__typename === "LivestreamMedia"
   ) {
+    if (
+      media.__typename === "VideoMedia" &&
+      media.embedUrl &&
+      !isEmbeddable(media.embedUrl)
+    ) {
+      return (
+        <LinkCardFallback
+          media={media}
+          canDelete={canDelete}
+          onDelete={onDelete}
+          t={t}
+        />
+      );
+    }
     return (
       <VideoMediaItem
         media={media}
@@ -148,7 +213,7 @@ export function GameMediaItem({
           {media.thumbnailUrl ? (
             <img
               src={media.thumbnailUrl}
-              alt={media.title ?? "Link preview"}
+              alt={media.title ?? t("opensInNewTab")}
               loading="lazy"
               className="h-full w-full object-cover"
             />
@@ -163,13 +228,12 @@ export function GameMediaItem({
         </a>
 
         {canDelete && (
-          <DeleteButton onDelete={onDelete} mediaId={media.id} />
+          <DeleteButton onDelete={onDelete} mediaId={media.id} ariaLabel={t("delete.title")} />
         )}
       </div>
     );
   }
 
-  // ImageMedia
   const thumbnailSrc = media.thumbnailUrl ?? media.url;
 
   return (
@@ -182,14 +246,14 @@ export function GameMediaItem({
       >
         <img
           src={thumbnailSrc}
-          alt={media.title ?? "Game media"}
+          alt={media.title ?? t("title")}
           loading="lazy"
           className="h-full w-full object-cover transition-transform group-hover:scale-105"
         />
       </a>
 
       {canDelete && (
-        <DeleteButton onDelete={onDelete} mediaId={media.id} />
+        <DeleteButton onDelete={onDelete} mediaId={media.id} ariaLabel={t("delete.title")} />
       )}
     </div>
   );

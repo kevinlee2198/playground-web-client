@@ -37,7 +37,7 @@ export function LiveStreamSection({ media, gameVisibility }: LiveStreamSectionPr
         gameVisibility={gameVisibility}
       />
       <TypographyMuted>
-        Added by @{media.addedBy.username}
+        {t("addedBy", { username: media.addedBy.username })}
       </TypographyMuted>
     </div>
   );

@@ -80,9 +80,6 @@ export function GameMediaGallery({
   }, [onFileInputReady]);
 
   const allMedia = [...(externalMedia ?? []), ...media];
-  const gridMedia = allMedia.filter(
-    (edge) => edge.node.__typename !== "LivestreamMedia",
-  );
 
   async function handleLoadMore(): Promise<void> {
     if (!pageInfo.hasNextPage || isLoading) return;
@@ -102,10 +99,17 @@ export function GameMediaGallery({
     setIsLoading(false);
   }
 
+  function markUploadError(fileId: string, file: File): void {
+    setUploadingFiles((prev) => {
+      const next = new Map(prev);
+      next.set(fileId, { file, status: "error" });
+      return next;
+    });
+  }
+
   const uploadSingleFile = useCallback(
     async (file: File, fileId: string) => {
       try {
-        // 1. Request upload
         const requestResult = await requestGameMediaUpload(
           file.name,
           file.type,
@@ -117,43 +121,28 @@ export function GameMediaGallery({
             requestResult.message ||
               t("errors.uploadFailed", { filename: file.name }),
           );
-          setUploadingFiles((prev) => {
-            const next = new Map(prev);
-            next.set(fileId, { file, status: "error" });
-            return next;
-          });
+          markUploadError(fileId, file);
           return;
         }
 
-        // 2. Upload to S3 (skip if uploadUrl is null for LOCAL storage)
         if (requestResult.uploadUrl) {
           const s3Result = await uploadToS3(file, requestResult.uploadUrl);
           if (!s3Result.success) {
             toast.error(
               t("errors.uploadFailed", { filename: file.name }),
             );
-            setUploadingFiles((prev) => {
-              const next = new Map(prev);
-              next.set(fileId, { file, status: "error" });
-              return next;
-            });
+            markUploadError(fileId, file);
             return;
           }
         }
 
-        // 3. Confirm upload
         const confirmResult = await confirmUpload(requestResult.resourceId);
         if (!confirmResult.success || confirmResult.kind !== "gameMedia") {
           toast.error(t("errors.saveFailed", { filename: file.name }));
-          setUploadingFiles((prev) => {
-            const next = new Map(prev);
-            next.set(fileId, { file, status: "error" });
-            return next;
-          });
+          markUploadError(fileId, file);
           return;
         }
 
-        // 4. Success: remove placeholder, add to media
         const gameMedia = confirmResult.gameMedia;
         setUploadingFiles((prev) => {
           const next = new Map(prev);
@@ -166,11 +155,7 @@ export function GameMediaGallery({
         ]);
         toast.success(t("success"));
       } catch {
-        setUploadingFiles((prev) => {
-          const next = new Map(prev);
-          next.set(fileId, { file, status: "error" });
-          return next;
-        });
+        markUploadError(fileId, file);
         toast.error(t("errors.uploadFailed", { filename: file.name }));
       }
     },
@@ -266,7 +251,7 @@ export function GameMediaGallery({
     return currentUserId != null && mediaNode.addedBy.id === currentUserId;
   }
 
-  const isEmpty = gridMedia.length === 0 && uploadingFiles.size === 0;
+  const isEmpty = allMedia.length === 0 && uploadingFiles.size === 0;
 
   if (isEmpty && !canUpload) {
     return null;
@@ -320,7 +305,7 @@ export function GameMediaGallery({
   return (
     <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {gridMedia.map((edge) => (
+        {allMedia.map((edge) => (
           <GameMediaItem
             key={edge.node.id}
             media={edge.node}

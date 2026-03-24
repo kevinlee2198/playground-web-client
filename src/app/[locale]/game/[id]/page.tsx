@@ -483,7 +483,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialBaseballBattingStats={initialBaseballBattingStats}
         initialBaseballPitchingStats={initialBaseballPitchingStats}
         initialBaseballFieldingStats={initialBaseballFieldingStats}
-        playerId={playerId ?? 0}
+        playerId={playerId}
         currentUserId={currentUserId}
       >
         <GameDetailHero game={game} locationText={locationText} />
