@@ -9,6 +9,9 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { EmbedPlayer } from "./embed-player";
 
+const cardClass =
+  "group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow";
+
 interface GameMediaItemProps {
   media: GameMediaNode;
   canDelete: boolean;
@@ -107,7 +110,7 @@ function VideoMediaItem({
   }
 
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow">
+    <div className={cardClass}>
       {renderPlayback()}
 
       {canDelete && !isPlaying && (
@@ -126,15 +129,15 @@ function LinkCardFallback({
   media,
   canDelete,
   onDelete,
-  t,
 }: {
   media: GameMediaNode;
   canDelete: boolean;
   onDelete: (id: string) => void;
-  t: ReturnType<typeof useTranslations<"game.media">>;
 }) {
+  const t = useTranslations("game.media");
+
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow">
+    <div className={cardClass}>
       <a
         href={media.url}
         target="_blank"
@@ -142,17 +145,25 @@ function LinkCardFallback({
         className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-4"
       >
         {media.thumbnailUrl ? (
-          <img
-            src={media.thumbnailUrl}
-            alt={media.title ?? t("opensInNewTab")}
-            loading="lazy"
-            className="h-full w-full object-cover"
-          />
+          <div className="flex h-full w-full flex-col">
+            <img
+              src={media.thumbnailUrl}
+              alt={media.title ?? t("opensInNewTab")}
+              loading="lazy"
+              className="flex-1 w-full object-cover"
+            />
+            <span className="p-2 text-xs text-muted-foreground truncate">
+              {t("openInProvider", { provider: media.source })}
+            </span>
+          </div>
         ) : (
           <>
             <LinkIcon className="h-10 w-10 text-muted-foreground" />
             <span className="text-xs text-muted-foreground text-center line-clamp-2">
               {media.title ?? media.url}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("openInProvider", { provider: media.source })}
             </span>
           </>
         )}
@@ -187,7 +198,6 @@ export function GameMediaItem({
           media={media}
           canDelete={canDelete}
           onDelete={onDelete}
-          t={t}
         />
       );
     }

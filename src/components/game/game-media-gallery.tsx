@@ -222,7 +222,11 @@ export function GameMediaGallery({
     const result = await deleteGameMedia(mediaToDelete);
 
     if (!result.success) {
-      toast.error(result.message || t("errors.deleteFailed"));
+      const msg =
+        result.errorType === "GameMediaNotFoundError"
+          ? t("errors.deleteFailed")
+          : result.message || t("delete.noPermission");
+      toast.error(msg);
       setIsDeleting(false);
       return;
     }
@@ -337,7 +341,7 @@ export function GameMediaGallery({
             disabled={isLoading}
           >
             {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />
             )}
             {t("loadMore")}
           </Button>

@@ -502,7 +502,6 @@
     "media": {
       "title": "Photos & Videos",
       "loadMore": "Load More",
-      "upload": "Add Media",
       "uploading": "Uploading\u2026",
       "uploadPhoto": "Add photo",
       "emptyUploadPrompt": "Upload photos or add a link to get started.",

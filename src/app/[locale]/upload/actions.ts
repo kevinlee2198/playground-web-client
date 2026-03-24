@@ -206,19 +206,11 @@ export async function confirmUpload(
       return { success: true, kind: "gameMedia", gameMedia: raw.gameMedia };
     }
 
-    const result = extractMutationResult(raw, "ConfirmUploadResponse");
-    if (!result.success) {
-      return {
-        success: false,
-        errorType: result.errorType,
-        message: result.message,
-      };
-    }
-
+    // Remaining typenames are error types (matched by errorFragment)
     return {
       success: false,
-      errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Unexpected response from server",
+      errorType: raw.__typename,
+      message: raw.message ?? "An unexpected error occurred",
     };
   } catch {
     return {

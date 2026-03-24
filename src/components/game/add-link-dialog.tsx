@@ -130,6 +130,10 @@ export function AddLinkDialog({
         setErrorMessage(t("errors.duplicateLink"));
       } else if (result.errorType === "UrlResolutionError" && result.errorCode) {
         setErrorMessage(URL_ERROR_MESSAGES[result.errorCode] ?? result.message ?? null);
+      } else if (result.errorType === "GameNotFoundError") {
+        setErrorMessage(t("errors.gameNotFound"));
+      } else if (result.errorType === "GameNotInProgressError") {
+        setErrorMessage(t("errors.gameNotInProgress"));
       } else {
         setErrorMessage(result.message ?? null);
       }
@@ -151,6 +155,12 @@ export function AddLinkDialog({
       } else if (result.errorType === "DuplicateMediaError") {
         setPreview(null);
         toast.error(t("errors.duplicateLink"));
+      } else if (result.errorType === "UrlResolutionError" && result.errorCode) {
+        toast.error(URL_ERROR_MESSAGES[result.errorCode] ?? result.message ?? t("errors.urlCannotBeAccessed"));
+      } else if (result.errorType === "GameNotFoundError") {
+        toast.error(t("errors.gameNotFound"));
+      } else if (result.errorType === "GameNotInProgressError") {
+        toast.error(t("errors.gameNotInProgress"));
       } else {
         toast.error(result.message ?? t("errors.urlCannotBeAccessed"));
       }
