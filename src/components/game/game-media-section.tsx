@@ -112,7 +112,7 @@ export function GameMediaSection({
         gameId={gameId}
         initialMedia={gridMedia}
         initialPageInfo={initialPageInfo}
-        canUpload={canContribute}
+        canContribute={canContribute}
         currentUserId={currentUserId}
         viewerGameRole={viewerGameRole}
         gameVisibility={gameVisibility}

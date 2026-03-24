@@ -36,7 +36,7 @@ interface GameMediaGalleryProps {
   gameId: number;
   initialMedia: Edge<GameMediaNode>[];
   initialPageInfo: PageInfo;
-  canUpload: boolean;
+  canContribute: boolean;
   currentUserId: string | null;
   viewerGameRole: GameRole | null;
   gameVisibility: GameVisibility;
@@ -53,7 +53,7 @@ export function GameMediaGallery({
   gameId,
   initialMedia,
   initialPageInfo,
-  canUpload,
+  canContribute,
   currentUserId,
   viewerGameRole,
   gameVisibility,
@@ -253,7 +253,7 @@ export function GameMediaGallery({
 
   const isEmpty = allMedia.length === 0 && uploadingFiles.size === 0;
 
-  if (isEmpty && !canUpload) {
+  if (isEmpty && !canContribute) {
     return null;
   }
 
@@ -326,7 +326,7 @@ export function GameMediaGallery({
             }
           />
         ))}
-        {canUpload && uploadButton}
+        {canContribute && uploadButton}
       </div>
 
       {pageInfo.hasNextPage && (
@@ -344,7 +344,7 @@ export function GameMediaGallery({
         </div>
       )}
 
-      {canUpload && (
+      {canContribute && (
         <input
           ref={fileInputRef}
           type="file"
