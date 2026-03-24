@@ -7,9 +7,14 @@ import {
   requestGameMediaUpload,
 } from "@/app/[locale]/upload/actions";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { TypographyH4 } from "@/components/ui/typography";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { GameRole, type GameVisibility } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { GameMediaNode } from "@/lib/types/game-media";
@@ -21,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Camera, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DeleteMediaDialog } from "./delete-media-dialog";
 import { GameMediaItem } from "./game-media-item";
@@ -32,7 +37,11 @@ interface GameMediaGalleryProps {
   initialMedia: Edge<GameMediaNode>[];
   initialPageInfo: PageInfo;
   canUpload: boolean;
-  isParticipant: boolean;
+  currentUserId: string | null;
+  viewerGameRole: GameRole | null;
+  gameVisibility: GameVisibility;
+  externalMedia?: Edge<GameMediaNode>[];
+  onFileInputReady?: (click: () => void) => void;
 }
 
 interface UploadingFile {
@@ -45,9 +54,13 @@ export function GameMediaGallery({
   initialMedia,
   initialPageInfo,
   canUpload,
-  isParticipant,
+  currentUserId,
+  viewerGameRole,
+  gameVisibility,
+  externalMedia,
+  onFileInputReady,
 }: GameMediaGalleryProps) {
-  const t = useTranslations("game");
+  const t = useTranslations("game.media");
   const [media, setMedia] = useState(initialMedia);
   const [pageInfo, setPageInfo] = useState(initialPageInfo);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +72,17 @@ export function GameMediaGallery({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (onFileInputReady && fileInputRef.current) {
+      onFileInputReady(() => fileInputRef.current?.click());
+    }
+  }, [onFileInputReady]);
+
+  const allMedia = [...(externalMedia ?? []), ...media];
+  const gridMedia = allMedia.filter(
+    (edge) => edge.node.__typename !== "LivestreamMedia",
+  );
 
   async function handleLoadMore(): Promise<void> {
     if (!pageInfo.hasNextPage || isLoading) return;
@@ -91,7 +115,7 @@ export function GameMediaGallery({
         if (!requestResult.success || !requestResult.resourceId) {
           toast.error(
             requestResult.message ||
-              t("media.errors.uploadFailed", { filename: file.name }),
+              t("errors.uploadFailed", { filename: file.name }),
           );
           setUploadingFiles((prev) => {
             const next = new Map(prev);
@@ -106,7 +130,7 @@ export function GameMediaGallery({
           const s3Result = await uploadToS3(file, requestResult.uploadUrl);
           if (!s3Result.success) {
             toast.error(
-              t("media.errors.uploadFailed", { filename: file.name }),
+              t("errors.uploadFailed", { filename: file.name }),
             );
             setUploadingFiles((prev) => {
               const next = new Map(prev);
@@ -120,7 +144,7 @@ export function GameMediaGallery({
         // 3. Confirm upload
         const confirmResult = await confirmUpload(requestResult.resourceId);
         if (!confirmResult.success || confirmResult.kind !== "gameMedia") {
-          toast.error(t("media.errors.saveFailed", { filename: file.name }));
+          toast.error(t("errors.saveFailed", { filename: file.name }));
           setUploadingFiles((prev) => {
             const next = new Map(prev);
             next.set(fileId, { file, status: "error" });
@@ -137,17 +161,17 @@ export function GameMediaGallery({
           return next;
         });
         setMedia((prev) => [
-          ...prev,
           { cursor: gameMedia.id, node: gameMedia },
+          ...prev,
         ]);
-        toast.success(t("media.success"));
+        toast.success(t("success"));
       } catch {
         setUploadingFiles((prev) => {
           const next = new Map(prev);
           next.set(fileId, { file, status: "error" });
           return next;
         });
-        toast.error(t("media.errors.uploadFailed", { filename: file.name }));
+        toast.error(t("errors.uploadFailed", { filename: file.name }));
       }
     },
     [gameId, t],
@@ -167,10 +191,10 @@ export function GameMediaGallery({
         const validation = validateFile(file, "gameMedia");
         if (!validation.valid) {
           if (validation.error === "invalidType") {
-            toast.error(t("media.errors.invalidType"));
+            toast.error(t("errors.invalidType"));
           } else if (validation.error === "fileTooLarge") {
             toast.error(
-              t("media.errors.fileTooLarge", {
+              t("errors.fileTooLarge", {
                 limit: getMaxSizeLabel(file.type),
               }),
             );
@@ -213,7 +237,7 @@ export function GameMediaGallery({
     const result = await deleteGameMedia(mediaToDelete);
 
     if (!result.success) {
-      toast.error(result.message || t("media.errors.deleteFailed"));
+      toast.error(result.message || t("errors.deleteFailed"));
       setIsDeleting(false);
       return;
     }
@@ -221,7 +245,7 @@ export function GameMediaGallery({
     setMedia((prev) =>
       prev.filter((edge) => edge.node.id !== mediaToDelete),
     );
-    toast.success(t("media.deleted"));
+    toast.success(t("deleted"));
     setDeleteDialogOpen(false);
     setMediaToDelete(null);
     setIsDeleting(false);
@@ -235,94 +259,105 @@ export function GameMediaGallery({
     });
   }
 
-  const isEmpty = media.length === 0 && uploadingFiles.size === 0;
-  const mediaCount = media.length + uploadingFiles.size;
+  function canDeleteMedia(mediaNode: GameMediaNode): boolean {
+    if (viewerGameRole === GameRole.OWNER || viewerGameRole === GameRole.EDITOR) {
+      return true;
+    }
+    return currentUserId != null && mediaNode.addedBy.id === currentUserId;
+  }
 
-  // Hide the section entirely when no media and user cannot upload
+  const isEmpty = gridMedia.length === 0 && uploadingFiles.size === 0;
+
   if (isEmpty && !canUpload) {
     return null;
+  }
+
+  if (isEmpty) {
+    return (
+      <>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Camera />
+            </EmptyMedia>
+            <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+            <EmptyDescription>{t("emptyUploadPrompt")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={getAcceptAttribute("gameMedia")}
+          onChange={handleFilesSelected}
+          className="hidden"
+          aria-label={t("uploadPhoto")}
+        />
+      </>
+    );
   }
 
   const uploadButton = (
     <button
       type="button"
       onClick={() => fileInputRef.current?.click()}
-      aria-label={t("media.uploadPhoto")}
+      aria-label={t("uploadPhoto")}
       className={cn(
         "aspect-square flex flex-col items-center justify-center gap-2",
         "border-2 border-dashed border-muted-foreground/25 rounded-xl",
         "text-muted-foreground transition-colors",
         "hover:border-muted-foreground/50 hover:text-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        !isEmpty && "motion-safe:hover:shadow-card-hover",
+        "motion-safe:hover:shadow-card-hover",
       )}
     >
       <Camera className="h-8 w-8" />
-      <span className="text-xs font-medium">{t("media.uploadPhoto")}</span>
+      <span className="text-xs font-medium">{t("uploadPhoto")}</span>
     </button>
   );
 
   return (
-    <Card className="mb-8">
-      <CardHeader className="flex flex-row items-center gap-3">
-        <TypographyH4>{t("media.title")}</TypographyH4>
-        {mediaCount > 0 && (
-          <Badge variant="secondary">{mediaCount}</Badge>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isEmpty && canUpload ? (
-          <div className="flex flex-col items-center gap-4">
-            <div className="grid grid-cols-2 gap-4 w-full sm:grid-cols-3 md:grid-cols-4">
-              {uploadButton}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {t("media.emptyUploadPrompt")}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {media.map((edge) => (
-                <GameMediaItem
-                  key={edge.node.id}
-                  media={edge.node}
-                  isParticipant={isParticipant}
-                  onDelete={handleDeleteClick}
-                />
-              ))}
-              {Array.from(uploadingFiles).map(([fileId, uploadFile]) => (
-                <GameMediaUploadPlaceholder
-                  key={fileId}
-                  filename={uploadFile.file.name}
-                  status={uploadFile.status}
-                  onDismiss={
-                    uploadFile.status === "error"
-                      ? () => dismissUploadError(fileId)
-                      : undefined
-                  }
-                />
-              ))}
-              {canUpload && uploadButton}
-            </div>
+    <>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+        {gridMedia.map((edge) => (
+          <GameMediaItem
+            key={edge.node.id}
+            media={edge.node}
+            canDelete={canDeleteMedia(edge.node)}
+            gameVisibility={gameVisibility}
+            onDelete={handleDeleteClick}
+          />
+        ))}
+        {Array.from(uploadingFiles).map(([fileId, uploadFile]) => (
+          <GameMediaUploadPlaceholder
+            key={fileId}
+            filename={uploadFile.file.name}
+            status={uploadFile.status}
+            onDismiss={
+              uploadFile.status === "error"
+                ? () => dismissUploadError(fileId)
+                : undefined
+            }
+          />
+        ))}
+        {canUpload && uploadButton}
+      </div>
 
-            {pageInfo.hasNextPage && (
-              <div className="mt-4 flex justify-center">
-                <Button
-                  variant="outline"
-                  onClick={handleLoadMore}
-                  disabled={isLoading}
-                >
-                  {isLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {t("media.loadMore")}
-                </Button>
-              </div>
+      {pageInfo.hasNextPage && (
+        <div className="mt-4 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={handleLoadMore}
+            disabled={isLoading}
+          >
+            {isLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-          </>
-        )}
-      </CardContent>
+            {t("loadMore")}
+          </Button>
+        </div>
+      )}
 
       {canUpload && (
         <input
@@ -332,7 +367,7 @@ export function GameMediaGallery({
           accept={getAcceptAttribute("gameMedia")}
           onChange={handleFilesSelected}
           className="hidden"
-          aria-label={t("media.uploadPhoto")}
+          aria-label={t("uploadPhoto")}
         />
       )}
 
@@ -342,6 +377,6 @@ export function GameMediaGallery({
         onConfirm={handleDeleteConfirm}
         isDeleting={isDeleting}
       />
-    </Card>
+    </>
   );
 }

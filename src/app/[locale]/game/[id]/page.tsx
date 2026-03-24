@@ -115,8 +115,6 @@ export default async function GameDetailPage({ params }: PageProps) {
   let game: GameDetail | null;
   let currentUserId: string | null = null;
   let playerId: number | null = null;
-  let isParticipant = false;
-
   if (session?.user) {
     // Authenticated flow: fetch user info and game with auth
     const meResponse = await authQuery({
@@ -136,19 +134,6 @@ export default async function GameDetailPage({ params }: PageProps) {
     });
 
     game = gameResponse.data?.game ?? null;
-
-    if (game && playerId != null) {
-      isParticipant = game.participants.edges.some((edge) => {
-        const node = edge.node;
-        if (node.__typename === "TeamInstance") {
-          return node.players.some((p) => p.id === playerId);
-        }
-        if (node.__typename === "IndividualParticipant") {
-          return node.player.id === playerId;
-        }
-        return false;
-      });
-    }
   } else {
     // Unauthenticated flow: fetch game without auth to check visibility
     const gameResponse = await query({
@@ -182,11 +167,6 @@ export default async function GameDetailPage({ params }: PageProps) {
       </div>
     );
   }
-
-  const canContribute =
-    (isParticipant || game.viewerGameRole != null) &&
-    (game.gameStatus === GameStatus.IN_PROGRESS ||
-      game.gameStatus === GameStatus.COMPLETE);
 
   const locationText = game.location
     ? formatAddress(game.location.address)
@@ -505,7 +485,6 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialBaseballFieldingStats={initialBaseballFieldingStats}
         playerId={playerId ?? 0}
         currentUserId={currentUserId}
-        canContribute={canContribute}
       >
         <GameDetailHero game={game} locationText={locationText} />
       </GameDetailClient>

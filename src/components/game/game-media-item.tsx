@@ -1,13 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import type { GameVisibility } from "@/lib/constants";
 import type { GameMediaNode } from "@/lib/types/game-media";
 import { Film, Link as LinkIcon, Play, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { EmbedPlayer } from "./embed-player";
 
 interface GameMediaItemProps {
   media: GameMediaNode;
-  isParticipant: boolean;
+  canDelete: boolean;
+  gameVisibility: GameVisibility;
   onDelete: (mediaId: string) => void;
 }
 
@@ -38,7 +41,8 @@ function DeleteButton({
 
 function VideoMediaItem({
   media,
-  isParticipant,
+  canDelete,
+  gameVisibility,
   onDelete,
 }: GameMediaItemProps & {
   media: Extract<GameMediaNode, { __typename: "VideoMedia" | "LivestreamMedia" }>;
@@ -72,12 +76,13 @@ function VideoMediaItem({
 
     if (media.embedUrl) {
       return (
-        <iframe
-          src={media.embedUrl}
-          title={media.title ?? "Video"}
-          className="h-full w-full"
-          allow="autoplay; encrypted-media"
-          allowFullScreen
+        <EmbedPlayer
+          embedUrl={media.embedUrl}
+          thumbnailUrl={media.thumbnailUrl}
+          title={media.title}
+          source={media.source}
+          autoLoad={false}
+          gameVisibility={gameVisibility}
         />
       );
     }
@@ -100,7 +105,7 @@ function VideoMediaItem({
     <div className="group relative aspect-square overflow-hidden rounded-xl border touch-manipulation motion-safe:hover:shadow-card-hover transition-shadow">
       {renderPlayback()}
 
-      {isParticipant && !isPlaying && (
+      {canDelete && !isPlaying && (
         <DeleteButton
           onDelete={onDelete}
           mediaId={media.id}
@@ -113,7 +118,8 @@ function VideoMediaItem({
 
 export function GameMediaItem({
   media,
-  isParticipant,
+  canDelete,
+  gameVisibility,
   onDelete,
 }: GameMediaItemProps) {
   if (
@@ -123,7 +129,8 @@ export function GameMediaItem({
     return (
       <VideoMediaItem
         media={media}
-        isParticipant={isParticipant}
+        canDelete={canDelete}
+        gameVisibility={gameVisibility}
         onDelete={onDelete}
       />
     );
@@ -155,7 +162,7 @@ export function GameMediaItem({
           )}
         </a>
 
-        {isParticipant && (
+        {canDelete && (
           <DeleteButton onDelete={onDelete} mediaId={media.id} />
         )}
       </div>
@@ -181,7 +188,7 @@ export function GameMediaItem({
         />
       </a>
 
-      {isParticipant && (
+      {canDelete && (
         <DeleteButton onDelete={onDelete} mediaId={media.id} />
       )}
     </div>

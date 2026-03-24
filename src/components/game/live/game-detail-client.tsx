@@ -2,13 +2,14 @@
 
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
-import { InvitationActionCard } from "@/components/game/invitation-action-card";
-import { GameMediaGallery } from "@/components/game/game-media-gallery";
+import { GameMediaSection } from "@/components/game/game-media-section";
 import { GameParticipants } from "@/components/game/game-participants";
+import { InvitationActionCard } from "@/components/game/invitation-action-card";
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
 import {
+  GameStatus,
   getSportParticipationType,
   getFormatFromMetadata,
   ParticipationType,
@@ -61,7 +62,6 @@ interface GameDetailClientProps {
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
   playerId: number;
   currentUserId: string | null;
-  canContribute: boolean;
   children: ReactNode;
 }
 
@@ -77,8 +77,7 @@ export function GameDetailClient({
   initialBaseballPitchingStats,
   initialBaseballFieldingStats,
   playerId,
-  currentUserId: _currentUserId,
-  canContribute,
+  currentUserId,
   children,
 }: GameDetailClientProps) {
   const t = useTranslations();
@@ -173,6 +172,11 @@ export function GameDetailClient({
     return false;
   });
 
+  const canContribute =
+    (isParticipant || state.game.viewerGameRole != null) &&
+    (state.game.gameStatus === GameStatus.IN_PROGRESS ||
+      state.game.gameStatus === GameStatus.COMPLETE);
+
   const sportFormat = getFormatFromMetadata(state.game.metadata);
   const isTeamBased =
     getSportParticipationType(state.game.sportType, sportFormat) ===
@@ -207,12 +211,14 @@ export function GameDetailClient({
       </section>
 
       <section className="mt-8">
-        <GameMediaGallery
+        <GameMediaSection
           gameId={state.game.id}
           initialMedia={game.media.edges}
           initialPageInfo={game.media.pageInfo}
-          canUpload={canContribute}
-          isParticipant={isParticipant}
+          canContribute={canContribute}
+          currentUserId={currentUserId}
+          viewerGameRole={state.game.viewerGameRole}
+          gameVisibility={state.game.visibility}
         />
       </section>
 
