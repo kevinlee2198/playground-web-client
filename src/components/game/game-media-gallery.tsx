@@ -119,7 +119,7 @@ export function GameMediaGallery({
 
         // 3. Confirm upload
         const confirmResult = await confirmUpload(requestResult.resourceId);
-        if (!confirmResult.success || !confirmResult.resource) {
+        if (!confirmResult.success || confirmResult.kind !== "resource") {
           toast.error(t("media.errors.saveFailed", { filename: file.name }));
           setUploadingFiles((prev) => {
             const next = new Map(prev);

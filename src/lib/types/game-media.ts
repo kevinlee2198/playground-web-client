@@ -90,6 +90,7 @@ export interface AddGameMediaLinkActionResult {
   success: boolean;
   gameMedia?: GameMediaNode;
   errorType?: string;
+  errorCode?: UrlResolutionErrorCode;
   message?: string;
   existingGameMediaId?: string;
   retryAfterSeconds?: number;

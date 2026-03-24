@@ -1,8 +1,9 @@
 "use server";
 
-import { errorFragment, resourceFragment } from "@/lib/graphql-fragments";
+import { errorFragment, gameMediaFragment, resourceFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
+import type { GameMediaNode } from "@/lib/types/game-media";
 import type { Resource } from "@/lib/types/resource";
 
 interface RequestUploadResult {
@@ -13,12 +14,10 @@ interface RequestUploadResult {
   message?: string;
 }
 
-interface ConfirmUploadResult {
-  success: boolean;
-  resource?: Resource;
-  errorType?: string;
-  message?: string;
-}
+export type ConfirmUploadResult =
+  | { success: true; kind: "resource"; resource: Resource }
+  | { success: true; kind: "gameMedia"; gameMedia: GameMediaNode }
+  | { success: false; errorType: string; message: string };
 
 interface DeleteResourceResult {
   success: boolean;
@@ -173,26 +172,60 @@ export async function confirmUpload(
         __typename: true,
         __on: [
           { __typeName: "ConfirmUploadResponse", resource: resourceFragment },
+          {
+            __typeName: "ConfirmGameMediaUploadResponse",
+            gameMedia: gameMediaFragment,
+          },
           errorFragment,
         ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+      return {
+        success: false,
+        errorType: MutationErrorType.GRAPHQL_ERROR,
+        message: response.errors[0].message,
+      };
     }
 
-    const result = extractMutationResult(response.data.confirmUpload, "ConfirmUploadResponse");
+    const raw = response.data?.confirmUpload;
+    if (!raw) {
+      return {
+        success: false,
+        errorType: MutationErrorType.UNEXPECTED_ERROR,
+        message: "No response from server",
+      };
+    }
+
+    if (raw.__typename === "ConfirmUploadResponse") {
+      return { success: true, kind: "resource", resource: raw.resource };
+    }
+
+    if (raw.__typename === "ConfirmGameMediaUploadResponse") {
+      return { success: true, kind: "gameMedia", gameMedia: raw.gameMedia };
+    }
+
+    const result = extractMutationResult(raw, "ConfirmUploadResponse");
     if (!result.success) {
-      return { success: false, errorType: result.errorType, message: result.message };
+      return {
+        success: false,
+        errorType: result.errorType,
+        message: result.message,
+      };
     }
 
     return {
-      success: true,
-      resource: result.data.resource,
+      success: false,
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
+      message: "Unexpected response from server",
     };
   } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to confirm upload" };
+    return {
+      success: false,
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
+      message: "Failed to confirm upload",
+    };
   }
 }
 
