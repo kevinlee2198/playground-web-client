@@ -14,6 +14,7 @@ import {
   gameMediaFragment,
   gameMetadataFragment,
   locationFragment,
+  normalizeGameMediaEdges,
   participantDetailNodeFragment,
   playerRefFragment,
   viewerInvitationFragment,
@@ -167,6 +168,9 @@ export default async function GameDetailPage({ params }: PageProps) {
       </div>
     );
   }
+
+  // Normalize aliased embedUrl fields in media nodes
+  game.media.edges = normalizeGameMediaEdges(game.media.edges);
 
   const locationText = game.location
     ? formatAddress(game.location.address)

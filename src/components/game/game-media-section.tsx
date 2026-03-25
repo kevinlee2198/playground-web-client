@@ -95,7 +95,7 @@ export function GameMediaSection({
             onClick={() => galleryFileInputClick?.()}
           >
             <Upload className="mr-2 h-4 w-4" />
-            {t("uploadPhoto")}
+            {t("uploadMedia")}
           </Button>
           <Button
             variant="outline"

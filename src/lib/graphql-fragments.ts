@@ -50,9 +50,13 @@ export const resourceFragment = {
   ],
 };
 
+/**
+ * Shared fields for embed-capable media types (VideoMedia, LivestreamMedia).
+ * Does NOT include embedUrl — each type aliases that to a unique key to avoid
+ * a GraphQL FieldsConflict error (nullable String vs non-null String!).
+ */
 const embedMediaFields = {
   description: true,
-  embedUrl: true,
   embedWidth: true,
   embedHeight: true,
 };
@@ -60,7 +64,11 @@ const embedMediaFields = {
 /**
  * Inline fragments for the GameMedia interface.
  * ImageMedia has no extra fields so it needs no __on entry.
- * Use as: node: gameMediaFragment
+ *
+ * VideoMedia.embedUrl is nullable (String) while LivestreamMedia.embedUrl is
+ * non-null (String!). graphql-java rejects merging fields with different
+ * nullability shapes, so each type aliases embedUrl to a unique response key.
+ * Use normalizeGameMedia() to map the aliased keys back to embedUrl.
  */
 export const gameMediaFragment = {
   __typename: true,
@@ -77,11 +85,51 @@ export const gameMediaFragment = {
   createdAt: true,
   updatedAt: true,
   __on: [
-    { __typeName: "VideoMedia", ...embedMediaFields },
-    { __typeName: "LivestreamMedia", ...embedMediaFields },
+    {
+      __typeName: "VideoMedia",
+      ...embedMediaFields,
+      videoEmbedUrl: { __aliasFor: "embedUrl" },
+    },
+    {
+      __typeName: "LivestreamMedia",
+      ...embedMediaFields,
+      livestreamEmbedUrl: { __aliasFor: "embedUrl" },
+    },
     { __typeName: "LinkMedia", description: true },
   ],
 };
+
+/**
+ * Maps aliased embedUrl fields back to the canonical embedUrl key.
+ * Call on every raw GameMedia node returned from a query using gameMediaFragment.
+ *
+ * Uses `any` because GraphQL responses are untyped at runtime. Type safety
+ * is provided by the callers' return type annotations.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeGameMedia(raw: any): any {
+  if (raw?.__typename === "VideoMedia") {
+    const { videoEmbedUrl, ...rest } = raw;
+    return { ...rest, embedUrl: videoEmbedUrl ?? null };
+  }
+  if (raw?.__typename === "LivestreamMedia") {
+    const { livestreamEmbedUrl, ...rest } = raw;
+    return { ...rest, embedUrl: livestreamEmbedUrl };
+  }
+  return raw;
+}
+
+/**
+ * Normalizes aliased embedUrl fields across an array of connection edges.
+ * Use on paginated GameMedia responses that return edges with gameMediaFragment nodes.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeGameMediaEdges(edges: any[]): any[] {
+  return edges.map((edge) => ({
+    ...edge,
+    node: normalizeGameMedia(edge.node),
+  }));
+}
 
 /**
  * Chat user fields fragment.

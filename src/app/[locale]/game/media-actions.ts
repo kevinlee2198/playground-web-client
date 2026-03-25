@@ -1,6 +1,6 @@
 "use server";
 
-import { gameMediaFragment } from "@/lib/graphql-fragments";
+import { gameMediaFragment, normalizeGameMedia } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import { MutationErrorType } from "@/lib/graphql-result";
 import type {
@@ -178,7 +178,7 @@ export async function addGameMediaLink(
       case "AddGameMediaLinkResponse":
         return {
           success: true,
-          gameMedia: raw.gameMedia,
+          gameMedia: normalizeGameMedia(raw.gameMedia),
         };
       case "DuplicateMediaError":
         return {

@@ -5,6 +5,7 @@ import {
   errorFragment,
   gameMediaFragment,
   gameMetadataFragment,
+  normalizeGameMediaEdges,
   participantNodeFragment,
   viewerFollowingPlayersFragment,
   viewerInvitationFragment,
@@ -651,7 +652,13 @@ export async function loadGameMedia(
       return null;
     }
 
-    return response.data?.game?.media || null;
+    const media = response.data?.game?.media;
+    if (!media) return null;
+
+    return {
+      ...media,
+      edges: normalizeGameMediaEdges(media.edges),
+    };
   } catch (error) {
     console.error("Failed to load game media:", error);
     return null;

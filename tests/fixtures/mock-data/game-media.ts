@@ -28,7 +28,7 @@ export function mockVideoMedia(overrides?: Record<string, unknown>) {
     thumbnailUrl: "https://img.youtube.com/vi/abc123/0.jpg",
     title: "Game Highlights",
     description: "First half highlights",
-    embedUrl: "https://www.youtube-nocookie.com/embed/abc123",
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/abc123",
     embedWidth: 560,
     embedHeight: 315,
     addedBy: {
@@ -51,7 +51,7 @@ export function mockLivestreamMedia(overrides?: Record<string, unknown>) {
     thumbnailUrl: null,
     title: "Live Game Stream",
     description: "Streaming now",
-    embedUrl: "https://www.youtube-nocookie.com/embed/xyz?autoplay=1",
+    livestreamEmbedUrl: "https://www.youtube-nocookie.com/embed/xyz?autoplay=1",
     embedWidth: 560,
     embedHeight: 315,
     addedBy: {

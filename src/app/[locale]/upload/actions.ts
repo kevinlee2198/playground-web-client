@@ -1,6 +1,6 @@
 "use server";
 
-import { errorFragment, gameMediaFragment, resourceFragment } from "@/lib/graphql-fragments";
+import { errorFragment, gameMediaFragment, normalizeGameMedia, resourceFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { GameMediaNode } from "@/lib/types/game-media";
@@ -203,7 +203,7 @@ export async function confirmUpload(
     }
 
     if (raw.__typename === "ConfirmGameMediaUploadResponse") {
-      return { success: true, kind: "gameMedia", gameMedia: raw.gameMedia };
+      return { success: true, kind: "gameMedia", gameMedia: normalizeGameMedia(raw.gameMedia) };
     }
 
     // Remaining typenames are error types (matched by errorFragment)

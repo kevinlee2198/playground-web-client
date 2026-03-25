@@ -281,7 +281,7 @@ export function GameMediaGallery({
           accept={getAcceptAttribute("gameMedia")}
           onChange={handleFilesSelected}
           className="hidden"
-          aria-label={t("uploadPhoto")}
+          aria-label={t("uploadMedia")}
         />
       </>
     );
@@ -291,7 +291,7 @@ export function GameMediaGallery({
     <button
       type="button"
       onClick={() => fileInputRef.current?.click()}
-      aria-label={t("uploadPhoto")}
+      aria-label={t("uploadMedia")}
       className={cn(
         "aspect-square flex flex-col items-center justify-center gap-2",
         "border-2 border-dashed border-muted-foreground/25 rounded-xl",
@@ -302,7 +302,7 @@ export function GameMediaGallery({
       )}
     >
       <Camera className="h-8 w-8" />
-      <span className="text-xs font-medium">{t("uploadPhoto")}</span>
+      <span className="text-xs font-medium">{t("uploadMedia")}</span>
     </button>
   );
 
@@ -356,7 +356,7 @@ export function GameMediaGallery({
           accept={getAcceptAttribute("gameMedia")}
           onChange={handleFilesSelected}
           className="hidden"
-          aria-label={t("uploadPhoto")}
+          aria-label={t("uploadMedia")}
         />
       )}
 
