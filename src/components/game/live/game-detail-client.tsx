@@ -2,13 +2,14 @@
 
 import { GameBoxScores } from "@/components/game/game-box-scores";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
-import { InvitationActionCard } from "@/components/game/invitation-action-card";
-import { GameMediaGallery } from "@/components/game/game-media-gallery";
+import { GameMediaSection } from "@/components/game/game-media-section";
 import { GameParticipants } from "@/components/game/game-participants";
+import { InvitationActionCard } from "@/components/game/invitation-action-card";
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
 import {
+  GameStatus,
   getSportParticipationType,
   getFormatFromMetadata,
   ParticipationType,
@@ -59,8 +60,8 @@ interface GameDetailClientProps {
   initialBaseballBattingStats?: { node: BaseballBattingStatsNode }[];
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
-  playerId: number;
-  canUpload: boolean;
+  playerId: number | null;
+  currentUserId: string | null;
   children: ReactNode;
 }
 
@@ -76,7 +77,7 @@ export function GameDetailClient({
   initialBaseballPitchingStats,
   initialBaseballFieldingStats,
   playerId,
-  canUpload,
+  currentUserId,
   children,
 }: GameDetailClientProps) {
   const t = useTranslations();
@@ -160,16 +161,23 @@ export function GameDetailClient({
     onReconnect: () => dispatch({ type: "RECONNECTED" }),
   });
 
-  const isParticipant = state.game.participants.edges.some((edge) => {
-    const node = edge.node;
-    if (node.__typename === "TeamInstance") {
-      return node.players.some((p) => p.id === playerId);
-    }
-    if (node.__typename === "IndividualParticipant") {
-      return node.player.id === playerId;
-    }
-    return false;
-  });
+  const isParticipant =
+    playerId != null &&
+    state.game.participants.edges.some((edge) => {
+      const node = edge.node;
+      if (node.__typename === "TeamInstance") {
+        return node.players.some((p) => p.id === playerId);
+      }
+      if (node.__typename === "IndividualParticipant") {
+        return node.player.id === playerId;
+      }
+      return false;
+    });
+
+  const canContribute =
+    (isParticipant || state.game.viewerGameRole != null) &&
+    (state.game.gameStatus === GameStatus.IN_PROGRESS ||
+      state.game.gameStatus === GameStatus.COMPLETE);
 
   const sportFormat = getFormatFromMetadata(state.game.metadata);
   const isTeamBased =
@@ -201,16 +209,20 @@ export function GameDetailClient({
       <GameDetailActions game={state.game} />
 
       <section className="mt-8">
-        <GameParticipants game={state.game} currentPlayerId={playerId} />
+        {playerId != null && (
+          <GameParticipants game={state.game} currentPlayerId={playerId} />
+        )}
       </section>
 
       <section className="mt-8">
-        <GameMediaGallery
+        <GameMediaSection
           gameId={state.game.id}
           initialMedia={game.media.edges}
           initialPageInfo={game.media.pageInfo}
-          canUpload={canUpload}
-          isParticipant={isParticipant}
+          canContribute={canContribute}
+          currentUserId={currentUserId}
+          viewerGameRole={state.game.viewerGameRole}
+          gameVisibility={state.game.visibility}
         />
       </section>
 

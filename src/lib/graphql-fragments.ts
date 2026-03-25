@@ -50,6 +50,39 @@ export const resourceFragment = {
   ],
 };
 
+const embedMediaFields = {
+  description: true,
+  embedUrl: true,
+  embedWidth: true,
+  embedHeight: true,
+};
+
+/**
+ * Inline fragments for the GameMedia interface.
+ * ImageMedia has no extra fields so it needs no __on entry.
+ * Use as: node: gameMediaFragment
+ */
+export const gameMediaFragment = {
+  __typename: true,
+  id: true,
+  source: true,
+  url: true,
+  thumbnailUrl: true,
+  title: true,
+  addedBy: {
+    id: true,
+    displayName: true,
+    username: true,
+  },
+  createdAt: true,
+  updatedAt: true,
+  __on: [
+    { __typeName: "VideoMedia", ...embedMediaFields },
+    { __typeName: "LivestreamMedia", ...embedMediaFields },
+    { __typeName: "LinkMedia", description: true },
+  ],
+};
+
 /**
  * Chat user fields fragment.
  * Use as: user: chatUserFragment

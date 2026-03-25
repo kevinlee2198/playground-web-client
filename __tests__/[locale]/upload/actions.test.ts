@@ -313,6 +313,7 @@ describe("confirmUpload", () => {
 
     expect(result).toEqual({
       success: true,
+      kind: "resource",
       resource: mockResource,
     });
     expect(revalidatePath).not.toHaveBeenCalled();

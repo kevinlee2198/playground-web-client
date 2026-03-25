@@ -9,6 +9,7 @@ import {
   SportType,
 } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import type { GameMediaNode } from "@/lib/types/game-media";
 import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import type { Location } from "@/lib/types/location";
 
@@ -248,7 +249,7 @@ export interface GameDetail {
     pageInfo: PageInfo;
   };
   media: {
-    edges: Edge<import("@/lib/types/resource").Resource>[];
+    edges: Edge<GameMediaNode>[];
     pageInfo: PageInfo;
   };
 }

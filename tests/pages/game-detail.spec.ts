@@ -1,13 +1,20 @@
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
+import { http, HttpResponse } from "msw";
 import {
   mockGameNotFoundResponse,
   mockGameDetailResponse,
 } from "../fixtures/mock-data/games";
 
 test.describe("Game Detail Page", () => {
-  test("[CRITICAL] unauthenticated: redirects to /", async ({
+  test("[CRITICAL] unauthenticated: redirects to / for non-public game", async ({
     unauthenticatedPage,
+    msw,
   }) => {
+    msw.use(
+      http.post("*/graphql", () =>
+        HttpResponse.json(mockGameDetailResponse({ visibility: "PRIVATE" })),
+      ),
+    );
     await unauthenticatedPage.goto("/en/game/game-1");
     await expect(unauthenticatedPage).toHaveURL(/\/en\/?$/);
   });

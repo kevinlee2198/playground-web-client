@@ -502,26 +502,57 @@
     "media": {
       "title": "Photos & Videos",
       "loadMore": "Load More",
-      "upload": "Add Media",
       "uploading": "Uploading\u2026",
       "uploadPhoto": "Add photo",
-      "emptyUploadPrompt": "Capture the moment \u2014 add your first photo",
-      "empty": "No media yet",
-      "emptyParticipant": "Share photos and videos from this game",
+      "emptyUploadPrompt": "Upload photos or add a link to get started.",
+      "emptyTitle": "No media yet",
+      "addLink": "Add Link",
+      "linkAdded": "Link added",
+      "live": "LIVE",
+      "addedBy": "Added by @{username}",
+      "playVideo": "Play {title}",
+      "openInProvider": "Open in {provider}",
+      "opensInNewTab": "(opens in new tab)",
+      "privacyDisclosure": "Loading this video will share data with {provider}.",
+      "authRequiredNote": "Viewers may need to sign in to {provider} to watch this video.",
+      "rateLimitCleared": "You can now add links again.",
       "delete": {
         "title": "Delete Media",
         "description": "Are you sure you want to delete this media? This action cannot be undone.",
         "confirm": "Delete",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "noPermission": "You don't have permission to delete this media."
       },
       "success": "Media uploaded",
       "deleted": "Media deleted",
+      "addLinkDialog": {
+        "title": "Add a Link",
+        "urlLabel": "URL",
+        "urlPlaceholder": "Paste a YouTube, Hudl, or any URL",
+        "invalidUrl": "Please enter a valid URL",
+        "resolve": "Preview",
+        "resolving": "Resolving link...",
+        "confirm": "Add",
+        "adding": "Adding...",
+        "cancel": "Cancel",
+        "previewTitle": "Preview",
+        "rateLimitCountdown": "Try again in {seconds}s"
+      },
       "errors": {
         "uploadFailed": "Failed to upload {filename}",
         "saveFailed": "Failed to save {filename}",
         "deleteFailed": "Failed to delete media",
         "fileTooLarge": "File must be less than {limit}",
-        "invalidType": "Please select an image or video file"
+        "invalidType": "Please select an image or video file",
+        "duplicateLink": "This link has already been added to this game.",
+        "invalidScheme": "Please use an https:// URL",
+        "urlCannotBeAccessed": "This URL cannot be added. Please check the URL and try a different one.",
+        "urlTimeout": "The URL took too long to respond. Please try again.",
+        "urlUnreachable": "Could not reach this URL. Please check it and try again.",
+        "unsupportedFormat": "This URL format is not supported.",
+        "rateLimited": "Too many links added recently. Try again in {seconds} seconds.",
+        "gameNotFound": "Game not found.",
+        "gameNotInProgress": "This game is no longer accepting media."
       }
     },
     "filters": {
