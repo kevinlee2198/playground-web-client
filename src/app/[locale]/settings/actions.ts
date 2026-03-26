@@ -82,33 +82,23 @@ export async function updatePreferences(
   }
 
   try {
-    // Wrap enum string values with EnumType for json-to-graphql-query
+    // Fields that need EnumType wrapping for json-to-graphql-query
+    const enumFields = new Set([
+      "measurementUnit",
+      "emailDigestFrequency",
+      "profileVisibility",
+    ]);
+
     const gqlInput: Record<string, unknown> = {};
-    if (input.measurementUnit !== undefined) {
-      gqlInput.measurementUnit = new EnumType(input.measurementUnit);
-    }
-    if (input.notificationsEnabled !== undefined) {
-      gqlInput.notificationsEnabled = input.notificationsEnabled;
-    }
-    if (input.emailDigestFrequency !== undefined) {
-      gqlInput.emailDigestFrequency = new EnumType(input.emailDigestFrequency);
-    }
-    if (input.profileVisibility !== undefined) {
-      gqlInput.profileVisibility = new EnumType(input.profileVisibility);
-    }
-    if (input.showOnlineStatus !== undefined) {
-      gqlInput.showOnlineStatus = input.showOnlineStatus;
-    }
-    if (input.showGameHistory !== undefined) {
-      gqlInput.showGameHistory = input.showGameHistory;
-    }
-    if (input.showStatistics !== undefined) {
-      gqlInput.showStatistics = input.showStatistics;
-    }
-    if (input.preferredSports !== undefined) {
-      gqlInput.preferredSports = input.preferredSports.map(
-        (s) => new EnumType(s),
-      );
+    for (const [key, value] of Object.entries(input)) {
+      if (value === undefined) continue;
+      if (key === "preferredSports" && Array.isArray(value)) {
+        gqlInput[key] = value.map((s) => new EnumType(s));
+      } else if (enumFields.has(key)) {
+        gqlInput[key] = new EnumType(value as string);
+      } else {
+        gqlInput[key] = value;
+      }
     }
 
     const response = await authMutate({

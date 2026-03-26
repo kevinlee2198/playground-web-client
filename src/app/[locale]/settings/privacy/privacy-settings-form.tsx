@@ -7,7 +7,7 @@ import {
   TypographyH2,
   TypographySmall,
 } from "@/components/ui/typography";
-import { updatePreferences } from "../actions";
+import { updatePreferences, type UpdatePreferencesInput } from "../actions";
 import { useForm } from "@tanstack/react-form";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -47,7 +47,7 @@ export function PrivacySettingsForm({
     },
     onSubmit: async ({ value }) => {
       startSaveTransition(async () => {
-        const input: Record<string, unknown> = {};
+        const input: UpdatePreferencesInput = {};
         if (value.profileVisibility !== profileVisibility) {
           input.profileVisibility = value.profileVisibility;
         }
@@ -89,7 +89,6 @@ export function PrivacySettingsForm({
 
   return (
     <div className="space-y-6">
-      {/* Section 1: Profile Visibility */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -98,11 +97,9 @@ export function PrivacySettingsForm({
         className="space-y-4"
         aria-label={t("privacy.profileVisibilityDescription")}
       >
-        <div>
-          <TypographyH2>
-            {t("privacy.profileVisibilityDescription")}
-          </TypographyH2>
-        </div>
+        <TypographyH2>
+          {t("privacy.profileVisibilityDescription")}
+        </TypographyH2>
         <form.Field name="profileVisibility">
           {(field) => (
             <FormSelectField
@@ -122,7 +119,6 @@ export function PrivacySettingsForm({
 
       <Separator />
 
-      {/* Section 2: Visibility Controls */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <TypographyH2>{t("privacy.visibilityControls")}</TypographyH2>
@@ -131,52 +127,50 @@ export function PrivacySettingsForm({
           </TypographySmall>
         </div>
 
-        <div className="space-y-4">
-          <form.Field name="showOnlineStatus">
-            {(field) => (
-              <FormSwitchField
-                field={field}
-                label={t("privacy.showOnlineStatus")}
-                description={t("privacy.showOnlineStatusDescription")}
-                disabled={isOnlinePending}
-                onChange={makeAutoSaveHandler(
-                  "showOnlineStatus",
-                  startOnlineTransition,
-                )}
-              />
-            )}
-          </form.Field>
+        <form.Field name="showOnlineStatus">
+          {(field) => (
+            <FormSwitchField
+              field={field}
+              label={t("privacy.showOnlineStatus")}
+              description={t("privacy.showOnlineStatusDescription")}
+              disabled={isOnlinePending}
+              onChange={makeAutoSaveHandler(
+                "showOnlineStatus",
+                startOnlineTransition,
+              )}
+            />
+          )}
+        </form.Field>
 
-          <form.Field name="showGameHistory">
-            {(field) => (
-              <FormSwitchField
-                field={field}
-                label={t("privacy.showGameHistory")}
-                description={t("privacy.showGameHistoryDescription")}
-                disabled={isHistoryPending}
-                onChange={makeAutoSaveHandler(
-                  "showGameHistory",
-                  startHistoryTransition,
-                )}
-              />
-            )}
-          </form.Field>
+        <form.Field name="showGameHistory">
+          {(field) => (
+            <FormSwitchField
+              field={field}
+              label={t("privacy.showGameHistory")}
+              description={t("privacy.showGameHistoryDescription")}
+              disabled={isHistoryPending}
+              onChange={makeAutoSaveHandler(
+                "showGameHistory",
+                startHistoryTransition,
+              )}
+            />
+          )}
+        </form.Field>
 
-          <form.Field name="showStatistics">
-            {(field) => (
-              <FormSwitchField
-                field={field}
-                label={t("privacy.showStatistics")}
-                description={t("privacy.showStatisticsDescription")}
-                disabled={isStatsPending}
-                onChange={makeAutoSaveHandler(
-                  "showStatistics",
-                  startStatsTransition,
-                )}
-              />
-            )}
-          </form.Field>
-        </div>
+        <form.Field name="showStatistics">
+          {(field) => (
+            <FormSwitchField
+              field={field}
+              label={t("privacy.showStatistics")}
+              description={t("privacy.showStatisticsDescription")}
+              disabled={isStatsPending}
+              onChange={makeAutoSaveHandler(
+                "showStatistics",
+                startStatsTransition,
+              )}
+            />
+          )}
+        </form.Field>
       </div>
     </div>
   );

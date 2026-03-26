@@ -32,10 +32,8 @@ export default async function PrivacySettingsPage({ params }: PageProps) {
 
   if (!preferences) {
     redirect({ href: "/", locale });
+    return; // redirect() throws, but TypeScript cannot infer that
   }
-
-  // TypeScript does not infer that redirect() throws, so assert non-null here.
-  if (!preferences) return null;
 
   const blockedEntries: BlockedUserEntry[] =
     (blockedUsers?.edges as BlockedUserEdge[] | undefined)?.map((edge) => ({
@@ -60,7 +58,6 @@ export default async function PrivacySettingsPage({ params }: PageProps) {
 
       <Separator className="my-6" />
 
-      {/* Section 3: Blocked Users */}
       <div>
         <div className="mb-4">
           <TypographyH2>{t("privacy.blockedUsers")}</TypographyH2>

@@ -5,6 +5,7 @@ import { PlayerStatsEditorLoader } from "@/components/profile/player-stats-edito
 import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TypographyH2, TypographyMuted } from "@/components/ui/typography";
 import {
   GameSortField,
   SortDirection,
@@ -157,15 +158,15 @@ async function PrivateProfileNotice() {
       className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
     >
       <Lock className="mb-4 h-10 w-10 text-muted-foreground" aria-hidden="true" />
-      <h2
+      <TypographyH2
         id="private-profile-heading"
-        className="text-xl font-semibold tracking-tight"
+        className="border-b-0 pb-0 text-xl"
       >
         {t("title")}
-      </h2>
-      <p className="text-muted-foreground mt-2 max-w-sm text-sm">
+      </TypographyH2>
+      <TypographyMuted className="mt-2 max-w-sm">
         {t("description")}
-      </p>
+      </TypographyMuted>
     </section>
   );
 }

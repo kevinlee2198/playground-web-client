@@ -14,13 +14,9 @@ import { toast } from "sonner";
 
 const sportTypes = Object.values(SportType);
 
-const sportI18nKeys: Record<string, string> = {
-  BASEBALL: "games.sports.baseball",
-  BASKETBALL: "games.sports.basketball",
-  FOOTBALL: "games.sports.football",
-  TENNIS: "games.sports.tennis",
-  PICKLEBALL: "games.sports.pickleball",
-};
+function sportI18nKey(sport: string): string {
+  return `games.sports.${sport.toLowerCase()}` as const;
+}
 
 interface GamesSettingsFormProps {
   measurementUnit: string;
@@ -42,7 +38,7 @@ export function GamesSettingsForm({
   const form = useForm({
     defaultValues: {
       measurementUnit,
-      preferredSports: preferredSports as string[],
+      preferredSports,
     },
     onSubmit: async ({ value }) => {
       startTransition(async () => {
@@ -57,10 +53,7 @@ export function GamesSettingsForm({
         if (sportsChanged) {
           input.preferredSports = value.preferredSports;
         }
-        if (
-          input.measurementUnit === undefined &&
-          input.preferredSports === undefined
-        ) {
+        if (Object.keys(input).length === 0) {
           toast.success(t("saveSuccess"));
           return;
         }
@@ -121,7 +114,7 @@ export function GamesSettingsForm({
                     pressed={selected.includes(sport)}
                     onPressedChange={() => toggle(sport)}
                   >
-                    {t(sportI18nKeys[sport] ?? sport)}
+                    {t(sportI18nKey(sport))}
                   </Toggle>
                 ))}
               </div>

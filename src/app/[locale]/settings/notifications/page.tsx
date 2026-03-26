@@ -22,10 +22,8 @@ export default async function NotificationsSettingsPage({
 
   if (!preferences) {
     redirect({ href: "/", locale });
+    return; // redirect() throws, but TypeScript cannot infer that
   }
-
-  // TypeScript does not infer that redirect() throws, so assert non-null here.
-  if (!preferences) return null;
 
   return (
     <div>

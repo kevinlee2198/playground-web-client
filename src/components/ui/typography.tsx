@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 interface TypographyProps {
   children: ReactNode;
   className?: string;
+  id?: string;
 }
 
 export function TypographyH1({ children, className }: TypographyProps) {
@@ -19,9 +20,10 @@ export function TypographyH1({ children, className }: TypographyProps) {
   );
 }
 
-export function TypographyH2({ children, className }: TypographyProps) {
+export function TypographyH2({ children, className, id }: TypographyProps) {
   return (
     <h2
+      id={id}
       className={cn(
         "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0 text-pretty font-heading",
         className,

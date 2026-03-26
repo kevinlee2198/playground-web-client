@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FormSelectField, FormSwitchField } from "@/components/ui/form-field";
 import { Separator } from "@/components/ui/separator";
 import { TypographySmall } from "@/components/ui/typography";
-import { updatePreferences } from "../actions";
+import { updatePreferences, type UpdatePreferencesInput } from "../actions";
 import { useForm } from "@tanstack/react-form";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -37,7 +37,7 @@ export function NotificationsSettingsForm({
     },
     onSubmit: async ({ value }) => {
       startSaveTransition(async () => {
-        const input: Record<string, unknown> = {};
+        const input: UpdatePreferencesInput = {};
         if (value.emailDigestFrequency !== emailDigestFrequency) {
           input.emailDigestFrequency = value.emailDigestFrequency;
         }

@@ -35,10 +35,6 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-function userDisplayName(user: UserSearchNode): string {
-  return getFullName(user);
-}
-
 interface InvitePlayersDialogProps {
   gameId: number;
   open: boolean;
@@ -189,7 +185,7 @@ export function InvitePlayersDialog({
           {results.map((result) => {
             const staged = stagedUsers.find((u) => u.id === result.userId);
             const displayName = staged
-              ? userDisplayName(staged)
+              ? getFullName(staged)
               : result.userId;
             const isSuccess =
               result.invitation !== null && result.error === null;
@@ -243,7 +239,7 @@ export function InvitePlayersDialog({
         {stagedUsers.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {stagedUsers.map((user) => {
-              const name = userDisplayName(user);
+              const name = getFullName(user);
               return (
                 <Badge
                   key={user.id}
@@ -288,7 +284,7 @@ export function InvitePlayersDialog({
                   >
                     <div>
                       <span className="text-sm">
-                        {userDisplayName(user)}
+                        {getFullName(user)}
                       </span>
                       <span className="ml-2 text-xs text-muted-foreground">
                         @{user.username}

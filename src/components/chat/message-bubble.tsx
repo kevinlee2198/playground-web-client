@@ -75,7 +75,7 @@ export function MessageBubble({
   const isTextMessage = message.__typename === "TextChatMessage";
 
   const userName = message.user.displayName;
-  const initials = getInitials({ ...message.user, displayName: userName });
+  const initials = getInitials(message.user);
 
   const handleSaveEdit = () => {
     const trimmedContent = editContent.trim();

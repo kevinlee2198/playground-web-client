@@ -1,4 +1,4 @@
-import { TypographyH1, TypographyMuted } from "@/components/ui/typography";
+import { TypographyH2, TypographyMuted } from "@/components/ui/typography";
 import { redirect } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { loadUserPreferences } from "../actions";
@@ -17,15 +17,13 @@ export default async function GamesSettingsPage({ params }: PageProps) {
 
   if (!preferences) {
     redirect({ href: "/", locale });
+    return; // redirect() throws, but TypeScript cannot infer that
   }
-
-  // TypeScript does not infer that redirect() throws, so assert non-null here.
-  if (!preferences) return null;
 
   return (
     <div>
       <div className="mb-6">
-        <TypographyH1>{t("title")}</TypographyH1>
+        <TypographyH2>{t("title")}</TypographyH2>
         <TypographyMuted>{t("description")}</TypographyMuted>
       </div>
       <GamesSettingsForm
