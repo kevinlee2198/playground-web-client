@@ -14,6 +14,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { Nunito, Quicksand } from "next/font/google";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { ThemeProvider } from "next-themes";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -57,6 +58,7 @@ export default async function RootLayout({
       lang={locale}
       className={`${nunito.variable} ${quicksand.variable}`}
       style={{ colorScheme: "light dark" }}
+      suppressHydrationWarning
     >
       <body
         className={cn(
@@ -65,17 +67,19 @@ export default async function RootLayout({
         )}
       >
         <NextIntlClientProvider>
-          <ScrollDirectionProvider>
-            <SkipNavLink />
-            <Navbar />
-            <TabBar />
-            <main id="main-content" className="flex-1">
-              {children}
-            </main>
-            <Footer />
-            <NewGameFab />
-            <Toaster />
-          </ScrollDirectionProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ScrollDirectionProvider>
+              <SkipNavLink />
+              <Navbar />
+              <TabBar />
+              <main id="main-content" className="flex-1">
+                {children}
+              </main>
+              <Footer />
+              <NewGameFab />
+              <Toaster />
+            </ScrollDirectionProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

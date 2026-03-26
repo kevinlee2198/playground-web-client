@@ -10,7 +10,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -258,24 +258,39 @@ export function FormComboboxField({
 interface FormSwitchFieldProps {
   field: AnyFieldApi;
   label: string;
+  description?: string;
   disabled?: boolean;
+  onChange?: (checked: boolean) => void;
 }
 
 export function FormSwitchField({
   field,
   label,
+  description,
   disabled,
+  onChange,
 }: FormSwitchFieldProps) {
+  const descriptionId = description ? `${field.name}-description` : undefined;
   return (
     <Field orientation="horizontal">
       <Switch
+        id={field.name}
         checked={field.state.value ?? false}
         onCheckedChange={(checked) => {
           field.handleChange(checked);
+          onChange?.(checked);
         }}
         disabled={disabled}
+        aria-describedby={descriptionId}
       />
-      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <div>
+        <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+        {description && (
+          <FieldDescription id={descriptionId}>
+            {description}
+          </FieldDescription>
+        )}
+      </div>
     </Field>
   );
 }
