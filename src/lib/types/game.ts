@@ -186,8 +186,9 @@ export type GameParticipantDetail =
  */
 export interface GameMemberUser {
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string;
   username: string;
 }
 

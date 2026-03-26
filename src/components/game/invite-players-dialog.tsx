@@ -23,6 +23,7 @@ import type {
   GameInvitationBulkItemResult,
 } from "@/lib/types/game-invitation";
 import type { UserSearchNode } from "@/lib/types/user";
+import { getFullName } from "@/lib/utils";
 import {
   AlertCircle,
   Check,
@@ -35,7 +36,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 function userDisplayName(user: UserSearchNode): string {
-  return `${user.firstName} ${user.lastName}`;
+  return getFullName(user);
 }
 
 interface InvitePlayersDialogProps {
@@ -287,7 +288,7 @@ export function InvitePlayersDialog({
                   >
                     <div>
                       <span className="text-sm">
-                        {user.firstName} {user.lastName}
+                        {userDisplayName(user)}
                       </span>
                       <span className="ml-2 text-xs text-muted-foreground">
                         @{user.username}

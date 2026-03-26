@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Resource } from "@/lib/types/resource";
+import { getInitials } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
 import { EditableBiography } from "./editable-biography";
 import { EditableDisplayName } from "./editable-display-name";
@@ -11,8 +12,8 @@ interface ProfileHeaderProps {
   user: {
     id: string;
     username: string;
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     displayName: string;
     biography: string | null;
     profilePicture?: Resource | null;
@@ -32,8 +33,7 @@ export async function ProfileHeader({
 }: ProfileHeaderProps) {
   const t = await getTranslations("profile");
 
-  const initials =
-    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+  const initials = getInitials(user);
 
   const profilePictureUrl =
     user.profilePicture?.__typename === "ImageResource"

@@ -2,8 +2,8 @@
 export interface UserSearchNode {
   id: string;
   username: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   displayName: string;
   /** null when unauthenticated */
   viewerFollowsUser: boolean | null;

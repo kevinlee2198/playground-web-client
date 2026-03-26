@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { Resource } from "@/lib/types/resource";
 import { getAcceptAttribute, validateFile } from "@/lib/upload-validation";
+import { getInitials } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -19,8 +20,8 @@ import { RemovePictureDialog } from "./remove-picture-dialog";
 interface ProfileAvatarProps {
   user: {
     id: string;
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     displayName: string;
     profilePicture: Resource | null;
   };
@@ -48,8 +49,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
     };
   }, [previewUrl]);
 
-  const initials =
-    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+  const initials = getInitials(user);
 
   const profilePictureUrl =
     profilePicture?.__typename === "ImageResource"

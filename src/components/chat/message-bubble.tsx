@@ -9,7 +9,7 @@ import type {
   UserChatMessageNode,
 } from "@/lib/types/chat";
 import { formatFileSize, isVideoMimeType } from "@/lib/upload-validation";
-import { cn } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 import { Download, FileIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -75,8 +75,7 @@ export function MessageBubble({
   const isTextMessage = message.__typename === "TextChatMessage";
 
   const userName = message.user.displayName;
-  const initials =
-    `${message.user.firstName[0]}${message.user.lastName[0]}`.toUpperCase();
+  const initials = getInitials({ ...message.user, displayName: userName });
 
   const handleSaveEdit = () => {
     const trimmedContent = editContent.trim();

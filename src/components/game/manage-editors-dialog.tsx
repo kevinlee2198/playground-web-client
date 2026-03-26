@@ -31,6 +31,7 @@ import { GameRole } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
 import type { GameMember } from "@/lib/types/game";
 import type { UserSearchNode } from "@/lib/types/user";
+import { getFullName } from "@/lib/utils";
 import { Loader2, Trash2, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useTransition } from "react";
@@ -172,7 +173,7 @@ export function ManageEditorsDialog({
                   {members.map((edge) => {
                     const member = edge.node;
                     const isOwner = member.role === GameRole.OWNER;
-                    const name = `${member.user.firstName} ${member.user.lastName}`;
+                    const name = getFullName(member.user);
 
                     return (
                       <div
@@ -250,7 +251,7 @@ export function ManageEditorsDialog({
                         >
                           <div>
                             <span className="text-sm">
-                              {user.firstName} {user.lastName}
+                              {getFullName(user)}
                             </span>
                             <span className="ml-2 text-xs text-muted-foreground">
                               @{user.username}
@@ -285,7 +286,7 @@ export function ManageEditorsDialog({
             <AlertDialogDescription>
               {t("removeConfirmDescription", {
                 name: removeTarget
-                  ? `${removeTarget.user.firstName} ${removeTarget.user.lastName}`
+                  ? getFullName(removeTarget.user)
                   : "",
               })}
             </AlertDialogDescription>
@@ -314,7 +315,7 @@ export function ManageEditorsDialog({
             <AlertDialogDescription>
               {t("transferConfirmDescription", {
                 name: transferTarget
-                  ? `${transferTarget.user.firstName} ${transferTarget.user.lastName}`
+                  ? getFullName(transferTarget.user)
                   : "",
               })}
             </AlertDialogDescription>

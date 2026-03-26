@@ -3,8 +3,8 @@ import type { Resource } from "@/lib/types/resource";
 /** A user reference as returned in chat-related queries */
 export interface ChatUser {
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   displayName: string;
 }
 

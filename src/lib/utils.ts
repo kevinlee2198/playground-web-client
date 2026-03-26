@@ -42,3 +42,31 @@ export function snakeToCamel(input: string): string {
 export function camelToSnake(input: string): string {
   return input.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
 }
+
+/** Safely compute avatar initials from a user with potentially null name fields. */
+export function getInitials(user: {
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName: string;
+}): string {
+  const first = user.firstName?.trim();
+  const last = user.lastName?.trim();
+  if (first && last) {
+    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
+  }
+  const display = user.displayName.trim();
+  if (!display) return "?";
+  return display.substring(0, 2).toUpperCase();
+}
+
+/** Get full name with fallback to displayName when firstName/lastName are null. */
+export function getFullName(user: {
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName: string;
+}): string {
+  const first = user.firstName?.trim();
+  const last = user.lastName?.trim();
+  if (first && last) return `${first} ${last}`;
+  return user.displayName;
+}
