@@ -34,14 +34,19 @@ import { GameMediaUploadPlaceholder } from "./game-media-upload-placeholder";
 
 interface GameMediaGalleryProps {
   gameId: number;
-  initialMedia: Edge<GameMediaNode>[];
-  initialPageInfo: PageInfo;
+  media: Edge<GameMediaNode>[];
+  pageInfo: PageInfo;
   canContribute: boolean;
   currentUserId: string | null;
   viewerGameRole: GameRole | null;
   gameVisibility: GameVisibility;
-  externalMedia?: Edge<GameMediaNode>[];
   onFileInputReady?: (click: () => void) => void;
+  onMediaAdded: (node: GameMediaNode) => void;
+  onMediaDeleted: (mediaId: string) => void;
+  onMediaLoaded: (
+    newEdges: Edge<GameMediaNode>[],
+    newPageInfo: PageInfo,
+  ) => void;
 }
 
 interface UploadingFile {
@@ -51,18 +56,18 @@ interface UploadingFile {
 
 export function GameMediaGallery({
   gameId,
-  initialMedia,
-  initialPageInfo,
+  media,
+  pageInfo,
   canContribute,
   currentUserId,
   viewerGameRole,
   gameVisibility,
-  externalMedia,
   onFileInputReady,
+  onMediaAdded,
+  onMediaDeleted,
+  onMediaLoaded,
 }: GameMediaGalleryProps) {
   const t = useTranslations("game.media");
-  const [media, setMedia] = useState(initialMedia);
-  const [pageInfo, setPageInfo] = useState(initialPageInfo);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<
     Map<string, UploadingFile>
@@ -79,10 +84,11 @@ export function GameMediaGallery({
     }
   }, [onFileInputReady]);
 
-  const allMedia = [...(externalMedia ?? []), ...media];
+  const isLoadingRef = useRef(false);
 
   async function handleLoadMore(): Promise<void> {
-    if (!pageInfo.hasNextPage || isLoading) return;
+    if (!pageInfo.hasNextPage || isLoadingRef.current) return;
+    isLoadingRef.current = true;
     setIsLoading(true);
 
     const result = await loadGameMedia(
@@ -92,10 +98,10 @@ export function GameMediaGallery({
     );
 
     if (result) {
-      setMedia((prev) => [...prev, ...result.edges]);
-      setPageInfo(result.pageInfo);
+      onMediaLoaded(result.edges, result.pageInfo);
     }
 
+    isLoadingRef.current = false;
     setIsLoading(false);
   }
 
@@ -149,17 +155,14 @@ export function GameMediaGallery({
           next.delete(fileId);
           return next;
         });
-        setMedia((prev) => [
-          { cursor: gameMedia.id, node: gameMedia },
-          ...prev,
-        ]);
+        onMediaAdded(gameMedia);
         toast.success(t("success"));
       } catch {
         markUploadError(fileId, file);
         toast.error(t("errors.uploadFailed", { filename: file.name }));
       }
     },
-    [gameId, t],
+    [gameId, t, onMediaAdded],
   );
 
   const handleFilesSelected = useCallback(
@@ -231,9 +234,7 @@ export function GameMediaGallery({
       return;
     }
 
-    setMedia((prev) =>
-      prev.filter((edge) => edge.node.id !== mediaToDelete),
-    );
+    onMediaDeleted(mediaToDelete);
     toast.success(t("deleted"));
     setDeleteDialogOpen(false);
     setMediaToDelete(null);
@@ -255,7 +256,7 @@ export function GameMediaGallery({
     return currentUserId != null && mediaNode.addedBy.id === currentUserId;
   }
 
-  const isEmpty = allMedia.length === 0 && uploadingFiles.size === 0;
+  const isEmpty = media.length === 0 && uploadingFiles.size === 0;
 
   if (isEmpty && !canContribute) {
     return null;
@@ -309,7 +310,7 @@ export function GameMediaGallery({
   return (
     <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {allMedia.map((edge) => (
+        {media.map((edge) => (
           <GameMediaItem
             key={edge.node.id}
             media={edge.node}

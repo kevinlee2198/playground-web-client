@@ -35,18 +35,23 @@ export function GameMediaSection({
   const t = useTranslations("game.media");
   const [addLinkOpen, setAddLinkOpen] = useState(false);
 
-  const livestream = initialMedia.reduce<LivestreamMediaNode | null>(
-    (latest, edge) => {
-      if (edge.node.__typename !== "LivestreamMedia") return latest;
-      if (!latest) return edge.node;
-      return edge.node.createdAt > latest.createdAt ? edge.node : latest;
-    },
-    null,
+  const [livestream] = useState(() =>
+    initialMedia.reduce<LivestreamMediaNode | null>(
+      (latest, edge) => {
+        if (edge.node.__typename !== "LivestreamMedia") return latest;
+        if (!latest) return edge.node;
+        return edge.node.createdAt > latest.createdAt ? edge.node : latest;
+      },
+      null,
+    ),
   );
 
-  const gridMedia = initialMedia.filter(
-    (edge) => edge.node.__typename !== "LivestreamMedia",
+  const [media, setMedia] = useState(() =>
+    initialMedia.filter(
+      (edge) => edge.node.__typename !== "LivestreamMedia",
+    ),
   );
+  const [pageInfo, setPageInfo] = useState(initialPageInfo);
 
   const [galleryFileInputClick, setGalleryFileInputClick] = useState<
     (() => void) | null
@@ -56,14 +61,23 @@ export function GameMediaSection({
     setGalleryFileInputClick(() => click);
   }, []);
 
-  const [externalMedia, setExternalMedia] = useState<Edge<GameMediaNode>[]>([]);
-
-  const handleMediaAdded = useCallback((media: GameMediaNode) => {
-    setExternalMedia((prev) => [{ cursor: media.id, node: media }, ...prev]);
+  const handleMediaAdded = useCallback((node: GameMediaNode) => {
+    setMedia((prev) => [{ cursor: node.id, node }, ...prev]);
   }, []);
 
-  const totalGridCount = gridMedia.length + externalMedia.length;
-  const isEmpty = totalGridCount === 0 && !livestream;
+  const handleMediaDeleted = useCallback((mediaId: string) => {
+    setMedia((prev) => prev.filter((edge) => edge.node.id !== mediaId));
+  }, []);
+
+  const handleMediaLoaded = useCallback(
+    (newEdges: Edge<GameMediaNode>[], newPageInfo: PageInfo) => {
+      setMedia((prev) => [...prev, ...newEdges]);
+      setPageInfo(newPageInfo);
+    },
+    [],
+  );
+
+  const isEmpty = media.length === 0 && !livestream;
 
   if (isEmpty && !canContribute) {
     return null;
@@ -73,8 +87,8 @@ export function GameMediaSection({
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <TypographyH3>{t("title")}</TypographyH3>
-        {totalGridCount > 0 && (
-          <Badge variant="secondary">{totalGridCount}</Badge>
+        {media.length > 0 && (
+          <Badge variant="secondary">{media.length}</Badge>
         )}
       </div>
 
@@ -110,14 +124,16 @@ export function GameMediaSection({
 
       <GameMediaGallery
         gameId={gameId}
-        initialMedia={gridMedia}
-        initialPageInfo={initialPageInfo}
+        media={media}
+        pageInfo={pageInfo}
         canContribute={canContribute}
         currentUserId={currentUserId}
         viewerGameRole={viewerGameRole}
         gameVisibility={gameVisibility}
-        externalMedia={externalMedia}
         onFileInputReady={handleFileInputReady}
+        onMediaAdded={handleMediaAdded}
+        onMediaDeleted={handleMediaDeleted}
+        onMediaLoaded={handleMediaLoaded}
       />
 
       {canContribute && (
