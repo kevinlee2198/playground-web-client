@@ -4,7 +4,7 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
-export default async function BlockedUsersPage({ params }: PageProps) {
+export default async function SettingsPage({ params }: PageProps) {
   const { locale } = await params;
-  redirect({ href: "/settings/privacy", locale });
+  redirect({ href: "/settings/display", locale });
 }
