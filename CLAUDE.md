@@ -79,6 +79,13 @@ This project uses specialized subagents for structured feature development. Agen
 
 For code review, use the plugin agents: `pr-review-toolkit:code-reviewer`, `pr-review-toolkit:code-simplifier`, etc.
 
+**Required skills for implementation and review:**
+
+- **/vercel-react-best-practices** — Must be invoked before writing or reviewing React/Next.js code. Covers server/client boundaries, parallel data fetching, serialization, stable callbacks, input validation in server actions, and performance patterns.
+- **/web-design-guidelines** — Must be invoked when writing or reviewing UI components. Covers accessibility (ARIA, keyboard, focus, semantics), heading hierarchy, form patterns, animation (`prefers-reduced-motion`), and typography.
+
+Implementation subagents should load these skills before starting work. Review subagents should use them as part of their review criteria.
+
 **Specifications directory:** `.claudedoc/<feature-name>/`
 
 - `requirements.md` - Functional requirements from requirements agent
