@@ -50,6 +50,23 @@ function mockMutateSuccess(data: Record<string, unknown>) {
   mockAuthMutate.mockResolvedValueOnce({ data });
 }
 
+function mockUpdatePreferencesSuccess() {
+  mockMutateSuccess({
+    updateUserPreferences: {
+      __typename: "UpdateUserPreferencesResponse",
+      preferences: mockPreferences,
+    },
+  });
+}
+
+/** Extract the gqlInput passed to the updateUserPreferences mutation. */
+function getLastMutateInput(): Record<string, unknown> {
+  const callArg = mockAuthMutate.mock.calls[0][0] as Record<string, unknown>;
+  return (
+    callArg.updateUserPreferences as { __args: { input: Record<string, unknown> } }
+  ).__args.input;
+}
+
 const mockPreferences = {
   measurementUnit: "METRIC",
   notificationsEnabled: true,
@@ -202,12 +219,7 @@ describe("updatePreferences", () => {
   });
 
   it("returns success with preferences on successful mutation", async () => {
-    mockMutateSuccess({
-      updateUserPreferences: {
-        __typename: "UpdateUserPreferencesResponse",
-        preferences: mockPreferences,
-      },
-    });
+    mockUpdatePreferencesSuccess();
 
     const result = await updatePreferences({ notificationsEnabled: true });
 
@@ -253,45 +265,26 @@ describe("updatePreferences", () => {
   });
 
   it("only sends changed fields in the gqlInput", async () => {
-    mockMutateSuccess({
-      updateUserPreferences: {
-        __typename: "UpdateUserPreferencesResponse",
-        preferences: mockPreferences,
-      },
-    });
+    mockUpdatePreferencesSuccess();
 
     await updatePreferences({ notificationsEnabled: false });
 
-    const callArg = mockAuthMutate.mock.calls[0][0] as Record<string, unknown>;
-    const updateArgs = (
-      callArg.updateUserPreferences as { __args: { input: Record<string, unknown> } }
-    ).__args.input;
-
-    expect(Object.keys(updateArgs)).toEqual(["notificationsEnabled"]);
-    expect(updateArgs.notificationsEnabled).toBe(false);
+    const input = getLastMutateInput();
+    expect(Object.keys(input)).toEqual(["notificationsEnabled"]);
+    expect(input.notificationsEnabled).toBe(false);
   });
 
   it("omits undefined fields from gqlInput", async () => {
-    mockMutateSuccess({
-      updateUserPreferences: {
-        __typename: "UpdateUserPreferencesResponse",
-        preferences: mockPreferences,
-      },
-    });
+    mockUpdatePreferencesSuccess();
 
     await updatePreferences({
       notificationsEnabled: true,
       measurementUnit: "IMPERIAL",
     });
 
-    const callArg = mockAuthMutate.mock.calls[0][0] as Record<string, unknown>;
-    const updateArgs = (
-      callArg.updateUserPreferences as { __args: { input: Record<string, unknown> } }
-    ).__args.input;
-
-    // Only the two provided fields should be present
-    expect(Object.keys(updateArgs)).toHaveLength(2);
-    expect(updateArgs).toHaveProperty("notificationsEnabled", true);
-    expect(updateArgs).toHaveProperty("measurementUnit");
+    const input = getLastMutateInput();
+    expect(Object.keys(input)).toHaveLength(2);
+    expect(input).toHaveProperty("notificationsEnabled", true);
+    expect(input).toHaveProperty("measurementUnit");
   });
 });

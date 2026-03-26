@@ -1,5 +1,6 @@
 import {
   TypographyH2,
+  TypographyH3,
   TypographyMuted,
 } from "@/components/ui/typography";
 import { Separator } from "@/components/ui/separator";
@@ -60,7 +61,7 @@ export default async function PrivacySettingsPage({ params }: PageProps) {
 
       <div>
         <div className="mb-4">
-          <TypographyH2>{t("privacy.blockedUsers")}</TypographyH2>
+          <TypographyH3>{t("privacy.blockedUsers")}</TypographyH3>
           <TypographyMuted>{t("blocked.description")}</TypographyMuted>
         </div>
         <BlockedUsersList entries={blockedEntries} />

@@ -6,6 +6,20 @@ import { MutationErrorType } from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 import { headers } from "next/headers";
 import { cache } from "react";
+import { z } from "zod";
+
+const updatePreferencesSchema = z.object({
+  measurementUnit: z.enum(["METRIC", "IMPERIAL"]).optional(),
+  notificationsEnabled: z.boolean().optional(),
+  emailDigestFrequency: z.enum(["DAILY", "WEEKLY", "NEVER"]).optional(),
+  profileVisibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+  showOnlineStatus: z.boolean().optional(),
+  showGameHistory: z.boolean().optional(),
+  showStatistics: z.boolean().optional(),
+  preferredSports: z
+    .array(z.enum(["BASEBALL", "BASKETBALL", "FOOTBALL", "TENNIS", "PICKLEBALL"]))
+    .optional(),
+});
 
 const preferencesSelection = {
   measurementUnit: true,
@@ -61,6 +75,13 @@ export interface UpdatePreferencesInput {
   preferredSports?: string[];
 }
 
+/** Fields that need EnumType wrapping for json-to-graphql-query. */
+const enumFields = new Set([
+  "measurementUnit",
+  "emailDigestFrequency",
+  "profileVisibility",
+]);
+
 interface UpdatePreferencesResult {
   success: boolean;
   preferences?: UserPreferences;
@@ -82,15 +103,10 @@ export async function updatePreferences(
   }
 
   try {
-    // Fields that need EnumType wrapping for json-to-graphql-query
-    const enumFields = new Set([
-      "measurementUnit",
-      "emailDigestFrequency",
-      "profileVisibility",
-    ]);
+    const validated = updatePreferencesSchema.parse(input);
 
     const gqlInput: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(input)) {
+    for (const [key, value] of Object.entries(validated)) {
       if (value === undefined) continue;
       if (key === "preferredSports" && Array.isArray(value)) {
         gqlInput[key] = value.map((s) => new EnumType(s));

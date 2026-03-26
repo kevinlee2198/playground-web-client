@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FormSelectField, FormSwitchField } from "@/components/ui/form-field";
 import { Separator } from "@/components/ui/separator";
 import {
-  TypographyH2,
+  TypographyH3,
   TypographySmall,
 } from "@/components/ui/typography";
 import { updatePreferences, type UpdatePreferencesInput } from "../actions";
@@ -65,26 +65,37 @@ export function PrivacySettingsForm({
     },
   });
 
-  const makeAutoSaveHandler = useCallback(
+  const autoSave = useCallback(
     (
       fieldName: "showOnlineStatus" | "showGameHistory" | "showStatistics",
+      newValue: boolean,
       startTransition: typeof startOnlineTransition,
     ) => {
-      return (newValue: boolean) => {
-        // field.handleChange already ran before onChange fires, so previous = inverse
-        const previousValue = !newValue;
-        startTransition(async () => {
-          const result = await updatePreferences({ [fieldName]: newValue });
-          if (!result.success) {
-            form.setFieldValue(fieldName, previousValue);
-            toast.error(t("saveError"));
-          } else {
-            toast.success(t("saveSuccess"));
-          }
-        });
-      };
+      const previousValue = !newValue;
+      startTransition(async () => {
+        const result = await updatePreferences({ [fieldName]: newValue });
+        if (!result.success) {
+          form.setFieldValue(fieldName, previousValue);
+          toast.error(t("saveError"));
+        } else {
+          toast.success(t("saveSuccess"));
+        }
+      });
     },
     [form, t],
+  );
+
+  const handleOnlineStatusChange = useCallback(
+    (v: boolean) => autoSave("showOnlineStatus", v, startOnlineTransition),
+    [autoSave],
+  );
+  const handleGameHistoryChange = useCallback(
+    (v: boolean) => autoSave("showGameHistory", v, startHistoryTransition),
+    [autoSave],
+  );
+  const handleStatisticsChange = useCallback(
+    (v: boolean) => autoSave("showStatistics", v, startStatsTransition),
+    [autoSave],
   );
 
   return (
@@ -97,9 +108,9 @@ export function PrivacySettingsForm({
         className="space-y-4"
         aria-label={t("privacy.profileVisibilityDescription")}
       >
-        <TypographyH2>
+        <TypographyH3>
           {t("privacy.profileVisibilityDescription")}
-        </TypographyH2>
+        </TypographyH3>
         <form.Field name="profileVisibility">
           {(field) => (
             <FormSelectField
@@ -121,7 +132,7 @@ export function PrivacySettingsForm({
 
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <TypographyH2>{t("privacy.visibilityControls")}</TypographyH2>
+          <TypographyH3>{t("privacy.visibilityControls")}</TypographyH3>
           <TypographySmall className="text-muted-foreground">
             {t("autoSaves")}
           </TypographySmall>
@@ -134,10 +145,7 @@ export function PrivacySettingsForm({
               label={t("privacy.showOnlineStatus")}
               description={t("privacy.showOnlineStatusDescription")}
               disabled={isOnlinePending}
-              onChange={makeAutoSaveHandler(
-                "showOnlineStatus",
-                startOnlineTransition,
-              )}
+              onChange={handleOnlineStatusChange}
             />
           )}
         </form.Field>
@@ -149,10 +157,7 @@ export function PrivacySettingsForm({
               label={t("privacy.showGameHistory")}
               description={t("privacy.showGameHistoryDescription")}
               disabled={isHistoryPending}
-              onChange={makeAutoSaveHandler(
-                "showGameHistory",
-                startHistoryTransition,
-              )}
+              onChange={handleGameHistoryChange}
             />
           )}
         </form.Field>
@@ -164,10 +169,7 @@ export function PrivacySettingsForm({
               label={t("privacy.showStatistics")}
               description={t("privacy.showStatisticsDescription")}
               disabled={isStatsPending}
-              onChange={makeAutoSaveHandler(
-                "showStatistics",
-                startStatsTransition,
-              )}
+              onChange={handleStatisticsChange}
             />
           )}
         </form.Field>
