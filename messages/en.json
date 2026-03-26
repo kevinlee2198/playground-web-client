@@ -164,6 +164,10 @@
       "error": "Failed to process request",
       "alreadyBlockedYou": "This user has already blocked you",
       "cannotBlockSelf": "You cannot block yourself"
+    },
+    "privateProfile": {
+      "title": "This account is private",
+      "description": "This account's full profile is only visible to followers"
     }
   },
   "actions": {
@@ -930,7 +934,78 @@
       "unblock": "Unblock",
       "unblockSuccess": "User unblocked",
       "unblockError": "Failed to unblock user"
-    }
+    },
+    "nav": {
+      "display": "Display",
+      "games": "Games",
+      "notifications": "Notifications",
+      "privacy": "Privacy"
+    },
+    "display": {
+      "title": "Display",
+      "description": "Customize your visual preferences",
+      "theme": "Theme",
+      "themeOptions": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "language": "Language"
+    },
+    "games": {
+      "title": "Games",
+      "description": "Configure your game experience",
+      "measurementUnit": "Measurement units",
+      "measurementUnitDescription": "Used for height, weight, and distances",
+      "measurementUnitOptions": {
+        "metric": "Metric (cm, kg)",
+        "imperial": "Imperial (ft, lbs)"
+      },
+      "preferredSports": "Preferred sports",
+      "preferredSportsDescription": "Highlight these sports across the app",
+      "sports": {
+        "baseball": "Baseball",
+        "basketball": "Basketball",
+        "football": "Football",
+        "tennis": "Tennis",
+        "pickleball": "Pickleball"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Control how you receive updates",
+      "enable": "Enable notifications",
+      "enableDescription": "Receive push notifications for activity",
+      "emailDigest": "Email digest",
+      "emailDigestDescription": "How often to receive email summaries",
+      "emailDigestOptions": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "never": "Never"
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Control who can see your information",
+      "profileVisibility": "Profile visibility",
+      "profileVisibilityDescription": "Control who can see your profile",
+      "profileVisibilityOptions": {
+        "public": "Public",
+        "private": "Private"
+      },
+      "visibilityControls": "Visibility controls",
+      "showOnlineStatus": "Show online status",
+      "showOnlineStatusDescription": "Let others see when you're active",
+      "showGameHistory": "Show game history",
+      "showGameHistoryDescription": "Display your past games on your profile",
+      "showStatistics": "Show statistics",
+      "showStatisticsDescription": "Display your performance stats on your profile",
+      "blockedUsers": "Blocked users"
+    },
+    "autoSaves": "Auto-saves",
+    "saveChanges": "Save changes",
+    "saveSuccess": "Settings saved",
+    "saveError": "Failed to save settings"
   },
   "about": {
     "title": "About",

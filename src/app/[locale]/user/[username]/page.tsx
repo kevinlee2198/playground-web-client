@@ -5,6 +5,7 @@ import { PlayerStatsEditorLoader } from "@/components/profile/player-stats-edito
 import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TypographyH2, TypographyMuted } from "@/components/ui/typography";
 import {
   GameSortField,
   SortDirection,
@@ -17,9 +18,11 @@ import {
 } from "@/lib/graphql-fragments";
 import { authQuery, query } from "@/lib/graphql-request";
 import { EnumType } from "json-to-graphql-query";
+import { Lock } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 
 interface PageProps {
@@ -60,6 +63,7 @@ function buildUserQuery(username: string) {
       lastName: true,
       displayName: true,
       biography: true,
+      profileVisibility: true,
       profilePicture: resourceFragment,
       followerCount: true,
       followingCount: true,
@@ -146,6 +150,27 @@ function GameHistorySkeleton() {
   );
 }
 
+async function PrivateProfileNotice() {
+  const t = await getTranslations("profile.privateProfile");
+  return (
+    <section
+      aria-labelledby="private-profile-heading"
+      className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
+    >
+      <Lock className="mb-4 h-10 w-10 text-muted-foreground" aria-hidden="true" />
+      <TypographyH2
+        id="private-profile-heading"
+        className="border-b-0 pb-0 text-xl"
+      >
+        {t("title")}
+      </TypographyH2>
+      <TypographyMuted className="mt-2 max-w-sm">
+        {t("description")}
+      </TypographyMuted>
+    </section>
+  );
+}
+
 export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
 
@@ -170,6 +195,11 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   const player = user.player;
 
+  const isPrivateProfile =
+    !isOwnProfile &&
+    user.profileVisibility === "PRIVATE" &&
+    user.viewerFollowsUser !== true;
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <ProfileHeader
@@ -178,15 +208,21 @@ export default async function UserProfilePage({ params }: PageProps) {
         isAuthenticated={isAuthenticated}
       />
 
-      {isOwnProfile ? (
-        <PlayerStatsEditorLoader initialPlayer={player} />
+      {isPrivateProfile ? (
+        <PrivateProfileNotice />
       ) : (
-        <PlayerStats player={player} />
-      )}
+        <>
+          {isOwnProfile ? (
+            <PlayerStatsEditorLoader initialPlayer={player} />
+          ) : (
+            <PlayerStats player={player} />
+          )}
 
-      <Suspense fallback={<GameHistorySkeleton />}>
-        <GameHistorySection playerId={player.id} />
-      </Suspense>
+          <Suspense fallback={<GameHistorySkeleton />}>
+            <GameHistorySection playerId={player.id} />
+          </Suspense>
+        </>
+      )}
     </main>
   );
 }

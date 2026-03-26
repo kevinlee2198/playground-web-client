@@ -23,6 +23,7 @@ import type {
   GameInvitationBulkItemResult,
 } from "@/lib/types/game-invitation";
 import type { UserSearchNode } from "@/lib/types/user";
+import { getFullName } from "@/lib/utils";
 import {
   AlertCircle,
   Check,
@@ -33,10 +34,6 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-
-function userDisplayName(user: UserSearchNode): string {
-  return `${user.firstName} ${user.lastName}`;
-}
 
 interface InvitePlayersDialogProps {
   gameId: number;
@@ -188,7 +185,7 @@ export function InvitePlayersDialog({
           {results.map((result) => {
             const staged = stagedUsers.find((u) => u.id === result.userId);
             const displayName = staged
-              ? userDisplayName(staged)
+              ? getFullName(staged)
               : result.userId;
             const isSuccess =
               result.invitation !== null && result.error === null;
@@ -242,7 +239,7 @@ export function InvitePlayersDialog({
         {stagedUsers.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {stagedUsers.map((user) => {
-              const name = userDisplayName(user);
+              const name = getFullName(user);
               return (
                 <Badge
                   key={user.id}
@@ -287,7 +284,7 @@ export function InvitePlayersDialog({
                   >
                     <div>
                       <span className="text-sm">
-                        {user.firstName} {user.lastName}
+                        {getFullName(user)}
                       </span>
                       <span className="ml-2 text-xs text-muted-foreground">
                         @{user.username}

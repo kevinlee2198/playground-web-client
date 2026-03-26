@@ -31,6 +31,7 @@ import { useRouter } from "@/i18n/navigation";
 import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
 import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
+import { getFullName } from "@/lib/utils";
 import { LogOut, UserPlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -262,7 +263,7 @@ export function MemberListPanel({
                 {members.map((edge) => {
                   const member = edge.node;
                   const isCurrentUser = member.user.id === currentUserId;
-                  const memberName = `${member.user.firstName} ${member.user.lastName}`;
+                  const memberName = getFullName(member.user);
 
                   return (
                     <div

@@ -41,7 +41,7 @@ interface GameMemberActionResult {
 
 const gameMemberSelection = {
   id: true,
-  user: { id: true, firstName: true, lastName: true, username: true },
+  user: { id: true, firstName: true, lastName: true, displayName: true, username: true },
   role: true,
 } as const;
 
@@ -492,6 +492,7 @@ export async function loadGameMembers(gameId: number): Promise<{
                 id: true,
                 firstName: true,
                 lastName: true,
+                displayName: true,
                 username: true,
               },
               role: true,
