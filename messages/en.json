@@ -116,7 +116,19 @@
       "unfollowedName": "Unfollowed {name}",
       "moreOptionsFor": "More options for {name}",
       "loadError": "Something went wrong",
-      "retry": "Try again"
+      "retry": "Try again",
+      "requested": "Requested",
+      "cancelRequest": "Cancel follow request for {name}",
+      "requestSent": "Follow request sent to {name}",
+      "requestCancelled": "Follow request cancelled",
+      "approve": "Approve",
+      "decline": "Decline",
+      "approved": "Approved",
+      "declined": "Declined",
+      "requestNotAvailable": "Request no longer available",
+      "approveError": "Failed to approve request",
+      "declineError": "Failed to decline request",
+      "cancelError": "Failed to cancel request"
     },
     "moreOptions": "More options",
     "messageDisabled": {
@@ -806,6 +818,14 @@
       "title": "Game Invitation",
       "body": "<link>{inviterName}</link> invited you to a {sportType} game"
     },
+    "followRequestReceived": {
+      "title": "Follow Request",
+      "body": "<link>{displayName}</link> requested to follow you"
+    },
+    "followRequestApproved": {
+      "title": "Follow Request Approved",
+      "body": "<link>{displayName}</link> approved your follow request"
+    },
     "unknown": {
       "body": "You have a new notification"
     }
@@ -939,7 +959,8 @@
       "display": "Display",
       "games": "Games",
       "notifications": "Notifications",
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "followRequests": "Follow Requests"
     },
     "display": {
       "title": "Display",
@@ -1001,6 +1022,11 @@
       "showStatistics": "Show statistics",
       "showStatisticsDescription": "Display your performance stats on your profile",
       "blockedUsers": "Blocked users"
+    },
+    "followRequests": {
+      "title": "Follow Requests",
+      "description": "People who have requested to follow you",
+      "empty": "No pending follow requests"
     },
     "autoSaves": "Auto-saves",
     "saveChanges": "Save changes",

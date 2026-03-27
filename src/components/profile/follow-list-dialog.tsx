@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TypographyMuted } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
+import type { FollowStateChange } from "@/lib/types/follow";
 import { MoreVertical, UserMinus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
@@ -41,6 +42,7 @@ interface FollowUser {
   } | null;
   viewerFollowsUser: boolean | null;
   userFollowsViewer: boolean | null;
+  viewerSentFollowRequest: { id: string } | null;
 }
 
 interface FollowListItem {
@@ -152,20 +154,37 @@ export function FollowListDialog({
     });
   }
 
-  function handleFollowChange(itemUserId: string, viewerFollowsUser: boolean) {
-    // Own profile following list: unfollowing removes the entry entirely
-    if (isOwnProfile && type === "following" && !viewerFollowsUser) {
+  function handleFollowChange(itemUserId: string, change: FollowStateChange) {
+    if (isOwnProfile && type === "following" && change.type === "unfollowed") {
       setItems((prev) => prev.filter((item) => item.user.id !== itemUserId));
       return;
     }
 
-    setItems((prev) =>
-      prev.map((item) =>
-        item.user.id === itemUserId
-          ? { ...item, user: { ...item.user, viewerFollowsUser } }
-          : item,
-      ),
-    );
+    if (change.type === "followed") {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.user.id === itemUserId
+            ? {
+                ...item,
+                user: {
+                  ...item.user,
+                  viewerFollowsUser: true,
+                  viewerSentFollowRequest: null,
+                },
+              }
+            : item,
+        ),
+      );
+    } else if (change.type === "unfollowed") {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.user.id === itemUserId
+            ? { ...item, user: { ...item.user, viewerFollowsUser: false } }
+            : item,
+        ),
+      );
+    }
+    // "requested" and "cancelled" — no list state change needed
   }
 
   const title =
@@ -255,8 +274,9 @@ export function FollowListDialog({
                 userId={item.user.id}
                 displayName={item.user.displayName}
                 initialViewerFollowsUser={item.user.viewerFollowsUser ?? false}
-                onFollowChange={(follows) =>
-                  handleFollowChange(item.user.id, follows)
+                initialViewerSentFollowRequest={item.user.viewerSentFollowRequest}
+                onFollowChange={(change) =>
+                  handleFollowChange(item.user.id, change)
                 }
               />
 

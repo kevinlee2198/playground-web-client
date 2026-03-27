@@ -21,6 +21,7 @@ interface ProfileHeaderProps {
     followingCount: number;
     viewerFollowsUser: boolean | null;
     userFollowsViewer: boolean | null;
+    viewerSentFollowRequest: { id: string } | null;
   };
   isOwnProfile: boolean;
   isAuthenticated: boolean;
@@ -101,6 +102,7 @@ export async function ProfileHeader({
               initialFollowingCount={user.followingCount}
               initialViewerFollowsUser={user.viewerFollowsUser ?? false}
               initialUserFollowsViewer={user.userFollowsViewer ?? false}
+              initialViewerSentFollowRequest={user.viewerSentFollowRequest ?? null}
               isOwnProfile={false}
             />
           ) : (

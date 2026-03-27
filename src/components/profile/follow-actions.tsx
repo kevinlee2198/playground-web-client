@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import { TypographyP } from "@/components/ui/typography";
 import { useRouter } from "@/i18n/navigation";
+import type { FollowStateChange } from "@/lib/types/follow";
 import { Ban, MessageCircle, MoreVertical, ShieldOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -42,8 +43,9 @@ interface FollowActionsProps {
   displayName: string;
   viewerFollowsUser: boolean;
   userFollowsViewer: boolean;
+  initialViewerSentFollowRequest?: { id: string } | null;
   showMessageButton?: boolean;
-  onFollowChange?: (viewerFollowsUser: boolean) => void;
+  onFollowChange?: (change: FollowStateChange) => void;
 }
 
 export function FollowActions({
@@ -51,6 +53,7 @@ export function FollowActions({
   displayName,
   viewerFollowsUser: initialViewerFollowsUser,
   userFollowsViewer,
+  initialViewerSentFollowRequest,
   showMessageButton = false,
   onFollowChange,
 }: FollowActionsProps) {
@@ -64,9 +67,13 @@ export function FollowActions({
   );
   const router = useRouter();
 
-  function handleFollowChange(nowFollowsUser: boolean) {
-    setLocalViewerFollowsUser(nowFollowsUser);
-    onFollowChange?.(nowFollowsUser);
+  function handleFollowChange(change: FollowStateChange) {
+    if (change.type === "followed") {
+      setLocalViewerFollowsUser(true);
+    } else if (change.type === "unfollowed" || change.type === "cancelled") {
+      setLocalViewerFollowsUser(false);
+    }
+    onFollowChange?.(change);
   }
 
   function handleBlock() {
@@ -198,6 +205,7 @@ export function FollowActions({
         userId={userId}
         displayName={displayName}
         initialViewerFollowsUser={localViewerFollowsUser}
+        initialViewerSentFollowRequest={initialViewerSentFollowRequest}
         onFollowChange={handleFollowChange}
       />
       {userFollowsViewer && !localViewerFollowsUser ? (
