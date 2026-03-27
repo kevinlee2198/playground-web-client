@@ -10,6 +10,7 @@ import { mockChatRoomsResponse } from "./mock-data/chat";
 import { mockSearchUsersResponse } from "./mock-data/search";
 import { mockEmptyBlockedResponse } from "./mock-data/blocked-users";
 import { mockUserResponse } from "./mock-data/user";
+import { mockEmptyFollowRequestsResponse } from "./mock-data/follow-requests";
 
 /**
  * Extract the top-level field name from a GraphQL query string.
@@ -47,6 +48,7 @@ const defaultResponses: Record<string, unknown> = {
   searchUsers: mockSearchUsersResponse(),
   user: mockUserResponse(),
   blockedUsers: mockEmptyBlockedResponse(),
+  followRequests: mockEmptyFollowRequestsResponse(),
   basketballBoxScores: mockBasketballBoxScoresResponse(),
   ...emptyStatResponses,
 };

@@ -16,6 +16,7 @@ export function mockUserResponse(overrides?: Record<string, unknown>) {
         followingCount: 0,
         viewerFollowsUser: null,
         userFollowsViewer: null,
+        viewerSentFollowRequest: null,
         ...overrides,
       },
     },
