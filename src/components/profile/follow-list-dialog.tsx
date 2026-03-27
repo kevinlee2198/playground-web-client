@@ -160,31 +160,23 @@ export function FollowListDialog({
       return;
     }
 
-    if (change.type === "followed") {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.user.id === itemUserId
-            ? {
-                ...item,
-                user: {
-                  ...item.user,
-                  viewerFollowsUser: true,
-                  viewerSentFollowRequest: null,
-                },
-              }
-            : item,
-        ),
-      );
-    } else if (change.type === "unfollowed") {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.user.id === itemUserId
-            ? { ...item, user: { ...item.user, viewerFollowsUser: false } }
-            : item,
-        ),
-      );
-    }
-    // "requested" and "cancelled" — no list state change needed
+    if (change.type !== "followed" && change.type !== "unfollowed") return;
+
+    const nowFollowing = change.type === "followed";
+    setItems((prev) =>
+      prev.map((item) =>
+        item.user.id === itemUserId
+          ? {
+              ...item,
+              user: {
+                ...item.user,
+                viewerFollowsUser: nowFollowing,
+                ...(nowFollowing ? { viewerSentFollowRequest: null } : {}),
+              },
+            }
+          : item,
+      ),
+    );
   }
 
   const title =

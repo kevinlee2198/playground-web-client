@@ -128,7 +128,7 @@ describe.each(actions)(
       });
     });
 
-    it.each(unionErrors)(
+    it.each([...unionErrors])(
       "returns $type on union error",
       async ({ type, message }) => {
         mockMutateUnionError(key, type, message);

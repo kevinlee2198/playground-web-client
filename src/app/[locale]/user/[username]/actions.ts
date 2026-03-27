@@ -10,8 +10,17 @@ import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
+interface FollowUserState {
+  id: string;
+  viewerFollowsUser: boolean;
+  userFollowsViewer: boolean;
+  viewerSentFollowRequest: { id: string } | null;
+  followerCount: number;
+  followingCount: number;
+}
+
 export type FollowUserResult =
-  | { success: true; type: "followed"; user: { id: string; viewerFollowsUser: boolean; userFollowsViewer: boolean; viewerSentFollowRequest: { id: string } | null; followerCount: number; followingCount: number } }
+  | { success: true; type: "followed"; user: FollowUserState }
   | { success: true; type: "requested"; requestId: string }
   | { success: false; errorType: string; message: string };
 

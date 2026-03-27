@@ -14,6 +14,8 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+type FollowRequestAction = "approved" | "declined";
+
 const HOVER_READ_DELAY_MS = 600;
 
 interface NotificationContent {
@@ -105,40 +107,27 @@ export function NotificationItem({
   const formatter = useFormatter();
   const now = useNow();
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [requestAction, setRequestAction] = useState<
-    "approved" | "declined" | null
-  >(null);
+  const [requestAction, setRequestAction] = useState<FollowRequestAction | null>(null);
   const [isActionPending, startActionTransition] = useTransition();
 
   const content = getNotificationContent(notification, tSports);
 
-  const handleApprove = useCallback(
-    (requestId: string) => {
-      startActionTransition(async () => {
-        const result = await approveFollowRequest(requestId);
-        if (result.success) {
-          setRequestAction("approved");
-        } else {
-          toast.error(tFollow("approveError"));
-        }
-      });
-    },
-    [tFollow],
-  );
+  function handleFollowRequestAction(
+    requestId: string,
+    action: FollowRequestAction,
+  ) {
+    const execute = action === "approved" ? approveFollowRequest : declineFollowRequest;
+    const errorKey = action === "approved" ? "approveError" : "declineError";
 
-  const handleDecline = useCallback(
-    (requestId: string) => {
-      startActionTransition(async () => {
-        const result = await declineFollowRequest(requestId);
-        if (result.success) {
-          setRequestAction("declined");
-        } else {
-          toast.error(tFollow("declineError"));
-        }
-      });
-    },
-    [tFollow],
-  );
+    startActionTransition(async () => {
+      const result = await execute(requestId);
+      if (result.success) {
+        setRequestAction(action);
+      } else {
+        toast.error(tFollow(errorKey));
+      }
+    });
+  }
 
   const relativeTime = formatter.relativeTime(
     new Date(notification.createdDate),
@@ -186,6 +175,54 @@ export function NotificationItem({
   const isFollowRequestReceived =
     notification.__typename === "FollowRequestReceivedNotification";
 
+  function renderFollowRequestActions() {
+    if (requestAction) {
+      return (
+        <TypographySmall className="mt-2 text-muted-foreground">
+          {tFollow(requestAction)}
+        </TypographySmall>
+      );
+    }
+
+    if (content.followRequestId == null) {
+      return (
+        <TypographySmall className="mt-2 text-muted-foreground">
+          {tFollow("requestNotAvailable")}
+        </TypographySmall>
+      );
+    }
+
+    const requestId = content.followRequestId;
+
+    function stopAndHandle(e: React.MouseEvent, action: FollowRequestAction) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFollowRequestAction(requestId, action);
+    }
+
+    return (
+      <div className="mt-2 flex gap-2">
+        <Button
+          size="sm"
+          disabled={isActionPending}
+          aria-label={`${tFollow("approve")} ${content.richParams.displayName}`}
+          onClick={(e) => stopAndHandle(e, "approved")}
+        >
+          {tFollow("approve")}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isActionPending}
+          aria-label={`${tFollow("decline")} ${content.richParams.displayName}`}
+          onClick={(e) => stopAndHandle(e, "declined")}
+        >
+          {tFollow("decline")}
+        </Button>
+      </div>
+    );
+  }
+
   const innerContent = (
     <div className="min-w-0 w-full">
       {content.templateKey && (
@@ -204,47 +241,7 @@ export function NotificationItem({
           : tNotif("unknown.body")}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">{relativeTime}</p>
-      {isFollowRequestReceived && !requestAction && content.followRequestId && (
-        <div className="mt-2 flex gap-2">
-          <Button
-            size="sm"
-            disabled={isActionPending}
-            aria-label={`${tFollow("approve")} ${content.richParams.displayName}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleApprove(content.followRequestId!);
-            }}
-          >
-            {tFollow("approve")}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isActionPending}
-            aria-label={`${tFollow("decline")} ${content.richParams.displayName}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDecline(content.followRequestId!);
-            }}
-          >
-            {tFollow("decline")}
-          </Button>
-        </div>
-      )}
-      {isFollowRequestReceived &&
-        !requestAction &&
-        content.followRequestId === null && (
-          <TypographySmall className="mt-2 text-muted-foreground">
-            {tFollow("requestNotAvailable")}
-          </TypographySmall>
-        )}
-      {requestAction && (
-        <TypographySmall className="mt-2 text-muted-foreground">
-          {tFollow(requestAction)}
-        </TypographySmall>
-      )}
+      {isFollowRequestReceived && renderFollowRequestActions()}
     </div>
   );
 

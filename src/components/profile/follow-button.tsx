@@ -176,7 +176,7 @@ export function FollowButton({
         onClick={getHandler()}
         disabled={isPending}
         aria-label={getAriaLabel()}
-        aria-pressed={state.type === "following" ? true : state.type === "not-following" ? false : undefined}
+        aria-pressed={state.type === "requested" ? undefined : state.type === "following"}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="min-w-[6rem]"

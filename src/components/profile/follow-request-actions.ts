@@ -4,17 +4,30 @@ import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 
-export async function approveFollowRequest(requestId: string) {
+type FollowRequestActionResult =
+  | { success: true }
+  | { success: false; errorType: string; message: string };
+
+/**
+ * Shared logic for follow request mutations (approve, cancel, decline).
+ * Each mutation follows the same pattern: send input, check for errors,
+ * extract the typed result, and return success/failure.
+ */
+async function executeFollowRequestAction(
+  mutationName: string,
+  successTypeName: string,
+  requestId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  successFields: Record<string, any>,
+  errorMessage: string,
+): Promise<FollowRequestActionResult> {
   try {
     const response = await authMutate({
-      approveFollowRequest: {
+      [mutationName]: {
         __args: { input: { requestId } },
         __typename: true,
         __on: [
-          {
-            __typeName: "ApproveFollowRequestResponse",
-            follow: { id: true },
-          },
+          { __typeName: successTypeName, ...successFields },
           errorFragment,
         ],
       },
@@ -24,69 +37,41 @@ export async function approveFollowRequest(requestId: string) {
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.approveFollowRequest, "ApproveFollowRequestResponse");
+    const result = extractMutationResult(response.data[mutationName], successTypeName);
     if (!result.success) return result;
 
     return { success: true };
   } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to approve follow request" };
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: errorMessage };
   }
 }
 
-export async function cancelFollowRequest(requestId: string) {
-  try {
-    const response = await authMutate({
-      cancelFollowRequest: {
-        __args: { input: { requestId } },
-        __typename: true,
-        __on: [
-          {
-            __typeName: "CancelFollowRequestResponse",
-            id: true,
-          },
-          errorFragment,
-        ],
-      },
-    });
-
-    if (response.errors?.length > 0) {
-      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
-    }
-
-    const result = extractMutationResult(response.data.cancelFollowRequest, "CancelFollowRequestResponse");
-    if (!result.success) return result;
-
-    return { success: true };
-  } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to cancel follow request" };
-  }
+export async function approveFollowRequest(requestId: string): Promise<FollowRequestActionResult> {
+  return executeFollowRequestAction(
+    "approveFollowRequest",
+    "ApproveFollowRequestResponse",
+    requestId,
+    { follow: { id: true } },
+    "Failed to approve follow request",
+  );
 }
 
-export async function declineFollowRequest(requestId: string) {
-  try {
-    const response = await authMutate({
-      declineFollowRequest: {
-        __args: { input: { requestId } },
-        __typename: true,
-        __on: [
-          {
-            __typeName: "DeclineFollowRequestResponse",
-            id: true,
-          },
-          errorFragment,
-        ],
-      },
-    });
+export async function cancelFollowRequest(requestId: string): Promise<FollowRequestActionResult> {
+  return executeFollowRequestAction(
+    "cancelFollowRequest",
+    "CancelFollowRequestResponse",
+    requestId,
+    { id: true },
+    "Failed to cancel follow request",
+  );
+}
 
-    if (response.errors?.length > 0) {
-      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
-    }
-
-    const result = extractMutationResult(response.data.declineFollowRequest, "DeclineFollowRequestResponse");
-    if (!result.success) return result;
-
-    return { success: true };
-  } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to decline follow request" };
-  }
+export async function declineFollowRequest(requestId: string): Promise<FollowRequestActionResult> {
+  return executeFollowRequestAction(
+    "declineFollowRequest",
+    "DeclineFollowRequestResponse",
+    requestId,
+    { id: true },
+    "Failed to decline follow request",
+  );
 }
