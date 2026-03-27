@@ -172,6 +172,11 @@ type DirectMessageChatRoom implements ChatRoom & Node {
   id: ID!
   createdDate: DateTime!
   lastModifiedDate: DateTime!
+  """
+  Whether the authenticated viewer can send messages in this DM.
+  False when the mutual follow relationship is broken.
+  """
+  canMessage: Boolean!
   members(
     first: Int
     after: String
@@ -398,12 +403,16 @@ type UpdateChatRoomMemberRoleResponse {
 # Chat Result Unions
 # ============================================================================
 
-union CreateDirectMessageResult = CreateDirectMessageResponse | UserBlockedError
+union CreateDirectMessageResult =
+  | CreateDirectMessageResponse
+  | UserBlockedError
+  | MutualFollowRequiredError
 union CreateGroupChatResult = CreateGroupChatResponse | EmptyChatRoomError
 union AddChatRoomMemberResult =
   | AddChatRoomMemberResponse
   | ChatRoomNotFoundError
   | DirectMessageNotAllowedError
+  | MutualFollowRequiredError
 union RemoveChatRoomMemberResult =
   | RemoveChatRoomMemberResponse
   | ChatRoomNotFoundError
@@ -427,7 +436,10 @@ union LeaveChatRoomResult =
   | UserNotFoundError
   | DirectMessageNotAllowedError
   | OwnerCannotLeaveError
-union SendChatMessageResult = SendChatMessageResponse | ChatRoomNotFoundError
+union SendChatMessageResult =
+  | SendChatMessageResponse
+  | ChatRoomNotFoundError
+  | MutualFollowRequiredError
 union UpdateChatMessageResult =
   | UpdateChatMessageResponse
   | ChatMessageNotFoundError
@@ -487,16 +499,7 @@ type InvalidParticipantTypeError implements Error {
 }
 
 # ============================================================================
-# Livestream Errors
-# ============================================================================
-
-type LivestreamNotFoundError implements Error {
-  message: String!
-  livestreamId: ID!
-}
-
-# ============================================================================
-# User / Friendship Errors
+# User Errors
 # ============================================================================
 
 type UserNotFoundError implements Error {
@@ -508,25 +511,11 @@ type SelfActionError implements Error {
   message: String!
 }
 
-type FriendshipAlreadyExistsError implements Error {
-  message: String!
-  currentStatus: FriendshipStatus!
-}
-
-type FriendRequestNotFoundError implements Error {
-  message: String!
-}
-
-type InvalidFriendshipStateError implements Error {
-  message: String!
-  currentStatus: FriendshipStatus!
-}
-
-type UserBlockedYouError implements Error {
-  message: String!
-}
-
 type BlockNotFoundError implements Error {
+  message: String!
+}
+
+type MutualFollowRequiredError implements Error {
   message: String!
 }
 
@@ -606,6 +595,625 @@ type ResourceNotFoundError implements Error {
 type InvalidUploadContextError implements Error {
   message: String!
 }
+type FollowRequest implements Node {
+  id: ID!
+  """
+  The user who sent the follow request.
+  """
+  requester: User!
+  """
+  The user who received the follow request.
+  """
+  target: User!
+  createdDate: DateTime!
+}
+
+type FollowRequestEdge implements Edge {
+  cursor: String!
+  node: FollowRequest!
+}
+
+type FollowRequestConnection implements Connection {
+  edges: [FollowRequestEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum FollowRequestDirection {
+  INCOMING
+  OUTGOING
+}
+
+# ============================================================================
+# Mutations
+# ============================================================================
+
+input ApproveFollowRequestInput {
+  requestId: ID!
+}
+
+type ApproveFollowRequestResponse {
+  follow: Follow!
+}
+
+input DeclineFollowRequestInput {
+  requestId: ID!
+}
+
+type DeclineFollowRequestResponse implements DeleteResponse {
+  id: ID!
+}
+
+input CancelFollowRequestInput {
+  requestId: ID!
+}
+
+type CancelFollowRequestResponse implements DeleteResponse {
+  id: ID!
+}
+
+# ============================================================================
+# Response Types
+# ============================================================================
+
+type FollowRequestSentResponse {
+  """
+  Returned when the target has a private profile and a follow request was created.
+  """
+  followRequest: FollowRequest!
+}
+
+# ============================================================================
+# Error Types
+# ============================================================================
+
+type FollowRequestNotFoundError implements Error {
+  message: String!
+  requestId: ID!
+}
+
+type FollowRequestAlreadyExistsError implements Error {
+  message: String!
+  requestId: ID!
+}
+
+type NotFollowRequestTargetError implements Error {
+  message: String!
+  requestId: ID!
+}
+
+type NotFollowRequestRequesterError implements Error {
+  message: String!
+  requestId: ID!
+}
+
+# ============================================================================
+# Result Unions
+# ============================================================================
+
+union ApproveFollowRequestResult =
+  | ApproveFollowRequestResponse
+  | FollowRequestNotFoundError
+  | NotFollowRequestTargetError
+union DeclineFollowRequestResult =
+  | DeclineFollowRequestResponse
+  | FollowRequestNotFoundError
+  | NotFollowRequestTargetError
+union CancelFollowRequestResult =
+  | CancelFollowRequestResponse
+  | FollowRequestNotFoundError
+  | NotFollowRequestRequesterError
+# ============================================================================
+# Game Media
+#
+# Unified content hub for game-related media: direct uploads, external video
+# embeds, livestreams, and rich link previews. Replaces the previous
+# Resource-based game.media connection and the separate Livestream entity.
+#
+# DESIGN: Interface + concrete types (not a single GameMedia type)
+#
+# Each content kind (image, video, livestream, link) has type-specific fields
+# that only make sense for that kind. Rather than a single type with ~5
+# nullable fields valid only for certain enum values, we use a GameMedia
+# interface with four concrete types. This follows GraphQL best practices:
+#
+#   - __typename is the type discriminator, replacing the MediaType enum on
+#     the entity. The runtime validates __typename; enums are unchecked.
+#   - Clients use inline fragments to access type-specific fields, which is
+#     self-documenting and IDE-friendly.
+#   - Adding a new media kind means adding a new concrete type without
+#     touching existing types.
+#
+# MediaStatus is also removed. A LivestreamMedia is always live by
+# definition. When it ends, the backend changes the entity's type to VIDEO,
+# and the GraphQL layer returns a VideoMedia. Status is implicit in
+# __typename, eliminating a redundant field.
+#
+# The frontend uses plain fetch() + json-to-graphql-query with no normalized
+# cache, so __typename changes during livestream-to-video transitions are
+# free -- no cache invalidation needed.
+# ============================================================================
+
+# ============================================================================
+# Enums
+# ============================================================================
+
+"""
+Used ONLY on ResolveUrlResponse to tell the client what type of media was
+detected before the entity is created. NOT a field on GameMedia or any
+concrete type -- __typename is the type discriminator for persisted entities.
+"""
+enum MediaType {
+  IMAGE
+  VIDEO
+  LIVESTREAM
+  LINK
+}
+
+enum MediaSource {
+  UPLOAD
+  YOUTUBE
+  TWITCH
+  HUDL
+  VIMEO
+  TIKTOK
+  INSTAGRAM
+  CUSTOM_URL
+}
+
+# ============================================================================
+# GameMedia Interface + Concrete Types
+# ============================================================================
+
+"""
+Common fields shared by all game media items. Clients query the interface
+for gallery listings and use inline fragments for type-specific fields:
+
+    ... on VideoMedia { embedUrl embedWidth embedHeight }
+    ... on LivestreamMedia { embedUrl embedWidth embedHeight }
+    ... on LinkMedia { description }
+"""
+interface GameMedia implements Node {
+  id: ID!
+  source: MediaSource!
+  """
+  Content URL -- S3 presigned URL for uploads, external URL for everything else.
+  """
+  url: String!
+  """
+  Gallery thumbnail. Auto-generated for uploads, fetched via oEmbed for
+  external providers, extracted from og:image for links.
+  """
+  thumbnailUrl: String
+  """
+  Display title. Optional for uploads, auto-populated from oEmbed/meta tags
+  for external sources.
+  """
+  title: String
+  """
+  The user who added this media.
+  """
+  addedBy: User!
+  """
+  When this media was added.
+  """
+  createdAt: DateTime!
+  """
+  When this media was last updated.
+  """
+  updatedAt: DateTime
+}
+
+"""
+An uploaded or externally-sourced image.
+"""
+type ImageMedia implements GameMedia & Node {
+  id: ID!
+  source: MediaSource!
+  url: String!
+  thumbnailUrl: String
+  title: String
+  addedBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime
+}
+
+"""
+An uploaded or externally-sourced video. When a livestream ends, the backend
+transitions the entity's type from LIVESTREAM to VIDEO -- the GraphQL layer
+then returns a VideoMedia instead of LivestreamMedia.
+"""
+type VideoMedia implements GameMedia & Node {
+  id: ID!
+  source: MediaSource!
+  url: String!
+  thumbnailUrl: String
+  title: String
+  """
+  Description from oEmbed/meta tags, or carried over from the livestream.
+  """
+  description: String
+  addedBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime
+  """
+  Iframe src URL from oEmbed. Null for uploaded videos.
+  """
+  embedUrl: String
+  """
+  Embed width from oEmbed response.
+  """
+  embedWidth: Int
+  """
+  Embed height from oEmbed response.
+  """
+  embedHeight: Int
+}
+
+"""
+A live stream. Always live by definition -- when it ends, the entity becomes
+a VideoMedia. The embedUrl is always present because livestreams require an
+embeddable player URL.
+"""
+type LivestreamMedia implements GameMedia & Node {
+  id: ID!
+  source: MediaSource!
+  url: String!
+  thumbnailUrl: String
+  title: String
+  """
+  Description provided when starting the stream.
+  """
+  description: String
+  addedBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime
+  """
+  Iframe src URL for the stream player. Always present for livestreams.
+  """
+  embedUrl: String!
+  """
+  Embed width from oEmbed response.
+  """
+  embedWidth: Int
+  """
+  Embed height from oEmbed response.
+  """
+  embedHeight: Int
+}
+
+"""
+A rich link preview (article, Hudl film, any non-embeddable URL).
+No embed fields -- links are never rendered as iframes.
+"""
+type LinkMedia implements GameMedia & Node {
+  id: ID!
+  source: MediaSource!
+  url: String!
+  thumbnailUrl: String
+  title: String
+  addedBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime
+  """
+  Description from oEmbed/meta tags.
+  """
+  description: String
+}
+
+type GameMediaEdge implements Edge {
+  cursor: String!
+  node: GameMedia!
+}
+
+type GameMediaConnection implements Connection {
+  edges: [GameMediaEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# URL Resolution (Phase 1 of Add Link flow)
+#
+# Client submits a URL. Backend resolves redirects, detects the provider,
+# fetches oEmbed/OpenGraph data, checks for duplicates, and returns a
+# preview for the user to confirm before creating the GameMedia item.
+#
+# This is a Query, not a Mutation -- it is a read-only operation that does
+# not create or modify any state. The caller must have a role on the game
+# (participant, editor, or owner) to resolve URLs for that game.
+# ============================================================================
+
+input ResolveUrlInput {
+  """
+  The URL pasted by the user.
+  """
+  url: String!
+  """
+  The game this link will be added to (for duplicate checking and authorization).
+  """
+  gameId: ID!
+}
+
+"""
+Preview data returned after resolving a URL. The client displays this
+for the user to confirm before calling addGameMediaLink.
+
+The `type` field uses the MediaType enum to tell the client what kind of
+media was detected. This is for preview purposes only -- once the entity is
+created, __typename is the discriminator.
+"""
+type ResolveUrlResponse {
+  """
+  Detected media type (preview only -- not stored on the entity).
+  """
+  type: MediaType!
+  """
+  Detected provider/source.
+  """
+  source: MediaSource!
+  """
+  The final resolved URL (after following redirects).
+  """
+  resolvedUrl: String!
+  """
+  Display title from oEmbed or og:title.
+  """
+  title: String
+  """
+  Description from oEmbed or og:description.
+  """
+  description: String
+  """
+  Thumbnail URL from oEmbed or og:image.
+  """
+  thumbnailUrl: String
+  """
+  Iframe embed URL from oEmbed (null for links and uploads).
+  """
+  embedUrl: String
+  """
+  Embed width from oEmbed.
+  """
+  embedWidth: Int
+  """
+  Embed height from oEmbed.
+  """
+  embedHeight: Int
+}
+
+union ResolveUrlResult =
+  | ResolveUrlResponse
+  | GameNotFoundError
+  | GameNotInProgressError
+  | DuplicateMediaError
+  | UrlResolutionError
+  | RateLimitedError
+
+# ============================================================================
+# Add Game Media Link (Phase 2 of Add Link flow)
+#
+# After the user confirms the preview, client calls this to create the
+# GameMedia record. The resolvedUrl is passed back so the backend can
+# re-validate and avoid a TOCTOU race.
+# ============================================================================
+
+input AddGameMediaLinkInput {
+  gameId: ID!
+  """
+  The resolved URL from the ResolveUrlResponse.
+  """
+  url: String!
+}
+
+type AddGameMediaLinkResponse {
+  gameMedia: GameMedia!
+}
+
+union AddGameMediaLinkResult =
+  | AddGameMediaLinkResponse
+  | GameNotFoundError
+  | GameNotInProgressError
+  | DuplicateMediaError
+  | UrlResolutionError
+  | RateLimitedError
+
+# ============================================================================
+# Delete Game Media
+#
+# For UPLOAD sources: deletes the GameMedia record, the underlying Resource,
+# and the S3 object. For external sources: deletes just the GameMedia record.
+# ============================================================================
+
+input DeleteGameMediaInput {
+  id: ID!
+}
+
+type DeleteGameMediaResponse implements DeleteResponse {
+  id: ID!
+}
+
+union DeleteGameMediaResult = DeleteGameMediaResponse | GameMediaNotFoundError
+
+# ============================================================================
+# Livestream Mutations (now operate on GameMedia)
+#
+# startLivestream creates a LivestreamMedia (type=LIVESTREAM in the DB).
+# endLivestream transitions it to a VideoMedia (type=VIDEO in the DB).
+# livestreamHeartbeat keeps it alive; missed heartbeats trigger auto-transition.
+# ============================================================================
+
+input StartLivestreamInput {
+  gameId: ID!
+  """
+  YouTube or Twitch.
+  """
+  source: LivestreamSource!
+  title: String!
+  description: String
+  """
+  The stream/broadcast URL (e.g., youtube.com/live/abc).
+  """
+  url: String!
+  """
+  The embeddable URL for the stream player.
+  """
+  embedUrl: String!
+}
+
+"""
+Restricted to providers that support livestreaming.
+"""
+enum LivestreamSource {
+  YOUTUBE
+  TWITCH
+}
+
+type StartLivestreamResponse {
+  """
+  The created livestream. Always a LivestreamMedia.
+  """
+  gameMedia: LivestreamMedia!
+}
+
+union StartLivestreamResult =
+  | StartLivestreamResponse
+  | GameNotFoundError
+  | GameNotInProgressError
+
+input EndLivestreamInput {
+  """
+  The GameMedia ID of the livestream.
+  """
+  id: ID!
+}
+
+type EndLivestreamResponse {
+  """
+  The transitioned media. Now a VideoMedia (was LivestreamMedia).
+  """
+  gameMedia: VideoMedia!
+}
+
+union EndLivestreamResult = EndLivestreamResponse | GameMediaNotFoundError
+
+input UpdateLivestreamInput {
+  """
+  The GameMedia ID of the livestream.
+  """
+  id: ID!
+  title: String
+  description: String
+}
+
+type UpdateLivestreamResponse {
+  gameMedia: GameMedia!
+}
+
+union UpdateLivestreamResult = UpdateLivestreamResponse | GameMediaNotFoundError
+
+input LivestreamHeartbeatInput {
+  """
+  The GameMedia ID of the livestream.
+  """
+  id: ID!
+}
+
+type LivestreamHeartbeatResponse {
+  """
+  Echoes back the GameMedia to confirm it's still live.
+  """
+  gameMedia: GameMedia!
+}
+
+union LivestreamHeartbeatResult =
+  | LivestreamHeartbeatResponse
+  | GameMediaNotFoundError
+
+# ============================================================================
+# Confirm Upload Override
+#
+# When the upload context is gameMedia, confirmUpload returns the GameMedia
+# wrapper instead of a bare Resource. This extends the existing
+# ConfirmUploadResult union.
+# ============================================================================
+
+type ConfirmGameMediaUploadResponse {
+  gameMedia: GameMedia!
+}
+
+# ============================================================================
+# Error Types
+# ============================================================================
+
+"""
+The resolved URL already exists as a GameMedia item in this game.
+"""
+type DuplicateMediaError implements Error {
+  message: String!
+  """
+  Reference to the existing GameMedia item with this URL.
+  """
+  existingGameMediaId: ID!
+}
+
+"""
+The URL could not be resolved -- invalid scheme, SSRF blocked, timeout,
+unreachable, or unsupported format.
+"""
+type UrlResolutionError implements Error {
+  message: String!
+  """
+  Machine-readable error code for client-side handling.
+  """
+  errorCode: UrlResolutionErrorCode!
+}
+
+"""
+Granular error codes for URL resolution failures.
+"""
+enum UrlResolutionErrorCode {
+  """
+  URL scheme is not https.
+  """
+  INVALID_SCHEME
+  """
+  Resolved IP is in a private/reserved range (SSRF protection).
+  """
+  SSRF_BLOCKED
+  """
+  URL resolution timed out.
+  """
+  TIMEOUT
+  """
+  Host is unreachable or DNS resolution failed.
+  """
+  UNREACHABLE
+  """
+  Response format is not supported (e.g., binary content).
+  """
+  UNSUPPORTED_FORMAT
+}
+
+"""
+Rate limit exceeded for link submissions.
+"""
+type RateLimitedError implements Error {
+  message: String!
+  """
+  Seconds until the user can submit again.
+  """
+  retryAfterSeconds: Int!
+}
+
+type GameMediaNotFoundError implements Error {
+  message: String!
+}
+
+"""
+The game is not in a valid status for this operation (must be IN_PROGRESS or COMPLETE).
+"""
+type GameNotInProgressError implements Error {
+  message: String!
+}
 """
 Management roles for a game, independent from being a participant.
 """
@@ -668,6 +1276,12 @@ enum SportType {
   FOOTBALL
   TENNIS
   PICKLEBALL
+  VOLLEYBALL
+}
+
+enum VolleyballFormat {
+  INDOOR
+  BEACH
 }
 
 enum BasketballFormat {
@@ -709,6 +1323,7 @@ union GameMetadata =
   | TennisGameMetadata
   | FootballGameMetadata
   | PickleballGameMetadata
+  | VolleyballGameMetadata
 
 type BaseballGameMetadata {
   """
@@ -765,6 +1380,14 @@ type PickleballGameMetadata {
   scoringType: PickleballScoringType
 }
 
+type VolleyballGameMetadata {
+  format: VolleyballFormat!
+  bestOf: Int
+  pointsPerSet: Int
+  pointsPerFinalSet: Int
+  winByTwo: Boolean
+}
+
 # ============================================================================
 # Participant Metadata
 # ============================================================================
@@ -779,6 +1402,7 @@ union ParticipantMetadata =
   | TennisParticipantMetadata
   | FootballParticipantMetadata
   | PickleballParticipantMetadata
+  | VolleyballParticipantMetadata
 
 type BaseballParticipantMetadata {
   score: Int!
@@ -808,6 +1432,15 @@ type PickleballParticipantMetadata {
 }
 
 type PickleballGameScore {
+  pointsScored: Int!
+}
+
+type VolleyballParticipantMetadata {
+  setsWon: Int!
+  sets: [VolleyballSetScore!]!
+}
+
+type VolleyballSetScore {
   pointsScored: Int!
 }
 
@@ -879,28 +1512,22 @@ type Game implements Node & HasLocation {
     last: Int
     before: String
   ): GameParticipantConnection!
-  livestreams(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): LivestreamConnection!
   """
-  Media (photos, videos) attached to this game.
+  Media (images, videos, livestreams, links) attached to this game.
   """
   media(
     first: Int
     after: String
     last: Int
     before: String
-  ): ResourceConnection!
+  ): GameMediaConnection!
   """
-  The current user's friends who are players in this game.
-  Returns an empty wrapper if the viewer is unauthenticated or has no friends in the game.
+  The current user's followed users who are players in this game.
+  Returns an empty wrapper if the viewer is unauthenticated or has no followed users in the game.
   Nodes are server-capped at 10 players; totalCount reflects the true number
   so the UI can render "Sarah, Kevin, and 3 others played basketball".
   """
-  viewerFriendPlayers: ViewerFriendPlayers!
+  viewerFollowingPlayers: ViewerFollowingPlayers!
   """
   The current viewer's management role in this game, if any. Null if the viewer
   has no management role (or is unauthenticated). Independent from being a
@@ -935,13 +1562,13 @@ type Game implements Node & HasLocation {
   viewerInvitation: GameInvitation
 }
 
-type ViewerFriendPlayers {
+type ViewerFollowingPlayers {
   """
-  First up to 10 friend players in this game.
+  First up to 10 following players in this game.
   """
   nodes: [Player!]!
   """
-  Total number of the viewer's friends who are players in this game.
+  Total number of the viewer's followed users who are players in this game.
   """
   totalCount: Int!
 }
@@ -1391,6 +2018,22 @@ input PickleballGameMetadataInput {
   scoringType: PickleballScoringType
 }
 
+input CreateVolleyballGameMetadataInput {
+  format: VolleyballFormat!
+  bestOf: Int
+  pointsPerSet: Int
+  pointsPerFinalSet: Int
+  winByTwo: Boolean
+}
+
+input VolleyballGameMetadataInput {
+  format: VolleyballFormat
+  bestOf: Int
+  pointsPerSet: Int
+  pointsPerFinalSet: Int
+  winByTwo: Boolean
+}
+
 # ============================================================================
 # Participant Metadata Inputs
 # ============================================================================
@@ -1426,6 +2069,15 @@ input PickleballGameScoreInput {
   pointsScored: Int!
 }
 
+input VolleyballParticipantMetadataInput {
+  setsWon: Int!
+  sets: [VolleyballSetScoreInput!]!
+}
+
+input VolleyballSetScoreInput {
+  pointsScored: Int!
+}
+
 """
 Sport-specific participant metadata. Exactly one must be provided.
 Must match the game's sport type.
@@ -1436,6 +2088,7 @@ input ParticipantMetadataInput @oneOf {
   tennis: TennisParticipantMetadataInput
   football: FootballParticipantMetadataInput
   pickleball: PickleballParticipantMetadataInput
+  volleyball: VolleyballParticipantMetadataInput
 }
 
 # ============================================================================
@@ -1452,6 +2105,7 @@ input CreateGameInput @oneOf {
   football: CreateFootballGameInput
   tennis: CreateTennisGameInput
   pickleball: CreatePickleballGameInput
+  volleyball: CreateVolleyballGameInput
 }
 
 """
@@ -1544,6 +2198,21 @@ input CreatePickleballGameInput {
   statEntryMode: StatEntryMode
 }
 
+input CreateVolleyballGameInput {
+  startDate: DateTime!
+  description: String
+  location: LocationInput
+  metadata: CreateVolleyballGameMetadataInput!
+  """
+  Defaults to PUBLIC if not provided.
+  """
+  visibility: GameVisibility
+  """
+  Defaults to OPEN if not provided.
+  """
+  statEntryMode: StatEntryMode
+}
+
 input UpdateGameInput {
   id: ID!
   description: String
@@ -1574,6 +2243,7 @@ input GameMetadataInput @oneOf {
   tennis: TennisGameMetadataInput
   football: FootballGameMetadataInput
   pickleball: PickleballGameMetadataInput
+  volleyball: VolleyballGameMetadataInput
 }
 
 input DeleteGameInput {
@@ -2004,77 +2674,6 @@ union CancelGameInvitationResult =
   | CancelGameInvitationResponse
   | InvitationNotFoundError
   | InvalidInvitationStatusError
-enum LivestreamProvider {
-  YOUTUBE
-  TWITCH
-}
-
-enum LivestreamStatus {
-  LIVE
-  COMPLETE
-}
-
-type Livestream implements HasUser & Node {
-  id: ID!
-  user: User!
-  provider: LivestreamProvider!
-  title: String!
-  description: String
-  streamUrl: String!
-  status: LivestreamStatus!
-}
-
-type LivestreamEdge implements Edge {
-  cursor: String!
-  node: Livestream!
-}
-
-type LivestreamConnection implements Connection {
-  edges: [LivestreamEdge!]!
-  pageInfo: PageInfo!
-}
-
-input StartLivestreamInput {
-  gameId: ID!
-  provider: LivestreamProvider!
-  title: String!
-  description: String
-  url: String!
-}
-
-type StartLivestreamResponse {
-  livestream: Livestream!
-}
-
-"""
-End a specific livestream. The caller must be the streamer or the game organizer.
-"""
-input EndLivestreamInput {
-  id: ID!
-}
-
-type EndLivestreamResponse {
-  livestream: Livestream!
-}
-
-"""
-Update a livestream's title or description. Only the streamer can do this.
-"""
-input UpdateLivestreamInput {
-  id: ID!
-  title: String
-  description: String
-}
-
-type UpdateLivestreamResponse {
-  livestream: Livestream!
-}
-
-union StartLivestreamResult = StartLivestreamResponse | GameNotFoundError
-union EndLivestreamResult = EndLivestreamResponse | LivestreamNotFoundError
-union UpdateLivestreamResult =
-  | UpdateLivestreamResponse
-  | LivestreamNotFoundError
 """
 A player in a game. Persists across games.
 Physical attributes (age, height, weight) may be null if the viewer has
@@ -2094,7 +2693,10 @@ type Player implements Node {
   Null when the viewer has a blocking relationship with this player's user.
   """
   weight: Float
-  user: User!
+  """
+  Null when the viewer has a blocking relationship with this player's user.
+  """
+  user: User
 }
 
 """
@@ -2287,7 +2889,10 @@ type DeleteResourceResponse implements DeleteResponse {
 # ============================================================================
 
 union RequestUploadResult = RequestUploadResponse | InvalidUploadContextError
-union ConfirmUploadResult = ConfirmUploadResponse | ResourceNotFoundError
+union ConfirmUploadResult =
+  | ConfirmUploadResponse
+  | ConfirmGameMediaUploadResponse
+  | ResourceNotFoundError
 union DeleteResourceResult = DeleteResourceResponse | ResourceNotFoundError
 scalar DateTime
 scalar JSON
@@ -2397,17 +3002,61 @@ type Query {
     before: String
   ): UserConnection!
   """
-  Query friendships for the current user.
-  Use filters to get pending requests, accepted friends, blocked users, etc.
-  User must be authenticated.
+  Get followers of a user (paginated).
+  Ordered by follow date DESC (most recent followers first).
   """
-  friendships(
-    input: FriendshipFilterInput
+  followers(
+    userId: ID!
     first: Int
     after: String
     last: Int
     before: String
-  ): FriendshipConnection!
+  ): FollowConnection!
+  """
+  Get users that a user follows (paginated).
+  Ordered by follow date DESC (most recently followed first).
+  """
+  following(
+    userId: ID!
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FollowConnection!
+  """
+  Get mutual follows for the current user (paginated).
+  Users where both parties follow each other.
+  For the chat "new conversation" selector.
+  User must be authenticated.
+  """
+  mutualFollows(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): UserConnection!
+  """
+  Get users the current user has blocked (paginated).
+  Only returns users that the caller has blocked (not users who have blocked the caller).
+  User must be authenticated.
+  """
+  blockedUsers(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): UserConnection!
+  """
+  Activity feed showing games from people the current user follows.
+  Ordered by start date DESC (most recent first).
+  User must be authenticated.
+  """
+  followingActivityFeed(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GameConnection!
   """
   Get a player by ID
   """
@@ -2442,6 +3091,18 @@ type Query {
     before: String
   ): NotificationConnection!
   """
+  Get follow requests for the current user.
+  INCOMING: requests others have sent to you. OUTGOING: requests you have sent.
+  Ordered by createdDate DESC. Use first/after.
+  """
+  followRequests(
+    direction: FollowRequestDirection!
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FollowRequestConnection!
+  """
   Get a chat room
   User must be authenticated.
   """
@@ -2463,18 +3124,6 @@ type Query {
   Returns null if no DM exists.
   """
   directMessageChatRoom(userId: ID!): ChatRoom
-  """
-  Activity feed showing games that the current user and their friends participate in.
-  Ordered by start date DESC (most recent first).
-  Use `first` to fetch the most recent games; `after` to load older games.
-  User must be authenticated.
-  """
-  friendsActivityFeed(
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): GameConnection!
   """
   Query and filter basketball box scores
   """
@@ -2574,6 +3223,23 @@ type Query {
     last: Int
     before: String
   ): BaseballFieldingStatsConnection!
+  """
+  Query and filter volleyball statistics
+  """
+  volleyballStatistics(
+    input: VolleyballStatisticsFilterInput!
+    sort: [VolleyballStatisticsSortInput!]
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): VolleyballStatisticsConnection!
+  """
+  Resolve a URL to detect its media type, fetch oEmbed/OpenGraph metadata,
+  and check for duplicates. Phase 1 of the Add Link flow.
+  The caller must have a role on the game (participant, editor, or owner).
+  """
+  resolveUrl(input: ResolveUrlInput!): ResolveUrlResult!
 }
 
 """
@@ -2698,11 +3364,11 @@ type Mutation {
     input: TransferGameOwnershipInput!
   ): TransferGameOwnershipResult!
   """
-  Start a livestream on a game
+  Start a livestream on a game. Creates a LivestreamMedia item.
   """
   startLivestream(input: StartLivestreamInput!): StartLivestreamResult!
   """
-  End a livestream on a game
+  End a livestream on a game. Transitions LivestreamMedia to VideoMedia.
   """
   endLivestream(input: EndLivestreamInput!): EndLivestreamResult!
   """
@@ -2710,45 +3376,59 @@ type Mutation {
   """
   updateLivestream(input: UpdateLivestreamInput!): UpdateLivestreamResult!
   """
-  Add a friend.
+  Add an external link (URL) as a GameMedia item to a game.
+  Phase 2 of the Add Link flow -- call resolveUrl first to obtain the preview.
   """
-  sendFriendRequest(input: SendFriendRequestInput!): SendFriendRequestResult!
+  addGameMediaLink(input: AddGameMediaLinkInput!): AddGameMediaLinkResult!
   """
-  Accept a friend request.
+  Delete a GameMedia item. For uploads, also deletes the backing Resource and S3 object.
   """
-  acceptFriendRequest(
-    input: AcceptFriendRequestInput!
-  ): AcceptFriendRequestResult!
+  deleteGameMedia(input: DeleteGameMediaInput!): DeleteGameMediaResult!
   """
-  Decline a friend request.
+  Send a heartbeat for an active livestream to keep it alive.
+  Missed heartbeats trigger auto-transition to VideoMedia.
   """
-  declineFriendRequest(
-    input: DeclineFriendRequestInput!
-  ): DeclineFriendRequestResult!
+  livestreamHeartbeat(
+    input: LivestreamHeartbeatInput!
+  ): LivestreamHeartbeatResult!
   """
-  Unfriend a user.
+  Follow a user. Idempotent.
   """
-  unfriend(input: UnfriendRequestInput!): UnfriendResult!
+  followUser(input: FollowUserInput!): FollowUserResult!
   """
-  Cancel a pending friend request you sent.
-  Only the requester can cancel; only works on PENDING requests.
+  Unfollow a user.
   """
-  cancelFriendRequest(
-    input: CancelFriendRequestInput!
-  ): CancelFriendRequestResult!
+  unfollowUser(input: UnfollowUserInput!): UnfollowUserResult!
   """
-  Block a user.
-  Any logged-in user can block anyone. Works regardless of current
-  friendship status (friends, pending, no relationship).
-  The blocked record is stored with the caller as requester.
+  Remove a user from your followers list without blocking them.
+  """
+  removeFollower(input: RemoveFollowerInput!): RemoveFollowerResult!
+  """
+  Block a user. Removes any existing follow relationships in both directions.
   """
   blockUser(input: BlockUserInput!): BlockUserResult!
   """
   Unblock a user you previously blocked.
-  Only the person who initiated the block can unblock.
-  The other person is not notified.
   """
   unblockUser(input: UnblockUserInput!): UnblockUserResult!
+  """
+  Approve a follow request. Only the target can approve.
+  """
+  approveFollowRequest(
+    input: ApproveFollowRequestInput!
+  ): ApproveFollowRequestResult!
+  """
+  Decline a follow request. Only the target can decline. Silent — no notification sent.
+  """
+  declineFollowRequest(
+    input: DeclineFollowRequestInput!
+  ): DeclineFollowRequestResult!
+  """
+  Cancel an outgoing follow request. Only the requester can cancel.
+  """
+  cancelFollowRequest(
+    input: CancelFollowRequestInput!
+  ): CancelFollowRequestResult!
   """
   Read notifications for the current user
   """
@@ -2928,6 +3608,20 @@ type Mutation {
   saveBaseballFieldingStatsBulk(
     input: SaveBaseballFieldingStatsBulkInput!
   ): SaveBaseballFieldingStatsBulkResult!
+  """
+  Save statistics for a volleyball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveVolleyballStatistics(
+    input: SaveVolleyballStatisticsInput!
+  ): SaveVolleyballStatisticsResult!
+  """
+  Save statistics for multiple players in a volleyball game.
+  Only available for games that are IN_PROGRESS or COMPLETE
+  """
+  saveVolleyballStatisticsBulk(
+    input: SaveVolleyballStatisticsBulkInput!
+  ): SaveVolleyballStatisticsBulkResult!
   """
   Send a game invitation to a user. Only managers (owner/editor) can send.
   """
@@ -4106,18 +4800,226 @@ union SaveBaseballFieldingStatsBulkResult =
   | SaveBaseballFieldingStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+
+# ============================================================================
+# Volleyball Statistics
+# ============================================================================
+
+"""
+Filter for volleyball statistics by game and/or player.
+At least one of gameIds or playerIds must be provided.
+"""
+input VolleyballStatisticsFilterInput {
+  gameIds: [ID!]
+  playerIds: [ID!]
+}
+
+"""
+Volleyball statistics for a single player in a game.
+"""
+type VolleyballStatistics implements Node {
+  id: ID!
+  player: Player!
+  game: Game!
+  kills: Int
+  attackErrors: Int
+  attackAttempts: Int
+  aces: Int
+  serviceErrors: Int
+  blocks: Int
+  blockErrors: Int
+  digs: Int
+  receptionErrors: Int
+  assists: Int
+  """
+  Computed: kills + aces + blocks
+  """
+  points: Int
+}
+
+type VolleyballStatisticsEdge implements Edge {
+  node: VolleyballStatistics!
+  cursor: String!
+}
+
+type VolleyballStatisticsConnection implements Connection {
+  edges: [VolleyballStatisticsEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum VolleyballStatisticsSortField {
+  KILLS
+  POINTS
+  ACES
+  BLOCKS
+  ASSISTS
+  DIGS
+}
+
+input VolleyballStatisticsSortInput {
+  field: VolleyballStatisticsSortField!
+  direction: SortDirection = ASC
+}
+
+input SaveVolleyballStatisticsInput {
+  playerId: ID!
+  gameId: ID!
+  kills: Int
+  attackErrors: Int
+  attackAttempts: Int
+  aces: Int
+  serviceErrors: Int
+  blocks: Int
+  blockErrors: Int
+  digs: Int
+  receptionErrors: Int
+  assists: Int
+}
+
+"""
+Volleyball statistics data for a single player within a bulk save (gameId is at parent level).
+"""
+input SaveVolleyballStatisticsData {
+  playerId: ID!
+  kills: Int
+  attackErrors: Int
+  attackAttempts: Int
+  aces: Int
+  serviceErrors: Int
+  blocks: Int
+  blockErrors: Int
+  digs: Int
+  receptionErrors: Int
+  assists: Int
+}
+
+input SaveVolleyballStatisticsBulkInput {
+  gameId: ID!
+  statistics: [SaveVolleyballStatisticsData!]!
+}
+
+type SaveVolleyballStatisticsResponse {
+  volleyballStatistics: VolleyballStatistics!
+}
+
+type SaveVolleyballStatisticsBulkResponse {
+  statistics: [VolleyballStatistics!]!
+}
+
+union SaveVolleyballStatisticsResult =
+  | SaveVolleyballStatisticsResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+union SaveVolleyballStatisticsBulkResult =
+  | SaveVolleyballStatisticsBulkResponse
+  | GameNotFoundError
+  | InvalidSportTypeError
+enum MeasurementUnit {
+  METRIC
+  IMPERIAL
+}
+
+enum EmailDigestFrequency {
+  DAILY
+  WEEKLY
+  NEVER
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+type UserPreferences implements Node {
+  id: ID!
+  measurementUnit: MeasurementUnit!
+  notificationsEnabled: Boolean!
+  emailDigestFrequency: EmailDigestFrequency!
+  profileVisibility: ProfileVisibility!
+  showOnlineStatus: Boolean!
+  showGameHistory: Boolean!
+  showStatistics: Boolean!
+  preferredSports: [SportType!]!
+}
+
+input UpdateUserPreferencesInput {
+  measurementUnit: MeasurementUnit
+  notificationsEnabled: Boolean
+  emailDigestFrequency: EmailDigestFrequency
+  profileVisibility: ProfileVisibility
+  showOnlineStatus: Boolean
+  showGameHistory: Boolean
+  showStatistics: Boolean
+  preferredSports: [SportType!]
+}
+
+type UpdateUserPreferencesResponse {
+  preferences: UserPreferences!
+}
+
+union UpdateUserPreferencesResult = UpdateUserPreferencesResponse
+
+extend type CurrentUser {
+  preferences: UserPreferences!
+}
+
+extend type Mutation {
+  """
+  Update the current user's account preferences. Only provided fields are changed.
+  """
+  updateUserPreferences(
+    input: UpdateUserPreferencesInput!
+  ): UpdateUserPreferencesResult!
+}
 """
 A Playground user
 """
 type User implements Node {
   id: ID!
   username: String!
-  firstName: String!
-  lastName: String!
+  """
+  Null when the profile is private and viewer is not a follower.
+  """
+  firstName: String
+  """
+  Null when the profile is private and viewer is not a follower.
+  """
+  lastName: String
   displayName: String!
+  """
+  The user's profile visibility setting.
+  """
+  profileVisibility: ProfileVisibility!
   biography: String
   player: Player!
-  friendship: Friendship
+  """
+  Whether the authenticated viewer follows this user.
+  Null when unauthenticated.
+  """
+  viewerFollowsUser: Boolean
+  """
+  Whether this user follows the authenticated viewer.
+  Null when unauthenticated.
+  """
+  userFollowsViewer: Boolean
+  """
+  The viewer's outgoing follow request to this user, if any.
+  Null when no outgoing request exists or the viewer is unauthenticated.
+  """
+  viewerSentFollowRequest: FollowRequest
+  """
+  This user's incoming follow request to the viewer, if any.
+  Null when no incoming request exists or the viewer is unauthenticated.
+  """
+  viewerReceivedFollowRequest: FollowRequest
+  """
+  Number of users who follow this user.
+  """
+  followerCount: Int!
+  """
+  Number of users this user follows.
+  """
+  followingCount: Int!
   """
   The user's profile picture. Null if no profile picture has been set.
   """
@@ -4150,66 +5052,29 @@ interface HasUser {
 }
 
 """
-The Friendship status between two users
+A follow relationship. The follower follows the following user.
 """
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  BLOCKED
-}
-
-"""
-Direction of a friendship relative to the current user
-"""
-enum FriendshipDirection {
-  """
-  Requests sent TO the current user
-  """
-  INCOMING
-  """
-  Requests sent BY the current user
-  """
-  OUTGOING
-}
-
-"""
-The Friendship between two users
-Can be bidirectional - ACCEPTED status
-Can be unidirectional - PENDING status
-"""
-type Friendship implements Node {
+type Follow implements Node {
   id: ID!
-  requester: User!
-  addressee: User!
-  status: FriendshipStatus!
+  """
+  The user who is performing the follow action.
+  """
+  follower: User!
+  """
+  The user being followed.
+  """
+  following: User!
   createdDate: DateTime!
 }
 
-type FriendshipEdge implements Edge {
+type FollowEdge implements Edge {
   cursor: String!
-  node: Friendship!
+  node: Follow!
 }
 
-type FriendshipConnection implements Connection {
-  edges: [FriendshipEdge!]!
+type FollowConnection implements Connection {
+  edges: [FollowEdge!]!
   pageInfo: PageInfo!
-}
-
-"""
-Filters for querying friendships
-"""
-input FriendshipFilterInput {
-  """
-  Filter by friendship status
-  """
-  status: FriendshipStatus
-  """
-  Filter by direction relative to current user.
-  INCOMING = other users requested me, OUTGOING = I requested them.
-  If null, returns both directions.
-  """
-  direction: FriendshipDirection
 }
 
 type UserEdge implements Edge {
@@ -4222,47 +5087,41 @@ type UserConnection implements Connection {
   pageInfo: PageInfo!
 }
 
-input SendFriendRequestInput {
+input FollowUserInput {
   userId: ID!
 }
 
-type SendFriendRequestResponse {
-  friendship: Friendship!
-}
-
-input AcceptFriendRequestInput {
-  requesterId: ID!
-}
-
-type AcceptFriendRequestResponse {
-  friendship: Friendship!
-}
-
-input DeclineFriendRequestInput {
-  requesterId: ID!
-}
-
-type DeclineFriendRequestResponse {
-  friendship: Friendship!
-}
-
-input UnfriendRequestInput {
+input UnfollowUserInput {
   userId: ID!
 }
 
-type UnfriendResponse {
-  friendship: Friendship
+input RemoveFollowerInput {
+  userId: ID!
 }
 
-input CancelFriendRequestInput {
+type FollowUserResponse {
   """
-  The user to whom the pending friend request was sent.
+  The followed user with updated counts and follow state.
   """
-  addresseeId: ID!
+  user: User!
 }
 
-type CancelFriendRequestResponse {
-  friendship: Friendship!
+type UnfollowUserResponse {
+  """
+  The unfollowed user with updated counts and follow state.
+  """
+  user: User!
+  """
+  Whether the unfollow broke a mutual follow (the other user still follows the caller).
+  """
+  wasMutualFollow: Boolean!
+}
+
+type RemoveFollowerResponse {
+  """
+  The ID of the removed follower.
+  """
+  userId: ID!
 }
 
 input BlockUserInput {
@@ -4270,7 +5129,10 @@ input BlockUserInput {
 }
 
 type BlockUserResponse {
-  friendship: Friendship!
+  """
+  The ID of the blocked user.
+  """
+  userId: ID!
 }
 
 input UnblockUserInput {
@@ -4279,10 +5141,9 @@ input UnblockUserInput {
 
 type UnblockUserResponse {
   """
-  The friendship relationship after unblocking, or null if there was no
-  relationship to restore (e.g., there was no prior friendship).
+  The ID of the unblocked user.
   """
-  friendship: Friendship
+  userId: ID!
 }
 
 interface Notification implements Node {
@@ -4291,24 +5152,14 @@ interface Notification implements Node {
   createdDate: DateTime!
 }
 
-type FriendRequestReceivedNotification implements Notification & Node {
+type NewFollowerNotification implements Notification & Node {
   id: ID!
   isRead: Boolean!
   createdDate: DateTime!
   """
-  The user who sent the friend request.
+  The user who started following you.
   """
-  sender: User!
-}
-
-type FriendRequestAcceptedNotification implements Notification & Node {
-  id: ID!
-  isRead: Boolean!
-  createdDate: DateTime!
-  """
-  The user who accepted your friend request.
-  """
-  accepter: User!
+  follower: User!
 }
 
 type GameStartedNotification implements Notification & Node {
@@ -4337,6 +5188,30 @@ type GameInvitationReceivedNotification implements Notification & Node {
   The invitation itself. Null if the invitation was declined (deleted) after the notification was created.
   """
   invitation: GameInvitation
+}
+
+type FollowRequestReceivedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The user who sent you a follow request.
+  """
+  requester: User!
+  """
+  The follow request. Null if the request was already approved, declined, or cancelled.
+  """
+  followRequest: FollowRequest
+}
+
+type FollowRequestApprovedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The user who approved your follow request.
+  """
+  approver: User!
 }
 
 type NotificationEdge implements Edge {
@@ -4368,9 +5243,6 @@ input QueryUserInput @oneOf {
 
 input UserSearchInput {
   query: String!
-  #    excludeFriends: Boolean
-  #    hasFriendshipStatus: FriendshipStatus
-  #    hasPlayer: Boolean
 }
 
 """
@@ -4395,35 +5267,23 @@ type UpdateUserResponse {
 union UpdateUserResult = UpdateUserResponse
 
 # ============================================================================
-# Friendship Result Unions
+# Follow Result Unions
 # ============================================================================
 
-union SendFriendRequestResult =
-  | SendFriendRequestResponse
+union FollowUserResult =
+  | FollowUserResponse
+  | FollowRequestSentResponse
+  | FollowRequestAlreadyExistsError
   | UserNotFoundError
   | SelfActionError
-  | FriendshipAlreadyExistsError
-union AcceptFriendRequestResult =
-  | AcceptFriendRequestResponse
-  | FriendRequestNotFoundError
-  | InvalidFriendshipStateError
-union DeclineFriendRequestResult =
-  | DeclineFriendRequestResponse
-  | FriendRequestNotFoundError
-  | InvalidFriendshipStateError
-union UnfriendResult = UnfriendResponse | SelfActionError
-union CancelFriendRequestResult =
-  | CancelFriendRequestResponse
-  | FriendRequestNotFoundError
-  | InvalidFriendshipStateError
-union BlockUserResult =
-  | BlockUserResponse
+  | UserBlockedError
+union UnfollowUserResult =
+  | UnfollowUserResponse
   | SelfActionError
-  | UserBlockedYouError
-union UnblockUserResult =
-  | UnblockUserResponse
-  | BlockNotFoundError
-  | UserBlockedYouError
+  | UserNotFoundError
+union RemoveFollowerResult = RemoveFollowerResponse | SelfActionError
+union BlockUserResult = BlockUserResponse | SelfActionError | UserNotFoundError
+union UnblockUserResult = UnblockUserResponse | BlockNotFoundError
 
 # ============================================================================
 # Notification Result Unions
