@@ -17,7 +17,7 @@ import { mockEmptyFollowRequestsResponse } from "./mock-data/follow-requests";
  * e.g. "query { me { id } }" -> "me"
  * e.g. "{ games(first: 10) { edges } }" -> "games"
  */
-function extractOperationField(queryString: string): string | null {
+export function extractOperationField(queryString: string): string | null {
   const match = queryString.match(
     /(?:query|mutation)?\s*(?:\w+\s*)?\{[\s]*(\w+)/,
   );

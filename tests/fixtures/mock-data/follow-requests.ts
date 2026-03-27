@@ -1,6 +1,5 @@
 import { buildConnection, emptyConnection } from "./connection";
 
-// Follow request for the incoming requests list
 export function mockFollowRequest(overrides?: Record<string, unknown>) {
   return {
     id: "follow-req-1",
@@ -24,8 +23,7 @@ export function mockEmptyFollowRequestsResponse() {
   return { data: { followRequests: emptyConnection() } };
 }
 
-// Follow user mutation responses
-export function mockFollowUserResponse(overrides?: Record<string, unknown>) {
+export function mockFollowUserResponse() {
   return {
     data: {
       followUser: {
@@ -37,21 +35,19 @@ export function mockFollowUserResponse(overrides?: Record<string, unknown>) {
           viewerSentFollowRequest: null,
           followerCount: 1,
           followingCount: 0,
-          ...overrides,
         },
       },
     },
   };
 }
 
-export function mockFollowRequestSentResponse(overrides?: Record<string, unknown>) {
+export function mockFollowRequestSentResponse() {
   return {
     data: {
       followUser: {
         __typename: "FollowRequestSentResponse",
         followRequest: {
           id: "follow-req-new",
-          ...overrides,
         },
       },
     },
