@@ -55,11 +55,7 @@ export function useNotificationSubscription({
 
     let isFirstConnection = true;
 
-    const client = getGraphQLWsClient(async () => {
-      const token = await getAccessToken();
-      if (!token) throw new Error("No access token available");
-      return token;
-    });
+    const client = getGraphQLWsClient(getAccessToken);
 
     const unsubscribeConnected = client.on("connected", () => {
       if (isFirstConnection) {

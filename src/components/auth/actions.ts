@@ -44,11 +44,16 @@ export async function getKeycloakLogoutUrl(): Promise<string> {
   return logoutUrl.toString();
 }
 
+export interface TokenInfo {
+  token: string;
+  expiresAt: number | null;
+}
+
 /**
  * Fetch the Keycloak access token for the current session.
  * Used by the WebSocket client to authenticate subscription connections.
  */
-export async function getAccessToken(): Promise<string | null> {
+export async function getAccessToken(): Promise<TokenInfo | null> {
   try {
     const reqHeaders = await headers();
     const session = await auth.api.getSession({ headers: reqHeaders });
@@ -62,7 +67,12 @@ export async function getAccessToken(): Promise<string | null> {
       body: { providerId: "keycloak" },
     });
 
-    return tokenResponse?.accessToken ?? null;
+    return tokenResponse?.accessToken
+      ? {
+          token: tokenResponse.accessToken,
+          expiresAt: tokenResponse.accessTokenExpiresAt?.getTime() ?? null,
+        }
+      : null;
   } catch (error) {
     console.error("Failed to fetch access token:", error);
     return null;

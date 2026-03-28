@@ -1,9 +1,14 @@
 "use client";
 
-import { createClient, type Client } from "graphql-ws";
+import type { TokenInfo } from "@/components/auth/actions";
+import { createClient, CloseCode, type Client } from "graphql-ws";
 import { GRAPHQL_PATH } from "./graphql-config";
 
 let client: Client | null = null;
+let expiryTimer: ReturnType<typeof setTimeout> | null = null;
+let lastExpiresAt: number | null = null;
+
+const BUFFER_MS = 30_000;
 
 function getWsUrl(): string {
   const httpUrl = process.env.NEXT_PUBLIC_API_SERVER_URL;
@@ -13,14 +18,34 @@ function getWsUrl(): string {
   return `${httpUrl.replace(/^http/, "ws")}${GRAPHQL_PATH}`;
 }
 
-export function getGraphQLWsClient(fetchToken: () => Promise<string>): Client {
+function clearExpiryTimer(): void {
+  if (expiryTimer) {
+    clearTimeout(expiryTimer);
+    expiryTimer = null;
+  }
+}
+
+export function getGraphQLWsClient(
+  fetchToken: () => Promise<TokenInfo | null>,
+): Client {
   if (client) return client;
 
   client = createClient({
     url: getWsUrl(),
     connectionParams: async () => {
-      const token = await fetchToken();
-      return { Authorization: `Bearer ${token}` };
+      try {
+        const tokenInfo = await fetchToken();
+        if (tokenInfo) {
+          lastExpiresAt = tokenInfo.expiresAt;
+          return { Authorization: `Bearer ${tokenInfo.token}` };
+        }
+        lastExpiresAt = null;
+        return {};
+      } catch (error) {
+        console.error("[graphql-ws] Failed to fetch token:", error);
+        lastExpiresAt = null;
+        return {};
+      }
     },
     retryAttempts: Infinity,
     retryWait: async (retries) => {
@@ -32,11 +57,25 @@ export function getGraphQLWsClient(fetchToken: () => Promise<string>): Client {
       error: (error) => {
         console.error("[graphql-ws] Connection error:", error);
       },
-      connected: () => {
+      connected: (socket) => {
         console.debug("[graphql-ws] Connected");
+        clearExpiryTimer();
+        const ws = socket as WebSocket;
+        if (lastExpiresAt !== null) {
+          const timeUntilClose = lastExpiresAt - Date.now() - BUFFER_MS;
+          if (timeUntilClose > 0) {
+            expiryTimer = setTimeout(() => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.close(CloseCode.Forbidden, "Forbidden");
+              }
+            }, timeUntilClose);
+          }
+          // else: token is nearly expired, let server close it
+        }
       },
       closed: (event) => {
         console.debug("[graphql-ws] Closed:", event);
+        clearExpiryTimer();
       },
     },
   });
@@ -45,6 +84,7 @@ export function getGraphQLWsClient(fetchToken: () => Promise<string>): Client {
 }
 
 export function disposeGraphQLWsClient(): void {
+  clearExpiryTimer();
   if (client) {
     client.dispose();
     client = null;
