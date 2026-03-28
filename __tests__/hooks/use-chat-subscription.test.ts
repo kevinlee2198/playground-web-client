@@ -44,7 +44,9 @@ const {
 });
 
 vi.mock("@/components/auth/actions", () => ({
-  getAccessToken: vi.fn().mockResolvedValue("mock-token"),
+  getAccessToken: vi
+    .fn()
+    .mockResolvedValue({ token: "mock-token", expiresAt: null }),
 }));
 
 vi.mock("@/lib/graphql-ws-client", () => ({
