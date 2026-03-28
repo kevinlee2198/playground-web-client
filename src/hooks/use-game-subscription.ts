@@ -7,6 +7,7 @@ import {
   participantMetadataFragment,
   playerRefFragment,
 } from "@/lib/graphql-fragments";
+import { CloseCode } from "graphql-ws";
 import { getGraphQLWsClient } from "@/lib/graphql-ws-client";
 import type { GameEvent } from "@/lib/types/game-event";
 import { jsonToGraphQLQuery } from "json-to-graphql-query";
@@ -156,11 +157,7 @@ export function useGameSubscription({
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    const client = getGraphQLWsClient(async () => {
-      const token = await getAccessToken();
-      if (!token) throw new Error("No access token available");
-      return token;
-    });
+    const client = getGraphQLWsClient(getAccessToken);
 
     const unsubscribeConnected = client.on("connected", () => {
       if (!isFirstConnection) {
@@ -172,8 +169,11 @@ export function useGameSubscription({
 
     let disposed = false;
 
-    const unsubscribeClosed = client.on("closed", () => {
-      if (!disposed && hasEverConnected) {
+    const unsubscribeClosed = client.on("closed", (event) => {
+      // event is CloseEvent (browser) or TerminatedCloseEvent (graphql-ws terminate()).
+      // If code is undefined (e.g., raw Error), treat as connection lost.
+      const code = (event as { code?: number })?.code;
+      if (!disposed && hasEverConnected && code !== CloseCode.Forbidden) {
         onConnectionLostRef.current?.();
       }
     });
