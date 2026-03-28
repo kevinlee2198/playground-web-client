@@ -69,6 +69,7 @@ function buildUserQuery(username: string) {
       followingCount: true,
       viewerFollowsUser: true,
       userFollowsViewer: true,
+      viewerSentFollowRequest: { id: true },
       player: {
         id: true,
         age: true,

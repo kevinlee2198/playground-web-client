@@ -94,7 +94,7 @@ describe("followUser", () => {
 
     const result = await followUser("u2");
 
-    expect(result).toEqual({ success: true, user: mockUserFollowData });
+    expect(result).toEqual({ success: true, type: "followed", user: mockUserFollowData });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 

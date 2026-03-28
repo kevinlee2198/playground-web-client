@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockFollowUser, mockUnfollowUser, mockToast } = vi.hoisted(() => {
+const { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast } = vi.hoisted(() => {
   const mockFollowUser = vi.fn();
   const mockUnfollowUser = vi.fn();
+  const mockCancelFollowRequest = vi.fn();
   const mockToast = Object.assign(vi.fn(), { error: vi.fn() });
-  return { mockFollowUser, mockUnfollowUser, mockToast };
+  return { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast };
 });
 
 vi.mock("next-intl", () => ({
@@ -14,8 +15,10 @@ vi.mock("next-intl", () => ({
       follow: "Follow",
       following: "Following",
       unfollow: "Unfollow",
+      requested: "Requested",
       error: "Something went wrong. Please try again.",
       undo: "Undo",
+      requestCancelled: "Follow request cancelled",
     };
     if (key === "unfollowedUndo" && params?.name) {
       return `Unfollowed ${params.name}. You can no longer message each other.`;
@@ -26,6 +29,12 @@ vi.mock("next-intl", () => ({
     if (key === "unfollowedName" && params?.name) {
       return `Unfollowed ${params.name}`;
     }
+    if (key === "cancelRequest" && params?.name) {
+      return `Cancel follow request for ${params.name}`;
+    }
+    if (key === "requestSent" && params?.name) {
+      return `Follow request sent to ${params.name}`;
+    }
     return map[key] ?? key;
   },
 }));
@@ -33,6 +42,10 @@ vi.mock("next-intl", () => ({
 vi.mock("@/app/[locale]/user/[username]/actions", () => ({
   followUser: (...args: unknown[]) => mockFollowUser(...args),
   unfollowUser: (...args: unknown[]) => mockUnfollowUser(...args),
+}));
+
+vi.mock("@/components/profile/follow-request-actions", () => ({
+  cancelFollowRequest: (...args: unknown[]) => mockCancelFollowRequest(...args),
 }));
 
 vi.mock("sonner", () => ({
@@ -44,8 +57,10 @@ import { FollowButton } from "@/components/profile/follow-button";
 function makeFollowResponse(overrides: { viewerFollowsUser?: boolean } = {}) {
   return {
     success: true,
+    type: "followed" as const,
     user: {
       viewerFollowsUser: true,
+      viewerSentFollowRequest: null,
       ...overrides,
     },
   };
@@ -92,6 +107,20 @@ describe("FollowButton", () => {
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Following");
     expect(button).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it('renders "Requested" when initialViewerSentFollowRequest is set', () => {
+    render(
+      <FollowButton
+        {...defaultProps}
+        initialViewerSentFollowRequest={{ id: "req-1" }}
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: /Cancel follow request for Alice/i });
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent("Requested");
+    expect(button).not.toHaveAttribute("aria-pressed");
   });
 
   it("disables the button during pending state", async () => {
@@ -144,6 +173,23 @@ describe("FollowButton", () => {
     });
   });
 
+  it("calls cancelFollowRequest when clicking Requested button", async () => {
+    mockCancelFollowRequest.mockResolvedValue({ success: true });
+
+    render(
+      <FollowButton
+        {...defaultProps}
+        initialViewerSentFollowRequest={{ id: "req-1" }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Cancel follow request for Alice/i }));
+
+    await waitFor(() => {
+      expect(mockCancelFollowRequest).toHaveBeenCalledWith("req-1");
+    });
+  });
+
   it("shows undo toast when unfollow breaks a mutual follow", async () => {
     mockUnfollowUser.mockResolvedValue(
       makeUnfollowResponse({ wasMutualFollow: true }),
@@ -186,7 +232,24 @@ describe("FollowButton", () => {
     expect(mockToast).not.toHaveBeenCalled();
   });
 
-  it("calls onFollowChange with true when follow succeeds", async () => {
+  it("transitions to Requested state when followUser returns a request", async () => {
+    mockFollowUser.mockResolvedValue({
+      success: true,
+      type: "requested",
+      requestId: "req-2",
+    });
+
+    render(<FollowButton {...defaultProps} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Follow Alice/i }));
+
+    await waitFor(() => {
+      const button = screen.getByRole("button");
+      expect(button).toHaveTextContent("Requested");
+    });
+  });
+
+  it("calls onFollowChange with type 'followed' when follow succeeds", async () => {
     mockFollowUser.mockResolvedValue(makeFollowResponse());
     const onFollowChange = vi.fn();
 
@@ -197,11 +260,11 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Follow Alice/i }));
 
     await waitFor(() => {
-      expect(onFollowChange).toHaveBeenCalledWith(true);
+      expect(onFollowChange).toHaveBeenCalledWith({ type: "followed" });
     });
   });
 
-  it("calls onFollowChange with false when unfollow succeeds", async () => {
+  it("calls onFollowChange with type 'unfollowed' when unfollow succeeds", async () => {
     mockUnfollowUser.mockResolvedValue(makeUnfollowResponse());
     const onFollowChange = vi.fn();
 
@@ -216,7 +279,45 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(onFollowChange).toHaveBeenCalledWith(false);
+      expect(onFollowChange).toHaveBeenCalledWith({ type: "unfollowed" });
+    });
+  });
+
+  it("calls onFollowChange with type 'requested' when follow creates a request", async () => {
+    mockFollowUser.mockResolvedValue({
+      success: true,
+      type: "requested",
+      requestId: "req-3",
+    });
+    const onFollowChange = vi.fn();
+
+    render(
+      <FollowButton {...defaultProps} onFollowChange={onFollowChange} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Follow Alice/i }));
+
+    await waitFor(() => {
+      expect(onFollowChange).toHaveBeenCalledWith({ type: "requested", requestId: "req-3" });
+    });
+  });
+
+  it("calls onFollowChange with type 'cancelled' when cancel succeeds", async () => {
+    mockCancelFollowRequest.mockResolvedValue({ success: true });
+    const onFollowChange = vi.fn();
+
+    render(
+      <FollowButton
+        {...defaultProps}
+        initialViewerSentFollowRequest={{ id: "req-1" }}
+        onFollowChange={onFollowChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Cancel follow request for Alice/i }));
+
+    await waitFor(() => {
+      expect(onFollowChange).toHaveBeenCalledWith({ type: "cancelled" });
     });
   });
 
@@ -256,6 +357,26 @@ describe("FollowButton", () => {
     const button = screen.getByRole("button");
     expect(button).toHaveTextContent("Following");
     expect(button).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("reverts to Requested state when cancel fails", async () => {
+    mockCancelFollowRequest.mockResolvedValue({ success: false });
+
+    render(
+      <FollowButton
+        {...defaultProps}
+        initialViewerSentFollowRequest={{ id: "req-1" }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Cancel follow request for Alice/i }));
+
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalled();
+    });
+
+    const button = screen.getByRole("button");
+    expect(button).toHaveTextContent("Requested");
   });
 
   it("has min-w-[6rem] class for layout stability", () => {

@@ -10,7 +10,21 @@ import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
 
-export async function followUser(userId: string) {
+interface FollowUserState {
+  id: string;
+  viewerFollowsUser: boolean;
+  userFollowsViewer: boolean;
+  viewerSentFollowRequest: { id: string } | null;
+  followerCount: number;
+  followingCount: number;
+}
+
+export type FollowUserResult =
+  | { success: true; type: "followed"; user: FollowUserState }
+  | { success: true; type: "requested"; requestId: string }
+  | { success: false; errorType: string; message: string };
+
+export async function followUser(userId: string): Promise<FollowUserResult> {
   try {
     const response = await authMutate({
       followUser: {
@@ -21,6 +35,15 @@ export async function followUser(userId: string) {
             __typeName: "FollowUserResponse",
             user: followUserStateFragment,
           },
+          {
+            __typeName: "FollowRequestSentResponse",
+            followRequest: { id: true },
+          },
+          {
+            __typeName: "FollowRequestAlreadyExistsError",
+            requestId: true,
+            message: true,
+          },
           errorFragment,
         ],
       },
@@ -30,10 +53,21 @@ export async function followUser(userId: string) {
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.followUser, "FollowUserResponse");
-    if (!result.success) return result;
+    const data = response.data.followUser;
 
-    return { success: true, user: result.data.user };
+    if (data.__typename === "FollowUserResponse") {
+      return { success: true, type: "followed", user: data.user };
+    }
+
+    if (data.__typename === "FollowRequestSentResponse") {
+      return { success: true, type: "requested", requestId: data.followRequest.id };
+    }
+
+    if (data.__typename === "FollowRequestAlreadyExistsError") {
+      return { success: true, type: "requested", requestId: data.requestId };
+    }
+
+    return { success: false, errorType: data.__typename, message: data.message ?? "Failed to follow user" };
   } catch {
     return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to follow user" };
   }

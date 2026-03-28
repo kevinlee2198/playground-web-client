@@ -277,8 +277,8 @@ function NonMutualSearchResultItem({ user, onFollowSuccess }: NonMutualSearchRes
         userId={user.id}
         displayName={user.displayName}
         initialViewerFollowsUser={user.viewerFollowsUser ?? false}
-        onFollowChange={(isFollowing) => {
-          if (isFollowing) onFollowSuccess();
+        onFollowChange={(change) => {
+          if (change.type === "followed") onFollowSuccess();
         }}
       />
     </div>

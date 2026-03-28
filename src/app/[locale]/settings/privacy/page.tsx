@@ -10,6 +10,7 @@ import type { BlockedUserEntry } from "../blocked/blocked-users-list";
 import { BlockedUsersList } from "../blocked/blocked-users-list";
 import { loadBlockedUsers, loadUserPreferences } from "../actions";
 import { PrivacySettingsForm } from "./privacy-settings-form";
+import { FollowRequestsList } from "@/components/profile/follow-requests-list";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -65,6 +66,16 @@ export default async function PrivacySettingsPage({ params }: PageProps) {
           <TypographyMuted>{t("blocked.description")}</TypographyMuted>
         </div>
         <BlockedUsersList entries={blockedEntries} />
+      </div>
+
+      <Separator className="my-6" />
+
+      <div id="follow-requests">
+        <div className="mb-4">
+          <TypographyH3>{t("followRequests.title")}</TypographyH3>
+          <TypographyMuted>{t("followRequests.description")}</TypographyMuted>
+        </div>
+        <FollowRequestsList />
       </div>
     </div>
   );

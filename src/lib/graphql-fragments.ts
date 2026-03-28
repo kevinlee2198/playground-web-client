@@ -421,6 +421,15 @@ export const notificationInlineFragments = [
       id: true,
     },
   },
+  {
+    __typeName: "FollowRequestReceivedNotification",
+    requester: userRefFragment,
+    followRequest: { id: true },
+  },
+  {
+    __typeName: "FollowRequestApprovedNotification",
+    approver: userRefFragment,
+  },
 ];
 
 /**
@@ -454,6 +463,7 @@ export const followUserStateFragment = {
   id: true,
   viewerFollowsUser: true,
   userFollowsViewer: true,
+  viewerSentFollowRequest: { id: true },
   followerCount: true,
   followingCount: true,
 };
@@ -470,6 +480,22 @@ export const followUserRefFragment = {
   profilePicture: profilePictureThumbnailFragment,
   viewerFollowsUser: true,
   userFollowsViewer: true,
+  viewerSentFollowRequest: { id: true },
+};
+
+/**
+ * Follow request fields for follow request lists and notifications.
+ * Use as: followRequest: followRequestFragment
+ */
+export const followRequestFragment = {
+  id: true,
+  requester: {
+    id: true,
+    username: true,
+    displayName: true,
+    profilePicture: profilePictureThumbnailFragment,
+  },
+  createdDate: true,
 };
 
 /**

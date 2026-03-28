@@ -1,12 +1,20 @@
 "use client";
 
+import {
+  approveFollowRequest,
+  declineFollowRequest,
+} from "@/components/profile/follow-request-actions";
+import { Button } from "@/components/ui/button";
 import { TypographySmall } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import type { KnownNotification, Notification } from "@/lib/types/notification";
 import { isKnownNotificationType } from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
+
+type FollowRequestAction = "approved" | "declined";
 
 const HOVER_READ_DELAY_MS = 600;
 
@@ -17,6 +25,8 @@ interface NotificationContent {
   href: string | null;
   /** Parameters to pass to t.rich() for the body */
   richParams: Record<string, string>;
+  /** Follow request ID for inline approve/decline actions (null = already handled) */
+  followRequestId?: string | null;
 }
 
 const FALLBACK_CONTENT: NotificationContent = {
@@ -54,6 +64,21 @@ function getKnownNotificationContent(
           sportType: tSports(notification.game.sportType),
         },
       };
+    case "FollowRequestReceivedNotification":
+      if (!notification.requester) return FALLBACK_CONTENT;
+      return {
+        templateKey: "followRequestReceived",
+        href: `/user/${notification.requester.username}`,
+        richParams: { displayName: notification.requester.displayName },
+        followRequestId: notification.followRequest?.id ?? null,
+      };
+    case "FollowRequestApprovedNotification":
+      if (!notification.approver) return FALLBACK_CONTENT;
+      return {
+        templateKey: "followRequestApproved",
+        href: `/user/${notification.approver.username}`,
+        richParams: { displayName: notification.approver.displayName },
+      };
   }
 }
 
@@ -78,11 +103,31 @@ export function NotificationItem({
 }: NotificationItemProps) {
   const tNotif = useTranslations("notificationTemplates");
   const tSports = useTranslations("sports");
+  const tFollow = useTranslations("profile.follow");
   const formatter = useFormatter();
   const now = useNow();
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [requestAction, setRequestAction] = useState<FollowRequestAction | null>(null);
+  const [isActionPending, startActionTransition] = useTransition();
 
   const content = getNotificationContent(notification, tSports);
+
+  function handleFollowRequestAction(
+    requestId: string,
+    action: FollowRequestAction,
+  ) {
+    const execute = action === "approved" ? approveFollowRequest : declineFollowRequest;
+    const errorKey = action === "approved" ? "approveError" : "declineError";
+
+    startActionTransition(async () => {
+      const result = await execute(requestId);
+      if (result.success) {
+        setRequestAction(action);
+      } else {
+        toast.error(tFollow(errorKey));
+      }
+    });
+  }
 
   const relativeTime = formatter.relativeTime(
     new Date(notification.createdDate),
@@ -127,6 +172,57 @@ export function NotificationItem({
     }
   }, [notification.isRead, notification.id, onMarkAsRead]);
 
+  const isFollowRequestReceived =
+    notification.__typename === "FollowRequestReceivedNotification";
+
+  function renderFollowRequestActions() {
+    if (requestAction) {
+      return (
+        <TypographySmall className="mt-2 text-muted-foreground">
+          {tFollow(requestAction)}
+        </TypographySmall>
+      );
+    }
+
+    if (content.followRequestId == null) {
+      return (
+        <TypographySmall className="mt-2 text-muted-foreground">
+          {tFollow("requestNotAvailable")}
+        </TypographySmall>
+      );
+    }
+
+    const requestId = content.followRequestId;
+
+    function stopAndHandle(e: React.MouseEvent, action: FollowRequestAction) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFollowRequestAction(requestId, action);
+    }
+
+    return (
+      <div className="mt-2 flex gap-2">
+        <Button
+          size="sm"
+          disabled={isActionPending}
+          aria-label={`${tFollow("approve")} ${content.richParams.displayName}`}
+          onClick={(e) => stopAndHandle(e, "approved")}
+        >
+          {tFollow("approve")}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isActionPending}
+          aria-label={`${tFollow("decline")} ${content.richParams.displayName}`}
+          onClick={(e) => stopAndHandle(e, "declined")}
+        >
+          {tFollow("decline")}
+        </Button>
+      </div>
+    );
+  }
+
   const innerContent = (
     <div className="min-w-0 w-full">
       {content.templateKey && (
@@ -145,6 +241,7 @@ export function NotificationItem({
           : tNotif("unknown.body")}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">{relativeTime}</p>
+      {isFollowRequestReceived && renderFollowRequestActions()}
     </div>
   );
 

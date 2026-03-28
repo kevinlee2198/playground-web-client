@@ -37,11 +37,24 @@ export interface GameInvitationReceivedNotification extends BaseNotification {
   invitation: { id: string } | null;
 }
 
+export interface FollowRequestReceivedNotification extends BaseNotification {
+  __typename: "FollowRequestReceivedNotification";
+  requester: NotificationUser;
+  followRequest: { id: string } | null;
+}
+
+export interface FollowRequestApprovedNotification extends BaseNotification {
+  __typename: "FollowRequestApprovedNotification";
+  approver: NotificationUser;
+}
+
 /** Known notification types that the frontend can render with full content */
 export type KnownNotification =
   | NewFollowerNotification
   | GameStartedNotification
-  | GameInvitationReceivedNotification;
+  | GameInvitationReceivedNotification
+  | FollowRequestReceivedNotification
+  | FollowRequestApprovedNotification;
 
 /**
  * Discriminated union of all known notification types plus a catch-all.
@@ -60,7 +73,9 @@ export function isKnownNotificationType(
   return (
     n.__typename === "NewFollowerNotification" ||
     n.__typename === "GameStartedNotification" ||
-    n.__typename === "GameInvitationReceivedNotification"
+    n.__typename === "GameInvitationReceivedNotification" ||
+    n.__typename === "FollowRequestReceivedNotification" ||
+    n.__typename === "FollowRequestApprovedNotification"
   );
 }
 

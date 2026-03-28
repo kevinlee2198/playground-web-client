@@ -1,5 +1,6 @@
 "use client";
 
+import type { FollowStateChange } from "@/lib/types/follow";
 import { useState } from "react";
 import { FollowActions } from "./follow-actions";
 import { FollowCounts } from "./follow-counts";
@@ -11,6 +12,7 @@ interface ProfileInteractiveSectionProps {
   initialFollowingCount: number;
   initialViewerFollowsUser: boolean;
   initialUserFollowsViewer: boolean;
+  initialViewerSentFollowRequest: { id: string } | null;
   isOwnProfile: boolean;
 }
 
@@ -21,6 +23,7 @@ export function ProfileInteractiveSection({
   initialFollowingCount,
   initialViewerFollowsUser,
   initialUserFollowsViewer,
+  initialViewerSentFollowRequest,
   isOwnProfile,
 }: ProfileInteractiveSectionProps) {
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
@@ -28,9 +31,15 @@ export function ProfileInteractiveSection({
     initialViewerFollowsUser,
   );
 
-  function handleFollowChange(nowFollowing: boolean) {
-    setFollowerCount((prev) => prev + (nowFollowing ? 1 : -1));
-    setViewerFollowsUser(nowFollowing);
+  function handleFollowChange(change: FollowStateChange) {
+    if (change.type === "followed") {
+      setFollowerCount((prev) => prev + 1);
+      setViewerFollowsUser(true);
+    } else if (change.type === "unfollowed") {
+      setFollowerCount((prev) => prev - 1);
+      setViewerFollowsUser(false);
+    }
+    // "requested" and "cancelled" don't change follower counts
   }
 
   return (
@@ -47,6 +56,7 @@ export function ProfileInteractiveSection({
           displayName={displayName}
           viewerFollowsUser={viewerFollowsUser}
           userFollowsViewer={initialUserFollowsViewer}
+          initialViewerSentFollowRequest={initialViewerSentFollowRequest}
           showMessageButton
           onFollowChange={handleFollowChange}
         />
