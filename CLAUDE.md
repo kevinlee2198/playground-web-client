@@ -147,10 +147,12 @@ Always use these file names in the `app/` directory:
 - Zero client-side JavaScript for static content
 - Async components are supported and encouraged
 
-**Authentication**: Better Auth with Keycloak OAuth (PKCE flow, stateless/database-less). Session stored in JWE cookies.
+**Authentication**: Better Auth with Keycloak OAuth (PKCE flow, stateless/database-less). Session stored in JWE cookies. Keycloak access tokens (JWTs) and refresh tokens are stored in an encrypted `account_data` cookie — there is no database.
 
 - Server-side: `auth.api.getSession({ headers: await headers() })`
 - Client-side: `useSession()` hook from `@/lib/auth-client`
+- Access token: `auth.api.getAccessToken({ headers, body: { providerId: "keycloak" } })` — returns `{ accessToken, accessTokenExpiresAt, scopes, idToken }`
+- **Token refresh**: `getAccessToken()` automatically refreshes expired Keycloak JWTs using the stored refresh token. It detects expiry with a 5-second buffer and calls Keycloak's token endpoint via `grant_type=refresh_token`. Verified working in this stateless/cookie-only setup (2026-03-28) despite Better Auth GitHub issues (#7703) reporting problems in similar configs.
 
 **GraphQL Client** (`src/lib/graphql-request.ts`):
 

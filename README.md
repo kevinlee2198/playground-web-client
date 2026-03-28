@@ -37,7 +37,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Authentication
 
-This project uses [better-auth](https://www.better-auth.com/) to handle authentication. It uses keycloak as the IDP and better auth as a stateless management system.
+This project uses [better-auth](https://www.better-auth.com/) to handle authentication. It uses keycloak as the IDP and better auth as a stateless management system. There is no database — sessions are stored in JWE cookies, and Keycloak access/refresh tokens are stored in an encrypted `account_data` cookie.
+
+**Token refresh**: `auth.api.getAccessToken()` automatically refreshes expired Keycloak JWTs using the stored refresh token via `grant_type=refresh_token`. This works in the stateless/cookie-only setup despite known Better Auth issues ([#7703](https://github.com/better-auth/better-auth/issues/7703)) in similar configurations. Verified 2026-03-28 by setting Keycloak access token lifespan to 1 minute and confirming `getAccessToken()` returns a fresh token after expiry.
 
 ### Keycloak Client Setup (Local Development)
 
