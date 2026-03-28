@@ -60,12 +60,13 @@ export function getGraphQLWsClient(
       connected: (socket) => {
         console.debug("[graphql-ws] Connected");
         clearExpiryTimer();
+        const ws = socket as WebSocket;
         if (lastExpiresAt !== null) {
           const timeUntilClose = lastExpiresAt - Date.now() - BUFFER_MS;
           if (timeUntilClose > 0) {
             expiryTimer = setTimeout(() => {
-              if ((socket as WebSocket).readyState === WebSocket.OPEN) {
-                (socket as WebSocket).close(CloseCode.Forbidden, "Forbidden");
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.close(CloseCode.Forbidden, "Forbidden");
               }
             }, timeUntilClose);
           }

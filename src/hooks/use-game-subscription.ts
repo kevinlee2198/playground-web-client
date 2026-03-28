@@ -7,9 +7,9 @@ import {
   participantMetadataFragment,
   playerRefFragment,
 } from "@/lib/graphql-fragments";
-import { CloseCode } from "graphql-ws";
 import { getGraphQLWsClient } from "@/lib/graphql-ws-client";
 import type { GameEvent } from "@/lib/types/game-event";
+import { CloseCode } from "graphql-ws";
 import { jsonToGraphQLQuery } from "json-to-graphql-query";
 import { useEffect, useMemo, useRef } from "react";
 

@@ -12,14 +12,14 @@ const { mockUnsubscribe, mockOnCleanup, mockOn, mockSubscribe, capturedState } =
     const capturedState = {
       sink: null as Sink | null,
       connectedHandler: null as (() => void) | null,
-      closedHandler: null as (() => void) | null,
+      closedHandler: null as ((event?: unknown) => void) | null,
     };
 
     const mockUnsubscribe = vi.fn();
     const mockOnCleanup = vi.fn();
     const mockOn = vi
       .fn()
-      .mockImplementation((event: string, handler: () => void) => {
+      .mockImplementation((event: string, handler: (event?: unknown) => void) => {
         if (event === "connected") capturedState.connectedHandler = handler;
         if (event === "closed") capturedState.closedHandler = handler;
         return mockOnCleanup;
@@ -58,7 +58,7 @@ describe("useGameSubscription", () => {
     capturedState.connectedHandler = null;
     capturedState.closedHandler = null;
 
-    mockOn.mockImplementation((event: string, handler: () => void) => {
+    mockOn.mockImplementation((event: string, handler: (event?: unknown) => void) => {
       if (event === "connected") capturedState.connectedHandler = handler;
       if (event === "closed") capturedState.closedHandler = handler;
       return mockOnCleanup;
@@ -225,6 +225,46 @@ describe("useGameSubscription", () => {
     expect(onConnectionLost).toHaveBeenCalledTimes(1);
   });
 
+  it("does not call onConnectionLost when closed with code 4403 (preemptive token expiry)", () => {
+    const onConnectionLost = vi.fn();
+    renderHook(() =>
+      useGameSubscription({
+        gameId: 1,
+        enabled: true,
+        onEvent: vi.fn(),
+        onConnectionLost,
+      }),
+    );
+
+    // Simulate connection established
+    act(() => capturedState.connectedHandler?.());
+
+    // Simulate close with 4403 (preemptive token expiry — expected, retriable)
+    act(() => capturedState.closedHandler?.({ code: 4403 }));
+
+    expect(onConnectionLost).not.toHaveBeenCalled();
+  });
+
+  it("calls onConnectionLost when closed with a non-4403 code", () => {
+    const onConnectionLost = vi.fn();
+    renderHook(() =>
+      useGameSubscription({
+        gameId: 1,
+        enabled: true,
+        onEvent: vi.fn(),
+        onConnectionLost,
+      }),
+    );
+
+    // Simulate connection established
+    act(() => capturedState.connectedHandler?.());
+
+    // Simulate close with 1006 (abnormal closure)
+    act(() => capturedState.closedHandler?.({ code: 1006 }));
+
+    expect(onConnectionLost).toHaveBeenCalledTimes(1);
+  });
+
   it("does not call onConnectionLost when closed before ever connecting", () => {
     const onConnectionLost = vi.fn();
     renderHook(() =>
@@ -294,7 +334,7 @@ describe("useGameSubscription", () => {
     expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
     vi.clearAllMocks();
-    mockOn.mockImplementation((event: string, handler: () => void) => {
+    mockOn.mockImplementation((event: string, handler: (event?: unknown) => void) => {
       if (event === "connected") capturedState.connectedHandler = handler;
       if (event === "closed") capturedState.closedHandler = handler;
       return mockOnCleanup;
