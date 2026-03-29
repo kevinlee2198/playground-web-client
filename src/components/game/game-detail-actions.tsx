@@ -1,6 +1,6 @@
 "use client";
 
-import { endGame, startGame } from "@/app/[locale]/game/actions";
+import { endGame, finalizeGameResults, startGame, unfinalizeGameResults } from "@/app/[locale]/game/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GameRole, GameStatus } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
-import { MoreHorizontal, Pencil, Play, Square, Trash2, UserPlus, Users } from "lucide-react";
+import { Lock, LockOpen, MoreHorizontal, Pencil, Play, Square, Trash2, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -44,6 +44,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
   const canStart = game.gameStatus === GameStatus.SCHEDULED;
   const canEnd = game.gameStatus === GameStatus.IN_PROGRESS;
   const isOwner = game.viewerGameRole === GameRole.OWNER;
+  const canFinalize = game.gameStatus === GameStatus.COMPLETE;
 
   function handleGameAction(
     action: (id: number) => Promise<{ success: boolean; message?: string }>,
@@ -66,6 +67,22 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
 
   function handleEnd(): void {
     handleGameAction(endGame, "game.success.ended", "game.errors.endError");
+  }
+
+  function handleFinalize(): void {
+    handleGameAction(
+      finalizeGameResults,
+      "game.success.resultsFinalized",
+      "game.errors.finalizeError",
+    );
+  }
+
+  function handleUnfinalize(): void {
+    handleGameAction(
+      unfinalizeGameResults,
+      "game.success.resultsUnfinalized",
+      "game.errors.unfinalizeError",
+    );
   }
 
   return (
@@ -117,6 +134,18 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
               <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
                 <UserPlus className="h-4 w-4" />
                 {t("game.invitations.invitePlayers")}
+              </DropdownMenuItem>
+            )}
+            {canFinalize && game.resultsFinalized && (
+              <DropdownMenuItem onClick={handleUnfinalize} disabled={isPending}>
+                <LockOpen className="h-4 w-4" />
+                {isPending ? t("game.actions.unfinalizing") : t("game.actions.unfinalizeResults")}
+              </DropdownMenuItem>
+            )}
+            {canFinalize && !game.resultsFinalized && (
+              <DropdownMenuItem onClick={handleFinalize} disabled={isPending}>
+                <Lock className="h-4 w-4" />
+                {isPending ? t("game.actions.finalizing") : t("game.actions.finalizeResults")}
               </DropdownMenuItem>
             )}
             {isOwner && (

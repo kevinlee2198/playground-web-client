@@ -377,6 +377,78 @@ export async function endGame(
 }
 
 /**
+ * Finalize game results (locks scores from further editing)
+ */
+export async function finalizeGameResults(
+  gameId: number,
+): Promise<GameActionResult> {
+  try {
+    const response = await authMutate({
+      finalizeGameResults: {
+        __args: { input: { id: gameId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "FinalizeGameResultsResponse",
+            game: { id: true, resultsFinalized: true },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.finalizeGameResults, "FinalizeGameResultsResponse");
+    if (!result.success) return result;
+
+    revalidatePath("/[locale]/game/[id]", "page");
+    return { success: true, gameId };
+  } catch (error) {
+    console.error("Failed to finalize game results:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to finalize game results" };
+  }
+}
+
+/**
+ * Unfinalize game results (unlocks scores for editing)
+ */
+export async function unfinalizeGameResults(
+  gameId: number,
+): Promise<GameActionResult> {
+  try {
+    const response = await authMutate({
+      unfinalizeGameResults: {
+        __args: { input: { id: gameId } },
+        __typename: true,
+        __on: [
+          {
+            __typeName: "UnfinalizeGameResultsResponse",
+            game: { id: true, resultsFinalized: true },
+          },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+    }
+
+    const result = extractMutationResult(response.data.unfinalizeGameResults, "UnfinalizeGameResultsResponse");
+    if (!result.success) return result;
+
+    revalidatePath("/[locale]/game/[id]", "page");
+    return { success: true, gameId };
+  } catch (error) {
+    console.error("Failed to unfinalize game results:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to unfinalize game results" };
+  }
+}
+
+/**
  * Load more games for infinite scroll pagination
  */
 export async function loadMoreGames(

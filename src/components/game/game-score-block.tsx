@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { Lock, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { BasketballScoreForm } from "@/components/game/scoreboard/basketball-sco
 import { FootballScoreForm } from "@/components/game/scoreboard/football-score-form";
 import { PickleballScoreForm } from "@/components/game/scoreboard/pickleball-score-form";
 import { TennisScoreForm } from "@/components/game/scoreboard/tennis-score-form";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GameStatus, SportType } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
@@ -174,13 +175,26 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
     </>
   );
 
+  const finalizedBadge = game.resultsFinalized && (
+    <Badge variant="secondary">
+      <Lock className="h-3 w-3" aria-hidden="true" />
+      {t("game.scoreboard.resultsFinalized")}
+    </Badge>
+  );
+
   if (isLive) {
     return (
       <div aria-live="polite" aria-atomic={true}>
         {scoreArea}
+        {finalizedBadge}
       </div>
     );
   }
 
-  return scoreArea;
+  return (
+    <>
+      {scoreArea}
+      {finalizedBadge}
+    </>
+  );
 }
