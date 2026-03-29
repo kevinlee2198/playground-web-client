@@ -288,7 +288,11 @@
       "ending": "Ending...",
       "saving": "Saving...",
       "deleting": "Deleting...",
-      "moreOptions": "More options"
+      "moreOptions": "More options",
+      "finalizeResults": "Finalize Results",
+      "unfinalizeResults": "Unfinalize Results",
+      "finalizing": "Finalizing...",
+      "unfinalizing": "Unfinalizing..."
     },
     "deleteConfirmation": {
       "title": "Delete Game",
@@ -650,6 +654,7 @@
       "noParticipants": "Add participants to track scores",
       "noScores": "No scores recorded",
       "edit": "Edit Score",
+      "resultsFinalized": "Results Finalized",
       "save": "Save Score",
       "cancel": "Cancel",
       "saving": "Saving...",
@@ -697,7 +702,9 @@
       "participantAdded": "Participant added",
       "participantRemoved": "Participant removed",
       "teamUpdated": "Team updated",
-      "boxScoresSaved": "Box scores saved"
+      "boxScoresSaved": "Box scores saved",
+      "resultsFinalized": "Results finalized",
+      "resultsUnfinalized": "Results unfinalized"
     },
     "errors": {
       "loadError": "Failed to load games",
@@ -706,6 +713,8 @@
       "deleteError": "Failed to delete game",
       "startError": "Failed to start game",
       "endError": "Failed to end game",
+      "finalizeError": "Failed to finalize results",
+      "unfinalizeError": "Failed to unfinalize results",
       "participantError": "Failed to update participants",
       "boxScoreError": "Failed to save box scores",
       "retry": "Retry"
