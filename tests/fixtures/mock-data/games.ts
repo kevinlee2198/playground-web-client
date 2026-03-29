@@ -50,3 +50,14 @@ export function mockGameNotFoundResponse() {
 export function mockBasketballBoxScoresResponse() {
   return { data: { basketballBoxScores: [] } };
 }
+
+export function mockParticipant(overrides?: Record<string, unknown>) {
+  return {
+    __typename: "TeamInstance",
+    id: "participant-1",
+    name: "Team A",
+    metadata: null,
+    players: [],
+    ...overrides,
+  };
+}

@@ -1,9 +1,11 @@
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import { http, HttpResponse } from "msw";
 import {
-  mockGameNotFoundResponse,
   mockGameDetailResponse,
+  mockGameNotFoundResponse,
+  mockParticipant,
 } from "../fixtures/mock-data/games";
+import { buildConnection } from "../fixtures/mock-data/connection";
 
 test.describe("Game Detail Page", () => {
   test("[CRITICAL] unauthenticated: redirects to / for non-public game", async ({
@@ -71,6 +73,108 @@ test.describe("Game Detail Page", () => {
     // Without mock participants, the score block shows "Add participants to track scores"
     await expect(
       authenticatedPage.getByText(/add participants/i).first(),
+    ).toBeVisible();
+  });
+
+  test("authenticated: completed game with finalized results shows badge", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          gameStatus: "COMPLETE",
+          resultsFinalized: true,
+          viewerGameRole: "OWNER",
+          participants: buildConnection([
+            mockParticipant({ id: "p1", name: "Team A" }),
+            mockParticipant({ id: "p2", name: "Team B" }),
+          ]),
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await expect(
+      authenticatedPage.getByText(/results finalized/i),
+    ).toBeVisible();
+  });
+
+  test("authenticated: owner sees finalize option for completed game", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          gameStatus: "COMPLETE",
+          resultsFinalized: false,
+          viewerGameRole: "OWNER",
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await authenticatedPage.getByRole("button", { name: /more options/i }).click();
+    await expect(
+      authenticatedPage.getByRole("menuitem", { name: /finalize results/i }),
+    ).toBeVisible();
+  });
+
+  test("authenticated: owner sees unfinalize option for finalized game", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          gameStatus: "COMPLETE",
+          resultsFinalized: true,
+          viewerGameRole: "OWNER",
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await authenticatedPage.getByRole("button", { name: /more options/i }).click();
+    await expect(
+      authenticatedPage.getByRole("menuitem", { name: /unfinalize results/i }),
+    ).toBeVisible();
+  });
+
+  test("authenticated: finalize option hidden for scheduled game", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          gameStatus: "SCHEDULED",
+          viewerGameRole: "OWNER",
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await authenticatedPage.getByRole("button", { name: /more options/i }).click();
+    await expect(
+      authenticatedPage.getByRole("menuitem", { name: /finalize results/i }),
+    ).not.toBeVisible();
+  });
+
+  test("authenticated: editor sees finalize option for completed game", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          gameStatus: "COMPLETE",
+          resultsFinalized: false,
+          viewerGameRole: "EDITOR",
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await authenticatedPage.getByRole("button", { name: /more options/i }).click();
+    await expect(
+      authenticatedPage.getByRole("menuitem", { name: /finalize results/i }),
     ).toBeVisible();
   });
 });
