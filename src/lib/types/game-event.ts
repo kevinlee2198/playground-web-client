@@ -11,7 +11,6 @@ import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
 export interface GameEventGame {
   id: number;
   gameStatus: GameStatus;
-  resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
   participants: {

@@ -18,6 +18,7 @@ export enum GameStatus {
   SCHEDULED = "SCHEDULED",
   IN_PROGRESS = "IN_PROGRESS",
   COMPLETE = "COMPLETE",
+  FINALIZED = "FINALIZED",
 }
 
 export enum ParticipationType {
@@ -155,6 +156,12 @@ export enum GameVisibility {
   PRIVATE = "PRIVATE",
 }
 
+export enum StatEntryMode {
+  OPEN = "OPEN",
+  SELF_REPORT = "SELF_REPORT",
+  MANAGER_ONLY = "MANAGER_ONLY",
+}
+
 export enum GameInvitationStatus {
   PENDING = "PENDING",
   ACCEPTED = "ACCEPTED",
@@ -183,6 +190,7 @@ export const GameStatusBadgeVariant = {
   SCHEDULED: "secondary",
   IN_PROGRESS: "default",
   COMPLETE: "outline",
+  FINALIZED: "outline",
 } as const;
 
 /**
@@ -192,6 +200,7 @@ export const GameStatusLabelKey: Record<GameStatus, string> = {
   [GameStatus.IN_PROGRESS]: "game.status.live",
   [GameStatus.SCHEDULED]: "game.status.upcoming",
   [GameStatus.COMPLETE]: "game.status.final",
+  [GameStatus.FINALIZED]: "game.status.finalized",
 };
 
 /**
@@ -201,6 +210,7 @@ export const GameStatusAriaLabelKey: Record<GameStatus, string> = {
   [GameStatus.IN_PROGRESS]: "game.status.ariaLabel.live",
   [GameStatus.SCHEDULED]: "game.status.ariaLabel.upcoming",
   [GameStatus.COMPLETE]: "game.status.ariaLabel.final",
+  [GameStatus.FINALIZED]: "game.status.ariaLabel.finalized",
 };
 
 /**

@@ -57,6 +57,7 @@ import {
   GameVisibility,
   SportFormat,
   SportType,
+  StatEntryMode,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 
@@ -75,9 +76,9 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
       periods: 4,
     },
     gameStatus: GameStatus.SCHEDULED,
-    resultsFinalized: false,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
+    statEntryMode: StatEntryMode.OPEN,
     viewerInvitation: null,
     location: null,
     participants: {

@@ -122,7 +122,6 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
       periods: 4,
     },
     gameStatus: GameStatus.IN_PROGRESS,
-    resultsFinalized: false,
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
     viewerInvitation: null,

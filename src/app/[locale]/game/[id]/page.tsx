@@ -84,9 +84,9 @@ const gameQueryFields = {
   sportType: true,
   metadata: gameMetadataFragment,
   gameStatus: true,
-  resultsFinalized: true,
   viewerGameRole: true,
   visibility: true,
+  statEntryMode: true,
   viewerInvitation: viewerInvitationFragment,
   location: locationFragment,
   participants: {

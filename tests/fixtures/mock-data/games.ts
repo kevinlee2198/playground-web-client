@@ -12,10 +12,10 @@ export function mockGame(overrides?: Record<string, unknown>) {
       periods: null,
     },
     gameStatus: "SCHEDULED",
-    resultsFinalized: false,
     description: "A test game",
     viewerGameRole: "ORGANIZER",
     visibility: "PUBLIC",
+    statEntryMode: "OPEN",
     viewerInvitation: null,
     location: {
       name: "Test Court",

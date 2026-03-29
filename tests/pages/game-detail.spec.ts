@@ -83,8 +83,7 @@ test.describe("Game Detail Page", () => {
     msw.use(
       withMeGuard(() =>
         mockGameDetailResponse({
-          gameStatus: "COMPLETE",
-          resultsFinalized: true,
+          gameStatus: "FINALIZED",
           viewerGameRole: "OWNER",
           participants: buildConnection([
             mockParticipant({ id: "p1", name: "Team A" }),
@@ -107,7 +106,6 @@ test.describe("Game Detail Page", () => {
       withMeGuard(() =>
         mockGameDetailResponse({
           gameStatus: "COMPLETE",
-          resultsFinalized: false,
           viewerGameRole: "OWNER",
         }),
       ),
@@ -126,8 +124,7 @@ test.describe("Game Detail Page", () => {
     msw.use(
       withMeGuard(() =>
         mockGameDetailResponse({
-          gameStatus: "COMPLETE",
-          resultsFinalized: true,
+          gameStatus: "FINALIZED",
           viewerGameRole: "OWNER",
         }),
       ),
@@ -166,7 +163,6 @@ test.describe("Game Detail Page", () => {
       withMeGuard(() =>
         mockGameDetailResponse({
           gameStatus: "COMPLETE",
-          resultsFinalized: false,
           viewerGameRole: "EDITOR",
         }),
       ),
@@ -175,6 +171,35 @@ test.describe("Game Detail Page", () => {
     await authenticatedPage.getByRole("button", { name: /more options/i }).click();
     await expect(
       authenticatedPage.getByRole("menuitem", { name: /finalize results/i }),
+    ).toBeVisible();
+  });
+
+  test("authenticated: edit dialog shows stat entry mode radio group", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          viewerGameRole: "OWNER",
+          statEntryMode: "OPEN",
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await authenticatedPage.getByRole("button", { name: /more options/i }).click();
+    await authenticatedPage.getByRole("menuitem", { name: /edit game/i }).click();
+    await expect(
+      authenticatedPage.getByText(/who can enter stats/i),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("radio", { name: /open/i }),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("radio", { name: /self-report/i }),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("radio", { name: /manager only/i }),
     ).toBeVisible();
   });
 });

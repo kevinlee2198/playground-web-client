@@ -50,7 +50,6 @@ describe("loadFeedGames", () => {
             endDate: null,
             sportType: "BASKETBALL",
             gameStatus: "SCHEDULED",
-            resultsFinalized: false,
             viewerGameRole: "PARTICIPANT",
             visibility: "PUBLIC",
             metadata: {},

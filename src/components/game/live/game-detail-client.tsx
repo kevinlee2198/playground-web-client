@@ -107,17 +107,15 @@ export function GameDetailClient({
     let message = "";
 
     if (prev.game.gameStatus !== state.game.gameStatus) {
-      if (state.game.gameStatus === "IN_PROGRESS") {
+      if (state.game.gameStatus === "FINALIZED") {
+        message = t("game.live.resultsFinalized");
+      } else if (prev.game.gameStatus === "FINALIZED") {
+        message = t("game.live.resultsUnfinalized");
+      } else if (state.game.gameStatus === "IN_PROGRESS") {
         message = t("game.live.gameStarted");
       } else if (state.game.gameStatus === "COMPLETE") {
         message = t("game.live.gameEnded");
       }
-    } else if (
-      prev.game.resultsFinalized !== state.game.resultsFinalized
-    ) {
-      message = state.game.resultsFinalized
-        ? t("game.live.resultsFinalized")
-        : t("game.live.resultsUnfinalized");
     } else if (
       prev.game.participants.edges.length !==
       state.game.participants.edges.length

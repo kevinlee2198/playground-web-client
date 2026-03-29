@@ -5,6 +5,7 @@ import {
   type GameVisibility,
   type PickleballScoringType,
   type SortDirection,
+  type StatEntryMode,
   SportFormat,
   SportType,
 } from "@/lib/constants";
@@ -212,9 +213,9 @@ export interface GameNode {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
-  resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
+  statEntryMode: StatEntryMode;
   viewerInvitation: ViewerGameInvitation | null;
   location: {
     name: string | null;
@@ -240,9 +241,9 @@ export interface GameDetail {
   sportType: SportType;
   metadata: GameMetadata;
   gameStatus: GameStatus;
-  resultsFinalized: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
+  statEntryMode: StatEntryMode;
   viewerInvitation: ViewerGameInvitation | null;
   location: Location | null;
   participants: {
@@ -276,6 +277,7 @@ export interface CreateBaseballGameInput {
     };
   };
   visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
   metadata: {
     innings?: number;
   };
@@ -302,6 +304,7 @@ export interface CreateBasketballGameInput {
     };
   };
   visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
   metadata: {
     format: SportFormat.FIVE_ON_FIVE | SportFormat.THREE_ON_THREE;
     periods?: number;
@@ -329,6 +332,7 @@ export interface CreateTennisGameInput {
     };
   };
   visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
   metadata: {
     format: SportFormat.SINGLES | SportFormat.DOUBLES;
     bestOf?: number;
@@ -357,6 +361,7 @@ export interface CreateFootballGameInput {
     };
   };
   visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
   metadata: {
     format: SportFormat.FLAG_FOOTBALL | SportFormat.AMERICAN_FOOTBALL;
     periods?: number;
@@ -384,6 +389,7 @@ export interface CreatePickleballGameInput {
     };
   };
   visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
   metadata: {
     format: SportFormat.SINGLES | SportFormat.DOUBLES;
     bestOf?: number;
@@ -455,6 +461,7 @@ export interface UpdateGameInput {
     };
   };
   visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
 }
 
 /**

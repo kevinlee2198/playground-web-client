@@ -5,8 +5,13 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 1,
+  // The experimental testProxy drops connections (ECONNRESET) under heavy
+  // concurrency because all workers funnel through a single Next.js dev-server
+  // proxy. Capping workers avoids most flakes. Revisit once testProxy graduates
+  // from experimental — unlimited workers may work fine then.
+  // Ref: https://github.com/vercel/next.js/issues/82913
+  workers: process.env.CI ? 1 : 4,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",

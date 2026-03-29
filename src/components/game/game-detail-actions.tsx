@@ -45,6 +45,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
   const canEnd = game.gameStatus === GameStatus.IN_PROGRESS;
   const isOwner = game.viewerGameRole === GameRole.OWNER;
   const canFinalize = game.gameStatus === GameStatus.COMPLETE;
+  const canUnfinalize = game.gameStatus === GameStatus.FINALIZED;
 
   function handleGameAction(
     action: (id: number) => Promise<{ success: boolean; message?: string }>,
@@ -130,19 +131,19 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
               <Pencil className="h-4 w-4" />
               {t("game.actions.edit")}
             </DropdownMenuItem>
-            {game.gameStatus !== GameStatus.COMPLETE && (
+            {game.gameStatus !== GameStatus.COMPLETE && game.gameStatus !== GameStatus.FINALIZED && (
               <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
                 <UserPlus className="h-4 w-4" />
                 {t("game.invitations.invitePlayers")}
               </DropdownMenuItem>
             )}
-            {canFinalize && game.resultsFinalized && (
+            {canUnfinalize && (
               <DropdownMenuItem onClick={handleUnfinalize} disabled={isPending}>
                 <LockOpen className="h-4 w-4" />
                 {isPending ? t("game.actions.unfinalizing") : t("game.actions.unfinalizeResults")}
               </DropdownMenuItem>
             )}
-            {canFinalize && !game.resultsFinalized && (
+            {canFinalize && (
               <DropdownMenuItem onClick={handleFinalize} disabled={isPending}>
                 <Lock className="h-4 w-4" />
                 {isPending ? t("game.actions.finalizing") : t("game.actions.finalizeResults")}
@@ -202,6 +203,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
             sportType={game.sportType}
             currentLocation={game.location}
             currentVisibility={game.visibility}
+            currentStatEntryMode={game.statEntryMode}
             onSuccess={() => setShowUpdateDialog(false)}
           />
         </DialogContent>

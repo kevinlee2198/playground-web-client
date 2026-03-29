@@ -1248,6 +1248,7 @@ enum GameStatus {
   SCHEDULED
   IN_PROGRESS
   COMPLETE
+  FINALIZED
 }
 
 """
@@ -1265,6 +1266,7 @@ Who can enter statistics for a game.
 enum StatEntryMode {
   OPEN
   SELF_REPORT
+  MANAGER_ONLY
 }
 
 """
@@ -1495,10 +1497,6 @@ type Game implements Node & HasLocation {
   Whether this game is open for anyone with a player profile to join, or invite-only.
   """
   visibility: GameVisibility!
-  """
-  Whether the game organizer has locked scores and statistics from further edits by participants.
-  """
-  resultsFinalized: Boolean!
   """
   Who can enter statistics for this game.
   """
@@ -2331,9 +2329,11 @@ union EndGameResult =
 union FinalizeGameResultsResult =
   | FinalizeGameResultsResponse
   | GameNotFoundError
+  | InvalidGameStatusTransitionError
 union UnfinalizeGameResultsResult =
   | UnfinalizeGameResultsResponse
   | GameNotFoundError
+  | InvalidGameStatusTransitionError
 union AddGameParticipantResult =
   | AddGameParticipantResponse
   | GameNotFoundError
@@ -3337,13 +3337,16 @@ type Mutation {
   """
   endGame(input: EndGameInput!): EndGameResult!
   """
-  Finalize game results. After finalization, only the organizer can modify scores and statistics.
+  Finalize the game. Transitions status from COMPLETE to FINALIZED.
+  When finalized, all scores, statistics, rosters, and participants are locked.
+  Only the organizer (owner/editor) can modify data while finalized.
   """
   finalizeGameResults(
     input: FinalizeGameResultsInput!
   ): FinalizeGameResultsResult!
   """
-  Reverse finalization, allowing participants to edit scores and statistics again.
+  Reverse finalization. Transitions status from FINALIZED back to COMPLETE,
+  allowing participants to edit scores and statistics again.
   """
   unfinalizeGameResults(
     input: UnfinalizeGameResultsInput!

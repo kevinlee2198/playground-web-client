@@ -119,6 +119,10 @@ export async function createGame(
       sportInput.visibility = new EnumType(input.visibility);
     }
 
+    if (input.statEntryMode !== undefined) {
+      sportInput.statEntryMode = new EnumType(input.statEntryMode);
+    }
+
     const mutationInput = { [sportKey]: sportInput };
 
     const response = await authMutate({
@@ -222,6 +226,10 @@ export async function updateGame(
 
     if (input.visibility !== undefined) {
       mutationInput.visibility = new EnumType(input.visibility);
+    }
+
+    if (input.statEntryMode !== undefined) {
+      mutationInput.statEntryMode = new EnumType(input.statEntryMode);
     }
 
     const response = await authMutate({
@@ -390,7 +398,7 @@ export async function finalizeGameResults(
         __on: [
           {
             __typeName: "FinalizeGameResultsResponse",
-            game: { id: true, resultsFinalized: true },
+            game: { id: true, gameStatus: true },
           },
           errorFragment,
         ],
@@ -426,7 +434,7 @@ export async function unfinalizeGameResults(
         __on: [
           {
             __typeName: "UnfinalizeGameResultsResponse",
-            game: { id: true, resultsFinalized: true },
+            game: { id: true, gameStatus: true },
           },
           errorFragment,
         ],

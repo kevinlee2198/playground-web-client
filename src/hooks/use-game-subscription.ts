@@ -49,7 +49,6 @@ export function useGameSubscription({
             game: {
               id: true,
               gameStatus: true,
-              resultsFinalized: true,
               viewerGameRole: true,
               visibility: true,
               metadata: gameMetadataFragment,

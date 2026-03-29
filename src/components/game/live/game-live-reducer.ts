@@ -36,7 +36,6 @@ export function gameLiveReducer(
       const mergedGame: GameDetail = {
         ...state.game,
         gameStatus: event.game.gameStatus,
-        resultsFinalized: event.game.resultsFinalized,
         viewerGameRole: event.game.viewerGameRole,
         visibility: event.game.visibility,
         participants: {

@@ -31,7 +31,6 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
   const isLive = game.gameStatus === GameStatus.IN_PROGRESS;
   const canEdit =
     game.viewerGameRole != null &&
-    !game.resultsFinalized &&
     (game.gameStatus === GameStatus.IN_PROGRESS ||
       game.gameStatus === GameStatus.COMPLETE);
 
@@ -43,12 +42,12 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
     }
   }, [isEditing]);
 
-  // Force-close score form if results are finalized by another user while editing
-  const resultsFinalizedRef = useRef(game.resultsFinalized);
+  // Force-close score form if game is finalized by another user while editing
+  const prevGameStatusRef = useRef(game.gameStatus);
   useEffect(() => {
-    const wasFinalizedBefore = resultsFinalizedRef.current;
-    resultsFinalizedRef.current = game.resultsFinalized;
-    if (!wasFinalizedBefore && game.resultsFinalized && isEditing) {
+    const prevStatus = prevGameStatusRef.current;
+    prevGameStatusRef.current = game.gameStatus;
+    if (prevStatus !== GameStatus.FINALIZED && game.gameStatus === GameStatus.FINALIZED && isEditing) {
       requestAnimationFrame(() => {
         setIsEditing(false);
         toast.error(t("game.live.resultsFinalizedWhileEditing"));
@@ -175,7 +174,7 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
     </>
   );
 
-  const finalizedBadge = game.resultsFinalized && (
+  const finalizedBadge = game.gameStatus === GameStatus.FINALIZED && (
     <Badge variant="secondary">
       <Lock className="h-3 w-3" aria-hidden="true" />
       {t("game.scoreboard.resultsFinalized")}

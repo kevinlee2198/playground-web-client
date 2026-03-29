@@ -237,12 +237,14 @@
       "inProgress": "In Progress",
       "complete": "Complete",
       "final": "Final",
+      "finalized": "Finalized",
       "upcoming": "Upcoming",
       "live": "Live",
       "ariaLabel": {
         "live": "Game in progress",
         "upcoming": "Game not yet started",
-        "final": "Game finished, final score"
+        "final": "Game finished, final score",
+        "finalized": "Game results finalized"
       }
     },
     "role": {
@@ -727,6 +729,15 @@
       "protectedDescription": "Anyone can find this game, but joining requires an invitation",
       "private": "Private",
       "privateDescription": "Only invited players can find or join this game"
+    },
+    "statEntryMode": {
+      "label": "Who can enter stats?",
+      "open": "Open",
+      "openDescription": "Any game participant can enter stats for anyone",
+      "selfReport": "Self-report",
+      "selfReportDescription": "Players can only enter their own stats",
+      "managerOnly": "Manager only",
+      "managerOnlyDescription": "Only the game organizer can enter stats"
     },
     "badges": {
       "invited": "Invited"

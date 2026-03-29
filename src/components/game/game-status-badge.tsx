@@ -7,6 +7,7 @@ const gameStatusI18nKey: Record<GameStatus, string> = {
   SCHEDULED: "scheduled",
   IN_PROGRESS: "inProgress",
   COMPLETE: "complete",
+  FINALIZED: "finalized",
 };
 
 interface GameStatusBadgeProps {

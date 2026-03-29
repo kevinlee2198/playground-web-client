@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GameVisibility, PickleballScoringType, SportType } from "@/lib/constants";
+import { GameVisibility, PickleballScoringType, SportType, StatEntryMode } from "@/lib/constants";
 import { locationToValue } from "@/lib/location-utils";
 import type { GameMetadata, UpdateGameInput } from "@/lib/types/game";
 import type { Location, LocationValue } from "@/lib/types/location";
@@ -32,6 +32,7 @@ import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateGameFormSchema } from "./game-form-fields";
+import { StatEntryModeRadioGroup } from "./stat-entry-mode-radio-group";
 import { VisibilityRadioGroup } from "./visibility-radio-group";
 
 interface UpdateGameFormProps {
@@ -41,6 +42,7 @@ interface UpdateGameFormProps {
   sportType: SportType;
   currentLocation?: Location | null;
   currentVisibility: GameVisibility;
+  currentStatEntryMode: StatEntryMode;
   onSuccess?: () => void;
 }
 
@@ -48,6 +50,7 @@ function buildDefaultValues(
   currentStartDate: string,
   metadata: GameMetadata,
   currentVisibility: GameVisibility,
+  currentStatEntryMode: StatEntryMode,
   currentLocation?: Location | null,
 ) {
   const isBaseball = metadata.__typename === "BaseballGameMetadata";
@@ -88,6 +91,7 @@ function buildDefaultValues(
       ? locationToValue(currentLocation)
       : undefined) as LocationValue | null | undefined,
     visibility: currentVisibility,
+    statEntryMode: currentStatEntryMode,
   };
 }
 
@@ -98,6 +102,7 @@ export function UpdateGameForm({
   sportType,
   currentLocation,
   currentVisibility,
+  currentStatEntryMode,
   onSuccess,
 }: UpdateGameFormProps) {
   const t = useTranslations();
@@ -110,6 +115,7 @@ export function UpdateGameForm({
       currentStartDate,
       metadata,
       currentVisibility,
+      currentStatEntryMode,
       currentLocation,
     ),
     validators: {
@@ -241,6 +247,10 @@ export function UpdateGameForm({
           input.visibility = value.visibility;
         }
 
+        if (value.statEntryMode !== undefined && value.statEntryMode !== currentStatEntryMode) {
+          input.statEntryMode = value.statEntryMode;
+        }
+
         const result = await updateGame(input);
 
         if (result.success) {
@@ -279,6 +289,17 @@ export function UpdateGameForm({
         {(field) => (
           <VisibilityRadioGroup
             value={field.state.value ?? currentVisibility}
+            onChange={field.handleChange}
+            onBlur={field.handleBlur}
+            disabled={isPending}
+          />
+        )}
+      </form.Field>
+
+      <form.Field name="statEntryMode">
+        {(field) => (
+          <StatEntryModeRadioGroup
+            value={field.state.value ?? currentStatEntryMode}
             onChange={field.handleChange}
             onBlur={field.handleBlur}
             disabled={isPending}

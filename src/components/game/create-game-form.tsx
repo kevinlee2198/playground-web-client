@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "@/i18n/navigation";
-import { GameVisibility, getFormats, PickleballScoringType, SportFormat, SportType } from "@/lib/constants";
+import { GameVisibility, getFormats, PickleballScoringType, SportFormat, SportType, StatEntryMode } from "@/lib/constants";
 import type { CreateGameInput } from "@/lib/types/game";
 import type { LocationValue } from "@/lib/types/location";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -33,6 +33,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createGameFormSchema } from "./game-form-fields";
+import { StatEntryModeRadioGroup } from "./stat-entry-mode-radio-group";
 import { VisibilityRadioGroup } from "./visibility-radio-group";
 
 const sportTypeOptions = Object.values(SportType);
@@ -61,6 +62,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       innings: undefined as number | undefined,
       location: undefined as LocationValue | undefined,
       visibility: GameVisibility.PUBLIC,
+      statEntryMode: StatEntryMode.OPEN,
     },
     validators: {
       onBlur: ({ value }) => {
@@ -85,6 +87,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             sportType: SportType.BASEBALL,
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
+            statEntryMode: value.statEntryMode,
             metadata: {
               ...(value.innings !== undefined && { innings: value.innings }),
             },
@@ -94,6 +97,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             sportType: SportType.BASKETBALL,
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
+            statEntryMode: value.statEntryMode,
             metadata: {
               format: value.format as
                 | SportFormat.FIVE_ON_FIVE
@@ -106,6 +110,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             sportType: SportType.FOOTBALL,
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
+            statEntryMode: value.statEntryMode,
             metadata: {
               format: value.format as
                 | SportFormat.FLAG_FOOTBALL
@@ -118,6 +123,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             sportType: SportType.PICKLEBALL,
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
+            statEntryMode: value.statEntryMode,
             metadata: {
               format: value.format as
                 | SportFormat.SINGLES
@@ -139,6 +145,7 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
             sportType: SportType.TENNIS,
             startDate: value.startDate.toISOString(),
             visibility: value.visibility,
+            statEntryMode: value.statEntryMode,
             metadata: {
               format: value.format as
                 | SportFormat.SINGLES
@@ -248,6 +255,17 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       <form.Field name="visibility">
         {(field) => (
           <VisibilityRadioGroup
+            value={field.state.value}
+            onChange={field.handleChange}
+            onBlur={field.handleBlur}
+            disabled={isPending}
+          />
+        )}
+      </form.Field>
+
+      <form.Field name="statEntryMode">
+        {(field) => (
+          <StatEntryModeRadioGroup
             value={field.state.value}
             onChange={field.handleChange}
             onBlur={field.handleBlur}

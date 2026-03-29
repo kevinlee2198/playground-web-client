@@ -27,7 +27,6 @@ function makeGameEventGame(overrides: Partial<GameEventGame> = {}): GameEventGam
   return {
     id: 1,
     gameStatus: GameStatus.SCHEDULED,
-    resultsFinalized: false,
     viewerGameRole: null,
     visibility: GameVisibility.PUBLIC,
     participants: { edges: [] },
@@ -53,7 +52,6 @@ function makeGameDetail(overrides: Partial<GameDetail> = {}): GameDetail {
       periods: null,
     },
     gameStatus: GameStatus.SCHEDULED,
-    resultsFinalized: false,
     viewerGameRole: null,
     visibility: GameVisibility.PUBLIC,
     viewerInvitation: null,
