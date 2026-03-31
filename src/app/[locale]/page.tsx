@@ -76,11 +76,8 @@ async function AuthenticatedHomePage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6">
         <TypographyH1 className="text-3xl">{t("feed.title")}</TypographyH1>
-        <Link href="/game" className={buttonVariants()}>
-          {t("game.actions.create")}
-        </Link>
       </div>
 
       {/* Feed content */}
@@ -98,7 +95,7 @@ async function AuthenticatedHomePage() {
           </EmptyHeader>
           <EmptyContent>
             <Link
-              href="/games"
+              href="/game"
               className={cn(buttonVariants(), "w-full")}
             >
               {t("feed.empty.createGame")}
