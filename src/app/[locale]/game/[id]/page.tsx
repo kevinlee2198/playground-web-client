@@ -143,7 +143,7 @@ export default async function GameDetailPage({ params }: PageProps) {
 
     game = gameResponse.data?.game ?? null;
 
-    if (!game || game.visibility !== GameVisibility.PUBLIC) {
+    if (!game || game.visibility === GameVisibility.PRIVATE) {
       redirect({ href: "/", locale });
     }
   }
