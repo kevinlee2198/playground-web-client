@@ -101,18 +101,19 @@ export function GameListFilters({ currentFilters }: GameListFiltersProps) {
       <div className="space-y-2">
         <Label>{t("game.filters.sportType")}</Label>
         <Select
-          value={currentFilters.sportType || ""}
+          value={currentFilters.sportType ?? null}
           onValueChange={(value) =>
             updateFilter("sportType", value || undefined)
           }
+          items={Object.keys(SportType).map((sport) => ({
+            value: sport,
+            label: t(`sports.${sport}`),
+          }))}
         >
           <SelectTrigger>
             <SelectValue placeholder={t("game.filters.allSports")} />
           </SelectTrigger>
           <SelectContent>
-            {/* <SelectItem value="allSports">
-              {t("game.filters.allSports")}
-            </SelectItem> */}
             {Object.keys(SportType).map((sport) => (
               <SelectItem key={sport} value={sport}>
                 {t(`sports.${sport}`)}
@@ -126,18 +127,19 @@ export function GameListFilters({ currentFilters }: GameListFiltersProps) {
       <div className="space-y-2">
         <Label>{t("game.filters.gameStatus")}</Label>
         <Select
-          value={currentFilters.gameStatus || ""}
+          value={currentFilters.gameStatus ?? null}
           onValueChange={(value) =>
             updateFilter("gameStatus", value || undefined)
           }
+          items={Object.values(GameStatus).map((status) => ({
+            value: status,
+            label: t(`game.status.${snakeToCamel(status.toLowerCase())}`),
+          }))}
         >
           <SelectTrigger>
             <SelectValue placeholder={t("game.filters.allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            {/* <SelectItem value="allStatuses">
-              {t("game.filters.allStatuses")}
-            </SelectItem> */}
             {Object.values(GameStatus).map((status) => (
               <SelectItem key={status} value={status}>
                 {t(`game.status.${snakeToCamel(status.toLowerCase())}`)}

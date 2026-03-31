@@ -175,6 +175,7 @@ export function FormSelectField({
           field.handleBlur();
         }}
         disabled={disabled}
+        items={options}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />

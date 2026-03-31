@@ -99,6 +99,11 @@ export function GameListSort({
           <Select
             value={currentSort.field}
             onValueChange={(value) => updateParam("sortField", value)}
+            items={[
+              { value: GameSortField.START_DATE, label: t("game.sort.startDate") },
+              { value: GameSortField.GAME_STATUS, label: t("game.sort.gameStatus") },
+              { value: GameSortField.DISTANCE, label: t("game.sort.distance") },
+            ]}
           >
             <SelectTrigger>
               <SelectValue />

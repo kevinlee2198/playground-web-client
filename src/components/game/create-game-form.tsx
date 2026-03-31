@@ -469,6 +469,10 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                           field.handleBlur();
                         }}
                         disabled={isPending}
+                        items={[
+                          { value: PickleballScoringType.RALLY, label: t("game.metadata.scoringType.RALLY") },
+                          { value: PickleballScoringType.SIDE_OUT, label: t("game.metadata.scoringType.SIDE_OUT") },
+                        ]}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue

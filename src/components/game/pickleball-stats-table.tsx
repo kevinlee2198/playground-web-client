@@ -255,8 +255,9 @@ export function PickleballStatsTable({
   const addPlayerControls = canEdit && playersWithoutStats.length > 0 && (
     <div className="flex items-center gap-2">
       <Select
-        value={selectedPlayerId}
+        value={selectedPlayerId || null}
         onValueChange={(val) => setSelectedPlayerId(val ?? "")}
+        items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder={boxScoreT("selectPlayer")} />
