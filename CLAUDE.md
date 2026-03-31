@@ -9,8 +9,8 @@ npm run dev      # Start development server at localhost:3000
 npm run build    # Production build
 npm run lint     # Run ESLint
 npm test         # Run Vitest tests
-npx playwright test                        # Run all Playwright integration tests
-npx playwright test tests/pages/about.spec.ts  # Run a single spec file
+npx playwright test --project=chromium                             # Run all Playwright integration tests (chromium only)
+npx playwright test --project=chromium tests/pages/about.spec.ts   # Run a single spec file
 ```
 
 **Important**: Always capture test output to a file (e.g., `2>&1 | tee /tmp/pw-results.txt`), then read the file for analysis. Never re-run tests just to grep for a different part of the output — tests are expensive.
