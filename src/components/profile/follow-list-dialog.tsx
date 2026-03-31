@@ -110,18 +110,16 @@ export function FollowListDialog({
     [type, userId],
   );
 
-  function handleOpenChange(nextOpen: boolean) {
-    onOpenChange(nextOpen);
-    if (nextOpen) {
-      setItems([]);
-      setEndCursor(undefined);
-      setHasNextPage(false);
-      setHasError(false);
-      setIsInitialLoad(true);
-      isLoadingRef.current = false;
-      fetchPage();
-    }
-  }
+  useEffect(() => {
+    if (!open) return;
+    setItems([]);
+    setEndCursor(undefined);
+    setHasNextPage(false);
+    setHasError(false);
+    setIsInitialLoad(true);
+    isLoadingRef.current = false;
+    fetchPage();
+  }, [open, type, userId, fetchPage]);
 
   useEffect(() => {
     if (!open || !hasNextPage || isInitialLoad) return;
@@ -317,7 +315,7 @@ export function FollowListDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
