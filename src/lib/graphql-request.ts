@@ -1,6 +1,7 @@
 import { jsonToGraphQLQuery } from "json-to-graphql-query";
 import { headers } from "next/headers";
 import { auth } from "./auth";
+import { env } from "./env";
 
 import { GRAPHQL_PATH } from "./graphql-config";
 
@@ -8,7 +9,7 @@ function buildRequestObject(
   data: BodyInit,
   inputHeaders: object = {},
 ): Request {
-  const baseUrl = process.env.API_SERVER_URL + GRAPHQL_PATH;
+  const baseUrl = env.API_SERVER_URL + GRAPHQL_PATH;
 
   return new Request(baseUrl, {
     method: "POST",
@@ -26,14 +27,8 @@ async function fetchData<T>(
   inputHeaders?: object,
   options?: NextFetchOptions,
 ): Promise<T> {
-  let response;
-  if (options === undefined) {
-    response = await fetch(buildRequestObject(data, inputHeaders));
-  } else {
-    response = await fetch(buildRequestObject(data, inputHeaders), options);
-  }
-
-  return await response.json(); // parses JSON response into native JavaScript objects
+  const response = await fetch(buildRequestObject(data, inputHeaders), options);
+  return response.json();
 }
 
 async function query(

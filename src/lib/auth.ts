@@ -2,11 +2,12 @@ import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 import { keycloak } from "better-auth/plugins/generic-oauth";
+import { env } from "./env";
 
-export const keycloakIssuer = `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_REALM}`;
+export const keycloakIssuer = `${env.KEYCLOAK_URL}/realms/${env.KEYCLOAK_REALM}`;
 
 export const auth = betterAuth({
-  trustedOrigins: [process.env.BETTER_AUTH_URL!],
+  trustedOrigins: [env.BETTER_AUTH_URL],
   session: {
     cookieCache: {
       enabled: true,
@@ -23,7 +24,7 @@ export const auth = betterAuth({
     genericOAuth({
       config: [
         keycloak({
-          clientId: process.env.KEYCLOAK_CLIENT_ID as string,
+          clientId: env.KEYCLOAK_CLIENT_ID,
           clientSecret: "", // Empty for public clients
           issuer: keycloakIssuer,
           pkce: true,
