@@ -98,7 +98,7 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "group flex gap-3 px-4 py-1",
+        "flex gap-3 px-4 py-1",
         isOwn ? "justify-end" : "justify-start",
         isFirstInGroup && "mt-2",
       )}
@@ -116,31 +116,32 @@ export function MessageBubble({
         </div>
       )}
 
-      <div className={cn("flex max-w-[70%] flex-col", isOwn && "items-end")}>
-        {showSender && (
+      <div className={cn("group/row flex max-w-[70%] items-end gap-2", isOwn && "flex-row-reverse")}>
+        <div className={cn("flex min-w-0 flex-col", isOwn && "items-end")}>
+          {showSender && (
+            <div
+              className={cn(
+                "mb-1 flex items-center gap-2 px-3 text-sm",
+                isOwn && "flex-row-reverse",
+              )}
+            >
+              <span className="font-semibold">{userName}</span>
+              <span className="text-muted-foreground text-xs">
+                {formatMessageTime(message.createdDate, locale, timeLabels)}
+              </span>
+            </div>
+          )}
+
           <div
             className={cn(
-              "mb-1 flex items-center gap-2 px-3 text-sm",
-              isOwn && "flex-row-reverse",
-            )}
-          >
-            <span className="font-semibold">{userName}</span>
-            <span className="text-muted-foreground text-xs">
-              {formatMessageTime(message.createdDate, locale, timeLabels)}
-            </span>
-          </div>
-        )}
-
-        <div
-          className={cn(
-            "relative flex items-start gap-2 rounded-lg px-3 py-2",
+            "group relative w-fit max-w-full rounded-lg px-3 py-2 before:pointer-events-none before:absolute before:-inset-x-4 before:-top-4 before:-bottom-1 before:content-[''] before:group-hover:pointer-events-auto",
             isOwn
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-foreground",
             isDeleted && "italic opacity-70",
           )}
         >
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             {message.replyTo && (
               <div className="mb-2">
                 <ReplyPreview
@@ -238,23 +239,32 @@ export function MessageBubble({
               </div>
             )}
 
-            {!showSender && !isDeleted && (
-              <div className="mt-1 text-xs opacity-0 group-hover:opacity-50">
-                {formatMessageTime(message.createdDate, locale, timeLabels)}
-              </div>
-            )}
           </div>
 
           {!isDeleted && !isEditing && (
-            <MessageActionsMenu
-              isOwn={isOwn}
-              canDelete={canDelete}
-              onReply={onReply}
-              onEdit={isOwn && isTextMessage ? onStartEdit : undefined}
-              onDelete={onDelete}
-            />
+            <div
+              className={cn(
+                "absolute top-0 -translate-y-1/2",
+                isOwn ? "left-0 -translate-x-1/2" : "right-0 translate-x-1/2",
+              )}
+            >
+              <MessageActionsMenu
+                isOwn={isOwn}
+                canDelete={canDelete}
+                onReply={onReply}
+                onEdit={isOwn && isTextMessage ? onStartEdit : undefined}
+                onDelete={onDelete}
+              />
+            </div>
           )}
         </div>
+        </div>
+
+        {!showSender && !isDeleted && (
+          <span className="shrink-0 text-xs text-muted-foreground opacity-0 group-hover/row:opacity-100">
+            {formatMessageTime(message.createdDate, locale, timeLabels)}
+          </span>
+        )}
       </div>
 
       {isOwn && <div className="h-6 w-6" />}
