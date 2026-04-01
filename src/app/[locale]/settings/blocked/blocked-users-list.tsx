@@ -2,7 +2,7 @@
 
 import { unblockUser } from "@/app/[locale]/user/[username]/actions";
 import { Button } from "@/components/ui/button";
-import { TypographyP } from "@/components/ui/typography";
+import { TypographyMuted, TypographyP } from "@/components/ui/typography";
 import { Loader2, ShieldOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -64,7 +64,7 @@ export function BlockedUsersList({ entries }: BlockedUsersListProps) {
 
   if (entries.length === 0) {
     return (
-      <TypographyP className="text-muted-foreground">{t("empty")}</TypographyP>
+      <TypographyMuted>{t("empty")}</TypographyMuted>
     );
   }
 
