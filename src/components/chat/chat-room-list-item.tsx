@@ -44,7 +44,7 @@ export function ChatRoomListItem({
   const avatarFallback = displayName.charAt(0).toUpperCase();
 
   // Get last message preview
-  const lastMessage = room.chatMessages.edges[0]?.node;
+  const lastMessage = room.chatMessages?.edges[0]?.node;
 
   let lastMessagePreview = "";
   let lastMessageTime = "";

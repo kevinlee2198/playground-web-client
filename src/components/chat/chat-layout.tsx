@@ -118,6 +118,7 @@ export function ChatLayout({
         case "ChatMessageSentEvent": {
           // Update room list: move room to top, update last message
           setRoomListEvent({ type: "upsert", room: event.chatRoom });
+          setLastMessageUpdate({ roomId, message: event.chatMessage });
 
           if (isActiveRoom) {
             // Pass to ConversationView for message insertion
@@ -133,6 +134,7 @@ export function ChatLayout({
         case "ChatMessageDeletedEvent": {
           // Update room list last message if it matches
           setRoomListEvent({ type: "upsert", room: event.chatRoom });
+          setLastMessageUpdate({ roomId, message: event.chatMessage });
 
           if (isActiveRoom) {
             dispatchToConversation(event);

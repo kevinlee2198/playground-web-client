@@ -99,13 +99,21 @@ export function ChatRoomList({
     switch (roomListEvent.type) {
       case "upsert": {
         setRooms((prev) => {
-          // Remove existing entry if present
+          const existing = prev.find(
+            (e) => e.node.id === roomListEvent.room.id,
+          );
           const filtered = prev.filter(
             (e) => e.node.id !== roomListEvent.room.id,
           );
+          // Preserve existing chatMessages — the subscription event
+          // doesn't select chatMessages (it's redundant; the new message
+          // arrives via lastMessageUpdate instead).
+          const room = existing
+            ? { ...roomListEvent.room, chatMessages: existing.node.chatMessages }
+            : roomListEvent.room;
           // Prepend to top
           return [
-            { cursor: roomListEvent.room.id, node: roomListEvent.room },
+            { cursor: roomListEvent.room.id, node: room },
             ...filtered,
           ];
         });

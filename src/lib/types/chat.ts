@@ -98,7 +98,7 @@ interface ChatRoomListBase {
   members: {
     edges: { node: { user: ChatUser } }[];
   };
-  chatMessages: {
+  chatMessages?: {
     edges: { node: ChatMessageNode }[];
   };
 }

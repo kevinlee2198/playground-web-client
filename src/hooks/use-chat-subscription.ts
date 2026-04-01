@@ -30,12 +30,6 @@ const chatRoomListNodeSelection = {
       },
     },
   },
-  chatMessages: {
-    __args: { last: 1 },
-    edges: {
-      node: chatMessageNodeSelection,
-    },
-  },
 };
 
 const SUBSCRIPTION_QUERY = jsonToGraphQLQuery({
