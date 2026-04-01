@@ -276,16 +276,18 @@ export function MemberListPanel({
                             {memberName}
                             {isCurrentUser && " (You)"}
                           </span>
-                          <Badge
-                            variant={ChatRoomRoleBadgeVariant[member.role]}
-                          >
-                            {t(
-                              member.role.toLowerCase() as
-                                | "owner"
-                                | "admin"
-                                | "member",
-                            )}
-                          </Badge>
+                          {!isDirectMessage && (
+                            <Badge
+                              variant={ChatRoomRoleBadgeVariant[member.role]}
+                            >
+                              {t(
+                                member.role.toLowerCase() as
+                                  | "owner"
+                                  | "admin"
+                                  | "member",
+                              )}
+                            </Badge>
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {t("joined", {
