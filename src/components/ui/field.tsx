@@ -108,6 +108,7 @@ function FieldLabel({
       className={cn(
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-data-checked:border-primary/30 has-data-checked:bg-primary/5 has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border *:data-[slot=field]:p-3 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",
+        "has-[[data-slot=radio-group-item]]:w-full has-[[data-slot=radio-group-item]]:items-start has-[[data-slot=radio-group-item]]:rounded-lg has-[[data-slot=radio-group-item]]:border has-[[data-slot=radio-group-item]]:px-4 has-[[data-slot=radio-group-item]]:py-3",
         className,
       )}
       {...props}
