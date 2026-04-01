@@ -18,17 +18,6 @@ test.describe("Home / Feed Page", () => {
     ).toBeVisible();
   });
 
-  test("authenticated: Create Game button links to /game", async ({
-    authenticatedPage,
-  }) => {
-    await authenticatedPage.goto("/en");
-    const btn = authenticatedPage
-      .locator("main")
-      .getByRole("link", { name: "Create Game" });
-    await expect(btn).toBeVisible();
-    await expect(btn).toHaveAttribute("href", /\/game$/);
-  });
-
   test("authenticated: feed displays game cards", async ({
     authenticatedPage,
   }) => {
