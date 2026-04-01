@@ -17,10 +17,12 @@ export default function GlobalError({ error, reset }: Props): ReactNode {
     <html lang="en" style={{ colorScheme: "light dark" }}>
       <head>
         <style>{`
+          button:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
           @media (prefers-color-scheme: dark) {
             body { background-color: #302b22 !important; color: #e5e5e5 !important; }
             button { background-color: #e5e5e5 !important; color: #302b22 !important; }
             p { color: #a3a3a3 !important; }
+            button:focus-visible { outline-color: #e5e5e5; }
           }
         `}</style>
       </head>
