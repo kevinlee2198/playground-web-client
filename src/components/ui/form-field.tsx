@@ -236,6 +236,7 @@ export function FormComboboxField({
           field.handleBlur();
         }}
         disabled={disabled}
+        items={options}
       >
         <ComboboxInput placeholder={placeholder} showClear showTrigger />
         <ComboboxContent>
