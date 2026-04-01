@@ -13,6 +13,7 @@ const envSchema = z.object({
 });
 
 // Set SKIP_ENV_VALIDATION=1 during Docker builds where server-only vars aren't present.
-export const env = process.env.SKIP_ENV_VALIDATION
-  ? (process.env as unknown as z.infer<typeof envSchema>)
-  : envSchema.parse(process.env);
+export const env =
+  process.env.SKIP_ENV_VALIDATION === "1"
+    ? (process.env as unknown as z.infer<typeof envSchema>)
+    : envSchema.parse(process.env);
