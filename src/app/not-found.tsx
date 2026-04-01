@@ -31,6 +31,7 @@ export default function RootNotFound() {
         <p style={{ color: "#666", marginBottom: "1.5rem" }}>
           Page not found
         </p>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Root not-found has no access to next-intl Link */}
         <a
           href="/"
           style={{
