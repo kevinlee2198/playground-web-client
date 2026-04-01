@@ -51,8 +51,12 @@ export default async function RootLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-  const session = await auth.api.getSession({ headers: hdrs });
-  const isAuthenticated = !!session?.user;
+  let session = null;
+  try {
+    session = await auth.api.getSession({ headers: hdrs });
+  } catch (error) {
+    console.error("[layout] Session fetch failed:", error instanceof Error ? error.message : String(error));
+  }
   return (
     <html
       lang={locale}
@@ -63,7 +67,7 @@ export default async function RootLayout({
       <body
         className={cn(
           "flex min-h-screen flex-col antialiased",
-          isAuthenticated && "pb-16 lg:pb-0",
+          session?.user && "pb-16 lg:pb-0",
         )}
       >
         <NextIntlClientProvider>
