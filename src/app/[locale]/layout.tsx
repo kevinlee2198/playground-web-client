@@ -15,6 +15,7 @@ import { Nunito, Quicksand } from "next/font/google";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { ThemeProvider } from "next-themes";
+import type { JSX } from "react";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -46,7 +47,7 @@ interface RootLayoutProps {
 export default async function RootLayout({
   children,
   params,
-}: RootLayoutProps) {
+}: RootLayoutProps): Promise<JSX.Element> {
   const [{ locale }, hdrs] = await Promise.all([params, headers()]);
   if (!hasLocale(routing.locales, locale)) {
     notFound();
@@ -55,7 +56,7 @@ export default async function RootLayout({
   try {
     session = await auth.api.getSession({ headers: hdrs });
   } catch (error) {
-    console.error("[layout] Session fetch failed:", error instanceof Error ? error.message : String(error));
+    console.error("[locale-layout] Session fetch failed:", error instanceof Error ? error.message : String(error));
   }
   return (
     <html

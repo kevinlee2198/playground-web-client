@@ -1,4 +1,6 @@
-export default function RootNotFound() {
+import type { JSX } from "react";
+
+export default function RootNotFound(): JSX.Element {
   return (
     <html lang="en" style={{ colorScheme: "light dark" }}>
       <head>

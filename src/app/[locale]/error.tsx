@@ -12,7 +12,7 @@ interface Props {
 
 export default function LocaleError({ error, reset }: Props): ReactNode {
   useEffect(() => {
-    console.error("[error]", error);
+    console.error("[locale-error]", error);
   }, [error]);
 
   return (
