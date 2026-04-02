@@ -311,17 +311,15 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       ? queryParams.myGamesFilter
       : undefined;
 
-  // Parse sort from URL
-  const sortField = (
-    typeof queryParams.sortField === "string"
-      ? queryParams.sortField
-      : GameSortField.START_DATE
-  ) as GameSortField;
-  const sortDirection = (
-    typeof queryParams.sortDir === "string"
-      ? queryParams.sortDir
-      : SortDirection.DESC
-  ) as SortDirection;
+  // Parse sort from URL with runtime validation
+  const validSortFields = Object.values(GameSortField) as string[];
+  const validSortDirs = Object.values(SortDirection) as string[];
+  const sortField = validSortFields.includes(queryParams.sortField as string)
+    ? (queryParams.sortField as GameSortField)
+    : GameSortField.START_DATE;
+  const sortDirection = validSortDirs.includes(queryParams.sortDir as string)
+    ? (queryParams.sortDir as SortDirection)
+    : SortDirection.DESC;
 
   // Build filter input for GraphQL
   const filterInput: Record<string, unknown> = {};
