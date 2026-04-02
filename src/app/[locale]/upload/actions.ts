@@ -5,6 +5,7 @@ import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { GameMediaNode } from "@/lib/types/game-media";
 import type { Resource } from "@/lib/types/resource";
+import { z } from "zod";
 
 interface RequestUploadResult {
   success: boolean;
@@ -25,19 +26,24 @@ interface DeleteResourceResult {
   message?: string;
 }
 
+const uploadInputSchema = z.object({
+  filename: z.string().min(1).max(255),
+  mimeType: z.string().min(1).max(127),
+  size: z.number().int().positive(),
+});
+
 export async function requestProfilePictureUpload(
   filename: string,
   mimeType: string,
   size: number,
 ): Promise<RequestUploadResult> {
   try {
+    const validated = uploadInputSchema.parse({ filename, mimeType, size });
     const response = await authMutate({
       requestUpload: {
         __args: {
           input: {
-            filename,
-            mimeType,
-            size,
+            ...validated,
             context: {
               userProfilePicture: { placeholder: true },
             },
@@ -77,13 +83,12 @@ export async function requestGameMediaUpload(
   gameId: number,
 ): Promise<RequestUploadResult> {
   try {
+    const validated = uploadInputSchema.parse({ filename, mimeType, size });
     const response = await authMutate({
       requestUpload: {
         __args: {
           input: {
-            filename,
-            mimeType,
-            size,
+            ...validated,
             context: {
               gameMedia: { gameId },
             },
@@ -123,13 +128,12 @@ export async function requestChatMediaUpload(
   chatRoomId: string,
 ): Promise<RequestUploadResult> {
   try {
+    const validated = uploadInputSchema.parse({ filename, mimeType, size });
     const response = await authMutate({
       requestUpload: {
         __args: {
           input: {
-            filename,
-            mimeType,
-            size,
+            ...validated,
             context: {
               chatMedia: { chatRoomId },
             },

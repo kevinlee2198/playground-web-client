@@ -9,6 +9,7 @@ import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { Player, UpdatePlayerInput } from "@/lib/types/player";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 interface FollowUserState {
   id: string;
@@ -269,14 +270,19 @@ interface UpdateUserResult {
   message?: string;
 }
 
-export async function updateUser(input: {
-  displayName?: string;
-  biography?: string | null;
-}): Promise<UpdateUserResult> {
+const updateUserSchema = z.object({
+  displayName: z.string().min(1).max(50).optional(),
+  biography: z.string().max(500).nullable().optional(),
+});
+
+export async function updateUser(
+  input: z.infer<typeof updateUserSchema>,
+): Promise<UpdateUserResult> {
   try {
+    const validated = updateUserSchema.parse(input);
     const response = await authMutate({
       updateUser: {
-        __args: { input },
+        __args: { input: validated },
         __typename: true,
         __on: [
           {
@@ -287,6 +293,7 @@ export async function updateUser(input: {
               biography: true,
             },
           },
+          errorFragment,
         ],
       },
     });
@@ -300,7 +307,7 @@ export async function updateUser(input: {
     }
 
     const data = response.data?.updateUser;
-    if (!data || data.__typename !== "UpdateUserResponse") {
+    if (!data) {
       return {
         success: false,
         errorType: MutationErrorType.UNEXPECTED_ERROR,
@@ -308,9 +315,14 @@ export async function updateUser(input: {
       };
     }
 
+    const result = extractMutationResult(data, "UpdateUserResponse");
+    if (!result.success) {
+      return result;
+    }
+
     revalidatePath("/[locale]/user/[username]", "page");
 
-    return { success: true, user: data.user };
+    return { success: true, user: result.data.user };
   } catch {
     return {
       success: false,

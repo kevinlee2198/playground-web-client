@@ -1,8 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
-import { MutationErrorType } from "@/lib/graphql-result";
+import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 import { headers } from "next/headers";
 import { cache } from "react";
@@ -126,6 +127,7 @@ export async function updatePreferences(
             __typeName: "UpdateUserPreferencesResponse",
             preferences: preferencesSelection,
           },
+          errorFragment,
         ],
       },
     });
@@ -139,7 +141,7 @@ export async function updatePreferences(
     }
 
     const data = response.data?.updateUserPreferences;
-    if (!data || data.__typename !== "UpdateUserPreferencesResponse") {
+    if (!data) {
       return {
         success: false,
         errorType: MutationErrorType.UNEXPECTED_ERROR,
@@ -147,7 +149,12 @@ export async function updatePreferences(
       };
     }
 
-    return { success: true, preferences: data.preferences };
+    const result = extractMutationResult(data, "UpdateUserPreferencesResponse");
+    if (!result.success) {
+      return result;
+    }
+
+    return { success: true, preferences: result.data.preferences };
   } catch {
     return {
       success: false,
