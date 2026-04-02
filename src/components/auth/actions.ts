@@ -1,6 +1,7 @@
 "use server";
 
 import { auth, keycloakIssuer } from "@/lib/auth";
+import { env } from "@/lib/env";
 import { authQuery } from "@/lib/graphql-request";
 import { headers } from "next/headers";
 
@@ -14,8 +15,8 @@ interface CurrentUserInfo {
 }
 
 export async function getKeycloakLogoutUrl(): Promise<string> {
-  const clientId = process.env.KEYCLOAK_CLIENT_ID!;
-  const redirectUri = process.env.BETTER_AUTH_URL!;
+  const clientId = env.KEYCLOAK_CLIENT_ID;
+  const redirectUri = env.BETTER_AUTH_URL;
   const reqHeaders = await headers();
 
   // Retrieve the id_token before signing out so Keycloak can skip the
@@ -26,7 +27,7 @@ export async function getKeycloakLogoutUrl(): Promise<string> {
       headers: reqHeaders,
       body: { providerId: "keycloak" },
     });
-    idToken = tokens?.idToken ?? undefined;
+    idToken = tokens?.idToken;
   } catch {
     // If token retrieval fails, proceed without id_token_hint
   }

@@ -1,18 +1,18 @@
 import { jsonToGraphQLQuery } from "json-to-graphql-query";
 import { headers } from "next/headers";
 import { auth } from "./auth";
-
+import { env } from "./env";
 import { GRAPHQL_PATH } from "./graphql-config";
 
 function buildRequestObject(
   data: BodyInit,
   inputHeaders: object = {},
 ): Request {
-  const baseUrl = process.env.API_SERVER_URL + GRAPHQL_PATH;
+  const baseUrl = env.API_SERVER_URL + GRAPHQL_PATH;
 
   return new Request(baseUrl, {
     method: "POST",
-    mode: "cors", // no-cors, cors, same-origin
+    mode: "cors",
     headers: {
       "Content-Type": "application/json",
       ...inputHeaders,
@@ -26,14 +26,8 @@ async function fetchData<T>(
   inputHeaders?: object,
   options?: NextFetchOptions,
 ): Promise<T> {
-  let response;
-  if (options === undefined) {
-    response = await fetch(buildRequestObject(data, inputHeaders));
-  } else {
-    response = await fetch(buildRequestObject(data, inputHeaders), options);
-  }
-
-  return await response.json(); // parses JSON response into native JavaScript objects
+  const response = await fetch(buildRequestObject(data, inputHeaders), options);
+  return response.json();
 }
 
 async function query(
@@ -41,11 +35,10 @@ async function query(
   headers?: object,
   options?: NextFetchOptions,
 ): Promise<GraphQLResponse> {
-  const graphQLQuery = { query: query };
   const body = JSON.stringify({
-    query: jsonToGraphQLQuery(graphQLQuery),
+    query: jsonToGraphQLQuery({ query }),
   });
-  return await fetchData(body, headers, options);
+  return fetchData(body, headers, options);
 }
 
 async function mutate(
@@ -53,11 +46,10 @@ async function mutate(
   headers: object,
   options?: NextFetchOptions,
 ): Promise<GraphQLResponse> {
-  const graphQLQuery = { mutation: mutation };
   const body = JSON.stringify({
-    query: jsonToGraphQLQuery(graphQLQuery),
+    query: jsonToGraphQLQuery({ mutation }),
   });
-  return await fetchData(body, headers, options);
+  return fetchData(body, headers, options);
 }
 
 async function getAuthHeaders() {
@@ -68,7 +60,6 @@ async function getAuthHeaders() {
     return {};
   }
 
-  // Get the Keycloak access token from the account cookie
   const tokenResponse = await auth.api.getAccessToken({
     headers: reqHeaders,
     body: { providerId: "keycloak" },
