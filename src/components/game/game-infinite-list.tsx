@@ -29,20 +29,24 @@ export function GameInfiniteList({
   const [edges, setEdges] = useState(initialEdges);
   const [pageInfo, setPageInfo] = useState(initialPageInfo);
   const [isPending, startTransition] = useTransition();
+  const [hasError, setHasError] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(() => {
-    if (!pageInfo.hasNextPage || isPending || !pageInfo.endCursor) return;
+    if (!pageInfo.hasNextPage || isPending || hasError || !pageInfo.endCursor) return;
 
     startTransition(async () => {
       const result = await loadMoreGames(filters, sort, pageInfo.endCursor!);
       if (result?.edges && result?.pageInfo) {
         setEdges((prev) => [...prev, ...result.edges]);
         setPageInfo(result.pageInfo);
+        setHasError(false);
+      } else {
+        setHasError(true);
       }
     });
-  }, [pageInfo, isPending, filters, sort]);
+  }, [pageInfo, isPending, hasError, filters, sort]);
 
   // IntersectionObserver for infinite scroll
   useEffect(() => {
@@ -86,9 +90,14 @@ export function GameInfiniteList({
         {isPending && (
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         )}
-        {!pageInfo.hasNextPage && edges.length > 0 && (
+        {hasError && !isPending && (
+          <p className="text-sm text-destructive">
+            {t("game.errors.loadMoreError")}
+          </p>
+        )}
+        {!pageInfo.hasNextPage && !hasError && edges.length > 0 && (
           <p className="text-sm text-muted-foreground">
-            {t("game.noGamesDescription")}
+            {t("game.endOfList")}
           </p>
         )}
       </div>

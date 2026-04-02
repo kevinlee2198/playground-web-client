@@ -23,7 +23,7 @@ export default function AuthButton() {
 
   useEffect(() => {
     if (session?.data?.user) {
-      fetchCurrentUser().then(setCurrentUser);
+      fetchCurrentUser().then(setCurrentUser).catch(() => {});
     }
   }, [session?.data?.user]);
 

@@ -1,8 +1,7 @@
 import { BackButton } from "@/components/game/back-button";
 import { GameDetailClient } from "@/components/game/live/game-detail-client";
 import { GameDetailHero } from "@/components/game/game-detail-hero";
-import { buttonVariants } from "@/components/ui/button-variants";
-import { Link, redirect } from "@/i18n/navigation";
+import { redirect } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import {
   GameStatus,
@@ -35,10 +34,10 @@ import type {
   BaseballPitchingStatsNode,
   BaseballFieldingStatsNode,
 } from "@/lib/types/stats/baseball";
-import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -149,24 +148,7 @@ export default async function GameDetailPage({ params }: PageProps) {
   }
 
   if (!game) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-lg border border-destructive bg-destructive/10 p-12 text-center">
-          <h2 className="text-2xl font-bold text-destructive">
-            {t("game.notFound")}
-          </h2>
-          <p className="mt-2 text-muted-foreground">
-            {t("game.notFoundDescription")}
-          </p>
-          <Link
-            href="/games"
-            className={cn(buttonVariants({ variant: "outline" }), "mt-6")}
-          >
-            {t("game.title")}
-          </Link>
-        </div>
-      </div>
-    );
+    notFound();
   }
 
   // Normalize aliased embedUrl fields in media nodes

@@ -719,8 +719,10 @@
       "unfinalizeError": "Failed to unfinalize results",
       "participantError": "Failed to update participants",
       "boxScoreError": "Failed to save box scores",
+      "loadMoreError": "Failed to load more games",
       "retry": "Retry"
     },
+    "endOfList": "You've reached the end",
     "visibility": {
       "label": "Who can see this game?",
       "public": "Public",
