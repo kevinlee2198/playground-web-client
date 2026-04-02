@@ -68,7 +68,7 @@ export function FormTextField({
     >
       <FieldLabel htmlFor={field.name}>
         {label}
-        {required && <span className="ml-1 text-destructive">*</span>}
+        {required && <><span className="ml-1 text-destructive" aria-hidden="true">*</span><span className="sr-only"> (required)</span></>}
       </FieldLabel>
       <Input
         id={field.name}
@@ -166,7 +166,7 @@ export function FormSelectField({
     >
       <FieldLabel htmlFor={field.name}>
         {label}
-        {required && <span className="ml-1 text-destructive">*</span>}
+        {required && <><span className="ml-1 text-destructive" aria-hidden="true">*</span><span className="sr-only"> (required)</span></>}
       </FieldLabel>
       <Select
         value={field.state.value ?? null}
@@ -227,7 +227,7 @@ export function FormComboboxField({
     >
       <FieldLabel htmlFor={field.name}>
         {label}
-        {required && <span className="ml-1 text-destructive">*</span>}
+        {required && <><span className="ml-1 text-destructive" aria-hidden="true">*</span><span className="sr-only"> (required)</span></>}
       </FieldLabel>
       <Combobox
         value={selectedOption}
@@ -329,7 +329,7 @@ export function FormDateTimeField({
     >
       <FieldLabel htmlFor={field.name}>
         {label}
-        {required && <span className="ml-1 text-destructive">*</span>}
+        {required && <><span className="ml-1 text-destructive" aria-hidden="true">*</span><span className="sr-only"> (required)</span></>}
       </FieldLabel>
       <Popover>
         <PopoverTrigger

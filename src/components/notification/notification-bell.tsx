@@ -209,7 +209,7 @@ export function NotificationBell() {
             <button
               type="button"
               onClick={handleMarkAllAsRead}
-              className="text-xs text-primary hover:underline"
+              className="rounded text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {t("markAllRead")}
             </button>

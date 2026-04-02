@@ -24,7 +24,7 @@ export function GameDescription({ description }: GameDescriptionProps) {
 
   return (
     <div className="flex flex-col items-center gap-1 w-full max-w-prose text-center">
-      <div ref={textRef} className={cn(!expanded && "line-clamp-2")}>
+      <div id="game-description" ref={textRef} className={cn(!expanded && "line-clamp-2")}>
         <TypographyMuted className="text-pretty">
           {description}
         </TypographyMuted>
@@ -34,6 +34,7 @@ export function GameDescription({ description }: GameDescriptionProps) {
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
+          aria-controls="game-description"
           className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
         >
           {expanded ? t("showLess") : t("showMore")}
