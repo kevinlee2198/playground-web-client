@@ -4,7 +4,7 @@ import {
   gameLiveReducer,
   type LiveGameState,
 } from "@/components/game/live/game-live-reducer";
-import { GameStatus, GameVisibility, SportFormat, SportType } from "@/lib/constants";
+import { GameStatus, GameVisibility, SportFormat, SportType, StatEntryMode } from "@/lib/constants";
 import type { GameDetail, GameParticipantDetail, TeamInstanceDetail } from "@/lib/types/game";
 import type {
   BoxScoreSavedEvent,
@@ -55,6 +55,7 @@ function makeGameDetail(overrides: Partial<GameDetail> = {}): GameDetail {
     viewerGameRole: null,
     visibility: GameVisibility.PUBLIC,
     viewerInvitation: null,
+    statEntryMode: StatEntryMode.OPEN,
     location: null,
     participants: { edges: [], pageInfo: emptyPageInfo },
     media: { edges: [], pageInfo: emptyPageInfo },

@@ -240,18 +240,19 @@ describe("updatePreferences", () => {
     expect(result.message).toBe("Permission denied");
   });
 
-  it("returns unexpected error on non-matching typename", async () => {
+  it("surfaces error type from non-matching typename", async () => {
     mockMutateSuccess({
       updateUserPreferences: {
         __typename: "SomeErrorType",
+        message: "Not allowed",
       },
     });
 
     const result = await updatePreferences({ notificationsEnabled: true });
 
     expect(result.success).toBe(false);
-    expect(result.errorType).toBe(MutationErrorType.UNEXPECTED_ERROR);
-    expect(result.message).toBe("Unexpected response");
+    expect(result.errorType).toBe("SomeErrorType");
+    expect(result.message).toBe("Not allowed");
   });
 
   it("returns unexpected error on thrown exception", async () => {

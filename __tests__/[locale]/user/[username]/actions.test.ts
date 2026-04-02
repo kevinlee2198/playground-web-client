@@ -634,7 +634,7 @@ describe("updateUser", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("returns UNEXPECTED_ERROR when response typename does not match", async () => {
+  it("surfaces error type when response typename does not match", async () => {
     mockAuthMutate.mockResolvedValueOnce({
       data: { updateUser: { __typename: "UpdateUserError", message: "Not allowed" } },
     });
@@ -643,8 +643,8 @@ describe("updateUser", () => {
 
     expect(result).toEqual({
       success: false,
-      errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Unexpected response",
+      errorType: "UpdateUserError",
+      message: "Not allowed",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });

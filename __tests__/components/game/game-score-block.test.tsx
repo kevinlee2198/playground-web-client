@@ -104,6 +104,7 @@ import {
   GameVisibility,
   SportFormat,
   SportType,
+  StatEntryMode,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 
@@ -125,6 +126,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
     viewerInvitation: null,
+    statEntryMode: StatEntryMode.OPEN,
     location: null,
     participants: {
       edges: [

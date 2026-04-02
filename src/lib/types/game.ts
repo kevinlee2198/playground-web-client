@@ -489,7 +489,7 @@ export interface ParticipantMetadataInput {
   basketball?: { score: number };
   tennis?: {
     setsWon: number;
-    sets: { gamesWon: number; tiebreakPoints?: number }[];
+    sets: { gamesWon: number; tiebreakPoints?: number | null }[];
   };
   football?: { score: number };
   pickleball?: {

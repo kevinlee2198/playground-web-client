@@ -44,7 +44,7 @@ vi.mock("next/image", () => ({
 }));
 
 import { GameCard } from "@/components/game/game-card";
-import { GameStatus, GameRole, GameVisibility, SportType, SportFormat } from "@/lib/constants";
+import { GameStatus, GameRole, GameVisibility, SportType, SportFormat, StatEntryMode } from "@/lib/constants";
 import type { GameNode } from "@/lib/types/game";
 
 function makeGame(overrides: Partial<GameNode> = {}): GameNode {
@@ -62,6 +62,7 @@ function makeGame(overrides: Partial<GameNode> = {}): GameNode {
     viewerGameRole: GameRole.OWNER,
     visibility: GameVisibility.PUBLIC,
     viewerInvitation: null,
+    statEntryMode: StatEntryMode.OPEN,
     location: {
       name: "Court 1",
       address: { city: "Los Angeles", state: "CA", country: "US" },
