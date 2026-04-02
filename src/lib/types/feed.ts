@@ -57,6 +57,7 @@ export interface FeedLocation {
  */
 export interface FeedGameNode {
   id: number;
+  description: string | null;
   startDate: string;
   endDate: string | null;
   sportType: SportType;

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 interface UserAvatarMenuProps {
   user: {
@@ -20,10 +20,9 @@ interface UserAvatarMenuProps {
     email?: string | null;
     profilePictureUrl?: string | null;
   };
-  locale: string;
 }
 
-export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
+export function UserAvatarMenu({ user }: UserAvatarMenuProps) {
   const t = useTranslations();
 
   // Generate initials from name or email
@@ -64,7 +63,7 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem>
           <Link
-            href={`/${locale}/user/${user.username}`}
+            href={`/user/${user.username}`}
             className="flex items-center"
           >
             <User className="mr-2 h-4 w-4" />
@@ -72,7 +71,7 @@ export function UserAvatarMenu({ user, locale }: UserAvatarMenuProps) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Link href={`/${locale}/settings`} className="flex items-center">
+          <Link href="/settings" className="flex items-center">
             <Settings className="mr-2 h-4 w-4" />
             {t("profile.settings")}
           </Link>

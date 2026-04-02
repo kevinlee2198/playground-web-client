@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { signIn, useSession } from "@/lib/auth-client";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { UserAvatarMenu } from "../playground/user-avatar-menu";
 import { Skeleton } from "../ui/skeleton";
@@ -11,7 +11,6 @@ import { fetchCurrentUser } from "./actions";
 
 export default function AuthButton() {
   const t = useTranslations();
-  const locale = useLocale();
   const session = useSession();
   const [currentUser, setCurrentUser] = useState<{
     id: string;
@@ -58,7 +57,6 @@ export default function AuthButton() {
           name: `${currentUser.firstName} ${currentUser.lastName}`,
           email: currentUser.email,
         }}
-        locale={locale}
       />
     );
   } else {

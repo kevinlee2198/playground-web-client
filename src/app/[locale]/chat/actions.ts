@@ -1,6 +1,7 @@
 "use server";
 
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
+import { EnumType } from "json-to-graphql-query";
 import {
   chatMessageNodeSelection,
   chatRoomInlineFragments,
@@ -573,7 +574,6 @@ export async function updateMemberRole(
   userId: string,
   role: ChatRoomRoleType,
 ): Promise<{ success: boolean; errorType?: string; message?: string }> {
-  const { EnumType } = await import("json-to-graphql-query");
   try {
     const response = await authMutate({
       updateChatRoomMemberRole: {

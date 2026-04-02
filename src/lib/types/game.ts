@@ -207,7 +207,7 @@ export interface GameMember {
  */
 export interface GameNode {
   id: number;
-  description?: string | null;
+  description: string | null;
   startDate: string;
   endDate: string | null;
   sportType: SportType;

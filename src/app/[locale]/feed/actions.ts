@@ -36,6 +36,7 @@ export async function loadFeedGames(
           cursor: true,
           node: {
             id: true,
+            description: true,
             startDate: true,
             endDate: true,
             sportType: true,
