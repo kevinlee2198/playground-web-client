@@ -206,6 +206,7 @@ export function ManageEditorsDialog({
                             <Button
                               variant="ghost"
                               size="icon"
+                              aria-label={t("removeEditor")}
                               onClick={() => setRemoveTarget(member)}
                               disabled={isPending}
                             >

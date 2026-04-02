@@ -148,7 +148,7 @@ export function BaseballScoreForm({
       </div>
 
       {error && (
-        <div className="rounded-md border border-destructive bg-destructive/10 p-3">
+        <div role="alert" className="rounded-md border border-destructive bg-destructive/10 p-3">
           <p className="text-sm text-destructive">{error}</p>
         </div>
       )}

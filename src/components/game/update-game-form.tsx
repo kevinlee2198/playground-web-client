@@ -35,6 +35,15 @@ import { updateGameFormSchema } from "./game-form-fields";
 import { StatEntryModeRadioGroup } from "./stat-entry-mode-radio-group";
 import { VisibilityRadioGroup } from "./visibility-radio-group";
 
+function validateUpdateGameForm({ value }: { value: unknown }) {
+  const result = updateGameFormSchema.safeParse(value);
+  if (result.success) return undefined;
+  return result.error.issues.map((issue) => ({
+    message: issue.message,
+    path: issue.path,
+  }));
+}
+
 interface UpdateGameFormProps {
   gameId: number;
   currentStartDate: string;
@@ -119,14 +128,8 @@ export function UpdateGameForm({
       currentLocation,
     ),
     validators: {
-      onBlur: ({ value }) => {
-        const result = updateGameFormSchema.safeParse(value);
-        if (result.success) return undefined;
-        return result.error.issues.map((issue) => ({
-          message: issue.message,
-          path: issue.path,
-        }));
-      },
+      onBlur: validateUpdateGameForm,
+      onSubmit: validateUpdateGameForm,
     },
     onSubmit: async ({ value }) => {
       setError(null);

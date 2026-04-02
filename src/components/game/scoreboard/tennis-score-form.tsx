@@ -259,6 +259,7 @@ export function TennisScoreForm({
                               type="button"
                               variant="ghost"
                               size="sm"
+                              aria-label={`${t("game.scoreboard.removeSet")} ${i + 1}`}
                               onClick={() => handleRemoveSet(i)}
                               disabled={isPending}
                             >
@@ -280,6 +281,7 @@ export function TennisScoreForm({
                               min={0}
                               max={7}
                               className="w-16"
+                              aria-label={`${nameA} ${t("game.scoreboard.set")} ${i + 1}`}
                               value={set.gamesWonA}
                               onChange={(e) => {
                                 const updated = [...field.state.value];
@@ -298,6 +300,7 @@ export function TennisScoreForm({
                               type="number"
                               min={0}
                               className="w-16"
+                              aria-label={`${nameA} ${t("game.scoreboard.set")} ${i + 1} ${t("game.scoreboard.tiebreakPoints")}`}
                               placeholder={t("game.scoreboard.tiebreakPoints")}
                               value={set.tiebreakPointsA ?? ""}
                               onChange={(e) => {
@@ -327,6 +330,7 @@ export function TennisScoreForm({
                               min={0}
                               max={7}
                               className="w-16"
+                              aria-label={`${nameB} ${t("game.scoreboard.set")} ${i + 1}`}
                               value={set.gamesWonB}
                               onChange={(e) => {
                                 const updated = [...field.state.value];
@@ -345,6 +349,7 @@ export function TennisScoreForm({
                               type="number"
                               min={0}
                               className="w-16"
+                              aria-label={`${nameB} ${t("game.scoreboard.set")} ${i + 1} ${t("game.scoreboard.tiebreakPoints")}`}
                               placeholder={t("game.scoreboard.tiebreakPoints")}
                               value={set.tiebreakPointsB ?? ""}
                               onChange={(e) => {
@@ -376,7 +381,7 @@ export function TennisScoreForm({
       </form.Field>
 
       {error && (
-        <div className="rounded-md border border-destructive bg-destructive/10 p-3">
+        <div role="alert" className="rounded-md border border-destructive bg-destructive/10 p-3">
           <p className="text-sm text-destructive">{error}</p>
         </div>
       )}

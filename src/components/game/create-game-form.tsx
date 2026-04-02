@@ -38,6 +38,15 @@ import { VisibilityRadioGroup } from "./visibility-radio-group";
 
 const sportTypeOptions = Object.values(SportType);
 
+function validateCreateGameForm({ value }: { value: unknown }) {
+  const result = createGameFormSchema.safeParse(value);
+  if (result.success) return undefined;
+  return result.error.issues.map((issue) => ({
+    message: issue.message,
+    path: issue.path,
+  }));
+}
+
 interface CreateGameFormProps {
   onSuccess?: () => void;
 }
@@ -65,14 +74,8 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       statEntryMode: StatEntryMode.OPEN,
     },
     validators: {
-      onBlur: ({ value }) => {
-        const result = createGameFormSchema.safeParse(value);
-        if (result.success) return undefined;
-        return result.error.issues.map((issue) => ({
-          message: issue.message,
-          path: issue.path,
-        }));
-      },
+      onBlur: validateCreateGameForm,
+      onSubmit: validateCreateGameForm,
     },
     onSubmit: async ({ value }) => {
       setError(null);
