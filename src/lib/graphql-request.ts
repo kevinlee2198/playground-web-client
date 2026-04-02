@@ -27,6 +27,11 @@ async function fetchData<T>(
   options?: NextFetchOptions,
 ): Promise<T> {
   const response = await fetch(buildRequestObject(data, inputHeaders), options);
+  if (!response.ok) {
+    throw new Error(
+      `GraphQL request failed with status ${response.status} ${response.statusText}`,
+    );
+  }
   return response.json();
 }
 
@@ -91,7 +96,7 @@ interface NextFetchOptions {
 interface GraphQLResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
-  errors: [GraphQLError];
+  errors: GraphQLError[];
 }
 
 // See https://netflix.github.io/dgs/error-handling/#error-specification for more information

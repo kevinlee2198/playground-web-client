@@ -75,48 +75,55 @@ export function FollowListDialog({
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [, startFetchTransition] = useTransition();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
 
   const fetchPage = useCallback(
-    async (after?: string) => {
+    (after?: string) => {
       if (isLoadingRef.current) return;
       isLoadingRef.current = true;
 
-      const loader = type === "followers" ? loadFollowers : loadFollowing;
-      const result = await loader(userId, PAGE_SIZE, after);
+      startFetchTransition(async () => {
+        if (!after) {
+          setItems([]);
+          setEndCursor(undefined);
+          setHasNextPage(false);
+          setHasError(false);
+          setIsInitialLoad(true);
+        }
 
-      if (result) {
-        setHasError(false);
-        const newItems: FollowListItem[] = result.edges.map(
-          (edge: { cursor: string; node: { id: string; follower: FollowUser; following: FollowUser } }) => ({
-            id: edge.node.id,
-            cursor: edge.cursor,
-            user:
-              type === "followers" ? edge.node.follower : edge.node.following,
-          }),
-        );
+        const loader = type === "followers" ? loadFollowers : loadFollowing;
+        const result = await loader(userId, PAGE_SIZE, after);
 
-        setItems((prev) => (after ? [...prev, ...newItems] : newItems));
-        setHasNextPage(result.pageInfo.hasNextPage);
-        setEndCursor(result.pageInfo.endCursor ?? undefined);
-      } else {
-        setHasError(true);
-      }
+        if (result) {
+          setHasError(false);
+          const newItems: FollowListItem[] = result.edges.map(
+            (edge: { cursor: string; node: { id: string; follower: FollowUser; following: FollowUser } }) => ({
+              id: edge.node.id,
+              cursor: edge.cursor,
+              user:
+                type === "followers" ? edge.node.follower : edge.node.following,
+            }),
+          );
 
-      setIsInitialLoad(false);
-      isLoadingRef.current = false;
+          setItems((prev) => (after ? [...prev, ...newItems] : newItems));
+          setHasNextPage(result.pageInfo.hasNextPage);
+          setEndCursor(result.pageInfo.endCursor ?? undefined);
+        } else {
+          setHasError(true);
+        }
+
+        setIsInitialLoad(false);
+        isLoadingRef.current = false;
+      });
     },
+    // startFetchTransition omitted — React guarantees dispatch functions are stable
     [type, userId],
   );
 
   useEffect(() => {
     if (!open) return;
-    setItems([]);
-    setEndCursor(undefined);
-    setHasNextPage(false);
-    setHasError(false);
-    setIsInitialLoad(true);
     isLoadingRef.current = false;
     fetchPage();
   }, [open, type, userId, fetchPage]);

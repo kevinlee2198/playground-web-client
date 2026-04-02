@@ -127,8 +127,8 @@ export default async function GameDetailPage({ params }: PageProps) {
       },
     });
 
-    currentUserId = meResponse.data.me.id;
-    playerId = meResponse.data.me.player.id;
+    currentUserId = meResponse.data?.me?.id ?? null;
+    playerId = meResponse.data?.me?.player?.id ?? null;
 
     const gameResponse = await authQuery({
       game: { ...gameQueryFields, __args: { id } },
