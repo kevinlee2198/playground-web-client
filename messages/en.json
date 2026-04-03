@@ -203,8 +203,6 @@
     "createTitle": "Create Game",
     "editTitle": "Edit Game",
     "detailTitle": "Game Details",
-    "notFound": "Game not found",
-    "notFoundDescription": "The game you are looking for does not exist or has been removed.",
     "noGames": "No games match your filters.",
     "noGamesDescription": "Try adjusting your filters or create a new game.",
     "schedule": "Schedule",

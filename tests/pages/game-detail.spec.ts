@@ -38,7 +38,7 @@ test.describe("Game Detail Page", () => {
     msw.use(withMeGuard(mockGameNotFoundResponse));
     await authenticatedPage.goto("/en/game/nonexistent");
     await expect(
-      authenticatedPage.getByText(/game not found/i),
+      authenticatedPage.getByText(/page not found/i),
     ).toBeVisible();
   });
 
