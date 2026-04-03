@@ -8,6 +8,7 @@ const frameSrc = [
 ].join(" ");
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   experimental: {
     testProxy: !!process.env.PLAYWRIGHT,
   },
