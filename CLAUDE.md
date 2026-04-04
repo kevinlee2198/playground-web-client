@@ -160,7 +160,7 @@ Always use these file names in the `app/` directory:
 - `authQuery(q)` / `authMutate(m)` - Automatically injects Bearer token from session
 - If authenticated - use the auth versions
 - Uses `json-to-graphql-query` to build queries from objects. Do not use plain strings
-- Error format follows Netflix DGS specification
+- Error format follows Spring GraphQL convention (`extensions.classification`)
 - Queries are sent to a spring-boot graphql server
 
 **i18n** (`src/i18n/`): Type-safe translation with dot-notation paths (e.g., `t("footer.company.about")`). Uses the `next-intl` library.

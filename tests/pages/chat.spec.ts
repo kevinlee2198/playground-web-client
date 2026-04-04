@@ -3,7 +3,7 @@ import { mockEmptyChatRoomsResponse } from "../fixtures/mock-data/chat";
 
 const chatRoomsError = () => ({
   data: null,
-  errors: [{ message: "Server error", extensions: { errorType: "INTERNAL" } }],
+  errors: [{ message: "Server error", extensions: { classification: "INTERNAL_ERROR" } }],
 });
 
 test.describe("Chat Page", () => {
