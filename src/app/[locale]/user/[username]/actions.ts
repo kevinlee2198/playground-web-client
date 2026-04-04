@@ -283,18 +283,14 @@ export async function updateUser(
     const response = await authMutate({
       updateUser: {
         __args: { input: validated },
-        __typename: true,
-        __on: [
-          {
-            __typeName: "UpdateUserResponse",
-            user: {
-              id: true,
-              displayName: true,
-              biography: true,
-            },
+        __on: {
+          __typeName: "UpdateUserResponse",
+          user: {
+            id: true,
+            displayName: true,
+            biography: true,
           },
-          errorFragment,
-        ],
+        },
       },
     });
 
@@ -315,14 +311,9 @@ export async function updateUser(
       };
     }
 
-    const result = extractMutationResult(data, "UpdateUserResponse");
-    if (!result.success) {
-      return result;
-    }
-
     revalidatePath("/[locale]/user/[username]", "page");
 
-    return { success: true, user: result.data.user };
+    return { success: true, user: data.user };
   } catch {
     return {
       success: false,
@@ -354,19 +345,15 @@ export async function updatePlayer(
     const response = await authMutate({
       updatePlayer: {
         __args: { input: mutationInput },
-        __typename: true,
-        __on: [
-          {
-            __typeName: "UpdatePlayerResponse",
-            player: {
-              id: true,
-              age: true,
-              height: true,
-              weight: true,
-            },
+        __on: {
+          __typeName: "UpdatePlayerResponse",
+          player: {
+            id: true,
+            age: true,
+            height: true,
+            weight: true,
           },
-          errorFragment,
-        ],
+        },
       },
     });
 
@@ -378,14 +365,17 @@ export async function updatePlayer(
       };
     }
 
-    const result = extractMutationResult(
-      response.data.updatePlayer,
-      "UpdatePlayerResponse",
-    );
-    if (!result.success) return result;
+    const data = response.data?.updatePlayer;
+    if (!data) {
+      return {
+        success: false,
+        errorType: MutationErrorType.UNEXPECTED_ERROR,
+        message: "Unexpected response",
+      };
+    }
 
     revalidatePath("/[locale]/user/[username]", "page");
-    return { success: true, player: result.data.player };
+    return { success: true, player: data.player };
   } catch (error) {
     console.error("Failed to update player:", error);
     return {

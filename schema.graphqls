@@ -2712,6 +2712,8 @@ input UpdatePlayerInput {
 type UpdatePlayerResponse {
   player: Player!
 }
+
+union UpdatePlayerResult = UpdatePlayerResponse
 # ============================================================================
 # Resource / File Management (v2)
 #
@@ -3254,7 +3256,7 @@ type Mutation {
   """
   Update the current user's player profile.
   """
-  updatePlayer(input: UpdatePlayerInput!): UpdatePlayerResponse!
+  updatePlayer(input: UpdatePlayerInput!): UpdatePlayerResult!
   """
   Create a game.
   """

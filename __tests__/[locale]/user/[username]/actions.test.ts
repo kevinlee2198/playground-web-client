@@ -634,21 +634,6 @@ describe("updateUser", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("surfaces error type when response typename does not match", async () => {
-    mockAuthMutate.mockResolvedValueOnce({
-      data: { updateUser: { __typename: "UpdateUserError", message: "Not allowed" } },
-    });
-
-    const result = await updateUser({ displayName: "Alice" });
-
-    expect(result).toEqual({
-      success: false,
-      errorType: "UpdateUserError",
-      message: "Not allowed",
-    });
-    expect(revalidatePath).not.toHaveBeenCalled();
-  });
-
   it("returns UNEXPECTED_ERROR when data.updateUser is null", async () => {
     mockAuthMutate.mockResolvedValueOnce({
       data: { updateUser: null },
@@ -792,19 +777,6 @@ describe("updatePlayer", () => {
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Unauthorized",
-    });
-    expect(revalidatePath).not.toHaveBeenCalled();
-  });
-
-  it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("updatePlayer", "PlayerNotFoundError", "Player does not exist");
-
-    const result = await updatePlayer({ age: 25 });
-
-    expect(result).toEqual({
-      success: false,
-      errorType: "PlayerNotFoundError",
-      message: "Player does not exist",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
