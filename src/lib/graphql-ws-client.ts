@@ -7,6 +7,7 @@ import { GRAPHQL_PATH } from "./graphql-config";
 let client: Client | null = null;
 let expiryTimer: ReturnType<typeof setTimeout> | null = null;
 let lastExpiresAt: number | null = null;
+let disposed = false;
 
 const BUFFER_MS = 30_000;
 
@@ -29,6 +30,7 @@ export function getGraphQLWsClient(
   fetchToken: () => Promise<TokenInfo | null>,
 ): Client {
   if (client) return client;
+  disposed = false;
 
   client = createClient({
     url: getWsUrl(),
@@ -52,7 +54,7 @@ export function getGraphQLWsClient(
       const delay = Math.min(1000 * Math.pow(2, retries), 30000);
       await new Promise((resolve) => setTimeout(resolve, delay));
     },
-    shouldRetry: () => true,
+    shouldRetry: () => !disposed,
     on: {
       error: (error) => {
         console.error("[graphql-ws] Connection error:", error);
@@ -84,6 +86,7 @@ export function getGraphQLWsClient(
 }
 
 export function disposeGraphQLWsClient(): void {
+  disposed = true;
   clearExpiryTimer();
   if (client) {
     client.dispose();
