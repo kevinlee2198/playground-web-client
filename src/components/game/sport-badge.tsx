@@ -1,8 +1,8 @@
 "use client";
 
 import { SportIcon } from "@/components/game/sport-icon";
-import { cn } from "@/lib/utils";
 import { getSportBgClass, getSportFgClass, type SportType } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 const sizeStyles = {
