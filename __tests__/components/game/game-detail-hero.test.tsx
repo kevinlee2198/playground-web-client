@@ -152,7 +152,7 @@ async function renderHero(
 // ---- Tests ----
 
 describe("GameDetailHero", () => {
-  it("renders sport emoji pill and format badge centered", async () => {
+  it("renders sport badge and format badge centered", async () => {
     await renderHero();
 
     expect(screen.getByTestId("sport-badge")).toBeInTheDocument();
