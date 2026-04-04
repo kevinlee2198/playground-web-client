@@ -179,13 +179,17 @@ export default async function UserProfilePage({ params }: PageProps) {
   const session = await auth.api.getSession({ headers: reqHeaders });
   const isAuthenticated = !!session?.user?.id;
 
-  const [currentUser, userResponse] = await Promise.all([
+  const [currentUserResult, userResponse] = await Promise.all([
     isAuthenticated ? fetchCurrentUser() : Promise.resolve(null),
     isAuthenticated
       ? authQuery(buildUserQuery(username))
       : query(buildUserQuery(username)),
   ]);
 
+  const currentUser =
+    currentUserResult?.status === "authenticated"
+      ? currentUserResult.user
+      : null;
   const isOwnProfile = currentUser?.username === username;
 
   const user = userResponse.data?.user;

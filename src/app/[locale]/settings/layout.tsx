@@ -16,12 +16,12 @@ export default async function SettingsLayout({
   children,
   params,
 }: LayoutProps) {
-  const [{ locale }, currentUser] = await Promise.all([
+  const [{ locale }, currentUserResult] = await Promise.all([
     params,
     fetchCurrentUser(),
   ]);
 
-  if (!currentUser) {
+  if (currentUserResult.status !== "authenticated") {
     redirect({ href: "/", locale });
   }
 

@@ -38,8 +38,8 @@ export function TabBar(): ReactNode {
 
   useEffect(() => {
     if (userId) {
-      fetchCurrentUser().then((user) => {
-        if (user) setUsername(user.username);
+      fetchCurrentUser().then((result) => {
+        if (result.status === "authenticated") setUsername(result.user.username);
       });
     }
   }, [userId]);

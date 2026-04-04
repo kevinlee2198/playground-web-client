@@ -65,13 +65,27 @@ async function getAuthHeaders() {
     return {};
   }
 
-  const tokenResponse = await auth.api.getAccessToken({
-    headers: reqHeaders,
-    body: { providerId: "keycloak" },
-  });
+  try {
+    const tokenResponse = await auth.api.getAccessToken({
+      headers: reqHeaders,
+      body: { providerId: "keycloak" },
+    });
 
-  const accessToken = tokenResponse?.accessToken;
-  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    if (!tokenResponse?.accessToken) {
+      console.warn(
+        "[getAuthHeaders] Token empty despite valid session — stale session",
+      );
+      return {};
+    }
+
+    return { Authorization: `Bearer ${tokenResponse.accessToken}` };
+  } catch (error) {
+    console.warn(
+      "[getAuthHeaders] Token fetch failed:",
+      error instanceof Error ? error.message : String(error),
+    );
+    return {};
+  }
 }
 
 async function authQuery(q: object, options?: NextFetchOptions) {
@@ -99,71 +113,34 @@ interface GraphQLResponse {
   errors: GraphQLError[];
 }
 
-// See https://netflix.github.io/dgs/error-handling/#error-specification for more information
+// Spring GraphQL error format — see extensions.classification
 interface GraphQLError {
   message: string;
-  locations: [string];
-  path: [string | number];
-  extensions: TypedError;
+  locations: { line: number; column: number }[];
+  path: (string | number)[];
+  extensions: GraphQLErrorExtensions;
 }
 
-enum ErrorType {
+enum ErrorClassification {
   BAD_REQUEST = "BAD_REQUEST",
-  FAILED_PRECONDITION = "FAILED_PRECONDITION",
-  INTERNAL = "INTERNAL",
+  FORBIDDEN = "FORBIDDEN",
+  INTERNAL_ERROR = "INTERNAL_ERROR",
   NOT_FOUND = "NOT_FOUND",
-  PERMISSION_DENIED = "PERMISSION_DENIED",
-  UNAUTHENTICATED = "UNAUTHENTICATED",
-  UNAVAILABLE = "UNAVAILABLE",
-  UNKNOWN = "UNKNOWN",
+  UNAUTHORIZED = "UNAUTHORIZED",
 }
 
-interface TypedError {
-  /**
-   * An error code from the ErrorType enumeration.
-   * An errorType is a fairly coarse characterization
-   * of an error that should be sufficient for client
-   * side branching logic.
-   */
-  errorType: ErrorType;
-
-  /**
-   * The ErrorDetail is an optional field which will
-   * provide more fine grained information on the error
-   * condition. This allows the ErrorType enumeration to
-   * be small and mostly static so that application branching
-   * logic can depend on it. The ErrorDetail provides a
-   * more specific cause for the error. This enumeration
-   * will be much larger and likely change/grow over time.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  errorDetail?: any;
-
-  /**
-   * Indicates the source that issued the error. For example, could
-   * be a backend service name, a domain graph service name, or a
-   * gateway. In the case of client code throwing the error, this
-   * may be a client library name, or the client app name.
-   */
-  origin?: string;
-
-  /**
-   * Optionally provided based on request flag
-   * Could include e.g. stacktrace or info from
-   * upstream service
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  debugInfo?: any;
-
-  /**
-   * Http URI to a page detailing additional
-   * information that could be used to debug
-   * the error. This information may be general
-   * to the class of error or specific to this
-   * particular instance of the error.
-   */
-  debugUri?: string;
+interface GraphQLErrorExtensions {
+  classification: ErrorClassification;
+  [key: string]: unknown;
 }
 
-export { authMutate, authQuery, ErrorType, mutate, query };
-export type { GraphQLError, GraphQLResponse, NextFetchOptions, TypedError };
+function hasUnauthorizedError(response: GraphQLResponse): boolean {
+  return (
+    response.errors?.some(
+      (e) => e.extensions?.classification === ErrorClassification.UNAUTHORIZED,
+    ) ?? false
+  );
+}
+
+export { authMutate, authQuery, ErrorClassification, hasUnauthorizedError, mutate, query };
+export type { GraphQLError, GraphQLErrorExtensions, GraphQLResponse, NextFetchOptions };

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { signIn, useSession } from "@/lib/auth-client";
+import { signIn, signOut, useSession } from "@/lib/auth-client";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { UserAvatarMenu } from "../playground/user-avatar-menu";
@@ -22,7 +22,18 @@ export default function AuthButton() {
 
   useEffect(() => {
     if (session?.data?.user) {
-      fetchCurrentUser().then(setCurrentUser).catch(() => {});
+      fetchCurrentUser().then((result) => {
+        switch (result.status) {
+          case "authenticated":
+            setCurrentUser(result.user);
+            break;
+          case "unauthenticated":
+            signOut();
+            break;
+          case "error":
+            break;
+        }
+      });
     }
   }, [session?.data?.user]);
 
@@ -41,29 +52,29 @@ export default function AuthButton() {
     );
   }
 
-  if (session?.data?.user) {
-    if (!currentUser) {
-      return (
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-9 w-9 rounded-full" />
-        </div>
-      );
-    }
-
-    return (
-      <UserAvatarMenu
-        user={{
-          username: currentUser.username,
-          name: `${currentUser.firstName} ${currentUser.lastName}`,
-          email: currentUser.email,
-        }}
-      />
-    );
-  } else {
+  if (!session?.data?.user) {
     return (
       <Button onClick={handleSignIn}>
         <TypographyP>{t("auth.signIn")}</TypographyP>
       </Button>
     );
   }
+
+  if (!currentUser) {
+    return (
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-9 w-9 rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <UserAvatarMenu
+      user={{
+        username: currentUser.username,
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        email: currentUser.email,
+      }}
+    />
+  );
 }
