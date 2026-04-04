@@ -152,7 +152,7 @@ describe("GameCard", () => {
     expect(screen.getByText("Mar 10, 2026, 07:00 PM")).toBeInTheDocument();
   });
 
-  it("renders sport emoji pill with accessibility label", () => {
+  it("renders sport badge with accessibility label", () => {
     render(<GameCard game={makeGame()} />);
     expect(screen.getByLabelText("Basketball")).toBeInTheDocument();
   });
