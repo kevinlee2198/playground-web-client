@@ -45,9 +45,9 @@ vi.mock("@/components/game/live/game-hero-content", () => ({
   ),
 }));
 
-vi.mock("@/components/game/sport-emoji-pill", () => ({
-  SportEmojiPill: ({ sportType }: { sportType: string }) => (
-    <span data-testid="sport-emoji-pill" data-sport={sportType}>
+vi.mock("@/components/game/sport-badge", () => ({
+  SportBadge: ({ sportType }: { sportType: string }) => (
+    <span data-testid="sport-badge" data-sport={sportType}>
       {sportType}
     </span>
   ),
@@ -155,7 +155,7 @@ describe("GameDetailHero", () => {
   it("renders sport emoji pill and format badge centered", async () => {
     await renderHero();
 
-    expect(screen.getByTestId("sport-emoji-pill")).toBeInTheDocument();
+    expect(screen.getByTestId("sport-badge")).toBeInTheDocument();
     expect(screen.getByText("5v5")).toBeInTheDocument();
   });
 
