@@ -6,9 +6,9 @@ import { getSportBgClass, getSportFgClass, type SportType } from "@/lib/constant
 import { useTranslations } from "next-intl";
 
 const sizeStyles = {
-  sm: { padding: "px-2 py-0.5", font: "text-xs", icon: "sm" as const },
-  md: { padding: "px-2.5 py-1", font: "text-sm", icon: "md" as const },
-  lg: { padding: "px-3 py-1.5", font: "text-base", icon: "lg" as const },
+  sm: { padding: "px-2 py-0.5", font: "text-xs" },
+  md: { padding: "px-2.5 py-1", font: "text-sm" },
+  lg: { padding: "px-3 py-1.5", font: "text-base" },
 };
 
 interface SportBadgeProps {
@@ -30,6 +30,7 @@ export function SportBadge({
 
   return (
     <span
+      role="img"
       aria-label={label}
       className={cn(
         "inline-flex items-center justify-center rounded-full",
@@ -40,7 +41,7 @@ export function SportBadge({
         className,
       )}
     >
-      <SportIcon sportType={sportType} size={styles.icon} />
+      <SportIcon sportType={sportType} size={size} />
       {showLabel ? <span className="ml-1">{label}</span> : null}
     </span>
   );

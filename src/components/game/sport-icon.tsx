@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { SportType } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 const sizeMap = {
   sm: 14,
@@ -77,7 +76,7 @@ export function SportIcon({ sportType, size = "md", className }: SportIconProps)
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className={cn(className)}
+      className={className}
     >
       {sportPaths[sportType]}
     </svg>
