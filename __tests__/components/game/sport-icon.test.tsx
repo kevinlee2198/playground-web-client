@@ -44,9 +44,10 @@ describe("SportIcon", () => {
 
   it("renders SVG paths for each sport type", () => {
     for (const sport of Object.values(SportType)) {
-      const { container } = render(<SportIcon sportType={sport} />);
+      const { container, unmount } = render(<SportIcon sportType={sport} />);
       const svg = container.querySelector("svg");
       expect(svg?.children.length).toBeGreaterThan(0);
+      unmount();
     }
   });
 

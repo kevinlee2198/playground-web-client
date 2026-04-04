@@ -18,11 +18,6 @@ import { SportBadge } from "@/components/game/sport-badge";
 import { SportType } from "@/lib/constants";
 
 describe("SportBadge", () => {
-  it("renders with aria-label for basketball", () => {
-    render(<SportBadge sportType={SportType.BASKETBALL} />);
-    expect(screen.getByLabelText("Basketball")).toBeInTheDocument();
-  });
-
   it("renders with aria-label for each sport type", () => {
     const expected: Record<string, string> = {
       BASKETBALL: "Basketball",

@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { SportType } from "@/lib/constants";
+import type { ReactNode } from "react";
 
 const sizeMap = {
   sm: 14,
