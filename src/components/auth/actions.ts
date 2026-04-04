@@ -14,6 +14,11 @@ interface CurrentUserInfo {
   email: string;
 }
 
+export type FetchUserResult =
+  | { status: "authenticated"; user: CurrentUserInfo }
+  | { status: "unauthenticated" }
+  | { status: "error" };
+
 export async function getKeycloakLogoutUrl(): Promise<string> {
   const clientId = env.KEYCLOAK_CLIENT_ID;
   const redirectUri = env.BETTER_AUTH_URL;
@@ -55,32 +60,41 @@ export interface TokenInfo {
  * Used by the WebSocket client to authenticate subscription connections.
  */
 export async function getAccessToken(): Promise<TokenInfo | null> {
+  const reqHeaders = await headers();
+  const session = await auth.api.getSession({ headers: reqHeaders });
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
   try {
-    const reqHeaders = await headers();
-    const session = await auth.api.getSession({ headers: reqHeaders });
-
-    if (!session?.user?.id) {
-      return null;
-    }
-
     const tokenResponse = await auth.api.getAccessToken({
       headers: reqHeaders,
       body: { providerId: "keycloak" },
     });
 
-    return tokenResponse?.accessToken
-      ? {
-          token: tokenResponse.accessToken,
-          expiresAt: tokenResponse.accessTokenExpiresAt?.getTime() ?? null,
-        }
-      : null;
+    if (!tokenResponse?.accessToken) {
+      // Stale session — clear cookies (works in Server Action context)
+      await auth.api.signOut({ headers: reqHeaders });
+      return null;
+    }
+
+    return {
+      token: tokenResponse.accessToken,
+      expiresAt: tokenResponse.accessTokenExpiresAt?.getTime() ?? null,
+    };
   } catch (error) {
-    console.error("Failed to fetch access token:", error);
+    console.warn(
+      "[getAccessToken] Token fetch failed:",
+      error instanceof Error ? error.message : String(error),
+    );
+    // Could be stale session or Keycloak outage — don't call signOut().
+    // The auth-button handles that determination.
     return null;
   }
 }
 
-export async function fetchCurrentUser(): Promise<CurrentUserInfo | null> {
+export async function fetchCurrentUser(): Promise<FetchUserResult> {
   try {
     const response = await authQuery({
       me: {
@@ -93,8 +107,18 @@ export async function fetchCurrentUser(): Promise<CurrentUserInfo | null> {
       },
     });
 
-    return response.data?.me ?? null;
+    if (response.data?.me) {
+      return { status: "authenticated", user: response.data.me };
+    }
+
+    // No data means the token was missing (stale session) or rejected
+    // (UNAUTHORIZED). Either way, clear stale cookies. signOut() works
+    // here because fetchCurrentUser is a Server Action.
+    const reqHeaders = await headers();
+    await auth.api.signOut({ headers: reqHeaders });
+    return { status: "unauthenticated" };
   } catch {
-    return null;
+    // Network error, backend 5xx, etc. — don't sign out, could be transient
+    return { status: "error" };
   }
 }
