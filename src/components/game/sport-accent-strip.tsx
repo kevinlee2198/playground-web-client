@@ -1,13 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { SportType } from "@/lib/constants";
-
-const sportColorClass: Record<SportType, string> = {
-  BASKETBALL: "bg-sport-basketball-foreground",
-  TENNIS: "bg-sport-tennis-foreground",
-  FOOTBALL: "bg-sport-football-foreground",
-  PICKLEBALL: "bg-sport-pickleball-foreground",
-  BASEBALL: "bg-sport-baseball-foreground",
-};
+import { getSportAccentClass, type SportType } from "@/lib/constants";
 
 interface SportAccentStripProps {
   sportType: SportType;
@@ -18,7 +10,7 @@ export function SportAccentStrip({ sportType, className }: SportAccentStripProps
   return (
     <div
       aria-hidden="true"
-      className={cn("h-[3px] w-full rounded-t-xl", sportColorClass[sportType], className)}
+      className={cn("h-[3px] w-full rounded-t-xl", getSportAccentClass(sportType), className)}
     />
   );
 }

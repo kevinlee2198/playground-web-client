@@ -89,22 +89,42 @@ export const SportTypeConfig = {
     participation: ParticipationType.TEAM,
     maxTeamSize: 25,
     maxParticipants: 2,
+    bgClass: "bg-sport-baseball",
+    fgClass: "text-sport-baseball-foreground",
+    accentClass: "bg-sport-baseball-foreground",
+    gradientClass: "bg-sport-baseball/5 dark:bg-sport-baseball/15",
   },
   BASKETBALL: {
     formats: [SportFormat.FIVE_ON_FIVE, SportFormat.THREE_ON_THREE],
     icon: "/sports/basketball.svg",
+    bgClass: "bg-sport-basketball",
+    fgClass: "text-sport-basketball-foreground",
+    accentClass: "bg-sport-basketball-foreground",
+    gradientClass: "bg-sport-basketball/5 dark:bg-sport-basketball/15",
   },
   FOOTBALL: {
     formats: [SportFormat.FLAG_FOOTBALL, SportFormat.AMERICAN_FOOTBALL],
     icon: "/sports/football.svg",
+    bgClass: "bg-sport-football",
+    fgClass: "text-sport-football-foreground",
+    accentClass: "bg-sport-football-foreground",
+    gradientClass: "bg-sport-football/5 dark:bg-sport-football/15",
   },
   TENNIS: {
     formats: [SportFormat.SINGLES, SportFormat.DOUBLES],
     icon: "/sports/tennis.svg",
+    bgClass: "bg-sport-tennis",
+    fgClass: "text-sport-tennis-foreground",
+    accentClass: "bg-sport-tennis-foreground",
+    gradientClass: "bg-sport-tennis/5 dark:bg-sport-tennis/15",
   },
   PICKLEBALL: {
     formats: [SportFormat.SINGLES, SportFormat.DOUBLES],
     icon: "/sports/pickleball.svg",
+    bgClass: "bg-sport-pickleball",
+    fgClass: "text-sport-pickleball-foreground",
+    accentClass: "bg-sport-pickleball-foreground",
+    gradientClass: "bg-sport-pickleball/5 dark:bg-sport-pickleball/15",
   },
   //   SOFTBALL: [],
   //   SWIM: [],
@@ -116,6 +136,22 @@ export function getFormats(sport: SportType) {
 
 export function getSportIconPath(sport: SportType) {
   return SportTypeConfig[sport].icon;
+}
+
+export function getSportBgClass(sport: SportType): string {
+  return SportTypeConfig[sport].bgClass;
+}
+
+export function getSportFgClass(sport: SportType): string {
+  return SportTypeConfig[sport].fgClass;
+}
+
+export function getSportAccentClass(sport: SportType): string {
+  return SportTypeConfig[sport].accentClass;
+}
+
+export function getSportGradientClass(sport: SportType): string {
+  return SportTypeConfig[sport].gradientClass;
 }
 
 export function getParticipationType(sportFormat: SportFormat) {

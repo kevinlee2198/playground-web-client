@@ -1,8 +1,8 @@
 "use client";
 
-import { sportBgClass, sportEmoji } from "@/components/game/sport-emoji-pill";
+import { SportIcon } from "@/components/game/sport-icon";
+import { SportType, getSportBgClass, getSportFgClass } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { SportType } from "@/lib/constants";
 import { useTranslations } from "next-intl";
 
 const SPORT_TYPES = Object.values(SportType);
@@ -47,14 +47,14 @@ export function SportFilterPills({
           className={cn(
             "inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium transition-colors",
             selected === sport
-              ? sportBgClass[sport]
+              ? cn(getSportBgClass(sport), getSportFgClass(sport))
               : "bg-muted text-muted-foreground hover:bg-muted/80",
             disabled && "opacity-50 cursor-not-allowed",
           )}
           aria-pressed={selected === sport}
           aria-label={tSports(sport)}
         >
-          {sportEmoji[sport]}
+          <SportIcon sportType={sport} size="sm" />
         </button>
       ))}
     </div>

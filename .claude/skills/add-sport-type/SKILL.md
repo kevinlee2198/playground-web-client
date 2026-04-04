@@ -15,7 +15,7 @@ Before starting, determine what already exists for this sport. Many sports have 
 1. Search `schema.graphqls` for the sport name — are types already defined?
 2. Check `src/lib/constants.ts` — is the sport in the `SportType` enum?
 3. Check `src/lib/types/game.ts` — do metadata interfaces exist?
-4. Check `src/components/game/sport-emoji-pill.tsx` — is the sport in the records?
+4. Check `src/components/game/sport-icon.tsx` — is the sport in the `sportPaths` lookup?
 5. Check `src/components/game/score/game-score.tsx` — is there a case for this sport?
 6. Check `src/components/game/create-game-form.tsx` — is there a branch for this sport?
 7. Check `src/lib/types/stats/` — does a stats type file exist?
@@ -34,7 +34,7 @@ Gather these details from the user (or research via web search if ambiguous):
 5. **Max participants** — how many teams/individuals compete in a game (usually 2)
 6. **Scoring model** — how scores are tracked per participant. Look at the GraphQL schema (`schema.graphqls`) to understand existing patterns. Read the existing `ParticipantMetadata` types to see what patterns are already in use (simple score, set-based, game-based, etc.)
 7. **Game configuration fields** — sport-specific settings on the game itself (periods, best-of-N, etc.)
-8. **Emoji** — the emoji to represent this sport
+8. **SVG icon** — add a Lucide-style 24x24 SVG icon to `public/sports/{sport}.svg` and inline its paths in `src/components/game/sport-icon.tsx`
 9. **Color theme** — pick oklch values for the sport accent color. Follow the existing pattern in `src/app/globals.css`: a light tint for backgrounds and a deeper foreground variant. Choose a hue angle that feels natural for the sport and distinct from existing sports. Check the existing `--sport-*` variables to see which hue angles are taken.
 10. **Box score stats** — what per-player statistics should be tracked? This may not exist yet in the schema — check and ask.
     - **Single-category**: one flat set of stats per player (like basketball, pickleball)
@@ -134,11 +134,10 @@ This commit gives the sport its visual presence: colors, emoji, accent strips, a
 
 ### 8. Visual Components
 
-These components use `Record<SportType, string>` maps — the TypeScript compiler will error if the new sport is missing, which helps catch omissions.
+Display config is centralized in `SportTypeConfig` (`as const`). TypeScript will still error if the new sport enum value is missing from the config object, catching omissions at compile time.
 
-- [ ] `src/components/game/sport-emoji-pill.tsx` — `sportEmoji` and `sportBgClass` records
-- [ ] `src/components/game/sport-accent-strip.tsx` — `sportColorClass` record
-- [ ] `src/components/game/game-detail-hero.tsx` — `sportGradientClass` record
+- [ ] `src/lib/constants.ts` — add `bgClass`, `fgClass`, `accentClass`, `gradientClass` to the new sport's `SportTypeConfig` entry
+- [ ] `src/components/game/sport-icon.tsx` — add SVG paths to the `sportPaths` lookup
 
 **Commit message:** `feat: add {sport} theme — colors, translations, icon, visual components`
 
@@ -302,7 +301,7 @@ This component gates which sports show box scores. Read the current implementati
 
 ### 14. Tests
 
-- [ ] Update `src/components/game/sport-emoji-pill.test.tsx` — add a test case for the new sport
+- [ ] Update `__tests__/components/game/sport-badge.test.tsx` — add a test case for the new sport
 - [ ] Update any test fixtures that create game objects to include the new sport
 - [ ] Add tests for the new score form component
 - [ ] Run `npm test` and `npm run build` to verify everything compiles

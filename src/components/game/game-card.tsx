@@ -5,7 +5,7 @@ import { FollowingAvatars } from "@/components/game/following-avatars";
 import { GameScore } from "@/components/game/score/game-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { SportAccentStrip } from "@/components/game/sport-accent-strip";
-import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
+import { SportBadge } from "@/components/game/sport-badge";
 import { Badge } from "@/components/ui/badge";
 import { TypographyMuted } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
@@ -105,9 +105,9 @@ export function GameCard({ game, distance }: GameCardProps) {
             />
           ) : null}
 
-          {/* Sport info row: emoji pill + format */}
+          {/* Sport info row: badge + format */}
           <div className="flex items-center gap-2">
-            <SportEmojiPill sportType={game.sportType} />
+            <SportBadge sportType={game.sportType} />
             {sportFormat != null && (
               <Badge variant="outline" className="text-xs">
                 {t(`sportFormats.${sportFormat}`)}

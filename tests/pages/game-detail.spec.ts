@@ -25,7 +25,7 @@ test.describe("Game Detail Page", () => {
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/en/game/game-1");
-    // SportEmojiPill renders an emoji with aria-label="Basketball", not visible text
+    // SportBadge renders an SVG icon with aria-label="Basketball", not visible text
     await expect(
       authenticatedPage.getByLabel(/basketball/i).first(),
     ).toBeVisible();

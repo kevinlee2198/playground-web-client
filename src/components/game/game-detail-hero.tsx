@@ -1,10 +1,9 @@
 import { GameDescription } from "@/components/game/game-description";
 import { GameHeroContent } from "@/components/game/live/game-hero-content";
-import { SportEmojiPill } from "@/components/game/sport-emoji-pill";
+import { SportBadge } from "@/components/game/sport-badge";
 import { Badge } from "@/components/ui/badge";
 import { TypographyMuted } from "@/components/ui/typography";
-import { GameVisibility, getFormatFromMetadata } from "@/lib/constants";
-import type { SportType } from "@/lib/constants";
+import { GameVisibility, getFormatFromMetadata, getSportGradientClass } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
 import { cn } from "@/lib/utils";
 import { Calendar, Lock, MapPin } from "lucide-react";
@@ -14,14 +13,6 @@ interface GameDetailHeroProps {
   game: GameDetail;
   locationText: string | null;
 }
-
-const sportGradientClass: Record<SportType, string> = {
-  BASKETBALL: "bg-sport-basketball/5 dark:bg-sport-basketball/15",
-  TENNIS: "bg-sport-tennis/5 dark:bg-sport-tennis/15",
-  FOOTBALL: "bg-sport-football/5 dark:bg-sport-football/15",
-  PICKLEBALL: "bg-sport-pickleball/5 dark:bg-sport-pickleball/15",
-  BASEBALL: "bg-sport-baseball/5 dark:bg-sport-baseball/15",
-};
 
 export async function GameDetailHero({
   game,
@@ -44,13 +35,13 @@ export async function GameDetailHero({
     <section
       className={cn(
         "rounded-3xl p-6 sm:p-8",
-        sportGradientClass[game.sportType],
+        getSportGradientClass(game.sportType),
       )}
     >
       <div className="flex flex-col items-center gap-4">
-        {/* Sport info row: emoji pill + format badge */}
+        {/* Sport info row: badge + format badge */}
         <div className="flex items-center justify-center gap-2">
-          <SportEmojiPill sportType={game.sportType} />
+          <SportBadge sportType={game.sportType} />
           {sportFormat != null && (
             <Badge variant="outline" className="text-xs">
               {t(`sportFormats.${sportFormat}`)}
