@@ -1129,16 +1129,26 @@ union LivestreamHeartbeatResult =
   | GameMediaNotFoundError
 
 # ============================================================================
-# Confirm Upload Override
+# Confirm Game Media Upload
 #
-# When the upload context is gameMedia, confirmUpload returns the GameMedia
-# wrapper instead of a bare Resource. This extends the existing
-# ConfirmUploadResult union.
+# Phase 2 of the upload flow specifically for game media.
+# After the client uploads the file to S3, call confirmGameMediaUpload
+# to transition the resource from REQUESTED to PERMANENT and create
+# the GameMedia record.
 # ============================================================================
+
+input ConfirmGameMediaUploadInput {
+  resourceId: ID!
+}
 
 type ConfirmGameMediaUploadResponse {
   gameMedia: GameMedia!
 }
+
+union ConfirmGameMediaUploadResult =
+  | ConfirmGameMediaUploadResponse
+  | ResourceNotFoundError
+  | GameNotFoundError
 
 # ============================================================================
 # Error Types
@@ -2891,10 +2901,7 @@ type DeleteResourceResponse implements DeleteResponse {
 # ============================================================================
 
 union RequestUploadResult = RequestUploadResponse | InvalidUploadContextError
-union ConfirmUploadResult =
-  | ConfirmUploadResponse
-  | ConfirmGameMediaUploadResponse
-  | ResourceNotFoundError
+union ConfirmUploadResult = ConfirmUploadResponse | ResourceNotFoundError
 union DeleteResourceResult = DeleteResourceResponse | ResourceNotFoundError
 scalar DateTime
 scalar JSON
@@ -3003,28 +3010,6 @@ type Query {
     last: Int
     before: String
   ): UserConnection!
-  """
-  Get followers of a user (paginated).
-  Ordered by follow date DESC (most recent followers first).
-  """
-  followers(
-    userId: ID!
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): FollowConnection!
-  """
-  Get users that a user follows (paginated).
-  Ordered by follow date DESC (most recently followed first).
-  """
-  following(
-    userId: ID!
-    first: Int
-    after: String
-    last: Int
-    before: String
-  ): FollowConnection!
   """
   Get mutual follows for the current user (paginated).
   Users where both parties follow each other.
@@ -3663,8 +3648,16 @@ type Mutation {
   Confirm that an upload is complete. Phase 2 of the upload flow.
   Transitions resource status from REQUESTED to PERMANENT.
   Not needed for chat media — sendChatMessage confirms chat resources automatically.
+  Not needed for game media — use confirmGameMediaUpload instead.
   """
   confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResult!
+  """
+  Confirm a game media upload. Creates the GameMedia record.
+  Phase 2 of the upload flow for game media specifically.
+  """
+  confirmGameMediaUpload(
+    input: ConfirmGameMediaUploadInput!
+  ): ConfirmGameMediaUploadResult!
   """
   Delete a resource and its backing file.
   """
@@ -5029,6 +5022,26 @@ type User implements Node {
   The user's profile picture. Null if no profile picture has been set.
   """
   profilePicture: Resource
+  """
+  Users who follow this user (paginated).
+  Ordered by follow date DESC (most recent followers first).
+  """
+  followers(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FollowConnection!
+  """
+  Users this user follows (paginated).
+  Ordered by follow date DESC (most recently followed first).
+  """
+  following(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): FollowConnection!
 }
 
 """
@@ -5047,6 +5060,18 @@ type CurrentUser implements Node {
   The user's profile picture. Null if no profile picture has been set.
   """
   profilePicture: Resource
+  """
+  Number of users who follow the current user.
+  """
+  followerCount: Int!
+  """
+  Number of users the current user follows.
+  """
+  followingCount: Int!
+  """
+  The current user's profile visibility setting.
+  """
+  profileVisibility: ProfileVisibility!
 }
 
 """

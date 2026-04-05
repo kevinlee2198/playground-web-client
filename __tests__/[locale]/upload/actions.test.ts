@@ -19,6 +19,7 @@ import {
   requestGameMediaUpload,
   requestChatMediaUpload,
   confirmUpload,
+  confirmGameMediaUpload,
   deleteResource,
 } from "@/app/[locale]/upload/actions";
 
@@ -313,7 +314,6 @@ describe("confirmUpload", () => {
 
     expect(result).toEqual({
       success: true,
-      kind: "resource",
       resource: mockResource,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
@@ -354,6 +354,99 @@ describe("confirmUpload", () => {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to confirm upload",
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// confirmGameMediaUpload
+// ---------------------------------------------------------------------------
+
+describe("confirmGameMediaUpload", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const mockGameMedia = {
+    id: "gm-1",
+    game: { id: 42 },
+    resource: {
+      __typename: "ImageResource",
+      id: "res-gm-1",
+      filename: "game-photo.jpg",
+      size: 2048,
+      mimeType: "image/jpeg",
+      downloadUrl: "https://storage.example.com/game-photo.jpg",
+      createdDate: "2025-01-01",
+      width: 1920,
+      height: 1080,
+      thumbnailUrl: "https://storage.example.com/game-thumb.jpg",
+    },
+    createdDate: "2025-01-01",
+    uploader: { id: "u1" },
+  };
+
+  it("returns success with gameMedia on confirmation", async () => {
+    mockMutateSuccess("confirmGameMediaUpload", "ConfirmGameMediaUploadResponse", {
+      gameMedia: mockGameMedia,
+    });
+
+    const result = await confirmGameMediaUpload("res-gm-1");
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.gameMedia).toBeDefined();
+    }
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns GRAPHQL_ERROR on top-level errors", async () => {
+    mockMutateGraphqlError("Resource not found");
+
+    const result = await confirmGameMediaUpload("res-missing");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: MutationErrorType.GRAPHQL_ERROR,
+      message: "Resource not found",
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns union error type on mutation error", async () => {
+    mockMutateUnionError("confirmGameMediaUpload", "ResourceNotFoundError", "Upload resource missing");
+
+    const result = await confirmGameMediaUpload("res-bad");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: "ResourceNotFoundError",
+      message: "Upload resource missing",
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns union error type for GameNotFoundError", async () => {
+    mockMutateUnionError("confirmGameMediaUpload", "GameNotFoundError", "Game not found");
+
+    const result = await confirmGameMediaUpload("res-bad");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: "GameNotFoundError",
+      message: "Game not found",
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns UNEXPECTED_ERROR on network failure", async () => {
+    mockMutateNetworkError();
+
+    const result = await confirmGameMediaUpload("res-gm-1");
+
+    expect(result).toEqual({
+      success: false,
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
+      message: "Failed to confirm game media upload",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });

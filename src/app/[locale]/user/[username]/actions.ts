@@ -4,6 +4,7 @@ import {
   errorFragment,
   followUserRefFragment,
   followUserStateFragment,
+  forwardPageInfoFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
@@ -191,27 +192,27 @@ export async function unblockUser(userId: string) {
   }
 }
 
-export async function loadFollowers(userId: string, first: number, after?: string) {
+async function loadFollowConnection(
+  userId: string,
+  field: "followers" | "following",
+  nodeFragment: Record<string, unknown>,
+  first: number,
+  after?: string,
+) {
   try {
     const response = await authQuery({
-      followers: {
-        __args: {
-          userId,
-          first,
-          ...(after ? { after } : {}),
-        },
-        edges: {
-          cursor: true,
-          node: {
-            id: true,
-            follower: followUserRefFragment,
-            following: { id: true },
-            createdDate: true,
+      user: {
+        __args: { input: { id: userId } },
+        [field]: {
+          __args: {
+            first,
+            ...(after ? { after } : {}),
           },
-        },
-        pageInfo: {
-          hasNextPage: true,
-          endCursor: true,
+          edges: {
+            cursor: true,
+            node: nodeFragment,
+          },
+          pageInfo: forwardPageInfoFragment,
         },
       },
     });
@@ -220,47 +221,30 @@ export async function loadFollowers(userId: string, first: number, after?: strin
       return null;
     }
 
-    return response.data?.followers || null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (response.data?.user as any)?.[field] || null;
   } catch (error) {
-    console.error("Failed to load followers:", error);
+    console.error(`Failed to load ${field}:`, error);
     return null;
   }
 }
 
+export async function loadFollowers(userId: string, first: number, after?: string) {
+  return loadFollowConnection(userId, "followers", {
+    id: true,
+    follower: followUserRefFragment,
+    following: { id: true },
+    createdDate: true,
+  }, first, after);
+}
+
 export async function loadFollowing(userId: string, first: number, after?: string) {
-  try {
-    const response = await authQuery({
-      following: {
-        __args: {
-          userId,
-          first,
-          ...(after ? { after } : {}),
-        },
-        edges: {
-          cursor: true,
-          node: {
-            id: true,
-            follower: { id: true },
-            following: followUserRefFragment,
-            createdDate: true,
-          },
-        },
-        pageInfo: {
-          hasNextPage: true,
-          endCursor: true,
-        },
-      },
-    });
-
-    if (response.errors?.length > 0) {
-      return null;
-    }
-
-    return response.data?.following || null;
-  } catch (error) {
-    console.error("Failed to load following:", error);
-    return null;
-  }
+  return loadFollowConnection(userId, "following", {
+    id: true,
+    follower: { id: true },
+    following: followUserRefFragment,
+    createdDate: true,
+  }, first, after);
 }
 
 interface UpdateUserResult {

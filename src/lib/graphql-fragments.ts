@@ -516,6 +516,15 @@ export const followRequestFragment = {
 };
 
 /**
+ * Forward pagination page info fields.
+ * Use as: pageInfo: forwardPageInfoFragment
+ */
+export const forwardPageInfoFragment = {
+  hasNextPage: true,
+  endCursor: true,
+};
+
+/**
  * Catch-all fragment for the Error interface in union result types.
  * Every error type implements this interface, so this matches all errors.
  * The __typename at the union level still gives the specific error type.

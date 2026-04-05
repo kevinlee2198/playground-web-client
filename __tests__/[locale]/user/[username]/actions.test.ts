@@ -442,7 +442,7 @@ describe("loadFollowers", () => {
 
   it("returns edges and pageInfo on success", async () => {
     mockAuthQuery.mockResolvedValueOnce({
-      data: { followers: { edges: [mockEdge], pageInfo: mockPageInfo } },
+      data: { user: { followers: { edges: [mockEdge], pageInfo: mockPageInfo } } },
     });
 
     const result = await loadFollowers("u-target", 10);
@@ -452,26 +452,38 @@ describe("loadFollowers", () => {
 
   it("passes after cursor when provided", async () => {
     mockAuthQuery.mockResolvedValueOnce({
-      data: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+      data: { user: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } },
     });
 
     await loadFollowers("u-target", 10, "some-cursor");
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const args = (callArg.followers as { __args: Record<string, unknown> }).__args;
-    expect(args).toHaveProperty("after", "some-cursor");
+    const userQuery = callArg.user as { followers: { __args: Record<string, unknown> } };
+    expect(userQuery.followers.__args).toHaveProperty("after", "some-cursor");
   });
 
   it("omits after cursor when not provided", async () => {
     mockAuthQuery.mockResolvedValueOnce({
-      data: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+      data: { user: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } },
     });
 
     await loadFollowers("u-target", 10);
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const args = (callArg.followers as { __args: Record<string, unknown> }).__args;
-    expect(args).not.toHaveProperty("after");
+    const userQuery = callArg.user as { followers: { __args: Record<string, unknown> } };
+    expect(userQuery.followers.__args).not.toHaveProperty("after");
+  });
+
+  it("passes userId as user input id", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { user: { followers: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } },
+    });
+
+    await loadFollowers("u-target", 10);
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const userQuery = callArg.user as { __args: { input: { id: string } } };
+    expect(userQuery.__args.input).toEqual({ id: "u-target" });
   });
 
   it("returns null on GraphQL error", async () => {
@@ -514,7 +526,7 @@ describe("loadFollowing", () => {
 
   it("returns edges and pageInfo on success", async () => {
     mockAuthQuery.mockResolvedValueOnce({
-      data: { following: { edges: [mockEdge], pageInfo: mockPageInfo } },
+      data: { user: { following: { edges: [mockEdge], pageInfo: mockPageInfo } } },
     });
 
     const result = await loadFollowing("u-source", 10);
@@ -524,26 +536,38 @@ describe("loadFollowing", () => {
 
   it("passes after cursor when provided", async () => {
     mockAuthQuery.mockResolvedValueOnce({
-      data: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+      data: { user: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } },
     });
 
     await loadFollowing("u-source", 10, "page-cursor");
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const args = (callArg.following as { __args: Record<string, unknown> }).__args;
-    expect(args).toHaveProperty("after", "page-cursor");
+    const userQuery = callArg.user as { following: { __args: Record<string, unknown> } };
+    expect(userQuery.following.__args).toHaveProperty("after", "page-cursor");
   });
 
   it("omits after cursor when not provided", async () => {
     mockAuthQuery.mockResolvedValueOnce({
-      data: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } },
+      data: { user: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } },
     });
 
     await loadFollowing("u-source", 10);
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
-    const args = (callArg.following as { __args: Record<string, unknown> }).__args;
-    expect(args).not.toHaveProperty("after");
+    const userQuery = callArg.user as { following: { __args: Record<string, unknown> } };
+    expect(userQuery.following.__args).not.toHaveProperty("after");
+  });
+
+  it("passes userId as user input id", async () => {
+    mockAuthQuery.mockResolvedValueOnce({
+      data: { user: { following: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } },
+    });
+
+    await loadFollowing("u-source", 10);
+
+    const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    const userQuery = callArg.user as { __args: { input: { id: string } } };
+    expect(userQuery.__args.input).toEqual({ id: "u-source" });
   });
 
   it("returns null on GraphQL error", async () => {

@@ -115,7 +115,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
 
       // 3. Confirm upload
       const confirmResult = await confirmUpload(requestResult.resourceId);
-      if (!confirmResult.success || confirmResult.kind !== "resource") {
+      if (!confirmResult.success) {
         toast.error(t("errors.saveFailed"));
         return;
       }

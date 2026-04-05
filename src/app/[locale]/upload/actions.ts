@@ -16,8 +16,11 @@ interface RequestUploadResult {
 }
 
 export type ConfirmUploadResult =
-  | { success: true; kind: "resource"; resource: Resource }
-  | { success: true; kind: "gameMedia"; gameMedia: GameMediaNode }
+  | { success: true; resource: Resource }
+  | { success: false; errorType: string; message: string };
+
+export type ConfirmGameMediaUploadResult =
+  | { success: true; gameMedia: GameMediaNode }
   | { success: false; errorType: string; message: string };
 
 interface DeleteResourceResult {
@@ -32,22 +35,18 @@ const uploadInputSchema = z.object({
   size: z.number().int().positive(),
 });
 
-export async function requestProfilePictureUpload(
+async function requestUpload(
   filename: string,
   mimeType: string,
   size: number,
+  context: Record<string, unknown>,
 ): Promise<RequestUploadResult> {
   try {
     const validated = uploadInputSchema.parse({ filename, mimeType, size });
     const response = await authMutate({
       requestUpload: {
         __args: {
-          input: {
-            ...validated,
-            context: {
-              userProfilePicture: { placeholder: true },
-            },
-          },
+          input: { ...validated, context },
         },
         __typename: true,
         __on: [
@@ -76,94 +75,30 @@ export async function requestProfilePictureUpload(
   }
 }
 
-export async function requestGameMediaUpload(
+export function requestProfilePictureUpload(
+  filename: string,
+  mimeType: string,
+  size: number,
+): Promise<RequestUploadResult> {
+  return requestUpload(filename, mimeType, size, { userProfilePicture: { placeholder: true } });
+}
+
+export function requestGameMediaUpload(
   filename: string,
   mimeType: string,
   size: number,
   gameId: number,
 ): Promise<RequestUploadResult> {
-  try {
-    const validated = uploadInputSchema.parse({ filename, mimeType, size });
-    const response = await authMutate({
-      requestUpload: {
-        __args: {
-          input: {
-            ...validated,
-            context: {
-              gameMedia: { gameId },
-            },
-          },
-        },
-        __typename: true,
-        __on: [
-          { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
-          errorFragment,
-        ],
-      },
-    });
-
-    if (response.errors?.length > 0) {
-      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
-    }
-
-    const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
-    if (!result.success) {
-      return { success: false, errorType: result.errorType, message: result.message };
-    }
-
-    return {
-      success: true,
-      uploadUrl: result.data.uploadUrl,
-      resourceId: result.data.resourceId,
-    };
-  } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to request upload" };
-  }
+  return requestUpload(filename, mimeType, size, { gameMedia: { gameId } });
 }
 
-export async function requestChatMediaUpload(
+export function requestChatMediaUpload(
   filename: string,
   mimeType: string,
   size: number,
   chatRoomId: string,
 ): Promise<RequestUploadResult> {
-  try {
-    const validated = uploadInputSchema.parse({ filename, mimeType, size });
-    const response = await authMutate({
-      requestUpload: {
-        __args: {
-          input: {
-            ...validated,
-            context: {
-              chatMedia: { chatRoomId },
-            },
-          },
-        },
-        __typename: true,
-        __on: [
-          { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
-          errorFragment,
-        ],
-      },
-    });
-
-    if (response.errors?.length > 0) {
-      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
-    }
-
-    const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
-    if (!result.success) {
-      return { success: false, errorType: result.errorType, message: result.message };
-    }
-
-    return {
-      success: true,
-      uploadUrl: result.data.uploadUrl,
-      resourceId: result.data.resourceId,
-    };
-  } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to request upload" };
-  }
+  return requestUpload(filename, mimeType, size, { chatMedia: { chatRoomId } });
 }
 
 export async function confirmUpload(
@@ -176,6 +111,41 @@ export async function confirmUpload(
         __typename: true,
         __on: [
           { __typeName: "ConfirmUploadResponse", resource: resourceFragment },
+          errorFragment,
+        ],
+      },
+    });
+
+    if (response.errors?.length > 0) {
+      return {
+        success: false,
+        errorType: MutationErrorType.GRAPHQL_ERROR,
+        message: response.errors[0].message,
+      };
+    }
+
+    const result = extractMutationResult(response.data.confirmUpload, "ConfirmUploadResponse");
+    if (!result.success) return result;
+
+    return { success: true, resource: result.data.resource };
+  } catch {
+    return {
+      success: false,
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
+      message: "Failed to confirm upload",
+    };
+  }
+}
+
+export async function confirmGameMediaUpload(
+  resourceId: string,
+): Promise<ConfirmGameMediaUploadResult> {
+  try {
+    const response = await authMutate({
+      confirmGameMediaUpload: {
+        __args: { input: { resourceId } },
+        __typename: true,
+        __on: [
           {
             __typeName: "ConfirmGameMediaUploadResponse",
             gameMedia: gameMediaFragment,
@@ -193,34 +163,15 @@ export async function confirmUpload(
       };
     }
 
-    const raw = response.data?.confirmUpload;
-    if (!raw) {
-      return {
-        success: false,
-        errorType: MutationErrorType.UNEXPECTED_ERROR,
-        message: "No response from server",
-      };
-    }
+    const result = extractMutationResult(response.data.confirmGameMediaUpload, "ConfirmGameMediaUploadResponse");
+    if (!result.success) return result;
 
-    if (raw.__typename === "ConfirmUploadResponse") {
-      return { success: true, kind: "resource", resource: raw.resource };
-    }
-
-    if (raw.__typename === "ConfirmGameMediaUploadResponse") {
-      return { success: true, kind: "gameMedia", gameMedia: normalizeGameMedia(raw.gameMedia) };
-    }
-
-    // Remaining typenames are error types (matched by errorFragment)
-    return {
-      success: false,
-      errorType: raw.__typename,
-      message: raw.message ?? "An unexpected error occurred",
-    };
+    return { success: true, gameMedia: normalizeGameMedia(result.data.gameMedia) };
   } catch {
     return {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Failed to confirm upload",
+      message: "Failed to confirm game media upload",
     };
   }
 }

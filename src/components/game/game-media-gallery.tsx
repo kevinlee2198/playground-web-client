@@ -3,7 +3,7 @@
 import { loadGameMedia } from "@/app/[locale]/game/actions";
 import { deleteGameMedia } from "@/app/[locale]/game/media-actions";
 import {
-  confirmUpload,
+  confirmGameMediaUpload,
   requestGameMediaUpload,
 } from "@/app/[locale]/upload/actions";
 import { Button } from "@/components/ui/button";
@@ -142,8 +142,8 @@ export function GameMediaGallery({
           }
         }
 
-        const confirmResult = await confirmUpload(requestResult.resourceId);
-        if (!confirmResult.success || confirmResult.kind !== "gameMedia") {
+        const confirmResult = await confirmGameMediaUpload(requestResult.resourceId);
+        if (!confirmResult.success) {
           toast.error(t("errors.saveFailed", { filename: file.name }));
           markUploadError(fileId, file);
           return;
