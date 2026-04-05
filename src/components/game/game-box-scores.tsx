@@ -10,6 +10,7 @@ import { BaseballPitchingStatsTable } from "@/components/game/baseball-pitching-
 import { BaseballFieldingStatsTable } from "@/components/game/baseball-fielding-stats-table";
 import { PickleballStatsTable } from "@/components/game/pickleball-stats-table";
 import { TennisStatsTable } from "@/components/game/tennis-stats-table";
+import { VolleyballStatsTable } from "@/components/game/volleyball-stats-table";
 import { TypographyH4 } from "@/components/ui/typography";
 import { GameStatus, SportType } from "@/lib/constants";
 import type {
@@ -32,6 +33,7 @@ import type {
   BaseballPitchingStatsNode,
   BaseballFieldingStatsNode,
 } from "@/lib/types/stats/baseball";
+import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
 import { useTranslations } from "next-intl";
 
 interface GameBoxScoresProps {
@@ -45,6 +47,7 @@ interface GameBoxScoresProps {
   baseballBattingStats?: { node: BaseballBattingStatsNode }[];
   baseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   baseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
+  volleyballStats?: { node: VolleyballStatisticsNode }[];
 }
 
 interface TeamBoxScoreGroup<T extends BoxScoreNode> {
@@ -112,6 +115,7 @@ export function GameBoxScores({
   baseballBattingStats,
   baseballPitchingStats,
   baseballFieldingStats,
+  volleyballStats,
 }: GameBoxScoresProps) {
   const t = useTranslations();
 
@@ -120,7 +124,8 @@ export function GameBoxScores({
     game.sportType !== SportType.PICKLEBALL &&
     game.sportType !== SportType.TENNIS &&
     game.sportType !== SportType.FOOTBALL &&
-    game.sportType !== SportType.BASEBALL
+    game.sportType !== SportType.BASEBALL &&
+    game.sportType !== SportType.VOLLEYBALL
   ) {
     return null;
   }
@@ -308,6 +313,15 @@ export function GameBoxScores({
       );
     }
 
+    if (game.sportType === SportType.VOLLEYBALL) {
+      return (
+        <VolleyballStatsTable
+          {...sharedProps}
+          boxScores={group.boxScores as { node: VolleyballStatisticsNode }[]}
+        />
+      );
+    }
+
     return (
       <BasketballBoxScoreTable
         {...sharedProps}
@@ -316,12 +330,14 @@ export function GameBoxScores({
     );
   }
 
-  const teamGroups =
-    game.sportType === SportType.PICKLEBALL && pickleballStats
-      ? groupByTeam(game, pickleballStats, fallbackGroupName)
-      : game.sportType === SportType.TENNIS && tennisStats
-        ? groupByTeam(game, tennisStats, fallbackGroupName)
-        : groupByTeam(game, boxScores ?? [], fallbackGroupName);
+  function getStatsForSport(): { node: BoxScoreNode }[] {
+    if (game.sportType === SportType.PICKLEBALL && pickleballStats) return pickleballStats;
+    if (game.sportType === SportType.TENNIS && tennisStats) return tennisStats;
+    if (game.sportType === SportType.VOLLEYBALL && volleyballStats) return volleyballStats;
+    return boxScores ?? [];
+  }
+
+  const teamGroups = groupByTeam(game, getStatsForSport(), fallbackGroupName);
 
   return (
     <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">

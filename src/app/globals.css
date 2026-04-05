@@ -40,6 +40,8 @@
   --color-sport-pickleball-foreground: var(--sport-pickleball-foreground);
   --color-sport-baseball: var(--sport-baseball);
   --color-sport-baseball-foreground: var(--sport-baseball-foreground);
+  --color-sport-volleyball: var(--sport-volleyball);
+  --color-sport-volleyball-foreground: var(--sport-volleyball-foreground);
   --color-live: var(--live);
   --color-live-foreground: var(--live-foreground);
   --radius-sm: calc(var(--radius) - 4px);
@@ -120,6 +122,8 @@
   --sport-pickleball-foreground: oklch(0.52 0.12 95);
   --sport-baseball: oklch(0.92 0.04 20);
   --sport-baseball-foreground: oklch(0.55 0.12 20);
+  --sport-volleyball: oklch(0.92 0.04 185);
+  --sport-volleyball-foreground: oklch(0.52 0.10 185);
 
   /* Live indicator */
   --live: oklch(0.60 0.14 45);
@@ -186,6 +190,8 @@
   --sport-pickleball-foreground: oklch(0.70 0.12 95);
   --sport-baseball: oklch(0.35 0.04 20);
   --sport-baseball-foreground: oklch(0.70 0.10 20);
+  --sport-volleyball: oklch(0.35 0.04 185);
+  --sport-volleyball-foreground: oklch(0.70 0.10 185);
 
   --live: oklch(0.70 0.14 45);
   --live-foreground: oklch(0.20 0.02 55);

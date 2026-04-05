@@ -90,12 +90,22 @@ export interface PickleballGameMetadata {
   scoringType: PickleballScoringType | null;
 }
 
+export interface VolleyballGameMetadata {
+  __typename: "VolleyballGameMetadata";
+  volleyballFormat: SportFormat.INDOOR | SportFormat.BEACH;
+  volleyballBestOf: number | null;
+  pointsPerSet: number | null;
+  pointsPerFinalSet: number | null;
+  winByTwo: boolean | null;
+}
+
 export type GameMetadata =
   | BaseballGameMetadata
   | BasketballGameMetadata
   | TennisGameMetadata
   | FootballGameMetadata
-  | PickleballGameMetadata;
+  | PickleballGameMetadata
+  | VolleyballGameMetadata;
 
 // ---------- Participant Metadata (response types) ----------
 
@@ -130,12 +140,23 @@ export interface PickleballParticipantMetadata {
   games: PickleballGameScore[];
 }
 
+export interface VolleyballSetScore {
+  pointsScored: number;
+}
+
+export interface VolleyballParticipantMetadata {
+  __typename: "VolleyballParticipantMetadata";
+  setsWon: number;
+  sets: VolleyballSetScore[];
+}
+
 export type ParticipantMetadata =
   | BaseballParticipantMetadata
   | BasketballParticipantMetadata
   | TennisParticipantMetadata
   | FootballParticipantMetadata
-  | PickleballParticipantMetadata;
+  | PickleballParticipantMetadata
+  | VolleyballParticipantMetadata;
 
 /**
  * Team instance participant in a game (basic info)
@@ -400,6 +421,37 @@ export interface CreatePickleballGameInput {
 }
 
 /**
+ * Input for creating a volleyball game
+ */
+export interface CreateVolleyballGameInput {
+  sportType: SportType.VOLLEYBALL;
+  startDate: string;
+  description?: string;
+  location?: {
+    address: {
+      street?: string;
+      city: string;
+      state?: string;
+      postalCode?: string;
+      country: string;
+    };
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  visibility?: GameVisibility;
+  statEntryMode?: StatEntryMode;
+  metadata: {
+    format: SportFormat.INDOOR | SportFormat.BEACH;
+    bestOf?: number;
+    pointsPerSet?: number;
+    pointsPerFinalSet?: number;
+    winByTwo?: boolean;
+  };
+}
+
+/**
  * Union type for creating a game
  */
 export type CreateGameInput =
@@ -407,7 +459,8 @@ export type CreateGameInput =
   | CreateBasketballGameInput
   | CreateTennisGameInput
   | CreateFootballGameInput
-  | CreatePickleballGameInput;
+  | CreatePickleballGameInput
+  | CreateVolleyballGameInput;
 
 /**
  * Input for updating a game
@@ -459,6 +512,13 @@ export interface UpdateGameInput {
       winByTwo?: boolean;
       scoringType?: PickleballScoringType;
     };
+    volleyball?: {
+      format?: SportFormat.INDOOR | SportFormat.BEACH;
+      bestOf?: number;
+      pointsPerSet?: number;
+      pointsPerFinalSet?: number;
+      winByTwo?: boolean;
+    };
   };
   visibility?: GameVisibility;
   statEntryMode?: StatEntryMode;
@@ -495,6 +555,10 @@ export interface ParticipantMetadataInput {
   pickleball?: {
     gamesWon: number;
     games: { pointsScored: number }[];
+  };
+  volleyball?: {
+    setsWon: number;
+    sets: { pointsScored: number }[];
   };
 }
 

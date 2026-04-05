@@ -58,7 +58,8 @@ export async function createGame(
       | "basketball"
       | "football"
       | "tennis"
-      | "pickleball";
+      | "pickleball"
+      | "volleyball";
     const metadata: Record<string, unknown> = {};
     if ("format" in input.metadata && input.metadata.format !== undefined) {
       metadata.format = new EnumType(input.metadata.format);
@@ -95,6 +96,18 @@ export async function createGame(
       input.metadata.scoringType !== undefined
     ) {
       metadata.scoringType = new EnumType(input.metadata.scoringType);
+    }
+    if (
+      "pointsPerSet" in input.metadata &&
+      input.metadata.pointsPerSet !== undefined
+    ) {
+      metadata.pointsPerSet = input.metadata.pointsPerSet;
+    }
+    if (
+      "pointsPerFinalSet" in input.metadata &&
+      input.metadata.pointsPerFinalSet !== undefined
+    ) {
+      metadata.pointsPerFinalSet = input.metadata.pointsPerFinalSet;
     }
 
     const sportInput: Record<string, unknown> = {
@@ -211,6 +224,19 @@ export async function updateGame(
         if (input.metadata.pickleball.scoringType !== undefined)
           p.scoringType = new EnumType(input.metadata.pickleball.scoringType);
         metadataInput.pickleball = p;
+      } else if (input.metadata.volleyball) {
+        const v: Record<string, unknown> = {};
+        if (input.metadata.volleyball.format)
+          v.format = new EnumType(input.metadata.volleyball.format);
+        if (input.metadata.volleyball.bestOf !== undefined)
+          v.bestOf = input.metadata.volleyball.bestOf;
+        if (input.metadata.volleyball.pointsPerSet !== undefined)
+          v.pointsPerSet = input.metadata.volleyball.pointsPerSet;
+        if (input.metadata.volleyball.pointsPerFinalSet !== undefined)
+          v.pointsPerFinalSet = input.metadata.volleyball.pointsPerFinalSet;
+        if (input.metadata.volleyball.winByTwo !== undefined)
+          v.winByTwo = input.metadata.volleyball.winByTwo;
+        metadataInput.volleyball = v;
       } else if (input.metadata.baseball) {
         const bb: Record<string, unknown> = {};
         if (input.metadata.baseball.innings !== undefined)

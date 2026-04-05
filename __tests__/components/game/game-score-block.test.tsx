@@ -97,6 +97,26 @@ vi.mock("@/components/game/scoreboard/tennis-score-form", () => ({
   ),
 }));
 
+vi.mock("@/components/game/scoreboard/volleyball-score-form", () => ({
+  VolleyballScoreForm: ({
+    onSuccess,
+    onCancel,
+  }: {
+    onSuccess: () => void;
+    onCancel: () => void;
+  }) => (
+    <div data-testid="volleyball-score-form">
+      <input data-testid="form-input" />
+      <button data-testid="save-btn" onClick={onSuccess}>
+        Save
+      </button>
+      <button data-testid="cancel-btn" onClick={onCancel}>
+        Cancel
+      </button>
+    </div>
+  ),
+}));
+
 import { GameScoreBlock } from "@/components/game/game-score-block";
 import {
   GameRole,
@@ -413,5 +433,68 @@ describe("GameScoreBlock", () => {
 
     const liveRegion = container.querySelector("[aria-live='polite']");
     expect(liveRegion).not.toBeInTheDocument();
+  });
+
+  it("toggles to volleyball score form when edit pencil is clicked", () => {
+    render(
+      <GameScoreBlock
+        game={makeGame({
+          sportType: SportType.VOLLEYBALL,
+          metadata: {
+            __typename: "VolleyballGameMetadata",
+            volleyballFormat: SportFormat.INDOOR,
+            volleyballBestOf: 5,
+            pointsPerSet: 25,
+            pointsPerFinalSet: 15,
+            winByTwo: true,
+          },
+          participants: {
+            edges: [
+              {
+                cursor: "c1",
+                node: {
+                  __typename: "TeamInstance",
+                  id: 10,
+                  name: "Team Alpha",
+                  description: null,
+                  players: [],
+                  metadata: {
+                    __typename: "VolleyballParticipantMetadata",
+                    setsWon: 2,
+                    sets: [{ pointsScored: 25 }, { pointsScored: 25 }],
+                  },
+                },
+              },
+              {
+                cursor: "c2",
+                node: {
+                  __typename: "TeamInstance",
+                  id: 11,
+                  name: "Team Beta",
+                  description: null,
+                  players: [],
+                  metadata: {
+                    __typename: "VolleyballParticipantMetadata",
+                    setsWon: 1,
+                    sets: [{ pointsScored: 20 }, { pointsScored: 18 }],
+                  },
+                },
+              },
+            ],
+            pageInfo: {
+              hasPreviousPage: false,
+              hasNextPage: false,
+              startCursor: "c1",
+              endCursor: "c2",
+            },
+          },
+        })}
+        statusPill={<span>Live</span>}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Score" }));
+
+    expect(screen.getByTestId("volleyball-score-form")).toBeInTheDocument();
   });
 });

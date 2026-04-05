@@ -34,7 +34,8 @@
     "FOOTBALL": "Football",
     "TENNIS": "Tennis",
     "PICKLEBALL": "Pickleball",
-    "BASEBALL": "Baseball"
+    "BASEBALL": "Baseball",
+    "VOLLEYBALL": "Volleyball"
   },
   "sportFormats": {
     "FIVE_ON_FIVE": "5v5",
@@ -42,7 +43,9 @@
     "FLAG_FOOTBALL": "Flag Football",
     "AMERICAN_FOOTBALL": "American Football",
     "SINGLES": "Singles",
-    "DOUBLES": "Doubles"
+    "DOUBLES": "Doubles",
+    "INDOOR": "Indoor",
+    "BEACH": "Beach"
   },
   "profile": {
     "title": "Profile",
@@ -228,7 +231,11 @@
       "selectScoringType": "Select scoring type",
       "location": "Location",
       "innings": "Number of Innings",
-      "inningsPlaceholder": "Default: 9"
+      "inningsPlaceholder": "Default: 9",
+      "pointsPerSet": "Points Per Set",
+      "pointsPerSetPlaceholder": "Default: 25",
+      "pointsPerFinalSet": "Points Per Final Set",
+      "pointsPerFinalSetPlaceholder": "Default: 15"
     },
     "status": {
       "scheduled": "Scheduled",
@@ -517,6 +524,20 @@
           "pitching": "Pitching",
           "fielding": "Fielding"
         }
+      },
+      "volleyball": {
+        "kills": "K",
+        "attackErrors": "AE",
+        "attackAttempts": "ATT",
+        "hittingPercentage": "HIT%",
+        "aces": "SA",
+        "serviceErrors": "SE",
+        "blocks": "BS",
+        "blockErrors": "BE",
+        "digs": "DIG",
+        "receptionErrors": "RE",
+        "assists": "AST",
+        "points": "PTS"
       }
     },
     "media": {
@@ -1009,7 +1030,8 @@
         "basketball": "Basketball",
         "football": "Football",
         "tennis": "Tennis",
-        "pickleball": "Pickleball"
+        "pickleball": "Pickleball",
+        "volleyball": "Volleyball"
       }
     },
     "notifications": {
