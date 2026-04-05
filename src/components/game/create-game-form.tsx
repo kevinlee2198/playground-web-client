@@ -69,6 +69,8 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
       winByTwo: undefined as boolean | undefined,
       scoringType: undefined as PickleballScoringType | undefined,
       innings: undefined as number | undefined,
+      pointsPerSet: undefined as number | undefined,
+      pointsPerFinalSet: undefined as number | undefined,
       location: undefined as LocationValue | undefined,
       visibility: GameVisibility.PUBLIC,
       statEntryMode: StatEntryMode.OPEN,
@@ -140,6 +142,28 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
               }),
               ...(value.scoringType !== undefined && {
                 scoringType: value.scoringType,
+              }),
+            },
+          };
+        } else if (sportType === SportType.VOLLEYBALL) {
+          input = {
+            sportType: SportType.VOLLEYBALL,
+            startDate: value.startDate.toISOString(),
+            visibility: value.visibility,
+            statEntryMode: value.statEntryMode,
+            metadata: {
+              format: value.format as
+                | SportFormat.INDOOR
+                | SportFormat.BEACH,
+              ...(value.bestOf !== undefined && { bestOf: value.bestOf }),
+              ...(value.pointsPerSet !== undefined && {
+                pointsPerSet: value.pointsPerSet,
+              }),
+              ...(value.pointsPerFinalSet !== undefined && {
+                pointsPerFinalSet: value.pointsPerFinalSet,
+              }),
+              ...(value.winByTwo !== undefined && {
+                winByTwo: value.winByTwo,
               }),
             },
           };
@@ -497,6 +521,81 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
                         />
                       )}
                     </Field>
+                  )}
+                </form.Field>
+                <form.Field name="winByTwo">
+                  {(field) => (
+                    <FormSwitchField
+                      field={field}
+                      label={t("game.form.winByTwo")}
+                      disabled={isPending}
+                    />
+                  )}
+                </form.Field>
+              </>
+            )}
+
+            {selectedSportType === SportType.VOLLEYBALL && (
+              <>
+                <form.Field name="bestOf">
+                  {(field) => (
+                    <Field
+                      data-invalid={
+                        field.state.meta.isTouched &&
+                        field.state.meta.errors.length > 0
+                          ? true
+                          : undefined
+                      }
+                    >
+                      <FieldLabel htmlFor={field.name}>
+                        {t("game.form.bestOf")}
+                      </FieldLabel>
+                      <Select
+                        value={field.state.value?.toString() ?? null}
+                        onValueChange={(v) => {
+                          field.handleChange(Number(v));
+                          field.handleBlur();
+                        }}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={t("game.form.bestOfPlaceholder")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="5">5</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {field.state.meta.isTouched && (
+                        <FieldError
+                          errors={toFieldErrors(field.state.meta.errors)}
+                        />
+                      )}
+                    </Field>
+                  )}
+                </form.Field>
+                <form.Field name="pointsPerSet">
+                  {(field) => (
+                    <FormTextField
+                      field={field}
+                      label={t("game.form.pointsPerSet")}
+                      type="number"
+                      disabled={isPending}
+                      placeholder={t("game.form.pointsPerSetPlaceholder")}
+                    />
+                  )}
+                </form.Field>
+                <form.Field name="pointsPerFinalSet">
+                  {(field) => (
+                    <FormTextField
+                      field={field}
+                      label={t("game.form.pointsPerFinalSet")}
+                      type="number"
+                      disabled={isPending}
+                      placeholder={t("game.form.pointsPerFinalSetPlaceholder")}
+                    />
                   )}
                 </form.Field>
                 <form.Field name="winByTwo">

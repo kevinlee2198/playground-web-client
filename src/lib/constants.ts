@@ -33,6 +33,8 @@ export enum SportFormat {
   AMERICAN_FOOTBALL = "AMERICAN_FOOTBALL",
   SINGLES = "SINGLES",
   DOUBLES = "DOUBLES",
+  INDOOR = "INDOOR",
+  BEACH = "BEACH",
 }
 
 /**
@@ -67,6 +69,15 @@ export const SportFormatConfig = {
     maxTeamSize: 2,
     maxParticipants: 2,
   },
+  INDOOR: {
+    participation: ParticipationType.TEAM,
+    maxParticipants: 2,
+  },
+  BEACH: {
+    participation: ParticipationType.TEAM,
+    maxTeamSize: 2,
+    maxParticipants: 2,
+  },
 } as const;
 
 export enum SportType {
@@ -75,6 +86,7 @@ export enum SportType {
   FOOTBALL = "FOOTBALL",
   TENNIS = "TENNIS",
   PICKLEBALL = "PICKLEBALL",
+  VOLLEYBALL = "VOLLEYBALL",
 }
 
 export enum PickleballScoringType {
@@ -126,8 +138,14 @@ export const SportTypeConfig = {
     accentClass: "bg-sport-pickleball-foreground",
     gradientClass: "bg-sport-pickleball/5 dark:bg-sport-pickleball/15",
   },
-  //   SOFTBALL: [],
-  //   SWIM: [],
+  VOLLEYBALL: {
+    formats: [SportFormat.INDOOR, SportFormat.BEACH],
+    icon: "/sports/volleyball.svg",
+    bgClass: "bg-sport-volleyball",
+    fgClass: "text-sport-volleyball-foreground",
+    accentClass: "bg-sport-volleyball-foreground",
+    gradientClass: "bg-sport-volleyball/5 dark:bg-sport-volleyball/15",
+  },
 } as const;
 
 export function getFormats(sport: SportType) {
@@ -260,7 +278,8 @@ export function getFormatFromMetadata(
     | { __typename: "BasketballGameMetadata"; basketballFormat: string }
     | { __typename: "TennisGameMetadata"; tennisFormat: string }
     | { __typename: "FootballGameMetadata"; footballFormat: string }
-    | { __typename: "PickleballGameMetadata"; pickleballFormat: string },
+    | { __typename: "PickleballGameMetadata"; pickleballFormat: string }
+    | { __typename: "VolleyballGameMetadata"; volleyballFormat: string },
 ): SportFormat | null {
   switch (metadata.__typename) {
     case "BaseballGameMetadata":
@@ -273,6 +292,8 @@ export function getFormatFromMetadata(
       return metadata.footballFormat as SportFormat;
     case "PickleballGameMetadata":
       return metadata.pickleballFormat as SportFormat;
+    case "VolleyballGameMetadata":
+      return metadata.volleyballFormat as SportFormat;
   }
 }
 

@@ -27,6 +27,7 @@ import type {
   BaseballPitchingStatsNode,
   BaseballFieldingStatsNode,
 } from "@/lib/types/stats/baseball";
+import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
 import { WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -60,6 +61,7 @@ interface GameDetailClientProps {
   initialBaseballBattingStats?: { node: BaseballBattingStatsNode }[];
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
+  initialVolleyballStats?: { node: VolleyballStatisticsNode }[];
   playerId: number | null;
   currentUserId: string | null;
   children: ReactNode;
@@ -76,6 +78,7 @@ export function GameDetailClient({
   initialBaseballBattingStats,
   initialBaseballPitchingStats,
   initialBaseballFieldingStats,
+  initialVolleyballStats,
   playerId,
   currentUserId,
   children,
@@ -236,6 +239,7 @@ export function GameDetailClient({
           baseballBattingStats={initialBaseballBattingStats}
           baseballPitchingStats={initialBaseballPitchingStats}
           baseballFieldingStats={initialBaseballFieldingStats}
+          volleyballStats={initialVolleyballStats}
         />
       </section>
 

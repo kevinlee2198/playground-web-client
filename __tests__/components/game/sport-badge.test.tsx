@@ -9,6 +9,7 @@ vi.mock("next-intl", () => ({
       "sports.FOOTBALL": "Football",
       "sports.PICKLEBALL": "Pickleball",
       "sports.BASEBALL": "Baseball",
+      "sports.VOLLEYBALL": "Volleyball",
     };
     return map[key] ?? key;
   },
@@ -25,6 +26,7 @@ describe("SportBadge", () => {
       FOOTBALL: "Football",
       PICKLEBALL: "Pickleball",
       BASEBALL: "Baseball",
+      VOLLEYBALL: "Volleyball",
     };
     for (const sport of Object.values(SportType)) {
       const { unmount } = render(<SportBadge sportType={sport} />);

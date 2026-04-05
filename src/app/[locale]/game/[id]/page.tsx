@@ -29,6 +29,7 @@ import type {
 } from "@/lib/types/stats/football";
 import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
 import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
+import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
 import type {
   BaseballBattingStatsNode,
   BaseballPitchingStatsNode,
@@ -172,6 +173,7 @@ export default async function GameDetailPage({ params }: PageProps) {
   let initialBaseballBattingStats: { node: BaseballBattingStatsNode }[] = [];
   let initialBaseballPitchingStats: { node: BaseballPitchingStatsNode }[] = [];
   let initialBaseballFieldingStats: { node: BaseballFieldingStatsNode }[] = [];
+  let initialVolleyballStats: { node: VolleyballStatisticsNode }[] = [];
 
   if (session?.user) {
     if (
@@ -244,6 +246,36 @@ export default async function GameDetailPage({ params }: PageProps) {
       });
       initialPickleballStats =
         statsResponse.data?.pickleballStatistics?.edges ?? [];
+    }
+
+    if (
+      game.sportType === SportType.VOLLEYBALL &&
+      game.gameStatus !== GameStatus.SCHEDULED
+    ) {
+      const volleyballStatsResponse = await authQuery({
+        volleyballStatistics: {
+          __args: { input: { gameIds: [game.id] }, first: 50 },
+          edges: {
+            node: {
+              id: true,
+              player: playerRefFragment,
+              kills: true,
+              attackErrors: true,
+              attackAttempts: true,
+              aces: true,
+              serviceErrors: true,
+              blocks: true,
+              blockErrors: true,
+              digs: true,
+              receptionErrors: true,
+              assists: true,
+              points: true,
+            },
+          },
+        },
+      });
+      initialVolleyballStats =
+        volleyballStatsResponse.data?.volleyballStatistics?.edges ?? [];
     }
 
     if (
@@ -469,6 +501,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialBaseballBattingStats={initialBaseballBattingStats}
         initialBaseballPitchingStats={initialBaseballPitchingStats}
         initialBaseballFieldingStats={initialBaseballFieldingStats}
+        initialVolleyballStats={initialVolleyballStats}
         playerId={playerId}
         currentUserId={currentUserId}
       >

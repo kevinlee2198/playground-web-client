@@ -36,6 +36,8 @@ export const createGameFormSchema = z
     winByTwo: z.boolean().optional(),
     scoringType: z.enum(PickleballScoringType).optional(),
     innings: z.number().int().positive("Must be positive").optional(),
+    pointsPerSet: z.number().int().positive("Must be positive").optional(),
+    pointsPerFinalSet: z.number().int().positive("Must be positive").optional(),
     location: locationSchema,
     visibility: z.enum(GameVisibility).default(GameVisibility.PUBLIC),
     statEntryMode: z.enum(StatEntryMode).default(StatEntryMode.OPEN),
@@ -59,6 +61,7 @@ export const createGameFormSchema = z
       if (data.bestOf === undefined) return true;
       if (data.sportType === SportType.TENNIS) return data.bestOf === 3 || data.bestOf === 5;
       if (data.sportType === SportType.PICKLEBALL) return data.bestOf === 1 || data.bestOf === 3 || data.bestOf === 5;
+      if (data.sportType === SportType.VOLLEYBALL) return data.bestOf === 3 || data.bestOf === 5;
       return true;
     },
     {
@@ -78,6 +81,8 @@ export interface CreateGameFormValues {
   winByTwo?: boolean;
   scoringType?: PickleballScoringType;
   innings?: number;
+  pointsPerSet?: number;
+  pointsPerFinalSet?: number;
   location?: LocationValue;
   visibility: GameVisibility;
   statEntryMode: StatEntryMode;
@@ -95,6 +100,8 @@ export const updateGameFormSchema = z.object({
   winByTwo: z.boolean().optional(),
   scoringType: z.enum(PickleballScoringType).optional(),
   innings: z.number().int().positive("Must be positive").optional(),
+  pointsPerSet: z.number().int().positive("Must be positive").optional(),
+  pointsPerFinalSet: z.number().int().positive("Must be positive").optional(),
   location: locationSchema.nullable(),
   visibility: z.enum(GameVisibility).optional(),
   statEntryMode: z.enum(StatEntryMode).optional(),
@@ -109,6 +116,8 @@ export interface UpdateGameFormValues {
   winByTwo?: boolean;
   scoringType?: PickleballScoringType;
   innings?: number;
+  pointsPerSet?: number;
+  pointsPerFinalSet?: number;
   location?: LocationValue | null;
   visibility?: GameVisibility;
   statEntryMode?: StatEntryMode;

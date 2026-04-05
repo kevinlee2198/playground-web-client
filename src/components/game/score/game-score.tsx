@@ -1,6 +1,7 @@
 import { PickleballScore } from "@/components/game/score/pickleball-score";
 import { SimpleScore } from "@/components/game/score/simple-score";
 import { TennisScore } from "@/components/game/score/tennis-score";
+import { VolleyballScore } from "@/components/game/score/volleyball-score";
 import { SportType } from "@/lib/constants";
 import type { GameParticipant } from "@/lib/types/game";
 import type { ReactNode } from "react";
@@ -27,6 +28,8 @@ export function GameScore({ sportType, participants, statusPill, size = "sm" }: 
       return <TennisScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
     case SportType.PICKLEBALL:
       return <PickleballScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
+    case SportType.VOLLEYBALL:
+      return <VolleyballScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
     default:
       return null;
   }

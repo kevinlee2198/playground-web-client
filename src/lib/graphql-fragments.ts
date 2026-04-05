@@ -267,6 +267,18 @@ export const gameMetadataFragment = {
       winByTwo: true,
       scoringType: true,
     },
+    {
+      __typeName: "VolleyballGameMetadata",
+      volleyballFormat: {
+        __aliasFor: "format",
+      },
+      volleyballBestOf: {
+        __aliasFor: "bestOf",
+      },
+      pointsPerSet: true,
+      pointsPerFinalSet: true,
+      winByTwo: true,
+    },
   ],
 };
 
@@ -298,6 +310,11 @@ export const participantMetadataFragment = {
       __typeName: "PickleballParticipantMetadata",
       gamesWon: true,
       games: { pointsScored: true },
+    },
+    {
+      __typeName: "VolleyballParticipantMetadata",
+      setsWon: true,
+      sets: { pointsScored: true },
     },
   ],
 };
