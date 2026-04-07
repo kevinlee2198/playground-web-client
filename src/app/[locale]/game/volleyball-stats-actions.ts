@@ -56,7 +56,7 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save a single set of volleyball statistics
+ * Save a single set of volleyball stats
  */
 export async function saveVolleyballStats(
   input: SaveVolleyballStatsInput,
@@ -98,7 +98,7 @@ export async function saveVolleyballStats(
 }
 
 /**
- * Save multiple sets of volleyball statistics
+ * Save multiple sets of volleyball stats
  */
 export async function saveVolleyballStatsBulk(
   gameId: number,

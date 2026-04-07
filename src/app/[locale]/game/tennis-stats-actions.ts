@@ -65,7 +65,7 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save a single set of tennis statistics
+ * Save a single set of tennis stats
  */
 export async function saveTennisStats(
   input: SaveTennisStatsInput,
@@ -107,7 +107,7 @@ export async function saveTennisStats(
 }
 
 /**
- * Save multiple sets of tennis statistics
+ * Save multiple sets of tennis stats
  */
 export async function saveTennisStatsBulk(
   gameId: number,

@@ -93,7 +93,7 @@ export function VolleyballStatsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "points", desc: true },
   ]);
-  const [editingStat, setEditingStat] =
+  const [editingStats, setEditingStats] =
     useState<VolleyballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
@@ -246,7 +246,7 @@ export function VolleyballStatsTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingStat(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -365,12 +365,12 @@ export function VolleyballStatsTable({
           </Table>
         </div>
 
-        {editingStat && (
+        {editingStats && (
           <VolleyballStatsForm
             gameId={gameId}
-            initialData={editingStat}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingStat(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

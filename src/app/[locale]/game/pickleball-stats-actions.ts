@@ -61,7 +61,7 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save a single set of pickleball statistics
+ * Save a single set of pickleball stats
  */
 export async function savePickleballStats(
   input: SavePickleballStatsInput,
@@ -103,7 +103,7 @@ export async function savePickleballStats(
 }
 
 /**
- * Save multiple sets of pickleball statistics
+ * Save multiple sets of pickleball stats
  */
 export async function savePickleballStatsBulk(
   gameId: number,

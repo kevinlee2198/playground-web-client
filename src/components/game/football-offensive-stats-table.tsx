@@ -94,7 +94,7 @@ export function FootballOffensiveStatsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "passingYards", desc: true },
   ]);
-  const [editingStat, setEditingStat] =
+  const [editingStats, setEditingStats] =
     useState<FootballOffensiveStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
@@ -275,7 +275,7 @@ export function FootballOffensiveStatsTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingStat(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -390,12 +390,12 @@ export function FootballOffensiveStatsTable({
           </Table>
         </div>
 
-        {editingStat && (
+        {editingStats && (
           <FootballOffensiveStatsForm
             gameId={gameId}
-            initialData={editingStat}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingStat(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

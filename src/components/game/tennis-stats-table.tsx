@@ -92,7 +92,7 @@ export function TennisStatsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "totalPointsWon", desc: true },
   ]);
-  const [editingStat, setEditingStat] =
+  const [editingStats, setEditingStats] =
     useState<TennisStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
@@ -290,7 +290,7 @@ export function TennisStatsTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingStat(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -409,12 +409,12 @@ export function TennisStatsTable({
           </Table>
         </div>
 
-        {editingStat && (
+        {editingStats && (
           <TennisStatsForm
             gameId={gameId}
-            initialData={editingStat}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingStat(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

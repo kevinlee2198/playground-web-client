@@ -20,7 +20,7 @@ export interface PickleballStatsNode extends StatsNode {
 }
 
 /**
- * Input for saving Pickleball stats.
+ * Input for saving pickleball stats.
  * Patch semantics:
  * - Omit a field (undefined) to leave it unchanged
  * - Set to null to clear the value
