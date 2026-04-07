@@ -7,14 +7,14 @@ import {
 import { GameStatus, GameVisibility, SportFormat, SportType, StatEntryMode } from "@/lib/constants";
 import type { GameDetail, GameParticipantDetail, TeamInstanceDetail } from "@/lib/types/game";
 import type {
-  BoxScoreSavedEvent,
+  BasketballStatsSavedEvent,
   GameEventGame,
   GameParticipantAddedEvent,
   GameParticipantRemovedEvent,
   GameScoreUpdatedEvent,
   GameStartedEvent,
 } from "@/lib/types/game-event";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 
 const emptyPageInfo = {
   hasPreviousPage: false,
@@ -78,7 +78,7 @@ function makeTeamParticipant(id: number, score: number): { cursor: string; node:
   return { cursor: `cursor-${id}`, node };
 }
 
-function makeBoxScore(playerId: number, points: number): BasketballBoxScoreNode {
+function makeBoxScore(playerId: number, points: number): BasketballStatsNode {
   return {
     id: playerId,
     player: {
@@ -114,14 +114,14 @@ function makeBoxScore(playerId: number, points: number): BasketballBoxScoreNode 
 }
 
 describe("createInitialState", () => {
-  it("creates state with the given game, boxScores, and isConnected: true", () => {
+  it("creates state with the given game, basketballStats, and isConnected: true", () => {
     const game = makeGameDetail();
-    const boxScores = [{ node: makeBoxScore(1, 10) }];
+    const basketballStats = [{ node: makeBoxScore(1, 10) }];
 
-    const state = createInitialState(game, boxScores);
+    const state = createInitialState(game, basketballStats);
 
     expect(state.game).toBe(game);
-    expect(state.boxScores).toBe(boxScores);
+    expect(state.basketballStats).toBe(basketballStats);
     expect(state.isConnected).toBe(true);
   });
 });
@@ -271,11 +271,11 @@ describe("gameLiveReducer", () => {
       const updatedBoxScore = makeBoxScore(1, 20);
       const newBoxScore = makeBoxScore(2, 15);
 
-      const event: BoxScoreSavedEvent = {
-        __typename: "BoxScoreSavedEvent",
+      const event: BasketballStatsSavedEvent = {
+        __typename: "BasketballStatsSavedEvent",
         occurredAt: "2026-03-16T11:20:00Z",
         game: makeGameEventGame(),
-        basketballBoxScores: [updatedBoxScore, newBoxScore],
+        basketballStats: [updatedBoxScore, newBoxScore],
       };
 
       const nextState = gameLiveReducer(initialState, {
@@ -283,12 +283,12 @@ describe("gameLiveReducer", () => {
         event,
       });
 
-      expect(nextState.boxScores).toHaveLength(2);
+      expect(nextState.basketballStats).toHaveLength(2);
 
-      const player1Entry = nextState.boxScores.find(
+      const player1Entry = nextState.basketballStats.find(
         (e) => e.node.player.id === 1
       )!;
-      const player2Entry = nextState.boxScores.find(
+      const player2Entry = nextState.basketballStats.find(
         (e) => e.node.player.id === 2
       )!;
 
@@ -327,7 +327,7 @@ describe("gameLiveReducer", () => {
   });
 
   describe("SYNC_FROM_SERVER", () => {
-    it("replaces game and boxScores fully and sets isConnected to true", () => {
+    it("replaces game and basketballStats fully and sets isConnected to true", () => {
       const originalGame = makeGameDetail({ description: "original" });
       const initialState: LiveGameState = {
         ...createInitialState(originalGame, [{ node: makeBoxScore(1, 5) }]),
@@ -335,7 +335,7 @@ describe("gameLiveReducer", () => {
       };
 
       const newGame = makeGameDetail({ description: "synced" });
-      const newBoxScores = [
+      const newBasketballStats = [
         { node: makeBoxScore(1, 20) },
         { node: makeBoxScore(2, 18) },
       ];
@@ -343,11 +343,11 @@ describe("gameLiveReducer", () => {
       const nextState = gameLiveReducer(initialState, {
         type: "SYNC_FROM_SERVER",
         game: newGame,
-        boxScores: newBoxScores,
+        basketballStats: newBasketballStats,
       });
 
       expect(nextState.game).toBe(newGame);
-      expect(nextState.boxScores).toBe(newBoxScores);
+      expect(nextState.basketballStats).toBe(newBasketballStats);
       expect(nextState.isConnected).toBe(true);
     });
   });

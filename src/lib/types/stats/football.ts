@@ -1,9 +1,9 @@
-import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
+import type { StatsNode, SaveStatsInput } from "./base";
 
 /**
  * Football offensive statistics entry returned from the server.
  */
-export interface FootballOffensiveStatsNode extends BoxScoreNode {
+export interface FootballOffensiveStatsNode extends StatsNode {
   completions: number | null;
   passAttempts: number | null;
   passingYards: number | null;
@@ -29,7 +29,7 @@ export interface FootballOffensiveStatsNode extends BoxScoreNode {
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveFootballOffensiveStatsInput extends SaveBoxScoreInput {
+export interface SaveFootballOffensiveStatsInput extends SaveStatsInput {
   completions?: number | null;
   passAttempts?: number | null;
   passingYards?: number | null;
@@ -75,7 +75,7 @@ export interface SaveFootballOffensiveStatsData {
 /**
  * Football defensive statistics entry returned from the server.
  */
-export interface FootballDefensiveStatsNode extends BoxScoreNode {
+export interface FootballDefensiveStatsNode extends StatsNode {
   soloTackles: number | null;
   assistedTackles: number | null;
   sacks: number | null;
@@ -98,7 +98,7 @@ export interface FootballDefensiveStatsNode extends BoxScoreNode {
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveFootballDefensiveStatsInput extends SaveBoxScoreInput {
+export interface SaveFootballDefensiveStatsInput extends SaveStatsInput {
   soloTackles?: number | null;
   assistedTackles?: number | null;
   sacks?: number | null;
@@ -138,7 +138,7 @@ export interface SaveFootballDefensiveStatsData {
 /**
  * Football special teams statistics entry returned from the server.
  */
-export interface FootballSpecialTeamsStatsNode extends BoxScoreNode {
+export interface FootballSpecialTeamsStatsNode extends StatsNode {
   fieldGoalsMade: number | null;
   fieldGoalsAttempted: number | null;
   longestFieldGoal: number | null;
@@ -162,7 +162,7 @@ export interface FootballSpecialTeamsStatsNode extends BoxScoreNode {
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveFootballSpecialTeamsStatsInput extends SaveBoxScoreInput {
+export interface SaveFootballSpecialTeamsStatsInput extends SaveStatsInput {
   fieldGoalsMade?: number | null;
   fieldGoalsAttempted?: number | null;
   longestFieldGoal?: number | null;

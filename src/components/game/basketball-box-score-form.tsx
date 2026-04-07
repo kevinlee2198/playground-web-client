@@ -1,6 +1,6 @@
 "use client";
 
-import { saveBasketballBoxScore } from "@/app/[locale]/game/box-score-actions";
+import { saveBasketballStats } from "@/app/[locale]/game/basketball-stats-actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +11,8 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 import { FormTextField } from "@/components/ui/form-field";
 import type {
-  BasketballBoxScoreNode,
-  SaveBasketballBoxScoreInput,
+  BasketballStatsNode,
+  SaveBasketballStatsInput,
 } from "@/lib/types/stats/basketball";
 import { nullToUndefined, undefinedToNull } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -22,7 +22,7 @@ import { toast } from "sonner";
 
 interface BasketballBoxScoreFormProps {
   gameId: number;
-  initialData: BasketballBoxScoreNode;
+  initialData: BasketballStatsNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -85,7 +85,7 @@ export function BasketballBoxScoreForm({
       }
 
       startTransition(async () => {
-        const input: SaveBasketballBoxScoreInput = {
+        const input: SaveBasketballStatsInput = {
           playerId: initialData.player.id,
           gameId,
           assists: undefinedToNull(value.assists),
@@ -103,7 +103,7 @@ export function BasketballBoxScoreForm({
           freeThrowsAttempted: undefinedToNull(value.freeThrowsAttempted),
         };
 
-        const result = await saveBasketballBoxScore(input);
+        const result = await saveBasketballStats(input);
 
         if (result.success) {
           toast.success(t("game.success.boxScoresSaved"));

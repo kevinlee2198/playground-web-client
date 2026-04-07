@@ -1,6 +1,6 @@
 "use client";
 
-import { saveVolleyballStatistics } from "@/app/[locale]/game/volleyball-stats-actions";
+import { saveVolleyballStats } from "@/app/[locale]/game/volleyball-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
+import type { VolleyballStatsNode } from "@/lib/types/stats/volleyball";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -55,14 +55,14 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface VolleyballStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: VolleyballStatisticsNode }[];
+  boxScores: { node: VolleyballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
 }
 
 function computeMaxStats(
-  data: VolleyballStatisticsNode[],
+  data: VolleyballStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -94,7 +94,7 @@ export function VolleyballStatsTable({
     { id: "points", desc: true },
   ]);
   const [editingStat, setEditingStat] =
-    useState<VolleyballStatisticsNode | null>(null);
+    useState<VolleyballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -115,7 +115,7 @@ export function VolleyballStatsTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await saveVolleyballStatistics({
+      const result = await saveVolleyballStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
@@ -132,7 +132,7 @@ export function VolleyballStatsTable({
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<VolleyballStatisticsNode>[] = useMemo(() => {
+  const columns: ColumnDef<VolleyballStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -166,7 +166,7 @@ export function VolleyballStatsTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<VolleyballStatisticsNode> {
+    ): ColumnDef<VolleyballStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -182,8 +182,8 @@ export function VolleyballStatsTable({
     }
 
     function plainStatColumn(
-      key: keyof VolleyballStatisticsNode & string,
-    ): ColumnDef<VolleyballStatisticsNode> {
+      key: keyof VolleyballStatsNode & string,
+    ): ColumnDef<VolleyballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -241,7 +241,7 @@ export function VolleyballStatsTable({
               cell: ({
                 row,
               }: {
-                row: { original: VolleyballStatisticsNode };
+                row: { original: VolleyballStatsNode };
               }) => (
                 <Button
                   variant="ghost"

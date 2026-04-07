@@ -19,10 +19,10 @@ import type {
   PlayerRef,
   TeamInstanceDetail,
 } from "@/lib/types/game";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
-import type { BoxScoreNode } from "@/lib/types/stats/base";
-import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
-import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
+import type { StatsNode } from "@/lib/types/stats/base";
+import type { PickleballStatsNode } from "@/lib/types/stats/pickleball";
+import type { TennisStatsNode } from "@/lib/types/stats/tennis";
 import type {
   FootballDefensiveStatsNode,
   FootballOffensiveStatsNode,
@@ -33,30 +33,30 @@ import type {
   BaseballPitchingStatsNode,
   BaseballFieldingStatsNode,
 } from "@/lib/types/stats/baseball";
-import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
+import type { VolleyballStatsNode } from "@/lib/types/stats/volleyball";
 import { useTranslations } from "next-intl";
 
 interface GameBoxScoresProps {
   game: GameDetail;
-  boxScores?: { node: BasketballBoxScoreNode }[];
-  pickleballStats?: { node: PickleballStatisticsNode }[];
-  tennisStats?: { node: TennisStatisticsNode }[];
+  boxScores?: { node: BasketballStatsNode }[];
+  pickleballStats?: { node: PickleballStatsNode }[];
+  tennisStats?: { node: TennisStatsNode }[];
   footballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
   footballDefensiveStats?: { node: FootballDefensiveStatsNode }[];
   footballSpecialTeamsStats?: { node: FootballSpecialTeamsStatsNode }[];
   baseballBattingStats?: { node: BaseballBattingStatsNode }[];
   baseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   baseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
-  volleyballStats?: { node: VolleyballStatisticsNode }[];
+  volleyballStats?: { node: VolleyballStatsNode }[];
 }
 
-interface TeamBoxScoreGroup<T extends BoxScoreNode> {
+interface TeamBoxScoreGroup<T extends StatsNode> {
   teamName: string;
   players: PlayerRef[];
   boxScores: { node: T }[];
 }
 
-function groupByTeam<T extends BoxScoreNode>(
+function groupByTeam<T extends StatsNode>(
   game: GameDetail,
   allBoxScores: { node: T }[],
   fallbackGroupName: string,
@@ -286,7 +286,7 @@ export function GameBoxScores({
     );
   }
 
-  function renderTable(group: TeamBoxScoreGroup<BoxScoreNode>) {
+  function renderTable(group: TeamBoxScoreGroup<StatsNode>) {
     const sharedProps = {
       gameId: game.id,
       teamName: group.teamName,
@@ -299,7 +299,7 @@ export function GameBoxScores({
       return (
         <PickleballStatsTable
           {...sharedProps}
-          boxScores={group.boxScores as { node: PickleballStatisticsNode }[]}
+          boxScores={group.boxScores as { node: PickleballStatsNode }[]}
         />
       );
     }
@@ -308,7 +308,7 @@ export function GameBoxScores({
       return (
         <TennisStatsTable
           {...sharedProps}
-          boxScores={group.boxScores as { node: TennisStatisticsNode }[]}
+          boxScores={group.boxScores as { node: TennisStatsNode }[]}
         />
       );
     }
@@ -317,7 +317,7 @@ export function GameBoxScores({
       return (
         <VolleyballStatsTable
           {...sharedProps}
-          boxScores={group.boxScores as { node: VolleyballStatisticsNode }[]}
+          boxScores={group.boxScores as { node: VolleyballStatsNode }[]}
         />
       );
     }
@@ -325,12 +325,12 @@ export function GameBoxScores({
     return (
       <BasketballBoxScoreTable
         {...sharedProps}
-        boxScores={group.boxScores as { node: BasketballBoxScoreNode }[]}
+        boxScores={group.boxScores as { node: BasketballStatsNode }[]}
       />
     );
   }
 
-  function getStatsForSport(): { node: BoxScoreNode }[] {
+  function getStatsForSport(): { node: StatsNode }[] {
     if (game.sportType === SportType.PICKLEBALL && pickleballStats) return pickleballStats;
     if (game.sportType === SportType.TENNIS && tennisStats) return tennisStats;
     if (game.sportType === SportType.VOLLEYBALL && volleyballStats) return volleyballStats;

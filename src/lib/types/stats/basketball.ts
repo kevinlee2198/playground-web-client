@@ -1,9 +1,9 @@
-import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
+import type { StatsNode, SaveStatsInput } from "./base";
 
 /**
- * Basketball box score entry returned from the server.
+ * Basketball stats entry returned from the server.
  */
-export interface BasketballBoxScoreNode extends BoxScoreNode {
+export interface BasketballStatsNode extends StatsNode {
   points: number | null;
   assists: number | null;
   totalRebounds: number | null;
@@ -28,13 +28,13 @@ export interface BasketballBoxScoreNode extends BoxScoreNode {
 }
 
 /**
- * Input for saving a basketball box score.
+ * Input for saving basketball stats.
  * Patch semantics:
  * - Omit a field (undefined) to leave it unchanged
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveBasketballBoxScoreInput extends SaveBoxScoreInput {
+export interface SaveBasketballStatsInput extends SaveStatsInput {
   assists?: number | null;
   steals?: number | null;
   blocks?: number | null;
@@ -51,10 +51,10 @@ export interface SaveBasketballBoxScoreInput extends SaveBoxScoreInput {
 }
 
 /**
- * Per-player box score data for bulk save (gameId is at parent level).
- * Independent interface mirroring schema — not derived from SaveBasketballBoxScoreInput.
+ * Per-player stats data for bulk save (gameId is at parent level).
+ * Independent interface mirroring schema — not derived from SaveBasketballStatsInput.
  */
-export interface SaveBasketballBoxScoreData {
+export interface SaveBasketballStatsData {
   playerId: number;
   assists?: number | null;
   steals?: number | null;

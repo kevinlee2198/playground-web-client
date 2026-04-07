@@ -1,6 +1,6 @@
 "use client";
 
-import { saveTennisStatistics } from "@/app/[locale]/game/tennis-stats-actions";
+import { saveTennisStats } from "@/app/[locale]/game/tennis-stats-actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,8 +12,8 @@ import { FieldGroup } from "@/components/ui/field";
 import { FormTextField } from "@/components/ui/form-field";
 import { TypographySmall } from "@/components/ui/typography";
 import type {
-  TennisStatisticsNode,
-  SaveTennisStatisticsInput,
+  TennisStatsNode,
+  SaveTennisStatsInput,
 } from "@/lib/types/stats/tennis";
 import { nullToUndefined, undefinedToNull } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -55,13 +55,13 @@ type StatField = (typeof STAT_FIELDS)[number];
 
 interface TennisStatsFormProps {
   gameId: number;
-  initialData: TennisStatisticsNode;
+  initialData: TennisStatsNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function buildDefaultValues(
-  data: TennisStatisticsNode,
+  data: TennisStatsNode,
 ): Record<StatField, number | undefined> {
   const result = {} as Record<StatField, number | undefined>;
   for (const field of STAT_FIELDS) {
@@ -74,8 +74,8 @@ function buildInput(
   value: Record<StatField, number | undefined>,
   playerId: number,
   gameId: number,
-): SaveTennisStatisticsInput {
-  const input: SaveTennisStatisticsInput = { playerId, gameId };
+): SaveTennisStatsInput {
+  const input: SaveTennisStatsInput = { playerId, gameId };
   for (const field of STAT_FIELDS) {
     input[field] = undefinedToNull(value[field]);
   }
@@ -100,7 +100,7 @@ export function TennisStatsForm({
 
       startTransition(async () => {
         const input = buildInput(value, initialData.player.id, gameId);
-        const result = await saveTennisStatistics(input);
+        const result = await saveTennisStats(input);
 
         if (result.success) {
           toast.success(t("game.success.boxScoresSaved"));

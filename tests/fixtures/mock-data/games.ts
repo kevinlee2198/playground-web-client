@@ -48,7 +48,7 @@ export function mockGameNotFoundResponse() {
 }
 
 export function mockBasketballBoxScoresResponse() {
-  return { data: { basketballBoxScores: [] } };
+  return { data: { basketballStats: [] } };
 }
 
 export function mockParticipant(overrides?: Record<string, unknown>) {

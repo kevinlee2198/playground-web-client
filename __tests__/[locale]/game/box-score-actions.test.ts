@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MutationErrorType } from "@/lib/graphql-result";
-import type { SaveBasketballBoxScoreInput, SaveBasketballBoxScoreData } from "@/lib/types/stats/basketball";
+import type { SaveBasketballStatsInput, SaveBasketballStatsData } from "@/lib/types/stats/basketball";
 
 const { mockAuthMutate } = vi.hoisted(() => ({
   mockAuthMutate: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-import { saveBasketballBoxScore, saveBasketballBoxScores } from "@/app/[locale]/game/box-score-actions";
+import { saveBasketballStats, saveBasketballStatsBulk } from "@/app/[locale]/game/basketball-stats-actions";
 import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ function getMutationInput(key: string): Record<string, unknown> {
 
 function makeBoxScoreFields(id: string) {
   return {
-    basketballBoxScore: {
+    basketballStats: {
       id,
       player: { id: "10", user: { displayName: "Alice" } },
       points: 20,
@@ -89,7 +89,7 @@ function makeBoxScoreFields(id: string) {
 
 function makeBoxScoresFields(ids: string[]) {
   return {
-    basketballBoxScores: ids.map((id) => ({
+    stats: ids.map((id) => ({
       id,
       player: { id: "10", user: { displayName: "Alice" } },
       points: 10,
@@ -118,41 +118,41 @@ function makeBoxScoresFields(ids: string[]) {
 }
 
 // ---------------------------------------------------------------------------
-// saveBasketballBoxScore
+// saveBasketballStats
 // ---------------------------------------------------------------------------
 
-describe("saveBasketballBoxScore", () => {
+describe("saveBasketballStats", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns success with boxScoreId on a successful mutation", async () => {
-    mockMutateSuccess("saveBasketballBoxScore", "SaveBasketballBoxScoreResponse", makeBoxScoreFields("abc-123"));
+  it("returns success with statsId on a successful mutation", async () => {
+    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeBoxScoreFields("abc-123"));
 
-    const input: SaveBasketballBoxScoreInput = {
+    const input: SaveBasketballStatsInput = {
       playerId: 10,
       gameId: 1,
       assists: 5,
       steals: 2,
     };
 
-    const result = await saveBasketballBoxScore(input);
+    const result = await saveBasketballStats(input);
 
-    expect(result).toEqual({ success: true, boxScoreId: "abc-123" });
+    expect(result).toEqual({ success: true, statsId: "abc-123" });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
   });
 
   it("only includes defined stat fields in the mutation input (PATCH semantics)", async () => {
-    mockMutateSuccess("saveBasketballBoxScore", "SaveBasketballBoxScoreResponse", makeBoxScoreFields("def-456"));
+    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeBoxScoreFields("def-456"));
 
-    const input: SaveBasketballBoxScoreInput = {
+    const input: SaveBasketballStatsInput = {
       playerId: 10,
       gameId: 1,
       assists: 7,
       blocks: 3,
     };
 
-    await saveBasketballBoxScore(input);
+    await saveBasketballStats(input);
 
-    const mutationInput = getMutationInput("saveBasketballBoxScore");
+    const mutationInput = getMutationInput("saveBasketballStats");
 
     expect(mutationInput.playerId).toBe(10);
     expect(mutationInput.gameId).toBe(1);
@@ -172,17 +172,17 @@ describe("saveBasketballBoxScore", () => {
   });
 
   it("includes null stat fields (explicit clear) in the mutation input", async () => {
-    mockMutateSuccess("saveBasketballBoxScore", "SaveBasketballBoxScoreResponse", makeBoxScoreFields("ghi-789"));
+    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeBoxScoreFields("ghi-789"));
 
-    const input: SaveBasketballBoxScoreInput = {
+    const input: SaveBasketballStatsInput = {
       playerId: 10,
       gameId: 1,
       assists: null,
     };
 
-    await saveBasketballBoxScore(input);
+    await saveBasketballStats(input);
 
-    const mutationInput = getMutationInput("saveBasketballBoxScore");
+    const mutationInput = getMutationInput("saveBasketballStats");
     expect("assists" in mutationInput).toBe(true);
     expect(mutationInput.assists).toBeNull();
   });
@@ -190,8 +190,8 @@ describe("saveBasketballBoxScore", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const input: SaveBasketballBoxScoreInput = { playerId: 10, gameId: 1 };
-    const result = await saveBasketballBoxScore(input);
+    const input: SaveBasketballStatsInput = { playerId: 10, gameId: 1 };
+    const result = await saveBasketballStats(input);
 
     expect(result).toEqual({
       success: false,
@@ -202,15 +202,15 @@ describe("saveBasketballBoxScore", () => {
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("saveBasketballBoxScore", "BoxScoreNotFoundError", "Box score not found");
+    mockMutateUnionError("saveBasketballStats", "BasketballStatsNotFoundError", "Stats not found");
 
-    const input: SaveBasketballBoxScoreInput = { playerId: 10, gameId: 1 };
-    const result = await saveBasketballBoxScore(input);
+    const input: SaveBasketballStatsInput = { playerId: 10, gameId: 1 };
+    const result = await saveBasketballStats(input);
 
     expect(result).toEqual({
       success: false,
-      errorType: "BoxScoreNotFoundError",
-      message: "Box score not found",
+      errorType: "BasketballStatsNotFoundError",
+      message: "Stats not found",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -218,64 +218,64 @@ describe("saveBasketballBoxScore", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const input: SaveBasketballBoxScoreInput = { playerId: 10, gameId: 1 };
-    const result = await saveBasketballBoxScore(input);
+    const input: SaveBasketballStatsInput = { playerId: 10, gameId: 1 };
+    const result = await saveBasketballStats(input);
 
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Failed to save basketball box score",
+      message: "Failed to save basketball stats",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 });
 
 // ---------------------------------------------------------------------------
-// saveBasketballBoxScores
+// saveBasketballStatsBulk
 // ---------------------------------------------------------------------------
 
-describe("saveBasketballBoxScores", () => {
+describe("saveBasketballStatsBulk", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns success with boxScoreIds on a successful batch mutation", async () => {
-    mockMutateSuccess("saveBasketballBoxScores", "SaveBasketballBoxScoresResponse", makeBoxScoresFields(["id-1", "id-2"]));
+  it("returns success with statsIds on a successful batch mutation", async () => {
+    mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeBoxScoresFields(["id-1", "id-2"]));
 
-    const scores: SaveBasketballBoxScoreData[] = [
+    const scores: SaveBasketballStatsData[] = [
       { playerId: 10, assists: 5 },
       { playerId: 11, steals: 3 },
     ];
 
-    const result = await saveBasketballBoxScores(1, scores);
+    const result = await saveBasketballStatsBulk(1, scores);
 
-    expect(result).toEqual({ success: true, boxScoreIds: ["id-1", "id-2"] });
+    expect(result).toEqual({ success: true, statsIds: ["id-1", "id-2"] });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
   });
 
   it("returns VALIDATION_ERROR for an empty scores array without calling authMutate", async () => {
-    const result = await saveBasketballBoxScores(1, []);
+    const result = await saveBasketballStatsBulk(1, []);
 
     expect(mockAuthMutate).not.toHaveBeenCalled();
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.VALIDATION_ERROR,
-      message: "No box scores provided",
+      message: "No stats provided",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("passes the gameId and per-player stat fields to the mutation", async () => {
-    mockMutateSuccess("saveBasketballBoxScores", "SaveBasketballBoxScoresResponse", makeBoxScoresFields(["id-1"]));
+    mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeBoxScoresFields(["id-1"]));
 
-    const scores: SaveBasketballBoxScoreData[] = [
+    const scores: SaveBasketballStatsData[] = [
       { playerId: 10, assists: 4, blocks: 2 },
     ];
 
-    await saveBasketballBoxScores(42, scores);
+    await saveBasketballStatsBulk(42, scores);
 
-    const mutationInput = getMutationInput("saveBasketballBoxScores");
+    const mutationInput = getMutationInput("saveBasketballStatsBulk");
     expect(mutationInput.gameId).toBe(42);
 
-    const boxScores = mutationInput.basketballBoxScores as Record<string, unknown>[];
+    const boxScores = mutationInput.stats as Record<string, unknown>[];
     expect(boxScores).toHaveLength(1);
     expect(boxScores[0].playerId).toBe(10);
     expect(boxScores[0].assists).toBe(4);
@@ -286,8 +286,8 @@ describe("saveBasketballBoxScores", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Server error");
 
-    const scores: SaveBasketballBoxScoreData[] = [{ playerId: 10 }];
-    const result = await saveBasketballBoxScores(1, scores);
+    const scores: SaveBasketballStatsData[] = [{ playerId: 10 }];
+    const result = await saveBasketballStatsBulk(1, scores);
 
     expect(result).toEqual({
       success: false,
@@ -300,13 +300,13 @@ describe("saveBasketballBoxScores", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const scores: SaveBasketballBoxScoreData[] = [{ playerId: 10 }];
-    const result = await saveBasketballBoxScores(1, scores);
+    const scores: SaveBasketballStatsData[] = [{ playerId: 10 }];
+    const result = await saveBasketballStatsBulk(1, scores);
 
     expect(result).toEqual({
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
-      message: "Failed to save basketball box scores",
+      message: "Failed to save basketball stats",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });

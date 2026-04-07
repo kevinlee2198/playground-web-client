@@ -1,6 +1,6 @@
 "use client";
 
-import { savePickleballStatistics } from "@/app/[locale]/game/pickleball-stats-actions";
+import { savePickleballStats } from "@/app/[locale]/game/pickleball-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
+import type { PickleballStatsNode } from "@/lib/types/stats/pickleball";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -52,14 +52,14 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface PickleballStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: PickleballStatisticsNode }[];
+  boxScores: { node: PickleballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
 }
 
 function computeMaxStats(
-  data: PickleballStatisticsNode[],
+  data: PickleballStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -91,7 +91,7 @@ export function PickleballStatsTable({
     { id: "pointsWon", desc: true },
   ]);
   const [editingStat, setEditingStat] =
-    useState<PickleballStatisticsNode | null>(null);
+    useState<PickleballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -112,7 +112,7 @@ export function PickleballStatsTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await savePickleballStatistics({
+      const result = await savePickleballStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
@@ -129,7 +129,7 @@ export function PickleballStatsTable({
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<PickleballStatisticsNode>[] = useMemo(() => {
+  const columns: ColumnDef<PickleballStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -163,7 +163,7 @@ export function PickleballStatsTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<PickleballStatisticsNode> {
+    ): ColumnDef<PickleballStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -179,8 +179,8 @@ export function PickleballStatsTable({
     }
 
     function plainStatColumn(
-      key: keyof PickleballStatisticsNode & string,
-    ): ColumnDef<PickleballStatisticsNode> {
+      key: keyof PickleballStatsNode & string,
+    ): ColumnDef<PickleballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -226,7 +226,7 @@ export function PickleballStatsTable({
               cell: ({
                 row,
               }: {
-                row: { original: PickleballStatisticsNode };
+                row: { original: PickleballStatsNode };
               }) => (
                 <Button
                   variant="ghost"

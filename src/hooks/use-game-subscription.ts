@@ -87,8 +87,8 @@ export function useGameSubscription({
                 },
               },
               {
-                __typeName: "BoxScoreSavedEvent",
-                basketballBoxScores: {
+                __typeName: "BasketballStatsSavedEvent",
+                basketballStats: {
                   id: true,
                   player: playerRefFragment,
                   points: true,

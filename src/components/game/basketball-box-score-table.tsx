@@ -1,6 +1,6 @@
 "use client";
 
-import { saveBasketballBoxScore } from "@/app/[locale]/game/box-score-actions";
+import { saveBasketballStats } from "@/app/[locale]/game/basketball-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -55,7 +55,7 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface BasketballBoxScoreTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: BasketballBoxScoreNode }[];
+  boxScores: { node: BasketballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
@@ -66,7 +66,7 @@ interface BasketballBoxScoreTableProps {
  * Returns a map from stat key to the max value (or null if all values are null).
  */
 function computeMaxStats(
-  data: BasketballBoxScoreNode[],
+  data: BasketballStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -99,7 +99,7 @@ export function BasketballBoxScoreTable({
     { id: "points", desc: true },
   ]);
   const [editingScore, setEditingScore] =
-    useState<BasketballBoxScoreNode | null>(null);
+    useState<BasketballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -120,7 +120,7 @@ export function BasketballBoxScoreTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await saveBasketballBoxScore({
+      const result = await saveBasketballStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
@@ -137,7 +137,7 @@ export function BasketballBoxScoreTable({
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<BasketballBoxScoreNode>[] = useMemo(() => {
+  const columns: ColumnDef<BasketballStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -171,7 +171,7 @@ export function BasketballBoxScoreTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<BasketballBoxScoreNode> {
+    ): ColumnDef<BasketballStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -187,8 +187,8 @@ export function BasketballBoxScoreTable({
     }
 
     function plainStatColumn(
-      key: keyof BasketballBoxScoreNode & string,
-    ): ColumnDef<BasketballBoxScoreNode> {
+      key: keyof BasketballStatsNode & string,
+    ): ColumnDef<BasketballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -203,9 +203,9 @@ export function BasketballBoxScoreTable({
     function madeAttemptedColumn(
       id: string,
       headerKey: string,
-      madeKey: keyof BasketballBoxScoreNode,
-      attemptedKey: keyof BasketballBoxScoreNode,
-    ): ColumnDef<BasketballBoxScoreNode> {
+      madeKey: keyof BasketballStatsNode,
+      attemptedKey: keyof BasketballStatsNode,
+    ): ColumnDef<BasketballStatsNode> {
       return {
         id,
         header: t(headerKey),
@@ -225,8 +225,8 @@ export function BasketballBoxScoreTable({
     }
 
     function percentageColumn(
-      key: keyof BasketballBoxScoreNode & string,
-    ): ColumnDef<BasketballBoxScoreNode> {
+      key: keyof BasketballStatsNode & string,
+    ): ColumnDef<BasketballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -278,7 +278,7 @@ export function BasketballBoxScoreTable({
               cell: ({
                 row,
               }: {
-                row: { original: BasketballBoxScoreNode };
+                row: { original: BasketballStatsNode };
               }) => (
                 <Button
                   variant="ghost"

@@ -2520,12 +2520,12 @@ type TeamRosterUpdatedEvent implements GameEvent {
   teamInstance: TeamInstance!
 }
 
-# --- Box score events ---
+# --- Basketball stats events ---
 
-type BoxScoreSavedEvent implements GameEvent {
+type BasketballStatsSavedEvent implements GameEvent {
   game: Game!
   occurredAt: DateTime!
-  basketballBoxScores: [BasketballBoxScore!]!
+  basketballStats: [BasketballStats!]!
 }
 
 # ============================================================================
@@ -3112,16 +3112,16 @@ type Query {
   """
   directMessageChatRoom(userId: ID!): ChatRoom
   """
-  Query and filter basketball box scores
+  Query and filter basketball stats
   """
-  basketballBoxScores(
-    input: BasketballBoxScoreFilterInput!
-    sort: [BoxScoreSortInput!]
+  basketballStats(
+    input: BasketballStatsFilterInput!
+    sort: [BasketballStatsSortInput!]
     first: Int
     after: String
     last: Int
     before: String
-  ): BasketballBoxScoreConnection!
+  ): BasketballStatsConnection!
   """
   Query and filter football offensive stats
   """
@@ -3156,27 +3156,27 @@ type Query {
     before: String
   ): FootballSpecialTeamsStatsConnection!
   """
-  Query and filter pickleball statistics
+  Query and filter pickleball stats
   """
-  pickleballStatistics(
-    input: PickleballStatisticsFilterInput!
-    sort: [PickleballStatisticsSortInput!]
+  pickleballStats(
+    input: PickleballStatsFilterInput!
+    sort: [PickleballStatsSortInput!]
     first: Int
     after: String
     last: Int
     before: String
-  ): PickleballStatisticsConnection!
+  ): PickleballStatsConnection!
   """
-  Query and filter tennis match statistics
+  Query and filter tennis match stats
   """
-  tennisStatistics(
-    input: TennisStatisticsFilterInput!
-    sort: [TennisStatisticsSortInput!]
+  tennisStats(
+    input: TennisStatsFilterInput!
+    sort: [TennisStatsSortInput!]
     first: Int
     after: String
     last: Int
     before: String
-  ): TennisStatisticsConnection!
+  ): TennisStatsConnection!
   """
   Query and filter baseball batting stats
   """
@@ -3211,16 +3211,16 @@ type Query {
     before: String
   ): BaseballFieldingStatsConnection!
   """
-  Query and filter volleyball statistics
+  Query and filter volleyball stats
   """
-  volleyballStatistics(
-    input: VolleyballStatisticsFilterInput!
-    sort: [VolleyballStatisticsSortInput!]
+  volleyballStats(
+    input: VolleyballStatsFilterInput!
+    sort: [VolleyballStatsSortInput!]
     first: Int
     after: String
     last: Int
     before: String
-  ): VolleyballStatisticsConnection!
+  ): VolleyballStatsConnection!
   """
   Resolve a URL to detect its media type, fetch oEmbed/OpenGraph metadata,
   and check for duplicates. Phase 1 of the Add Link flow.
@@ -3473,19 +3473,19 @@ type Mutation {
   """
   deleteChatMessage(input: DeleteChatMessageInput!): DeleteChatMessageResult!
   """
-  Save a box score for a basketball game.
+  Save stats for a basketball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  saveBasketballBoxScore(
-    input: SaveBasketballBoxScoreInput!
-  ): SaveBasketballBoxScoreResult!
+  saveBasketballStats(
+    input: SaveBasketballStatsInput!
+  ): SaveBasketballStatsResult!
   """
-  Save box scores for a basketball game.
+  Save stats for multiple players in a basketball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  saveBasketballBoxScores(
-    input: SaveBasketballBoxScoresInput!
-  ): SaveBasketballBoxScoresResult!
+  saveBasketballStatsBulk(
+    input: SaveBasketballStatsBulkInput!
+  ): SaveBasketballStatsBulkResult!
   """
   Save offensive stats for a football game.
   Only available for games that are IN_PROGRESS or COMPLETE
@@ -3529,33 +3529,31 @@ type Mutation {
     input: SaveFootballSpecialTeamsStatsBulkInput!
   ): SaveFootballSpecialTeamsStatsBulkResult!
   """
-  Save statistics for a pickleball game.
+  Save stats for a pickleball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  savePickleballStatistics(
-    input: SavePickleballStatisticsInput!
-  ): SavePickleballStatisticsResult!
+  savePickleballStats(
+    input: SavePickleballStatsInput!
+  ): SavePickleballStatsResult!
   """
-  Save statistics for multiple players in a pickleball game.
+  Save stats for multiple players in a pickleball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  savePickleballStatisticsBulk(
-    input: SavePickleballStatisticsBulkInput!
-  ): SavePickleballStatisticsBulkResult!
+  savePickleballStatsBulk(
+    input: SavePickleballStatsBulkInput!
+  ): SavePickleballStatsBulkResult!
   """
-  Save statistics for a tennis match.
+  Save stats for a tennis match.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  saveTennisStatistics(
-    input: SaveTennisStatisticsInput!
-  ): SaveTennisStatisticsResult!
+  saveTennisStats(input: SaveTennisStatsInput!): SaveTennisStatsResult!
   """
-  Save statistics for multiple players in a tennis match.
+  Save stats for multiple players in a tennis match.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  saveTennisStatisticsBulk(
-    input: SaveTennisStatisticsBulkInput!
-  ): SaveTennisStatisticsBulkResult!
+  saveTennisStatsBulk(
+    input: SaveTennisStatsBulkInput!
+  ): SaveTennisStatsBulkResult!
   """
   Save batting stats for a baseball game.
   Only available for games that are IN_PROGRESS or COMPLETE
@@ -3599,19 +3597,19 @@ type Mutation {
     input: SaveBaseballFieldingStatsBulkInput!
   ): SaveBaseballFieldingStatsBulkResult!
   """
-  Save statistics for a volleyball game.
+  Save stats for a volleyball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  saveVolleyballStatistics(
-    input: SaveVolleyballStatisticsInput!
-  ): SaveVolleyballStatisticsResult!
+  saveVolleyballStats(
+    input: SaveVolleyballStatsInput!
+  ): SaveVolleyballStatsResult!
   """
-  Save statistics for multiple players in a volleyball game.
+  Save stats for multiple players in a volleyball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
-  saveVolleyballStatisticsBulk(
-    input: SaveVolleyballStatisticsBulkInput!
-  ): SaveVolleyballStatisticsBulkResult!
+  saveVolleyballStatsBulk(
+    input: SaveVolleyballStatsBulkInput!
+  ): SaveVolleyballStatsBulkResult!
   """
   Send a game invitation to a user. Only managers (owner/editor) can send.
   """
@@ -3682,24 +3680,24 @@ type Subscription {
   notificationEvents: NotificationEvent!
   """
   Subscribe to real-time events for a specific game.
-  Receives score updates, status changes, participant/roster changes, and box score updates.
+  Receives score updates, status changes, participant/roster changes, and basketball stats updates.
   Does not require the subscriber to be a participant — anyone viewing the game can subscribe.
   """
   gameEvents(gameId: ID!): GameEvent!
 }
 """
-Filter for box scores by game and/or player.
+Filter for basketball stats by game and/or player.
 At least one of gameIds or playerIds must be provided.
 """
-input BasketballBoxScoreFilterInput {
+input BasketballStatsFilterInput {
   gameIds: [ID!]
   playerIds: [ID!]
 }
 
 """
-Box scores for basketball
+Stats for basketball
 """
-type BasketballBoxScore implements Node {
+type BasketballStats implements Node {
   id: ID!
   player: Player!
   game: Game!
@@ -3726,17 +3724,17 @@ type BasketballBoxScore implements Node {
   fieldGoalPercentage: Float
 }
 
-type BasketballBoxScoreEdge implements Edge {
-  node: BasketballBoxScore!
+type BasketballStatsEdge implements Edge {
+  node: BasketballStats!
   cursor: String!
 }
 
-type BasketballBoxScoreConnection implements Connection {
-  edges: [BasketballBoxScoreEdge!]!
+type BasketballStatsConnection implements Connection {
+  edges: [BasketballStatsEdge!]!
   pageInfo: PageInfo!
 }
 
-enum BoxScoreSortField {
+enum BasketballStatsSortField {
   POINTS
   ASSISTS
   TOTAL_REBOUNDS
@@ -3744,20 +3742,20 @@ enum BoxScoreSortField {
   BLOCKS
 }
 
-input BoxScoreSortInput {
-  field: BoxScoreSortField!
+input BasketballStatsSortInput {
+  field: BasketballStatsSortField!
   direction: SortDirection = ASC
 }
 
-input SaveBasketballBoxScoresInput {
+input SaveBasketballStatsBulkInput {
   gameId: ID!
-  basketballBoxScores: [SaveBasketballBoxScoreData!]!
+  stats: [SaveBasketballStatsData!]!
 }
 
 """
-Box score data for a single player within a bulk save (gameId is at parent level).
+Stats data for a single player within a bulk save (gameId is at parent level).
 """
-input SaveBasketballBoxScoreData {
+input SaveBasketballStatsData {
   playerId: ID!
   defensiveRebounds: Int
   offensiveRebounds: Int
@@ -3774,7 +3772,7 @@ input SaveBasketballBoxScoreData {
   freeThrowsAttempted: Int
 }
 
-input SaveBasketballBoxScoreInput {
+input SaveBasketballStatsInput {
   playerId: ID!
   gameId: ID!
   defensiveRebounds: Int
@@ -3792,24 +3790,24 @@ input SaveBasketballBoxScoreInput {
   freeThrowsAttempted: Int
 }
 
-type SaveBasketballBoxScoresResponse {
-  basketballBoxScores: [BasketballBoxScore!]!
+type SaveBasketballStatsBulkResponse {
+  stats: [BasketballStats!]!
 }
 
-type SaveBasketballBoxScoreResponse {
-  basketballBoxScore: BasketballBoxScore!
+type SaveBasketballStatsResponse {
+  basketballStats: BasketballStats!
 }
 
 # ============================================================================
 # Statistic Result Unions
 # ============================================================================
 
-union SaveBasketballBoxScoreResult =
-  | SaveBasketballBoxScoreResponse
+union SaveBasketballStatsResult =
+  | SaveBasketballStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
-union SaveBasketballBoxScoresResult =
-  | SaveBasketballBoxScoresResponse
+union SaveBasketballStatsBulkResult =
+  | SaveBasketballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
 
@@ -4186,22 +4184,22 @@ union SaveFootballSpecialTeamsStatsBulkResult =
   | InvalidSportTypeError
 
 # ============================================================================
-# Pickleball Statistics
+# Pickleball Stats
 # ============================================================================
 
 """
-Filter for pickleball statistics by game and/or player.
+Filter for pickleball stats by game and/or player.
 At least one of gameIds or playerIds must be provided.
 """
-input PickleballStatisticsFilterInput {
+input PickleballStatsFilterInput {
   gameIds: [ID!]
   playerIds: [ID!]
 }
 
 """
-Pickleball statistics for a single player in a game.
+Pickleball stats for a single player in a game.
 """
-type PickleballStatistics implements Node {
+type PickleballStats implements Node {
   id: ID!
   player: Player!
   game: Game!
@@ -4220,17 +4218,17 @@ type PickleballStatistics implements Node {
   overheads: Int
 }
 
-type PickleballStatisticsEdge implements Edge {
-  node: PickleballStatistics!
+type PickleballStatsEdge implements Edge {
+  node: PickleballStats!
   cursor: String!
 }
 
-type PickleballStatisticsConnection implements Connection {
-  edges: [PickleballStatisticsEdge!]!
+type PickleballStatsConnection implements Connection {
+  edges: [PickleballStatsEdge!]!
   pageInfo: PageInfo!
 }
 
-enum PickleballStatisticsSortField {
+enum PickleballStatsSortField {
   POINTS_WON
   ACES
   WINNERS
@@ -4238,12 +4236,12 @@ enum PickleballStatisticsSortField {
   DINKS
 }
 
-input PickleballStatisticsSortInput {
-  field: PickleballStatisticsSortField!
+input PickleballStatsSortInput {
+  field: PickleballStatsSortField!
   direction: SortDirection = ASC
 }
 
-input SavePickleballStatisticsInput {
+input SavePickleballStatsInput {
   playerId: ID!
   gameId: ID!
   aces: Int
@@ -4262,9 +4260,9 @@ input SavePickleballStatisticsInput {
 }
 
 """
-Pickleball statistics data for a single player within a bulk save (gameId is at parent level).
+Pickleball stats data for a single player within a bulk save (gameId is at parent level).
 """
-input SavePickleballStatisticsData {
+input SavePickleballStatsData {
   playerId: ID!
   aces: Int
   faults: Int
@@ -4281,46 +4279,46 @@ input SavePickleballStatisticsData {
   overheads: Int
 }
 
-input SavePickleballStatisticsBulkInput {
+input SavePickleballStatsBulkInput {
   gameId: ID!
-  statistics: [SavePickleballStatisticsData!]!
+  stats: [SavePickleballStatsData!]!
 }
 
-type SavePickleballStatisticsResponse {
-  pickleballStatistics: PickleballStatistics!
+type SavePickleballStatsResponse {
+  pickleballStats: PickleballStats!
 }
 
-type SavePickleballStatisticsBulkResponse {
-  statistics: [PickleballStatistics!]!
+type SavePickleballStatsBulkResponse {
+  stats: [PickleballStats!]!
 }
 
-union SavePickleballStatisticsResult =
-  | SavePickleballStatisticsResponse
+union SavePickleballStatsResult =
+  | SavePickleballStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
-union SavePickleballStatisticsBulkResult =
-  | SavePickleballStatisticsBulkResponse
+union SavePickleballStatsBulkResult =
+  | SavePickleballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
 
 # ============================================================================
-# Tennis Statistics
+# Tennis Stats
 # ============================================================================
 
 """
-Filter for tennis statistics by game and/or player.
+Filter for tennis stats by game and/or player.
 At least one of gameIds or playerIds must be provided.
 """
-input TennisStatisticsFilterInput {
+input TennisStatsFilterInput {
   gameIds: [ID!]
   playerIds: [ID!]
 }
 
 """
-Tennis match statistics for a single player in a game.
+Tennis match stats for a single player in a game.
 Covers serving, returning, and general point play.
 """
-type TennisStatistics implements Node {
+type TennisStats implements Node {
   id: ID!
   player: Player!
   game: Game!
@@ -4386,17 +4384,17 @@ type TennisStatistics implements Node {
   totalPointsWon: Int
 }
 
-type TennisStatisticsEdge implements Edge {
-  node: TennisStatistics!
+type TennisStatsEdge implements Edge {
+  node: TennisStats!
   cursor: String!
 }
 
-type TennisStatisticsConnection implements Connection {
-  edges: [TennisStatisticsEdge!]!
+type TennisStatsConnection implements Connection {
+  edges: [TennisStatsEdge!]!
   pageInfo: PageInfo!
 }
 
-enum TennisStatisticsSortField {
+enum TennisStatsSortField {
   ACES
   TOTAL_POINTS_WON
   WINNERS
@@ -4404,12 +4402,12 @@ enum TennisStatisticsSortField {
   DOUBLE_FAULTS
 }
 
-input TennisStatisticsSortInput {
-  field: TennisStatisticsSortField!
+input TennisStatsSortInput {
+  field: TennisStatsSortField!
   direction: SortDirection = ASC
 }
 
-input SaveTennisStatisticsInput {
+input SaveTennisStatsInput {
   playerId: ID!
   gameId: ID!
   aces: Int
@@ -4430,9 +4428,9 @@ input SaveTennisStatisticsInput {
 }
 
 """
-Tennis statistics data for a single player within a bulk save (gameId is at parent level).
+Tennis stats data for a single player within a bulk save (gameId is at parent level).
 """
-input SaveTennisStatisticsData {
+input SaveTennisStatsData {
   playerId: ID!
   aces: Int
   doubleFaults: Int
@@ -4451,25 +4449,25 @@ input SaveTennisStatisticsData {
   totalPointsWon: Int
 }
 
-input SaveTennisStatisticsBulkInput {
+input SaveTennisStatsBulkInput {
   gameId: ID!
-  statistics: [SaveTennisStatisticsData!]!
+  stats: [SaveTennisStatsData!]!
 }
 
-type SaveTennisStatisticsResponse {
-  tennisStatistics: TennisStatistics!
+type SaveTennisStatsResponse {
+  tennisStats: TennisStats!
 }
 
-type SaveTennisStatisticsBulkResponse {
-  statistics: [TennisStatistics!]!
+type SaveTennisStatsBulkResponse {
+  stats: [TennisStats!]!
 }
 
-union SaveTennisStatisticsResult =
-  | SaveTennisStatisticsResponse
+union SaveTennisStatsResult =
+  | SaveTennisStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
-union SaveTennisStatisticsBulkResult =
-  | SaveTennisStatisticsBulkResponse
+union SaveTennisStatsBulkResult =
+  | SaveTennisStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
 
@@ -4800,22 +4798,22 @@ union SaveBaseballFieldingStatsBulkResult =
   | InvalidSportTypeError
 
 # ============================================================================
-# Volleyball Statistics
+# Volleyball Stats
 # ============================================================================
 
 """
-Filter for volleyball statistics by game and/or player.
+Filter for volleyball stats by game and/or player.
 At least one of gameIds or playerIds must be provided.
 """
-input VolleyballStatisticsFilterInput {
+input VolleyballStatsFilterInput {
   gameIds: [ID!]
   playerIds: [ID!]
 }
 
 """
-Volleyball statistics for a single player in a game.
+Volleyball stats for a single player in a game.
 """
-type VolleyballStatistics implements Node {
+type VolleyballStats implements Node {
   id: ID!
   player: Player!
   game: Game!
@@ -4835,17 +4833,17 @@ type VolleyballStatistics implements Node {
   points: Int
 }
 
-type VolleyballStatisticsEdge implements Edge {
-  node: VolleyballStatistics!
+type VolleyballStatsEdge implements Edge {
+  node: VolleyballStats!
   cursor: String!
 }
 
-type VolleyballStatisticsConnection implements Connection {
-  edges: [VolleyballStatisticsEdge!]!
+type VolleyballStatsConnection implements Connection {
+  edges: [VolleyballStatsEdge!]!
   pageInfo: PageInfo!
 }
 
-enum VolleyballStatisticsSortField {
+enum VolleyballStatsSortField {
   KILLS
   POINTS
   ACES
@@ -4854,12 +4852,12 @@ enum VolleyballStatisticsSortField {
   DIGS
 }
 
-input VolleyballStatisticsSortInput {
-  field: VolleyballStatisticsSortField!
+input VolleyballStatsSortInput {
+  field: VolleyballStatsSortField!
   direction: SortDirection = ASC
 }
 
-input SaveVolleyballStatisticsInput {
+input SaveVolleyballStatsInput {
   playerId: ID!
   gameId: ID!
   kills: Int
@@ -4875,9 +4873,9 @@ input SaveVolleyballStatisticsInput {
 }
 
 """
-Volleyball statistics data for a single player within a bulk save (gameId is at parent level).
+Volleyball stats data for a single player within a bulk save (gameId is at parent level).
 """
-input SaveVolleyballStatisticsData {
+input SaveVolleyballStatsData {
   playerId: ID!
   kills: Int
   attackErrors: Int
@@ -4891,25 +4889,25 @@ input SaveVolleyballStatisticsData {
   assists: Int
 }
 
-input SaveVolleyballStatisticsBulkInput {
+input SaveVolleyballStatsBulkInput {
   gameId: ID!
-  statistics: [SaveVolleyballStatisticsData!]!
+  stats: [SaveVolleyballStatsData!]!
 }
 
-type SaveVolleyballStatisticsResponse {
-  volleyballStatistics: VolleyballStatistics!
+type SaveVolleyballStatsResponse {
+  volleyballStats: VolleyballStats!
 }
 
-type SaveVolleyballStatisticsBulkResponse {
-  statistics: [VolleyballStatistics!]!
+type SaveVolleyballStatsBulkResponse {
+  stats: [VolleyballStats!]!
 }
 
-union SaveVolleyballStatisticsResult =
-  | SaveVolleyballStatisticsResponse
+union SaveVolleyballStatsResult =
+  | SaveVolleyballStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
-union SaveVolleyballStatisticsBulkResult =
-  | SaveVolleyballStatisticsBulkResponse
+union SaveVolleyballStatsBulkResult =
+  | SaveVolleyballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
 enum MeasurementUnit {

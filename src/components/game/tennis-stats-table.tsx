@@ -1,6 +1,6 @@
 "use client";
 
-import { saveTennisStatistics } from "@/app/[locale]/game/tennis-stats-actions";
+import { saveTennisStats } from "@/app/[locale]/game/tennis-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
+import type { TennisStatsNode } from "@/lib/types/stats/tennis";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -52,14 +52,14 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface TennisStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: TennisStatisticsNode }[];
+  boxScores: { node: TennisStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
 }
 
 function computeMaxStats(
-  data: TennisStatisticsNode[],
+  data: TennisStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -93,7 +93,7 @@ export function TennisStatsTable({
     { id: "totalPointsWon", desc: true },
   ]);
   const [editingStat, setEditingStat] =
-    useState<TennisStatisticsNode | null>(null);
+    useState<TennisStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -114,7 +114,7 @@ export function TennisStatsTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await saveTennisStatistics({
+      const result = await saveTennisStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
@@ -131,7 +131,7 @@ export function TennisStatsTable({
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<TennisStatisticsNode>[] = useMemo(() => {
+  const columns: ColumnDef<TennisStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -165,7 +165,7 @@ export function TennisStatsTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<TennisStatisticsNode> {
+    ): ColumnDef<TennisStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -181,8 +181,8 @@ export function TennisStatsTable({
     }
 
     function plainStatColumn(
-      key: keyof TennisStatisticsNode & string,
-    ): ColumnDef<TennisStatisticsNode> {
+      key: keyof TennisStatsNode & string,
+    ): ColumnDef<TennisStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -196,9 +196,9 @@ export function TennisStatsTable({
 
     function madeAttemptedColumn(
       headerKey: string,
-      madeKey: keyof TennisStatisticsNode & string,
-      attemptedKey: keyof TennisStatisticsNode & string,
-    ): ColumnDef<TennisStatisticsNode> {
+      madeKey: keyof TennisStatsNode & string,
+      attemptedKey: keyof TennisStatsNode & string,
+    ): ColumnDef<TennisStatsNode> {
       return {
         id: headerKey,
         header: colT(headerKey),
@@ -221,9 +221,9 @@ export function TennisStatsTable({
     function percentageColumn(
       id: string,
       headerKey: string,
-      madeKey: keyof TennisStatisticsNode & string,
-      attemptedKey: keyof TennisStatisticsNode & string,
-    ): ColumnDef<TennisStatisticsNode> {
+      madeKey: keyof TennisStatsNode & string,
+      attemptedKey: keyof TennisStatsNode & string,
+    ): ColumnDef<TennisStatsNode> {
       return {
         id,
         header: colT(headerKey),
@@ -285,7 +285,7 @@ export function TennisStatsTable({
               cell: ({
                 row,
               }: {
-                row: { original: TennisStatisticsNode };
+                row: { original: TennisStatsNode };
               }) => (
                 <Button
                   variant="ghost"
