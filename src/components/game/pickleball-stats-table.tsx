@@ -1,6 +1,6 @@
 "use client";
 
-import { savePickleballStatistics } from "@/app/[locale]/game/pickleball-stats-actions";
+import { savePickleballStats } from "@/app/[locale]/game/pickleball-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
+import type { PickleballStatsNode } from "@/lib/types/stats/pickleball";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -52,14 +52,14 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface PickleballStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: PickleballStatisticsNode }[];
+  stats: { node: PickleballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
 }
 
 function computeMaxStats(
-  data: PickleballStatisticsNode[],
+  data: PickleballStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -80,18 +80,18 @@ function computeMaxStats(
 export function PickleballStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
 }: PickleballStatsTableProps) {
-  const t = useTranslations("game.boxScore.pickleball");
-  const boxScoreT = useTranslations("game.boxScore");
+  const t = useTranslations("game.stats.pickleball");
+  const statsT = useTranslations("game.stats");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "pointsWon", desc: true },
   ]);
-  const [editingStat, setEditingStat] =
-    useState<PickleballStatisticsNode | null>(null);
+  const [editingStats, setEditingStats] =
+    useState<PickleballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -100,8 +100,8 @@ export function PickleballStatsTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -112,24 +112,24 @@ export function PickleballStatsTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await savePickleballStatistics({
+      const result = await savePickleballStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<PickleballStatisticsNode>[] = useMemo(() => {
+  const columns: ColumnDef<PickleballStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -163,7 +163,7 @@ export function PickleballStatsTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<PickleballStatisticsNode> {
+    ): ColumnDef<PickleballStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -179,8 +179,8 @@ export function PickleballStatsTable({
     }
 
     function plainStatColumn(
-      key: keyof PickleballStatisticsNode & string,
-    ): ColumnDef<PickleballStatisticsNode> {
+      key: keyof PickleballStatsNode & string,
+    ): ColumnDef<PickleballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -195,7 +195,7 @@ export function PickleballStatsTable({
     return [
       {
         accessorKey: "player",
-        header: boxScoreT("player"),
+        header: statsT("player"),
         cell: ({ row }) => {
           const player = row.original.player;
           return (
@@ -226,12 +226,12 @@ export function PickleballStatsTable({
               cell: ({
                 row,
               }: {
-                row: { original: PickleballStatisticsNode };
+                row: { original: PickleballStatsNode };
               }) => (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingStat(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -241,7 +241,7 @@ export function PickleballStatsTable({
           ]
         : []),
     ];
-  }, [t, boxScoreT, canEdit, maxStats, data.length]);
+  }, [t, statsT, canEdit, maxStats, data.length]);
 
   const table = useReactTable({
     data,
@@ -260,7 +260,7 @@ export function PickleballStatsTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -275,7 +275,7 @@ export function PickleballStatsTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -290,7 +290,7 @@ export function PickleballStatsTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
@@ -350,12 +350,12 @@ export function PickleballStatsTable({
           </Table>
         </div>
 
-        {editingStat && (
+        {editingStats && (
           <PickleballStatsForm
             gameId={gameId}
-            initialData={editingStat}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingStat(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

@@ -3,13 +3,13 @@
 import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
-import type { SavePickleballStatisticsData, SavePickleballStatisticsInput } from "@/lib/types/stats/pickleball";
+import type { SavePickleballStatsData, SavePickleballStatsInput } from "@/lib/types/stats/pickleball";
 import { revalidatePath } from "next/cache";
 
 interface PickleballStatsActionResult {
   success: boolean;
-  statisticsId?: string;
-  statisticsIds?: string[];
+  statsId?: string;
+  statsIds?: string[];
   errorType?: string;
   message?: string;
 }
@@ -31,7 +31,7 @@ const STAT_FIELDS = [
 ] as const;
 
 function buildStatFields(
-  data: SavePickleballStatisticsData,
+  data: SavePickleballStatsData,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const field of STAT_FIELDS) {
@@ -61,10 +61,10 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save a single set of pickleball statistics
+ * Save a single set of pickleball stats
  */
-export async function savePickleballStatistics(
-  input: SavePickleballStatisticsInput,
+export async function savePickleballStats(
+  input: SavePickleballStatsInput,
 ): Promise<PickleballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
@@ -74,13 +74,13 @@ export async function savePickleballStatistics(
     };
 
     const response = await authMutate({
-      savePickleballStatistics: {
+      savePickleballStats: {
         __args: { input: mutationInput },
         __typename: true,
         __on: [
           {
-            __typeName: "SavePickleballStatisticsResponse",
-            pickleballStatistics: RESPONSE_FIELDS,
+            __typeName: "SavePickleballStatsResponse",
+            pickleballStats: RESPONSE_FIELDS,
           },
           errorFragment,
         ],
@@ -91,42 +91,42 @@ export async function savePickleballStatistics(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.savePickleballStatistics, "SavePickleballStatisticsResponse");
+    const result = extractMutationResult(response.data.savePickleballStats, "SavePickleballStatsResponse");
     if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, statisticsId: result.data.pickleballStatistics.id };
+    return { success: true, statsId: result.data.pickleballStats.id };
   } catch (error) {
-    console.error("Failed to save pickleball statistics:", error);
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save pickleball statistics" };
+    console.error("Failed to save pickleball stats:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save pickleball stats" };
   }
 }
 
 /**
- * Save multiple sets of pickleball statistics
+ * Save multiple sets of pickleball stats
  */
-export async function savePickleballStatisticsBulk(
+export async function savePickleballStatsBulk(
   gameId: number,
-  statistics: SavePickleballStatisticsData[],
+  stats: SavePickleballStatsData[],
 ): Promise<PickleballStatsActionResult> {
   try {
-    if (statistics.length === 0) {
-      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No statistics provided" };
+    if (stats.length === 0) {
+      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No stats provided" };
     }
 
-    const statisticsInput = statistics.map((stat) => ({
+    const statsInput = stats.map((stat) => ({
       playerId: stat.playerId,
       ...buildStatFields(stat),
     }));
 
     const response = await authMutate({
-      savePickleballStatisticsBulk: {
-        __args: { input: { gameId, statistics: statisticsInput } },
+      savePickleballStatsBulk: {
+        __args: { input: { gameId, stats: statsInput } },
         __typename: true,
         __on: [
           {
-            __typeName: "SavePickleballStatisticsBulkResponse",
-            statistics: RESPONSE_FIELDS,
+            __typeName: "SavePickleballStatsBulkResponse",
+            stats: RESPONSE_FIELDS,
           },
           errorFragment,
         ],
@@ -137,17 +137,17 @@ export async function savePickleballStatisticsBulk(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.savePickleballStatisticsBulk, "SavePickleballStatisticsBulkResponse");
+    const result = extractMutationResult(response.data.savePickleballStatsBulk, "SavePickleballStatsBulkResponse");
     if (!result.success) return result;
 
-    const statisticsIds = result.data.statistics.map(
+    const statsIds = result.data.stats.map(
       (stat: { id: string }) => stat.id,
     );
 
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, statisticsIds };
+    return { success: true, statsIds };
   } catch (error) {
-    console.error("Failed to save pickleball statistics bulk:", error);
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save pickleball statistics" };
+    console.error("Failed to save pickleball stats bulk:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save pickleball stats" };
   }
 }

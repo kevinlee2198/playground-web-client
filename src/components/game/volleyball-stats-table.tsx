@@ -1,6 +1,6 @@
 "use client";
 
-import { saveVolleyballStatistics } from "@/app/[locale]/game/volleyball-stats-actions";
+import { saveVolleyballStats } from "@/app/[locale]/game/volleyball-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
+import type { VolleyballStatsNode } from "@/lib/types/stats/volleyball";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -55,14 +55,14 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface VolleyballStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: VolleyballStatisticsNode }[];
+  stats: { node: VolleyballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
 }
 
 function computeMaxStats(
-  data: VolleyballStatisticsNode[],
+  data: VolleyballStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -83,18 +83,18 @@ function computeMaxStats(
 export function VolleyballStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
 }: VolleyballStatsTableProps) {
-  const t = useTranslations("game.boxScore.volleyball");
-  const boxScoreT = useTranslations("game.boxScore");
+  const t = useTranslations("game.stats.volleyball");
+  const statsT = useTranslations("game.stats");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "points", desc: true },
   ]);
-  const [editingStat, setEditingStat] =
-    useState<VolleyballStatisticsNode | null>(null);
+  const [editingStats, setEditingStats] =
+    useState<VolleyballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -103,8 +103,8 @@ export function VolleyballStatsTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -115,24 +115,24 @@ export function VolleyballStatsTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await saveVolleyballStatistics({
+      const result = await saveVolleyballStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<VolleyballStatisticsNode>[] = useMemo(() => {
+  const columns: ColumnDef<VolleyballStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -166,7 +166,7 @@ export function VolleyballStatsTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<VolleyballStatisticsNode> {
+    ): ColumnDef<VolleyballStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -182,8 +182,8 @@ export function VolleyballStatsTable({
     }
 
     function plainStatColumn(
-      key: keyof VolleyballStatisticsNode & string,
-    ): ColumnDef<VolleyballStatisticsNode> {
+      key: keyof VolleyballStatsNode & string,
+    ): ColumnDef<VolleyballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -198,7 +198,7 @@ export function VolleyballStatsTable({
     return [
       {
         accessorKey: "player",
-        header: boxScoreT("player"),
+        header: statsT("player"),
         cell: ({ row }) => {
           const player = row.original.player;
           return (
@@ -241,12 +241,12 @@ export function VolleyballStatsTable({
               cell: ({
                 row,
               }: {
-                row: { original: VolleyballStatisticsNode };
+                row: { original: VolleyballStatsNode };
               }) => (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingStat(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -256,7 +256,7 @@ export function VolleyballStatsTable({
           ]
         : []),
     ];
-  }, [t, boxScoreT, canEdit, maxStats, data.length]);
+  }, [t, statsT, canEdit, maxStats, data.length]);
 
   const table = useReactTable({
     data,
@@ -275,7 +275,7 @@ export function VolleyballStatsTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -290,7 +290,7 @@ export function VolleyballStatsTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -305,7 +305,7 @@ export function VolleyballStatsTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
@@ -365,12 +365,12 @@ export function VolleyballStatsTable({
           </Table>
         </div>
 
-        {editingStat && (
+        {editingStats && (
           <VolleyballStatsForm
             gameId={gameId}
-            initialData={editingStat}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingStat(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

@@ -51,7 +51,7 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface FootballSpecialTeamsStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: FootballSpecialTeamsStatsNode }[];
+  stats: { node: FootballSpecialTeamsStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
@@ -79,18 +79,18 @@ function computeMaxStats(
 export function FootballSpecialTeamsStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
 }: FootballSpecialTeamsStatsTableProps) {
-  const t = useTranslations("game.boxScore.football.specialTeams");
-  const boxScoreT = useTranslations("game.boxScore");
+  const t = useTranslations("game.stats.football.specialTeams");
+  const statsT = useTranslations("game.stats");
   const format = useFormatter();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "fieldGoalsMade", desc: true },
   ]);
-  const [editingStat, setEditingStat] =
+  const [editingStats, setEditingStats] =
     useState<FootballSpecialTeamsStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
@@ -100,8 +100,8 @@ export function FootballSpecialTeamsStatsTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -117,15 +117,15 @@ export function FootballSpecialTeamsStatsTable({
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
@@ -219,7 +219,7 @@ export function FootballSpecialTeamsStatsTable({
     return [
       {
         accessorKey: "player",
-        header: boxScoreT("player"),
+        header: statsT("player"),
         cell: ({ row }) => {
           const player = row.original.player;
           return (
@@ -299,7 +299,7 @@ export function FootballSpecialTeamsStatsTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingStat(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -309,7 +309,7 @@ export function FootballSpecialTeamsStatsTable({
           ]
         : []),
     ];
-  }, [t, boxScoreT, format, canEdit, maxStats, data.length]);
+  }, [t, statsT, format, canEdit, maxStats, data.length]);
 
   const table = useReactTable({
     data,
@@ -328,7 +328,7 @@ export function FootballSpecialTeamsStatsTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -343,7 +343,7 @@ export function FootballSpecialTeamsStatsTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -358,7 +358,7 @@ export function FootballSpecialTeamsStatsTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
@@ -414,12 +414,12 @@ export function FootballSpecialTeamsStatsTable({
           </Table>
         </div>
 
-        {editingStat && (
+        {editingStats && (
           <FootballSpecialTeamsStatsForm
             gameId={gameId}
-            initialData={editingStat}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingStat(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

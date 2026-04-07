@@ -3,7 +3,7 @@ import { mockMeResponse } from "./mock-data/me";
 import {
   mockGamesListResponse,
   mockGameDetailResponse,
-  mockBasketballBoxScoresResponse,
+  mockBasketballStatsResponse,
 } from "./mock-data/games";
 import { mockFeedResponse } from "./mock-data/feed";
 import { mockChatRoomsResponse } from "./mock-data/chat";
@@ -25,8 +25,9 @@ export function extractOperationField(queryString: string): string | null {
 }
 
 const EMPTY_STAT_FIELDS = [
-  "pickleballStatistics",
-  "tennisStatistics",
+  "pickleballStats",
+  "tennisStats",
+  "volleyballStats",
   "footballOffensiveStats",
   "footballDefensiveStats",
   "footballSpecialTeamsStats",
@@ -49,7 +50,7 @@ const defaultResponses: Record<string, unknown> = {
   user: mockUserResponse(),
   blockedUsers: mockEmptyBlockedResponse(),
   followRequests: mockEmptyFollowRequestsResponse(),
-  basketballBoxScores: mockBasketballBoxScoresResponse(),
+  basketballStats: mockBasketballStatsResponse(),
   ...emptyStatResponses,
 };
 

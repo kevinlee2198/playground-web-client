@@ -1,6 +1,6 @@
 "use client";
 
-import { savePickleballStatistics } from "@/app/[locale]/game/pickleball-stats-actions";
+import { savePickleballStats } from "@/app/[locale]/game/pickleball-stats-actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +11,8 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 import { FormTextField } from "@/components/ui/form-field";
 import type {
-  PickleballStatisticsNode,
-  SavePickleballStatisticsInput,
+  PickleballStatsNode,
+  SavePickleballStatsInput,
 } from "@/lib/types/stats/pickleball";
 import { nullToUndefined, undefinedToNull } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -40,13 +40,13 @@ type StatField = (typeof STAT_FIELDS)[number];
 
 interface PickleballStatsFormProps {
   gameId: number;
-  initialData: PickleballStatisticsNode;
+  initialData: PickleballStatsNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function buildDefaultValues(
-  data: PickleballStatisticsNode,
+  data: PickleballStatsNode,
 ): Record<StatField, number | undefined> {
   const result = {} as Record<StatField, number | undefined>;
   for (const field of STAT_FIELDS) {
@@ -59,8 +59,8 @@ function buildInput(
   value: Record<StatField, number | undefined>,
   playerId: number,
   gameId: number,
-): SavePickleballStatisticsInput {
-  const input: SavePickleballStatisticsInput = { playerId, gameId };
+): SavePickleballStatsInput {
+  const input: SavePickleballStatsInput = { playerId, gameId };
   for (const field of STAT_FIELDS) {
     input[field] = undefinedToNull(value[field]);
   }
@@ -84,14 +84,14 @@ export function PickleballStatsForm({
 
       startTransition(async () => {
         const input = buildInput(value, initialData.player.id, gameId);
-        const result = await savePickleballStatistics(input);
+        const result = await savePickleballStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -104,7 +104,7 @@ export function PickleballStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -121,7 +121,7 @@ export function PickleballStatsForm({
                 {(fieldApi) => (
                   <FormTextField
                     field={fieldApi}
-                    label={t(`game.boxScore.pickleball.${field}`)}
+                    label={t(`game.stats.pickleball.${field}`)}
                     type="number"
                     disabled={isPending}
                     placeholder="0"

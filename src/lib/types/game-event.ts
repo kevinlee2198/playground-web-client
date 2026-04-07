@@ -5,7 +5,7 @@ import type {
   GameParticipantDetail,
   TeamInstanceDetail,
 } from "@/lib/types/game";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 
 /** The shape of the `game` field on game events (live-changing fields only) */
 export interface GameEventGame {
@@ -69,10 +69,10 @@ export interface TeamRosterUpdatedEvent extends GameEventBase {
   teamInstance: TeamInstanceDetail;
 }
 
-/** A basketball box score has been saved */
-export interface BoxScoreSavedEvent extends GameEventBase {
-  __typename: "BoxScoreSavedEvent";
-  basketballBoxScores: BasketballBoxScoreNode[];
+/** Basketball stats have been saved */
+export interface BasketballStatsSavedEvent extends GameEventBase {
+  __typename: "BasketballStatsSavedEvent";
+  basketballStats: BasketballStatsNode[];
 }
 
 /** Known game event types that the frontend can handle with full detail */
@@ -85,7 +85,7 @@ export type KnownGameEvent =
   | GameParticipantAddedEvent
   | GameParticipantRemovedEvent
   | TeamRosterUpdatedEvent
-  | BoxScoreSavedEvent;
+  | BasketballStatsSavedEvent;
 
 /**
  * Discriminated union of all known game event types plus a catch-all.
@@ -108,6 +108,6 @@ export function isKnownGameEventType(e: GameEvent): e is KnownGameEvent {
     e.__typename === "GameParticipantAddedEvent" ||
     e.__typename === "GameParticipantRemovedEvent" ||
     e.__typename === "TeamRosterUpdatedEvent" ||
-    e.__typename === "BoxScoreSavedEvent"
+    e.__typename === "BasketballStatsSavedEvent"
   );
 }

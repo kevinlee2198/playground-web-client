@@ -78,11 +78,11 @@ export function BaseballBattingStatsForm({
         const result = await saveBaseballBattingStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -95,7 +95,7 @@ export function BaseballBattingStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -111,7 +111,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.atBats")}
+                  label={t("game.stats.baseball.batting.atBats")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -123,7 +123,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.runs")}
+                  label={t("game.stats.baseball.batting.runs")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -135,7 +135,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.hits")}
+                  label={t("game.stats.baseball.batting.hits")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -147,7 +147,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.doubles")}
+                  label={t("game.stats.baseball.batting.doubles")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -159,7 +159,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.triples")}
+                  label={t("game.stats.baseball.batting.triples")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -171,7 +171,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.homeRuns")}
+                  label={t("game.stats.baseball.batting.homeRuns")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -183,7 +183,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.rbi")}
+                  label={t("game.stats.baseball.batting.rbi")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -195,7 +195,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.walks")}
+                  label={t("game.stats.baseball.batting.walks")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -207,7 +207,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.strikeouts")}
+                  label={t("game.stats.baseball.batting.strikeouts")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -219,7 +219,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.stolenBases")}
+                  label={t("game.stats.baseball.batting.stolenBases")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -231,7 +231,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.caughtStealing")}
+                  label={t("game.stats.baseball.batting.caughtStealing")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -243,7 +243,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.hitByPitch")}
+                  label={t("game.stats.baseball.batting.hitByPitch")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -255,7 +255,7 @@ export function BaseballBattingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.batting.sacrifices")}
+                  label={t("game.stats.baseball.batting.sacrifices")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"

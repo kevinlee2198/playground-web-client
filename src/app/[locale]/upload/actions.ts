@@ -75,7 +75,7 @@ async function requestUpload(
   }
 }
 
-export function requestProfilePictureUpload(
+export async function requestProfilePictureUpload(
   filename: string,
   mimeType: string,
   size: number,
@@ -83,7 +83,7 @@ export function requestProfilePictureUpload(
   return requestUpload(filename, mimeType, size, { userProfilePicture: { placeholder: true } });
 }
 
-export function requestGameMediaUpload(
+export async function requestGameMediaUpload(
   filename: string,
   mimeType: string,
   size: number,
@@ -92,7 +92,7 @@ export function requestGameMediaUpload(
   return requestUpload(filename, mimeType, size, { gameMedia: { gameId } });
 }
 
-export function requestChatMediaUpload(
+export async function requestChatMediaUpload(
   filename: string,
   mimeType: string,
   size: number,

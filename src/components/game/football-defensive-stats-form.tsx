@@ -87,11 +87,11 @@ export function FootballDefensiveStatsForm({
         const result = await saveFootballDefensiveStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -104,7 +104,7 @@ export function FootballDefensiveStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -121,7 +121,7 @@ export function FootballDefensiveStatsForm({
                 {(fieldApi) => (
                   <FormTextField
                     field={fieldApi}
-                    label={t(`game.boxScore.football.defensive.${field}`)}
+                    label={t(`game.stats.football.defensive.${field}`)}
                     type="number"
                     disabled={isPending}
                     placeholder="0"

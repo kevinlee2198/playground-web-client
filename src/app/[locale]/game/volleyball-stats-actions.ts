@@ -3,13 +3,13 @@
 import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
-import type { SaveVolleyballStatisticsData, SaveVolleyballStatisticsInput } from "@/lib/types/stats/volleyball";
+import type { SaveVolleyballStatsData, SaveVolleyballStatsInput } from "@/lib/types/stats/volleyball";
 import { revalidatePath } from "next/cache";
 
 interface VolleyballStatsActionResult {
   success: boolean;
-  statisticsId?: string;
-  statisticsIds?: string[];
+  statsId?: string;
+  statsIds?: string[];
   errorType?: string;
   message?: string;
 }
@@ -28,7 +28,7 @@ const STAT_FIELDS = [
 ] as const;
 
 function buildStatFields(
-  data: SaveVolleyballStatisticsData,
+  data: SaveVolleyballStatsData,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const field of STAT_FIELDS) {
@@ -56,10 +56,10 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save a single set of volleyball statistics
+ * Save a single set of volleyball stats
  */
-export async function saveVolleyballStatistics(
-  input: SaveVolleyballStatisticsInput,
+export async function saveVolleyballStats(
+  input: SaveVolleyballStatsInput,
 ): Promise<VolleyballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
@@ -69,13 +69,13 @@ export async function saveVolleyballStatistics(
     };
 
     const response = await authMutate({
-      saveVolleyballStatistics: {
+      saveVolleyballStats: {
         __args: { input: mutationInput },
         __typename: true,
         __on: [
           {
-            __typeName: "SaveVolleyballStatisticsResponse",
-            volleyballStatistics: RESPONSE_FIELDS,
+            __typeName: "SaveVolleyballStatsResponse",
+            volleyballStats: RESPONSE_FIELDS,
           },
           errorFragment,
         ],
@@ -86,42 +86,42 @@ export async function saveVolleyballStatistics(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.saveVolleyballStatistics, "SaveVolleyballStatisticsResponse");
+    const result = extractMutationResult(response.data.saveVolleyballStats, "SaveVolleyballStatsResponse");
     if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, statisticsId: result.data.volleyballStatistics.id };
+    return { success: true, statsId: result.data.volleyballStats.id };
   } catch (error) {
-    console.error("Failed to save volleyball statistics:", error);
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save volleyball statistics" };
+    console.error("Failed to save volleyball stats:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save volleyball stats" };
   }
 }
 
 /**
- * Save multiple sets of volleyball statistics
+ * Save multiple sets of volleyball stats
  */
-export async function saveVolleyballStatisticsBulk(
+export async function saveVolleyballStatsBulk(
   gameId: number,
-  statistics: SaveVolleyballStatisticsData[],
+  stats: SaveVolleyballStatsData[],
 ): Promise<VolleyballStatsActionResult> {
   try {
-    if (statistics.length === 0) {
-      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No statistics provided" };
+    if (stats.length === 0) {
+      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No stats provided" };
     }
 
-    const statisticsInput = statistics.map((stat) => ({
+    const statsInput = stats.map((stat) => ({
       playerId: stat.playerId,
       ...buildStatFields(stat),
     }));
 
     const response = await authMutate({
-      saveVolleyballStatisticsBulk: {
-        __args: { input: { gameId, statistics: statisticsInput } },
+      saveVolleyballStatsBulk: {
+        __args: { input: { gameId, stats: statsInput } },
         __typename: true,
         __on: [
           {
-            __typeName: "SaveVolleyballStatisticsBulkResponse",
-            statistics: RESPONSE_FIELDS,
+            __typeName: "SaveVolleyballStatsBulkResponse",
+            stats: RESPONSE_FIELDS,
           },
           errorFragment,
         ],
@@ -132,17 +132,17 @@ export async function saveVolleyballStatisticsBulk(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.saveVolleyballStatisticsBulk, "SaveVolleyballStatisticsBulkResponse");
+    const result = extractMutationResult(response.data.saveVolleyballStatsBulk, "SaveVolleyballStatsBulkResponse");
     if (!result.success) return result;
 
-    const statisticsIds = result.data.statistics.map(
+    const statsIds = result.data.stats.map(
       (stat: { id: string }) => stat.id,
     );
 
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, statisticsIds };
+    return { success: true, statsIds };
   } catch (error) {
-    console.error("Failed to save volleyball statistics bulk:", error);
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save volleyball statistics" };
+    console.error("Failed to save volleyball stats bulk:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save volleyball stats" };
   }
 }

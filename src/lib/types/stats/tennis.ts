@@ -1,9 +1,9 @@
-import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
+import type { StatsNode, SaveStatsInput } from "./base";
 
 /**
- * Tennis match statistics entry returned from the server.
+ * Tennis match stats entry returned from the server.
  */
-export interface TennisStatisticsNode extends BoxScoreNode {
+export interface TennisStatsNode extends StatsNode {
   aces: number | null;
   doubleFaults: number | null;
   firstServesIn: number | null;
@@ -22,13 +22,13 @@ export interface TennisStatisticsNode extends BoxScoreNode {
 }
 
 /**
- * Input for saving tennis statistics.
+ * Input for saving tennis stats.
  * Patch semantics:
  * - Omit a field (undefined) to leave it unchanged
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveTennisStatisticsInput extends SaveBoxScoreInput {
+export interface SaveTennisStatsInput extends SaveStatsInput {
   aces?: number | null;
   doubleFaults?: number | null;
   firstServesIn?: number | null;
@@ -47,10 +47,10 @@ export interface SaveTennisStatisticsInput extends SaveBoxScoreInput {
 }
 
 /**
- * Per-player statistics data for bulk save (gameId is at parent level).
- * Independent interface mirroring schema — not derived from SaveTennisStatisticsInput.
+ * Per-player stats data for bulk save (gameId is at parent level).
+ * Independent interface mirroring schema — not derived from SaveTennisStatsInput.
  */
-export interface SaveTennisStatisticsData {
+export interface SaveTennisStatsData {
   playerId: number;
   aces?: number | null;
   doubleFaults?: number | null;

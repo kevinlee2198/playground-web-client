@@ -1,6 +1,6 @@
 "use client";
 
-import { saveBasketballBoxScore } from "@/app/[locale]/game/box-score-actions";
+import { saveBasketballStats } from "@/app/[locale]/game/basketball-stats-actions";
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
 import type { PlayerRef } from "@/lib/types/game";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 import { cn } from "@/lib/utils";
 import {
   flexRender,
@@ -36,7 +36,7 @@ import { ArrowUpDown, Pencil } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { BasketballBoxScoreForm } from "./basketball-box-score-form";
+import { BasketballStatsForm } from "./basketball-stats-form";
 
 const STICKY_FIRST_COL =
   "sticky left-0 z-10 bg-card group-hover/row:bg-muted/50 min-w-[140px]";
@@ -52,10 +52,10 @@ const HIGHLIGHTABLE_STATS = [
 
 type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 
-interface BasketballBoxScoreTableProps {
+interface BasketballStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: BasketballBoxScoreNode }[];
+  stats: { node: BasketballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
@@ -66,7 +66,7 @@ interface BasketballBoxScoreTableProps {
  * Returns a map from stat key to the max value (or null if all values are null).
  */
 function computeMaxStats(
-  data: BasketballBoxScoreNode[],
+  data: BasketballStatsNode[],
 ): Record<HighlightableStat, number | null> {
   const result = {} as Record<HighlightableStat, number | null>;
 
@@ -84,22 +84,22 @@ function computeMaxStats(
   return result;
 }
 
-export function BasketballBoxScoreTable({
+export function BasketballStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
-}: BasketballBoxScoreTableProps) {
-  const t = useTranslations("game.boxScore.basketball");
-  const boxScoreT = useTranslations("game.boxScore");
+}: BasketballStatsTableProps) {
+  const t = useTranslations("game.stats.basketball");
+  const statsT = useTranslations("game.stats");
   const format = useFormatter();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "points", desc: true },
   ]);
-  const [editingScore, setEditingScore] =
-    useState<BasketballBoxScoreNode | null>(null);
+  const [editingStats, setEditingStats] =
+    useState<BasketballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
@@ -108,8 +108,8 @@ export function BasketballBoxScoreTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -120,24 +120,24 @@ export function BasketballBoxScoreTable({
   function handleAddPlayerStats() {
     if (!selectedPlayerId) return;
     startTransition(async () => {
-      const result = await saveBasketballBoxScore({
+      const result = await saveBasketballStats({
         playerId: Number(selectedPlayerId),
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
-  const columns: ColumnDef<BasketballBoxScoreNode>[] = useMemo(() => {
+  const columns: ColumnDef<BasketballStatsNode>[] = useMemo(() => {
     function statCellClass(
       stat: HighlightableStat,
       value: number | null,
@@ -171,7 +171,7 @@ export function BasketballBoxScoreTable({
 
     function highlightableStatColumn(
       stat: HighlightableStat,
-    ): ColumnDef<BasketballBoxScoreNode> {
+    ): ColumnDef<BasketballStatsNode> {
       return {
         accessorKey: stat,
         header: ({ column }) => sortableHeader(t(stat), column),
@@ -187,8 +187,8 @@ export function BasketballBoxScoreTable({
     }
 
     function plainStatColumn(
-      key: keyof BasketballBoxScoreNode & string,
-    ): ColumnDef<BasketballBoxScoreNode> {
+      key: keyof BasketballStatsNode & string,
+    ): ColumnDef<BasketballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -203,9 +203,9 @@ export function BasketballBoxScoreTable({
     function madeAttemptedColumn(
       id: string,
       headerKey: string,
-      madeKey: keyof BasketballBoxScoreNode,
-      attemptedKey: keyof BasketballBoxScoreNode,
-    ): ColumnDef<BasketballBoxScoreNode> {
+      madeKey: keyof BasketballStatsNode,
+      attemptedKey: keyof BasketballStatsNode,
+    ): ColumnDef<BasketballStatsNode> {
       return {
         id,
         header: t(headerKey),
@@ -225,8 +225,8 @@ export function BasketballBoxScoreTable({
     }
 
     function percentageColumn(
-      key: keyof BasketballBoxScoreNode & string,
-    ): ColumnDef<BasketballBoxScoreNode> {
+      key: keyof BasketballStatsNode & string,
+    ): ColumnDef<BasketballStatsNode> {
       return {
         accessorKey: key,
         header: t(key),
@@ -278,12 +278,12 @@ export function BasketballBoxScoreTable({
               cell: ({
                 row,
               }: {
-                row: { original: BasketballBoxScoreNode };
+                row: { original: BasketballStatsNode };
               }) => (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingScore(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -312,7 +312,7 @@ export function BasketballBoxScoreTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -327,7 +327,7 @@ export function BasketballBoxScoreTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -342,7 +342,7 @@ export function BasketballBoxScoreTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
@@ -402,12 +402,12 @@ export function BasketballBoxScoreTable({
           </Table>
         </div>
 
-        {editingScore && (
-          <BasketballBoxScoreForm
+        {editingStats && (
+          <BasketballStatsForm
             gameId={gameId}
-            initialData={editingScore}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingScore(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

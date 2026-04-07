@@ -79,11 +79,11 @@ export function BaseballPitchingStatsForm({
         const result = await saveBaseballPitchingStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -96,7 +96,7 @@ export function BaseballPitchingStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -112,7 +112,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>
-                    {t("game.boxScore.baseball.pitching.inningsPitched")}
+                    {t("game.stats.baseball.pitching.inningsPitched")}
                   </FieldLabel>
                   <Input
                     id={field.name}
@@ -137,7 +137,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.hitsAllowed")}
+                  label={t("game.stats.baseball.pitching.hitsAllowed")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -149,7 +149,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.runsAllowed")}
+                  label={t("game.stats.baseball.pitching.runsAllowed")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -161,7 +161,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.earnedRuns")}
+                  label={t("game.stats.baseball.pitching.earnedRuns")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -173,7 +173,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.walks")}
+                  label={t("game.stats.baseball.pitching.walks")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -185,7 +185,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.strikeouts")}
+                  label={t("game.stats.baseball.pitching.strikeouts")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -197,7 +197,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.homeRunsAllowed")}
+                  label={t("game.stats.baseball.pitching.homeRunsAllowed")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -209,7 +209,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.hitBatsmen")}
+                  label={t("game.stats.baseball.pitching.hitBatsmen")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -221,7 +221,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.wildPitches")}
+                  label={t("game.stats.baseball.pitching.wildPitches")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -233,7 +233,7 @@ export function BaseballPitchingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.pitching.pitchCount")}
+                  label={t("game.stats.baseball.pitching.pitchCount")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -244,14 +244,14 @@ export function BaseballPitchingStatsForm({
 
           <div className="space-y-2">
             <h4 className="text-sm font-medium">
-              {t("game.boxScore.baseball.pitching.decisionFlags")}
+              {t("game.stats.baseball.pitching.decisionFlags")}
             </h4>
             <FieldGroup>
               <form.Field name="win">
                 {(field) => (
                   <FormSwitchField
                     field={field}
-                    label={t("game.boxScore.baseball.pitching.win")}
+                    label={t("game.stats.baseball.pitching.win")}
                     disabled={isPending}
                   />
                 )}
@@ -261,7 +261,7 @@ export function BaseballPitchingStatsForm({
                 {(field) => (
                   <FormSwitchField
                     field={field}
-                    label={t("game.boxScore.baseball.pitching.loss")}
+                    label={t("game.stats.baseball.pitching.loss")}
                     disabled={isPending}
                   />
                 )}
@@ -271,7 +271,7 @@ export function BaseballPitchingStatsForm({
                 {(field) => (
                   <FormSwitchField
                     field={field}
-                    label={t("game.boxScore.baseball.pitching.creditedSave")}
+                    label={t("game.stats.baseball.pitching.creditedSave")}
                     disabled={isPending}
                   />
                 )}

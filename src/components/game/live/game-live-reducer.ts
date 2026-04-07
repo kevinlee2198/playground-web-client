@@ -1,10 +1,10 @@
 import type { KnownGameEvent } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 
 export interface LiveGameState {
   game: GameDetail;
-  boxScores: { node: BasketballBoxScoreNode }[];
+  basketballStats: { node: BasketballStatsNode }[];
   isConnected: boolean;
 }
 
@@ -12,15 +12,15 @@ export type LiveGameAction =
   | { type: "GAME_EVENT"; event: KnownGameEvent }
   | { type: "CONNECTION_LOST" }
   | { type: "RECONNECTED" }
-  | { type: "SYNC_FROM_SERVER"; game: GameDetail; boxScores: { node: BasketballBoxScoreNode }[] };
+  | { type: "SYNC_FROM_SERVER"; game: GameDetail; basketballStats: { node: BasketballStatsNode }[] };
 
 export function createInitialState(
   game: GameDetail,
-  boxScores: { node: BasketballBoxScoreNode }[]
+  basketballStats: { node: BasketballStatsNode }[]
 ): LiveGameState {
   return {
     game,
-    boxScores,
+    basketballStats,
     isConnected: true,
   };
 }
@@ -45,27 +45,27 @@ export function gameLiveReducer(
         metadata: event.game.metadata,
       };
 
-      if (event.__typename === "BoxScoreSavedEvent") {
+      if (event.__typename === "BasketballStatsSavedEvent") {
         const incomingByPlayerId = new Map(
-          event.basketballBoxScores.map((bs) => [bs.player.id, bs])
+          event.basketballStats.map((bs) => [bs.player.id, bs])
         );
 
-        const updated = state.boxScores.map((entry) => {
+        const updated = state.basketballStats.map((entry) => {
           const replacement = incomingByPlayerId.get(entry.node.player.id);
           return replacement ? { node: replacement } : entry;
         });
 
         const existingPlayerIds = new Set(
-          state.boxScores.map((entry) => entry.node.player.id)
+          state.basketballStats.map((entry) => entry.node.player.id)
         );
-        const appended = event.basketballBoxScores
+        const appended = event.basketballStats
           .filter((bs) => !existingPlayerIds.has(bs.player.id))
           .map((bs) => ({ node: bs }));
 
         return {
           ...state,
           game: mergedGame,
-          boxScores: [...updated, ...appended],
+          basketballStats: [...updated, ...appended],
         };
       }
 
@@ -82,7 +82,7 @@ export function gameLiveReducer(
       return {
         ...state,
         game: action.game,
-        boxScores: action.boxScores,
+        basketballStats: action.basketballStats,
         isConnected: true,
       };
   }

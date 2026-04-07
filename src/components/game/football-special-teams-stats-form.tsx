@@ -111,11 +111,11 @@ export function FootballSpecialTeamsStatsForm({
         const result = await saveFootballSpecialTeamsStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -128,7 +128,7 @@ export function FootballSpecialTeamsStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -141,7 +141,7 @@ export function FootballSpecialTeamsStatsForm({
         >
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">
-              {t("game.boxScore.football.sections.kicking")}
+              {t("game.stats.football.sections.kicking")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               {KICKING_FIELDS.map((field) => (
@@ -150,7 +150,7 @@ export function FootballSpecialTeamsStatsForm({
                     <FormTextField
                       field={fieldApi}
                       label={t(
-                        `game.boxScore.football.specialTeams.${field}`,
+                        `game.stats.football.specialTeams.${field}`,
                       )}
                       type="number"
                       disabled={isPending}
@@ -164,7 +164,7 @@ export function FootballSpecialTeamsStatsForm({
 
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">
-              {t("game.boxScore.football.sections.punting")}
+              {t("game.stats.football.sections.punting")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               {PUNTING_FIELDS.map((field) => (
@@ -173,7 +173,7 @@ export function FootballSpecialTeamsStatsForm({
                     <FormTextField
                       field={fieldApi}
                       label={t(
-                        `game.boxScore.football.specialTeams.${field}`,
+                        `game.stats.football.specialTeams.${field}`,
                       )}
                       type="number"
                       disabled={isPending}
@@ -187,7 +187,7 @@ export function FootballSpecialTeamsStatsForm({
 
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">
-              {t("game.boxScore.football.sections.returns")}
+              {t("game.stats.football.sections.returns")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               {RETURNS_FIELDS.map((field) => (
@@ -196,7 +196,7 @@ export function FootballSpecialTeamsStatsForm({
                     <FormTextField
                       field={fieldApi}
                       label={t(
-                        `game.boxScore.football.specialTeams.${field}`,
+                        `game.stats.football.specialTeams.${field}`,
                       )}
                       type="number"
                       disabled={isPending}

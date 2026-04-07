@@ -10,20 +10,20 @@ import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-interface CollapsibleBoxScoreProps {
+interface CollapsibleStatsProps {
   teamName: string;
   playerCount: number;
   defaultOpen: boolean;
   children: ReactNode;
 }
 
-export function CollapsibleBoxScore({
+export function CollapsibleStats({
   teamName,
   playerCount,
   defaultOpen,
   children,
-}: CollapsibleBoxScoreProps) {
-  const t = useTranslations("game.boxScore");
+}: CollapsibleStatsProps) {
+  const t = useTranslations("game.stats");
 
   return (
     <Collapsible defaultOpen={defaultOpen}>

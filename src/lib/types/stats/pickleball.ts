@@ -1,9 +1,9 @@
-import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
+import type { StatsNode, SaveStatsInput } from "./base";
 
 /**
- * Pickleball statistics entry returned from the server.
+ * Pickleball stats entry returned from the server.
  */
-export interface PickleballStatisticsNode extends BoxScoreNode {
+export interface PickleballStatsNode extends StatsNode {
   aces: number | null;
   faults: number | null;
   doubleFaults: number | null;
@@ -20,13 +20,13 @@ export interface PickleballStatisticsNode extends BoxScoreNode {
 }
 
 /**
- * Input for saving pickleball statistics.
+ * Input for saving pickleball stats.
  * Patch semantics:
  * - Omit a field (undefined) to leave it unchanged
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SavePickleballStatisticsInput extends SaveBoxScoreInput {
+export interface SavePickleballStatsInput extends SaveStatsInput {
   aces?: number | null;
   faults?: number | null;
   doubleFaults?: number | null;
@@ -43,10 +43,10 @@ export interface SavePickleballStatisticsInput extends SaveBoxScoreInput {
 }
 
 /**
- * Per-player statistics data for bulk save (gameId is at parent level).
- * Independent interface mirroring schema — not derived from SavePickleballStatisticsInput.
+ * Per-player stats data for bulk save (gameId is at parent level).
+ * Independent interface mirroring schema — not derived from SavePickleballStatsInput.
  */
-export interface SavePickleballStatisticsData {
+export interface SavePickleballStatsData {
   playerId: number;
   aces?: number | null;
   faults?: number | null;

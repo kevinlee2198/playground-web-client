@@ -3,13 +3,13 @@
 import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
-import type { SaveTennisStatisticsData, SaveTennisStatisticsInput } from "@/lib/types/stats/tennis";
+import type { SaveTennisStatsData, SaveTennisStatsInput } from "@/lib/types/stats/tennis";
 import { revalidatePath } from "next/cache";
 
 interface TennisStatsActionResult {
   success: boolean;
-  statisticsId?: string;
-  statisticsIds?: string[];
+  statsId?: string;
+  statsIds?: string[];
   errorType?: string;
   message?: string;
 }
@@ -33,7 +33,7 @@ const STAT_FIELDS = [
 ] as const;
 
 function buildStatFields(
-  data: SaveTennisStatisticsData,
+  data: SaveTennisStatsData,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const field of STAT_FIELDS) {
@@ -65,10 +65,10 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save a single set of tennis statistics
+ * Save a single set of tennis stats
  */
-export async function saveTennisStatistics(
-  input: SaveTennisStatisticsInput,
+export async function saveTennisStats(
+  input: SaveTennisStatsInput,
 ): Promise<TennisStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
@@ -78,13 +78,13 @@ export async function saveTennisStatistics(
     };
 
     const response = await authMutate({
-      saveTennisStatistics: {
+      saveTennisStats: {
         __args: { input: mutationInput },
         __typename: true,
         __on: [
           {
-            __typeName: "SaveTennisStatisticsResponse",
-            tennisStatistics: RESPONSE_FIELDS,
+            __typeName: "SaveTennisStatsResponse",
+            tennisStats: RESPONSE_FIELDS,
           },
           errorFragment,
         ],
@@ -95,42 +95,42 @@ export async function saveTennisStatistics(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.saveTennisStatistics, "SaveTennisStatisticsResponse");
+    const result = extractMutationResult(response.data.saveTennisStats, "SaveTennisStatsResponse");
     if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, statisticsId: result.data.tennisStatistics.id };
+    return { success: true, statsId: result.data.tennisStats.id };
   } catch (error) {
-    console.error("Failed to save tennis statistics:", error);
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save tennis statistics" };
+    console.error("Failed to save tennis stats:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save tennis stats" };
   }
 }
 
 /**
- * Save multiple sets of tennis statistics
+ * Save multiple sets of tennis stats
  */
-export async function saveTennisStatisticsBulk(
+export async function saveTennisStatsBulk(
   gameId: number,
-  statistics: SaveTennisStatisticsData[],
+  stats: SaveTennisStatsData[],
 ): Promise<TennisStatsActionResult> {
   try {
-    if (statistics.length === 0) {
-      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No statistics provided" };
+    if (stats.length === 0) {
+      return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: "No stats provided" };
     }
 
-    const statisticsInput = statistics.map((stat) => ({
+    const statsInput = stats.map((stat) => ({
       playerId: stat.playerId,
       ...buildStatFields(stat),
     }));
 
     const response = await authMutate({
-      saveTennisStatisticsBulk: {
-        __args: { input: { gameId, statistics: statisticsInput } },
+      saveTennisStatsBulk: {
+        __args: { input: { gameId, stats: statsInput } },
         __typename: true,
         __on: [
           {
-            __typeName: "SaveTennisStatisticsBulkResponse",
-            statistics: RESPONSE_FIELDS,
+            __typeName: "SaveTennisStatsBulkResponse",
+            stats: RESPONSE_FIELDS,
           },
           errorFragment,
         ],
@@ -141,17 +141,17 @@ export async function saveTennisStatisticsBulk(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.saveTennisStatisticsBulk, "SaveTennisStatisticsBulkResponse");
+    const result = extractMutationResult(response.data.saveTennisStatsBulk, "SaveTennisStatsBulkResponse");
     if (!result.success) return result;
 
-    const statisticsIds = result.data.statistics.map(
+    const statsIds = result.data.stats.map(
       (stat: { id: string }) => stat.id,
     );
 
     revalidatePath("/[locale]/game/[id]", "page");
-    return { success: true, statisticsIds };
+    return { success: true, statsIds };
   } catch (error) {
-    console.error("Failed to save tennis statistics bulk:", error);
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save tennis statistics" };
+    console.error("Failed to save tennis stats bulk:", error);
+    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to save tennis stats" };
   }
 }

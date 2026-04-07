@@ -1,6 +1,6 @@
 "use client";
 
-import { GameBoxScores } from "@/components/game/game-box-scores";
+import { GameStats } from "@/components/game/game-stats";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
 import { GameMediaSection } from "@/components/game/game-media-section";
 import { GameParticipants } from "@/components/game/game-participants";
@@ -14,20 +14,20 @@ import {
   getFormatFromMetadata,
   ParticipationType,
 } from "@/lib/constants";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 import type {
   FootballDefensiveStatsNode,
   FootballOffensiveStatsNode,
   FootballSpecialTeamsStatsNode,
 } from "@/lib/types/stats/football";
-import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
-import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
+import type { PickleballStatsNode } from "@/lib/types/stats/pickleball";
+import type { TennisStatsNode } from "@/lib/types/stats/tennis";
 import type {
   BaseballBattingStatsNode,
   BaseballPitchingStatsNode,
   BaseballFieldingStatsNode,
 } from "@/lib/types/stats/baseball";
-import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
+import type { VolleyballStatsNode } from "@/lib/types/stats/volleyball";
 import { WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -52,16 +52,16 @@ export function useGameLiveContext(): LiveGameState | null {
 
 interface GameDetailClientProps {
   game: GameDetail;
-  initialBoxScores: { node: BasketballBoxScoreNode }[];
-  initialPickleballStats?: { node: PickleballStatisticsNode }[];
+  initialBasketballStats: { node: BasketballStatsNode }[];
+  initialPickleballStats?: { node: PickleballStatsNode }[];
   initialFootballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
   initialFootballDefensiveStats?: { node: FootballDefensiveStatsNode }[];
   initialFootballSpecialTeamsStats?: { node: FootballSpecialTeamsStatsNode }[];
-  initialTennisStats?: { node: TennisStatisticsNode }[];
+  initialTennisStats?: { node: TennisStatsNode }[];
   initialBaseballBattingStats?: { node: BaseballBattingStatsNode }[];
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
-  initialVolleyballStats?: { node: VolleyballStatisticsNode }[];
+  initialVolleyballStats?: { node: VolleyballStatsNode }[];
   playerId: number | null;
   currentUserId: string | null;
   children: ReactNode;
@@ -69,7 +69,7 @@ interface GameDetailClientProps {
 
 export function GameDetailClient({
   game,
-  initialBoxScores,
+  initialBasketballStats,
   initialPickleballStats,
   initialFootballOffensiveStats,
   initialFootballDefensiveStats,
@@ -87,16 +87,16 @@ export function GameDetailClient({
   const [state, dispatch] = useReducer(
     gameLiveReducer,
     null,
-    () => createInitialState(game, initialBoxScores),
+    () => createInitialState(game, initialBasketballStats),
   );
 
   const prevGameRef = useRef(game);
   useEffect(() => {
     if (prevGameRef.current !== game) {
       prevGameRef.current = game;
-      dispatch({ type: "SYNC_FROM_SERVER", game, boxScores: initialBoxScores });
+      dispatch({ type: "SYNC_FROM_SERVER", game, basketballStats: initialBasketballStats });
     }
-  }, [game, initialBoxScores]);
+  }, [game, initialBasketballStats]);
 
   const prevStateRef = useRef(state);
   const announcerRef = useRef<HTMLDivElement>(null);
@@ -228,9 +228,9 @@ export function GameDetailClient({
       </section>
 
       <section className="mt-8">
-        <GameBoxScores
+        <GameStats
           game={state.game}
-          boxScores={state.boxScores}
+          basketballStats={state.basketballStats}
           pickleballStats={initialPickleballStats}
           footballOffensiveStats={initialFootballOffensiveStats}
           footballDefensiveStats={initialFootballDefensiveStats}

@@ -1,9 +1,9 @@
-import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
+import type { StatsNode, SaveStatsInput } from "./base";
 
 /**
- * Volleyball statistics entry returned from the server.
+ * Volleyball stats entry returned from the server.
  */
-export interface VolleyballStatisticsNode extends BoxScoreNode {
+export interface VolleyballStatsNode extends StatsNode {
   kills: number | null;
   attackErrors: number | null;
   attackAttempts: number | null;
@@ -18,13 +18,13 @@ export interface VolleyballStatisticsNode extends BoxScoreNode {
 }
 
 /**
- * Input for saving volleyball statistics.
+ * Input for saving volleyball stats.
  * Patch semantics:
  * - Omit a field (undefined) to leave it unchanged
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveVolleyballStatisticsInput extends SaveBoxScoreInput {
+export interface SaveVolleyballStatsInput extends SaveStatsInput {
   kills?: number | null;
   attackErrors?: number | null;
   attackAttempts?: number | null;
@@ -38,10 +38,10 @@ export interface SaveVolleyballStatisticsInput extends SaveBoxScoreInput {
 }
 
 /**
- * Per-player statistics data for bulk save (gameId is at parent level).
- * Independent interface mirroring schema -- not derived from SaveVolleyballStatisticsInput.
+ * Per-player stats data for bulk save (gameId is at parent level).
+ * Independent interface mirroring schema — not derived from SaveVolleyballStatsInput.
  */
-export interface SaveVolleyballStatisticsData {
+export interface SaveVolleyballStatsData {
   playerId: number;
   kills?: number | null;
   attackErrors?: number | null;

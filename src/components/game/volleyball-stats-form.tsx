@@ -1,6 +1,6 @@
 "use client";
 
-import { saveVolleyballStatistics } from "@/app/[locale]/game/volleyball-stats-actions";
+import { saveVolleyballStats } from "@/app/[locale]/game/volleyball-stats-actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +11,8 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 import { FormTextField } from "@/components/ui/form-field";
 import type {
-  VolleyballStatisticsNode,
-  SaveVolleyballStatisticsInput,
+  VolleyballStatsNode,
+  SaveVolleyballStatsInput,
 } from "@/lib/types/stats/volleyball";
 import { nullToUndefined, undefinedToNull } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -37,13 +37,13 @@ type StatField = (typeof STAT_FIELDS)[number];
 
 interface VolleyballStatsFormProps {
   gameId: number;
-  initialData: VolleyballStatisticsNode;
+  initialData: VolleyballStatsNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function buildDefaultValues(
-  data: VolleyballStatisticsNode,
+  data: VolleyballStatsNode,
 ): Record<StatField, number | undefined> {
   const result = {} as Record<StatField, number | undefined>;
   for (const field of STAT_FIELDS) {
@@ -56,8 +56,8 @@ function buildInput(
   value: Record<StatField, number | undefined>,
   playerId: number,
   gameId: number,
-): SaveVolleyballStatisticsInput {
-  const input: SaveVolleyballStatisticsInput = { playerId, gameId };
+): SaveVolleyballStatsInput {
+  const input: SaveVolleyballStatsInput = { playerId, gameId };
   for (const field of STAT_FIELDS) {
     input[field] = undefinedToNull(value[field]);
   }
@@ -81,14 +81,14 @@ export function VolleyballStatsForm({
 
       startTransition(async () => {
         const input = buildInput(value, initialData.player.id, gameId);
-        const result = await saveVolleyballStatistics(input);
+        const result = await saveVolleyballStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -101,7 +101,7 @@ export function VolleyballStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -118,7 +118,7 @@ export function VolleyballStatsForm({
                 {(fieldApi) => (
                   <FormTextField
                     field={fieldApi}
-                    label={t(`game.boxScore.volleyball.${field}`)}
+                    label={t(`game.stats.volleyball.${field}`)}
                     type="number"
                     disabled={isPending}
                     placeholder="0"

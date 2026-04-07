@@ -1,4 +1,4 @@
-import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
+import type { StatsNode, SaveStatsInput } from "./base";
 
 // ---------------------------------------------------------------------------
 // Batting
@@ -7,7 +7,7 @@ import type { BoxScoreNode, SaveBoxScoreInput } from "./base";
 /**
  * Baseball batting statistics entry returned from the server.
  */
-export interface BaseballBattingStatsNode extends BoxScoreNode {
+export interface BaseballBattingStatsNode extends StatsNode {
   atBats: number | null;
   runs: number | null;
   hits: number | null;
@@ -31,7 +31,7 @@ export interface BaseballBattingStatsNode extends BoxScoreNode {
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveBaseballBattingStatsInput extends SaveBoxScoreInput {
+export interface SaveBaseballBattingStatsInput extends SaveStatsInput {
   atBats?: number | null;
   runs?: number | null;
   hits?: number | null;
@@ -75,7 +75,7 @@ export interface SaveBaseballBattingStatsData {
 /**
  * Baseball pitching statistics entry returned from the server.
  */
-export interface BaseballPitchingStatsNode extends BoxScoreNode {
+export interface BaseballPitchingStatsNode extends StatsNode {
   inningsPitched: number | null;
   hitsAllowed: number | null;
   runsAllowed: number | null;
@@ -99,7 +99,7 @@ export interface BaseballPitchingStatsNode extends BoxScoreNode {
  * - Set to null to clear the value
  * - Set to a number/boolean to update
  */
-export interface SaveBaseballPitchingStatsInput extends SaveBoxScoreInput {
+export interface SaveBaseballPitchingStatsInput extends SaveStatsInput {
   inningsPitched?: number | null;
   hitsAllowed?: number | null;
   runsAllowed?: number | null;
@@ -143,7 +143,7 @@ export interface SaveBaseballPitchingStatsData {
 /**
  * Baseball fielding statistics entry returned from the server.
  */
-export interface BaseballFieldingStatsNode extends BoxScoreNode {
+export interface BaseballFieldingStatsNode extends StatsNode {
   putouts: number | null;
   assists: number | null;
   errors: number | null;
@@ -157,7 +157,7 @@ export interface BaseballFieldingStatsNode extends BoxScoreNode {
  * - Set to null to clear the value
  * - Set to a number to update
  */
-export interface SaveBaseballFieldingStatsInput extends SaveBoxScoreInput {
+export interface SaveBaseballFieldingStatsInput extends SaveStatsInput {
   putouts?: number | null;
   assists?: number | null;
   errors?: number | null;

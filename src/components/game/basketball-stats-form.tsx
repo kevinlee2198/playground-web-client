@@ -1,6 +1,6 @@
 "use client";
 
-import { saveBasketballBoxScore } from "@/app/[locale]/game/box-score-actions";
+import { saveBasketballStats } from "@/app/[locale]/game/basketball-stats-actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +11,8 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 import { FormTextField } from "@/components/ui/form-field";
 import type {
-  BasketballBoxScoreNode,
-  SaveBasketballBoxScoreInput,
+  BasketballStatsNode,
+  SaveBasketballStatsInput,
 } from "@/lib/types/stats/basketball";
 import { nullToUndefined, undefinedToNull } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -20,19 +20,19 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-interface BasketballBoxScoreFormProps {
+interface BasketballStatsFormProps {
   gameId: number;
-  initialData: BasketballBoxScoreNode;
+  initialData: BasketballStatsNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function BasketballBoxScoreForm({
+export function BasketballStatsForm({
   gameId,
   initialData,
   open,
   onOpenChange,
-}: BasketballBoxScoreFormProps) {
+}: BasketballStatsFormProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export function BasketballBoxScoreForm({
       }
 
       startTransition(async () => {
-        const input: SaveBasketballBoxScoreInput = {
+        const input: SaveBasketballStatsInput = {
           playerId: initialData.player.id,
           gameId,
           assists: undefinedToNull(value.assists),
@@ -103,14 +103,14 @@ export function BasketballBoxScoreForm({
           freeThrowsAttempted: undefinedToNull(value.freeThrowsAttempted),
         };
 
-        const result = await saveBasketballBoxScore(input);
+        const result = await saveBasketballStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -123,7 +123,7 @@ export function BasketballBoxScoreForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -139,7 +139,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.assists")}
+                  label={t("game.stats.basketball.assists")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -151,7 +151,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.steals")}
+                  label={t("game.stats.basketball.steals")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -163,7 +163,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.blocks")}
+                  label={t("game.stats.basketball.blocks")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -175,7 +175,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.turnovers")}
+                  label={t("game.stats.basketball.turnovers")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -187,7 +187,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.personalFouls")}
+                  label={t("game.stats.basketball.personalFouls")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -199,7 +199,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.offensiveRebounds")}
+                  label={t("game.stats.basketball.offensiveRebounds")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -211,7 +211,7 @@ export function BasketballBoxScoreForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.basketball.defensiveRebounds")}
+                  label={t("game.stats.basketball.defensiveRebounds")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -223,7 +223,7 @@ export function BasketballBoxScoreForm({
           {/* Three Pointers */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium">
-              {t("game.boxScore.basketball.threePointers")}
+              {t("game.stats.basketball.threePointers")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               <form.Field name="threePointersMade">
@@ -254,7 +254,7 @@ export function BasketballBoxScoreForm({
           {/* Two Pointers */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium">
-              {t("game.boxScore.basketball.twoPointers")}
+              {t("game.stats.basketball.twoPointers")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               <form.Field name="twoPointersMade">
@@ -285,7 +285,7 @@ export function BasketballBoxScoreForm({
           {/* Free Throws */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium">
-              {t("game.boxScore.basketball.freeThrows")}
+              {t("game.stats.basketball.freeThrows")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               <form.Field name="freeThrowsMade">

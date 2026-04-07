@@ -115,11 +115,11 @@ export function FootballOffensiveStatsForm({
         const result = await saveFootballOffensiveStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -132,7 +132,7 @@ export function FootballOffensiveStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -145,7 +145,7 @@ export function FootballOffensiveStatsForm({
         >
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">
-              {t("game.boxScore.football.sections.passing")}
+              {t("game.stats.football.sections.passing")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               {PASSING_FIELDS.map((field) => (
@@ -153,7 +153,7 @@ export function FootballOffensiveStatsForm({
                   {(fieldApi) => (
                     <FormTextField
                       field={fieldApi}
-                      label={t(`game.boxScore.football.offensive.${field}`)}
+                      label={t(`game.stats.football.offensive.${field}`)}
                       type="number"
                       disabled={isPending}
                       placeholder="0"
@@ -166,7 +166,7 @@ export function FootballOffensiveStatsForm({
 
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">
-              {t("game.boxScore.football.sections.rushing")}
+              {t("game.stats.football.sections.rushing")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               {RUSHING_FIELDS.map((field) => (
@@ -174,7 +174,7 @@ export function FootballOffensiveStatsForm({
                   {(fieldApi) => (
                     <FormTextField
                       field={fieldApi}
-                      label={t(`game.boxScore.football.offensive.${field}`)}
+                      label={t(`game.stats.football.offensive.${field}`)}
                       type="number"
                       disabled={isPending}
                       placeholder="0"
@@ -187,7 +187,7 @@ export function FootballOffensiveStatsForm({
 
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">
-              {t("game.boxScore.football.sections.receiving")}
+              {t("game.stats.football.sections.receiving")}
             </h4>
             <FieldGroup className="sm:grid sm:grid-cols-2">
               {RECEIVING_FIELDS.map((field) => (
@@ -195,7 +195,7 @@ export function FootballOffensiveStatsForm({
                   {(fieldApi) => (
                     <FormTextField
                       field={fieldApi}
-                      label={t(`game.boxScore.football.offensive.${field}`)}
+                      label={t(`game.stats.football.offensive.${field}`)}
                       type="number"
                       disabled={isPending}
                       placeholder="0"

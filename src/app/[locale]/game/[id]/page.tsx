@@ -21,15 +21,15 @@ import {
 import { authQuery, query } from "@/lib/graphql-request";
 import { formatAddress } from "@/lib/location-utils";
 import type { GameDetail } from "@/lib/types/game";
-import type { BasketballBoxScoreNode } from "@/lib/types/stats/basketball";
+import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 import type {
   FootballDefensiveStatsNode,
   FootballOffensiveStatsNode,
   FootballSpecialTeamsStatsNode,
 } from "@/lib/types/stats/football";
-import type { PickleballStatisticsNode } from "@/lib/types/stats/pickleball";
-import type { TennisStatisticsNode } from "@/lib/types/stats/tennis";
-import type { VolleyballStatisticsNode } from "@/lib/types/stats/volleyball";
+import type { PickleballStatsNode } from "@/lib/types/stats/pickleball";
+import type { TennisStatsNode } from "@/lib/types/stats/tennis";
+import type { VolleyballStatsNode } from "@/lib/types/stats/volleyball";
 import type {
   BaseballBattingStatsNode,
   BaseballPitchingStatsNode,
@@ -160,9 +160,9 @@ export default async function GameDetailPage({ params }: PageProps) {
     : null;
 
   // Sport-specific stats (only fetched for authenticated users)
-  let initialBoxScores: { node: BasketballBoxScoreNode }[] = [];
-  let initialPickleballStats: { node: PickleballStatisticsNode }[] = [];
-  let initialTennisStats: { node: TennisStatisticsNode }[] = [];
+  let initialBasketballStats: { node: BasketballStatsNode }[] = [];
+  let initialPickleballStats: { node: PickleballStatsNode }[] = [];
+  let initialTennisStats: { node: TennisStatsNode }[] = [];
   let initialFootballOffensiveStats: { node: FootballOffensiveStatsNode }[] =
     [];
   let initialFootballDefensiveStats: { node: FootballDefensiveStatsNode }[] =
@@ -173,15 +173,15 @@ export default async function GameDetailPage({ params }: PageProps) {
   let initialBaseballBattingStats: { node: BaseballBattingStatsNode }[] = [];
   let initialBaseballPitchingStats: { node: BaseballPitchingStatsNode }[] = [];
   let initialBaseballFieldingStats: { node: BaseballFieldingStatsNode }[] = [];
-  let initialVolleyballStats: { node: VolleyballStatisticsNode }[] = [];
+  let initialVolleyballStats: { node: VolleyballStatsNode }[] = [];
 
   if (session?.user) {
     if (
       game.sportType === SportType.BASKETBALL &&
       game.gameStatus !== GameStatus.SCHEDULED
     ) {
-      const boxScoreResponse = await authQuery({
-        basketballBoxScores: {
+      const basketballStatsResponse = await authQuery({
+        basketballStats: {
           __args: { input: { gameIds: [game.id] }, first: 50 },
           edges: {
             node: {
@@ -212,8 +212,8 @@ export default async function GameDetailPage({ params }: PageProps) {
           },
         },
       });
-      initialBoxScores =
-        boxScoreResponse.data?.basketballBoxScores?.edges ?? [];
+      initialBasketballStats =
+        basketballStatsResponse.data?.basketballStats?.edges ?? [];
     }
 
     if (
@@ -221,7 +221,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       game.gameStatus !== GameStatus.SCHEDULED
     ) {
       const statsResponse = await authQuery({
-        pickleballStatistics: {
+        pickleballStats: {
           __args: { input: { gameIds: [game.id] }, first: 50 },
           edges: {
             node: {
@@ -245,7 +245,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         },
       });
       initialPickleballStats =
-        statsResponse.data?.pickleballStatistics?.edges ?? [];
+        statsResponse.data?.pickleballStats?.edges ?? [];
     }
 
     if (
@@ -253,7 +253,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       game.gameStatus !== GameStatus.SCHEDULED
     ) {
       const volleyballStatsResponse = await authQuery({
-        volleyballStatistics: {
+        volleyballStats: {
           __args: { input: { gameIds: [game.id] }, first: 50 },
           edges: {
             node: {
@@ -275,7 +275,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         },
       });
       initialVolleyballStats =
-        volleyballStatsResponse.data?.volleyballStatistics?.edges ?? [];
+        volleyballStatsResponse.data?.volleyballStats?.edges ?? [];
     }
 
     if (
@@ -283,7 +283,7 @@ export default async function GameDetailPage({ params }: PageProps) {
       game.gameStatus !== GameStatus.SCHEDULED
     ) {
       const tennisStatsResponse = await authQuery({
-        tennisStatistics: {
+        tennisStats: {
           __args: { input: { gameIds: [game.id] }, first: 50 },
           edges: {
             node: {
@@ -309,7 +309,7 @@ export default async function GameDetailPage({ params }: PageProps) {
         },
       });
       initialTennisStats =
-        tennisStatsResponse.data?.tennisStatistics?.edges ?? [];
+        tennisStatsResponse.data?.tennisStats?.edges ?? [];
     }
 
     if (
@@ -492,7 +492,7 @@ export default async function GameDetailPage({ params }: PageProps) {
 
       <GameDetailClient
         game={game}
-        initialBoxScores={initialBoxScores}
+        initialBasketballStats={initialBasketballStats}
         initialPickleballStats={initialPickleballStats}
         initialFootballOffensiveStats={initialFootballOffensiveStats}
         initialFootballDefensiveStats={initialFootballDefensiveStats}
