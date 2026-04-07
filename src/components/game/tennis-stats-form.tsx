@@ -89,7 +89,7 @@ export function TennisStatsForm({
   onOpenChange,
 }: TennisStatsFormProps) {
   const t = useTranslations();
-  const tennisT = useTranslations("game.boxScore.tennis");
+  const tennisT = useTranslations("game.stats.tennis");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -103,11 +103,11 @@ export function TennisStatsForm({
         const result = await saveTennisStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -140,7 +140,7 @@ export function TennisStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editStats")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 

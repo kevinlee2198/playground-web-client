@@ -1,6 +1,6 @@
 "use client";
 
-import { GameBoxScores } from "@/components/game/game-box-scores";
+import { GameStats } from "@/components/game/game-stats";
 import { GameDetailActions } from "@/components/game/game-detail-actions";
 import { GameMediaSection } from "@/components/game/game-media-section";
 import { GameParticipants } from "@/components/game/game-participants";
@@ -228,9 +228,9 @@ export function GameDetailClient({
       </section>
 
       <section className="mt-8">
-        <GameBoxScores
+        <GameStats
           game={state.game}
-          boxScores={state.basketballStats}
+          basketballStats={state.basketballStats}
           pickleballStats={initialPickleballStats}
           footballOffensiveStats={initialFootballOffensiveStats}
           footballDefensiveStats={initialFootballDefensiveStats}

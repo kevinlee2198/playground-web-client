@@ -49,7 +49,7 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface BaseballPitchingStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: BaseballPitchingStatsNode }[];
+  stats: { node: BaseballPitchingStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
@@ -81,18 +81,18 @@ function computeMaxStats(
 export function BaseballPitchingStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
 }: BaseballPitchingStatsTableProps) {
-  const t = useTranslations("game.boxScore.baseball.pitching");
-  const boxScoreT = useTranslations("game.boxScore");
+  const t = useTranslations("game.stats.baseball.pitching");
+  const statsT = useTranslations("game.stats");
   const format = useFormatter();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "inningsPitched", desc: true },
   ]);
-  const [editingScore, setEditingScore] =
+  const [editingStats, setEditingStats] =
     useState<BaseballPitchingStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
@@ -102,8 +102,8 @@ export function BaseballPitchingStatsTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -119,15 +119,15 @@ export function BaseballPitchingStatsTable({
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
@@ -265,7 +265,7 @@ export function BaseballPitchingStatsTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingScore(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -294,7 +294,7 @@ export function BaseballPitchingStatsTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -309,7 +309,7 @@ export function BaseballPitchingStatsTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -324,7 +324,7 @@ export function BaseballPitchingStatsTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
@@ -384,12 +384,12 @@ export function BaseballPitchingStatsTable({
           </Table>
         </div>
 
-        {editingScore && (
+        {editingStats && (
           <BaseballPitchingStatsForm
             gameId={gameId}
-            initialData={editingScore}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingScore(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

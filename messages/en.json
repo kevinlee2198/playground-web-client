@@ -331,17 +331,17 @@
       "removeTeamConfirm": "Are you sure you want to remove {teamName}? This action cannot be undone.",
       "removePlayerConfirm": "Are you sure you want to remove {playerName} from this team? This action cannot be undone."
     },
-    "boxScore": {
-      "title": "Box Scores",
-      "noBoxScores": "No box scores recorded yet",
+    "stats": {
+      "title": "Stats",
+      "noStats": "No stats recorded yet",
       "playerCount": "{count, plural, one {# player} other {# players}}",
       "selectPlayer": "Select player...",
       "addPlayerStats": "Add Player Stats",
       "playerStatsAdded": "Player stats row added",
       "playerStatsError": "Failed to add player stats",
-      "addBoxScores": "Add Box Scores",
-      "editBoxScores": "Edit Box Scores",
-      "saveBoxScores": "Save Box Scores",
+      "addStats": "Add Stats",
+      "editStats": "Edit Stats",
+      "saveStats": "Save Stats",
       "player": "Player",
       "tennis": {
         "aces": "ACE",
@@ -723,7 +723,7 @@
       "participantAdded": "Participant added",
       "participantRemoved": "Participant removed",
       "teamUpdated": "Team updated",
-      "boxScoresSaved": "Box scores saved",
+      "statsSaved": "Stats saved",
       "resultsFinalized": "Results finalized",
       "resultsUnfinalized": "Results unfinalized"
     },
@@ -737,7 +737,7 @@
       "finalizeError": "Failed to finalize results",
       "unfinalizeError": "Failed to unfinalize results",
       "participantError": "Failed to update participants",
-      "boxScoreError": "Failed to save box scores",
+      "statsError": "Failed to save stats",
       "loadMoreError": "Failed to load more games",
       "retry": "Retry"
     },

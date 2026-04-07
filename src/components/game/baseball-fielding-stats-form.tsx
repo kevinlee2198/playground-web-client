@@ -58,11 +58,11 @@ export function BaseballFieldingStatsForm({
         const result = await saveBaseballFieldingStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.boxScoresSaved"));
+          toast.success(t("game.success.statsSaved"));
           onOpenChange(false);
         } else {
-          setError(result.message || t("game.errors.boxScoreError"));
-          toast.error(result.message || t("game.errors.boxScoreError"));
+          setError(result.message || t("game.errors.statsError"));
+          toast.error(result.message || t("game.errors.statsError"));
         }
       });
     },
@@ -75,7 +75,7 @@ export function BaseballFieldingStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.boxScore.editBoxScores")} - {playerName}
+            {t("game.stats.editBoxScores")} - {playerName}
           </DialogTitle>
         </DialogHeader>
 
@@ -91,7 +91,7 @@ export function BaseballFieldingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.fielding.putouts")}
+                  label={t("game.stats.baseball.fielding.putouts")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -103,7 +103,7 @@ export function BaseballFieldingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.fielding.assists")}
+                  label={t("game.stats.baseball.fielding.assists")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"
@@ -115,7 +115,7 @@ export function BaseballFieldingStatsForm({
               {(field) => (
                 <FormTextField
                   field={field}
-                  label={t("game.boxScore.baseball.fielding.errors")}
+                  label={t("game.stats.baseball.fielding.errors")}
                   type="number"
                   disabled={isPending}
                   placeholder="0"

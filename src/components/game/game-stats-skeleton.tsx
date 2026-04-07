@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function GameBoxScoresSkeleton() {
+export function GameStatsSkeleton() {
   return (
     <div className="space-y-4">
       {[0, 1].map((i) => (

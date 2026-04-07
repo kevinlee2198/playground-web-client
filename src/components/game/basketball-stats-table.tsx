@@ -36,7 +36,7 @@ import { ArrowUpDown, Pencil } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { BasketballBoxScoreForm } from "./basketball-box-score-form";
+import { BasketballStatsForm } from "./basketball-stats-form";
 
 const STICKY_FIRST_COL =
   "sticky left-0 z-10 bg-card group-hover/row:bg-muted/50 min-w-[140px]";
@@ -52,10 +52,10 @@ const HIGHLIGHTABLE_STATS = [
 
 type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 
-interface BasketballBoxScoreTableProps {
+interface BasketballStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: BasketballStatsNode }[];
+  stats: { node: BasketballStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
@@ -84,21 +84,21 @@ function computeMaxStats(
   return result;
 }
 
-export function BasketballBoxScoreTable({
+export function BasketballStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
-}: BasketballBoxScoreTableProps) {
-  const t = useTranslations("game.boxScore.basketball");
-  const boxScoreT = useTranslations("game.boxScore");
+}: BasketballStatsTableProps) {
+  const t = useTranslations("game.stats.basketball");
+  const statsT = useTranslations("game.stats");
   const format = useFormatter();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "points", desc: true },
   ]);
-  const [editingScore, setEditingScore] =
+  const [editingStats, setEditingStats] =
     useState<BasketballStatsNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
@@ -108,8 +108,8 @@ export function BasketballBoxScoreTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -125,15 +125,15 @@ export function BasketballBoxScoreTable({
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
@@ -283,7 +283,7 @@ export function BasketballBoxScoreTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setEditingScore(row.original)}
+                  onClick={() => setEditingStats(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Edit</span>
@@ -312,7 +312,7 @@ export function BasketballBoxScoreTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -327,7 +327,7 @@ export function BasketballBoxScoreTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -342,7 +342,7 @@ export function BasketballBoxScoreTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
@@ -402,12 +402,12 @@ export function BasketballBoxScoreTable({
           </Table>
         </div>
 
-        {editingScore && (
-          <BasketballBoxScoreForm
+        {editingStats && (
+          <BasketballStatsForm
             gameId={gameId}
-            initialData={editingScore}
+            initialData={editingStats}
             open={true}
-            onOpenChange={(open) => !open && setEditingScore(null)}
+            onOpenChange={(open) => !open && setEditingStats(null)}
           />
         )}
       </CardContent>

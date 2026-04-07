@@ -57,7 +57,7 @@ function getMutationInput(key: string): Record<string, unknown> {
   return (callArg[key] as { __args: { input: Record<string, unknown> } }).__args.input;
 }
 
-function makeBoxScoreFields(id: string) {
+function makeStatsFields(id: string) {
   return {
     basketballStats: {
       id,
@@ -87,7 +87,7 @@ function makeBoxScoreFields(id: string) {
   };
 }
 
-function makeBoxScoresFields(ids: string[]) {
+function makeStatsBulkFields(ids: string[]) {
   return {
     stats: ids.map((id) => ({
       id,
@@ -125,7 +125,7 @@ describe("saveBasketballStats", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns success with statsId on a successful mutation", async () => {
-    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeBoxScoreFields("abc-123"));
+    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeStatsFields("abc-123"));
 
     const input: SaveBasketballStatsInput = {
       playerId: 10,
@@ -141,7 +141,7 @@ describe("saveBasketballStats", () => {
   });
 
   it("only includes defined stat fields in the mutation input (PATCH semantics)", async () => {
-    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeBoxScoreFields("def-456"));
+    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeStatsFields("def-456"));
 
     const input: SaveBasketballStatsInput = {
       playerId: 10,
@@ -172,7 +172,7 @@ describe("saveBasketballStats", () => {
   });
 
   it("includes null stat fields (explicit clear) in the mutation input", async () => {
-    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeBoxScoreFields("ghi-789"));
+    mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeStatsFields("ghi-789"));
 
     const input: SaveBasketballStatsInput = {
       playerId: 10,
@@ -238,7 +238,7 @@ describe("saveBasketballStatsBulk", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns success with statsIds on a successful batch mutation", async () => {
-    mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeBoxScoresFields(["id-1", "id-2"]));
+    mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeStatsBulkFields(["id-1", "id-2"]));
 
     const scores: SaveBasketballStatsData[] = [
       { playerId: 10, assists: 5 },
@@ -264,7 +264,7 @@ describe("saveBasketballStatsBulk", () => {
   });
 
   it("passes the gameId and per-player stat fields to the mutation", async () => {
-    mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeBoxScoresFields(["id-1"]));
+    mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeStatsBulkFields(["id-1"]));
 
     const scores: SaveBasketballStatsData[] = [
       { playerId: 10, assists: 4, blocks: 2 },

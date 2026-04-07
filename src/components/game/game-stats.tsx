@@ -1,7 +1,7 @@
 "use client";
 
-import { BasketballBoxScoreTable } from "@/components/game/basketball-box-score-table";
-import { CollapsibleBoxScore } from "@/components/game/collapsible-box-score";
+import { BasketballStatsTable } from "@/components/game/basketball-stats-table";
+import { CollapsibleStats } from "@/components/game/collapsible-stats";
 import { FootballDefensiveStatsTable } from "@/components/game/football-defensive-stats-table";
 import { FootballOffensiveStatsTable } from "@/components/game/football-offensive-stats-table";
 import { FootballSpecialTeamsStatsTable } from "@/components/game/football-special-teams-stats-table";
@@ -36,9 +36,9 @@ import type {
 import type { VolleyballStatsNode } from "@/lib/types/stats/volleyball";
 import { useTranslations } from "next-intl";
 
-interface GameBoxScoresProps {
+interface GameStatsProps {
   game: GameDetail;
-  boxScores?: { node: BasketballStatsNode }[];
+  basketballStats?: { node: BasketballStatsNode }[];
   pickleballStats?: { node: PickleballStatsNode }[];
   tennisStats?: { node: TennisStatsNode }[];
   footballOffensiveStats?: { node: FootballOffensiveStatsNode }[];
@@ -50,17 +50,17 @@ interface GameBoxScoresProps {
   volleyballStats?: { node: VolleyballStatsNode }[];
 }
 
-interface TeamBoxScoreGroup<T extends StatsNode> {
+interface TeamStatsGroup<T extends StatsNode> {
   teamName: string;
   players: PlayerRef[];
-  boxScores: { node: T }[];
+  stats: { node: T }[];
 }
 
 function groupByTeam<T extends StatsNode>(
   game: GameDetail,
-  allBoxScores: { node: T }[],
+  allStats: { node: T }[],
   fallbackGroupName: string,
-): TeamBoxScoreGroup<T>[] {
+): TeamStatsGroup<T>[] {
   const teams: {
     name: string;
     playerIds: Set<number>;
@@ -90,7 +90,7 @@ function groupByTeam<T extends StatsNode>(
       return [{
         teamName: fallbackGroupName,
         players: individualPlayers,
-        boxScores: allBoxScores,
+        stats: allStats,
       }];
     }
   }
@@ -98,15 +98,15 @@ function groupByTeam<T extends StatsNode>(
   return teams.map((team) => ({
     teamName: team.name,
     players: team.players,
-    boxScores: allBoxScores.filter((edge) =>
+    stats: allStats.filter((edge) =>
       team.playerIds.has(edge.node.player.id),
     ),
   }));
 }
 
-export function GameBoxScores({
+export function GameStats({
   game,
-  boxScores,
+  basketballStats,
   pickleballStats,
   tennisStats,
   footballOffensiveStats,
@@ -116,7 +116,7 @@ export function GameBoxScores({
   baseballPitchingStats,
   baseballFieldingStats,
   volleyballStats,
-}: GameBoxScoresProps) {
+}: GameStatsProps) {
   const t = useTranslations();
 
   if (
@@ -138,74 +138,74 @@ export function GameBoxScores({
   const defaultOpen =
     game.viewerGameRole != null && game.gameStatus === GameStatus.COMPLETE;
 
-  const fallbackGroupName = t("game.boxScore.title");
+  const fallbackGroupName = t("game.stats.title");
 
   if (game.sportType === SportType.BASEBALL) {
     return (
       <div className="space-y-6">
         {baseballBattingStats && baseballBattingStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-            <TypographyH4>{t("game.boxScore.baseball.sections.batting")}</TypographyH4>
+            <TypographyH4>{t("game.stats.baseball.sections.batting")}</TypographyH4>
             {groupByTeam(game, baseballBattingStats, fallbackGroupName).map((group) => (
-              <CollapsibleBoxScore
+              <CollapsibleStats
                 key={group.teamName}
                 teamName={group.teamName}
-                playerCount={group.boxScores.length || group.players.length}
+                playerCount={group.stats.length || group.players.length}
                 defaultOpen={defaultOpen}
               >
                 <BaseballBattingStatsTable
                   gameId={game.id}
                   teamName={group.teamName}
-                  boxScores={group.boxScores}
+                  stats={group.stats}
                   gameStatus={game.gameStatus}
                   availablePlayers={group.players}
                   viewerGameRole={game.viewerGameRole}
                 />
-              </CollapsibleBoxScore>
+              </CollapsibleStats>
             ))}
           </div>
         )}
         {baseballPitchingStats && baseballPitchingStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-            <TypographyH4>{t("game.boxScore.baseball.sections.pitching")}</TypographyH4>
+            <TypographyH4>{t("game.stats.baseball.sections.pitching")}</TypographyH4>
             {groupByTeam(game, baseballPitchingStats, fallbackGroupName).map((group) => (
-              <CollapsibleBoxScore
+              <CollapsibleStats
                 key={group.teamName}
                 teamName={group.teamName}
-                playerCount={group.boxScores.length || group.players.length}
+                playerCount={group.stats.length || group.players.length}
                 defaultOpen={defaultOpen}
               >
                 <BaseballPitchingStatsTable
                   gameId={game.id}
                   teamName={group.teamName}
-                  boxScores={group.boxScores}
+                  stats={group.stats}
                   gameStatus={game.gameStatus}
                   availablePlayers={group.players}
                   viewerGameRole={game.viewerGameRole}
                 />
-              </CollapsibleBoxScore>
+              </CollapsibleStats>
             ))}
           </div>
         )}
         {baseballFieldingStats && baseballFieldingStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-            <TypographyH4>{t("game.boxScore.baseball.sections.fielding")}</TypographyH4>
+            <TypographyH4>{t("game.stats.baseball.sections.fielding")}</TypographyH4>
             {groupByTeam(game, baseballFieldingStats, fallbackGroupName).map((group) => (
-              <CollapsibleBoxScore
+              <CollapsibleStats
                 key={group.teamName}
                 teamName={group.teamName}
-                playerCount={group.boxScores.length || group.players.length}
+                playerCount={group.stats.length || group.players.length}
                 defaultOpen={defaultOpen}
               >
                 <BaseballFieldingStatsTable
                   gameId={game.id}
                   teamName={group.teamName}
-                  boxScores={group.boxScores}
+                  stats={group.stats}
                   gameStatus={game.gameStatus}
                   availablePlayers={group.players}
                   viewerGameRole={game.viewerGameRole}
                 />
-              </CollapsibleBoxScore>
+              </CollapsibleStats>
             ))}
           </div>
         )}
@@ -218,67 +218,67 @@ export function GameBoxScores({
       <div className="space-y-6">
         {footballOffensiveStats && footballOffensiveStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-            <TypographyH4>{t("game.boxScore.football.sections.offensive")}</TypographyH4>
+            <TypographyH4>{t("game.stats.football.sections.offensive")}</TypographyH4>
             {groupByTeam(game, footballOffensiveStats, fallbackGroupName).map((group) => (
-              <CollapsibleBoxScore
+              <CollapsibleStats
                 key={group.teamName}
                 teamName={group.teamName}
-                playerCount={group.boxScores.length || group.players.length}
+                playerCount={group.stats.length || group.players.length}
                 defaultOpen={defaultOpen}
               >
                 <FootballOffensiveStatsTable
                   gameId={game.id}
                   teamName={group.teamName}
-                  boxScores={group.boxScores}
+                  stats={group.stats}
                   gameStatus={game.gameStatus}
                   availablePlayers={group.players}
                   viewerGameRole={game.viewerGameRole}
                 />
-              </CollapsibleBoxScore>
+              </CollapsibleStats>
             ))}
           </div>
         )}
         {footballDefensiveStats && footballDefensiveStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-            <TypographyH4>{t("game.boxScore.football.sections.defensive")}</TypographyH4>
+            <TypographyH4>{t("game.stats.football.sections.defensive")}</TypographyH4>
             {groupByTeam(game, footballDefensiveStats, fallbackGroupName).map((group) => (
-              <CollapsibleBoxScore
+              <CollapsibleStats
                 key={group.teamName}
                 teamName={group.teamName}
-                playerCount={group.boxScores.length || group.players.length}
+                playerCount={group.stats.length || group.players.length}
                 defaultOpen={defaultOpen}
               >
                 <FootballDefensiveStatsTable
                   gameId={game.id}
                   teamName={group.teamName}
-                  boxScores={group.boxScores}
+                  stats={group.stats}
                   gameStatus={game.gameStatus}
                   availablePlayers={group.players}
                   viewerGameRole={game.viewerGameRole}
                 />
-              </CollapsibleBoxScore>
+              </CollapsibleStats>
             ))}
           </div>
         )}
         {footballSpecialTeamsStats && footballSpecialTeamsStats.length > 0 && (
           <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
-            <TypographyH4>{t("game.boxScore.football.sections.specialTeams")}</TypographyH4>
+            <TypographyH4>{t("game.stats.football.sections.specialTeams")}</TypographyH4>
             {groupByTeam(game, footballSpecialTeamsStats, fallbackGroupName).map((group) => (
-              <CollapsibleBoxScore
+              <CollapsibleStats
                 key={group.teamName}
                 teamName={group.teamName}
-                playerCount={group.boxScores.length || group.players.length}
+                playerCount={group.stats.length || group.players.length}
                 defaultOpen={defaultOpen}
               >
                 <FootballSpecialTeamsStatsTable
                   gameId={game.id}
                   teamName={group.teamName}
-                  boxScores={group.boxScores}
+                  stats={group.stats}
                   gameStatus={game.gameStatus}
                   availablePlayers={group.players}
                   viewerGameRole={game.viewerGameRole}
                 />
-              </CollapsibleBoxScore>
+              </CollapsibleStats>
             ))}
           </div>
         )}
@@ -286,7 +286,7 @@ export function GameBoxScores({
     );
   }
 
-  function renderTable(group: TeamBoxScoreGroup<StatsNode>) {
+  function renderTable(group: TeamStatsGroup<StatsNode>) {
     const sharedProps = {
       gameId: game.id,
       teamName: group.teamName,
@@ -299,7 +299,7 @@ export function GameBoxScores({
       return (
         <PickleballStatsTable
           {...sharedProps}
-          boxScores={group.boxScores as { node: PickleballStatsNode }[]}
+          stats={group.stats as { node: PickleballStatsNode }[]}
         />
       );
     }
@@ -308,7 +308,7 @@ export function GameBoxScores({
       return (
         <TennisStatsTable
           {...sharedProps}
-          boxScores={group.boxScores as { node: TennisStatsNode }[]}
+          stats={group.stats as { node: TennisStatsNode }[]}
         />
       );
     }
@@ -317,15 +317,15 @@ export function GameBoxScores({
       return (
         <VolleyballStatsTable
           {...sharedProps}
-          boxScores={group.boxScores as { node: VolleyballStatsNode }[]}
+          stats={group.stats as { node: VolleyballStatsNode }[]}
         />
       );
     }
 
     return (
-      <BasketballBoxScoreTable
+      <BasketballStatsTable
         {...sharedProps}
-        boxScores={group.boxScores as { node: BasketballStatsNode }[]}
+        stats={group.stats as { node: BasketballStatsNode }[]}
       />
     );
   }
@@ -334,7 +334,7 @@ export function GameBoxScores({
     if (game.sportType === SportType.PICKLEBALL && pickleballStats) return pickleballStats;
     if (game.sportType === SportType.TENNIS && tennisStats) return tennisStats;
     if (game.sportType === SportType.VOLLEYBALL && volleyballStats) return volleyballStats;
-    return boxScores ?? [];
+    return basketballStats ?? [];
   }
 
   const teamGroups = groupByTeam(game, getStatsForSport(), fallbackGroupName);
@@ -342,14 +342,14 @@ export function GameBoxScores({
   return (
     <div className="space-y-4 [content-visibility:auto] [contain-intrinsic-size:0_200px]">
       {teamGroups.map((group) => (
-        <CollapsibleBoxScore
+        <CollapsibleStats
           key={group.teamName}
           teamName={group.teamName}
-          playerCount={group.boxScores.length || group.players.length}
+          playerCount={group.stats.length || group.players.length}
           defaultOpen={defaultOpen}
         >
           {renderTable(group)}
-        </CollapsibleBoxScore>
+        </CollapsibleStats>
       ))}
     </div>
   );

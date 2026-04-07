@@ -80,8 +80,8 @@ export default function GameDetailLoading() {
         </div>
       </section>
 
-      {/* Box scores skeleton -- rendered inline since the Suspense boundary
-          with GameBoxScoresSkeleton only fires after page data loads */}
+      {/* Stats skeleton -- rendered inline since the Suspense boundary
+          with GameStatsSkeleton only fires after page data loads */}
       <section className="mt-8">
         <div className="space-y-4">
           {[0, 1].map((i) => (

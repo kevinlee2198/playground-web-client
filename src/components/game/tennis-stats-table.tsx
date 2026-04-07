@@ -52,7 +52,7 @@ type HighlightableStat = (typeof HIGHLIGHTABLE_STATS)[number];
 interface TennisStatsTableProps {
   gameId: number;
   teamName: string;
-  boxScores: { node: TennisStatsNode }[];
+  stats: { node: TennisStatsNode }[];
   gameStatus: GameStatus;
   availablePlayers?: PlayerRef[];
   viewerGameRole: GameRole | null;
@@ -80,14 +80,14 @@ function computeMaxStats(
 export function TennisStatsTable({
   gameId,
   teamName,
-  boxScores,
+  stats,
   gameStatus,
   availablePlayers = [],
   viewerGameRole,
 }: TennisStatsTableProps) {
-  const t = useTranslations("game.boxScore.tennis");
-  const colT = useTranslations("game.boxScore.tennis.columns");
-  const boxScoreT = useTranslations("game.boxScore");
+  const t = useTranslations("game.stats.tennis");
+  const colT = useTranslations("game.stats.tennis.columns");
+  const statsT = useTranslations("game.stats");
   const format = useFormatter();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "totalPointsWon", desc: true },
@@ -102,8 +102,8 @@ export function TennisStatsTable({
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
   const existingPlayerIds = useMemo(
-    () => new Set(boxScores.map((edge) => edge.node.player.id)),
-    [boxScores],
+    () => new Set(stats.map((edge) => edge.node.player.id)),
+    [stats],
   );
 
   const playersWithoutStats = useMemo(
@@ -119,15 +119,15 @@ export function TennisStatsTable({
         gameId,
       });
       if (result.success) {
-        toast.success(boxScoreT("playerStatsAdded"));
+        toast.success(statsT("playerStatsAdded"));
         setSelectedPlayerId("");
       } else {
-        toast.error(result.message ?? boxScoreT("playerStatsError"));
+        toast.error(result.message ?? statsT("playerStatsError"));
       }
     });
   }
 
-  const data = useMemo(() => boxScores.map((edge) => edge.node), [boxScores]);
+  const data = useMemo(() => stats.map((edge) => edge.node), [stats]);
 
   const maxStats = useMemo(() => computeMaxStats(data), [data]);
 
@@ -246,7 +246,7 @@ export function TennisStatsTable({
     return [
       {
         accessorKey: "player",
-        header: boxScoreT("player"),
+        header: statsT("player"),
         cell: ({ row }) => {
           const player = row.original.player;
           return (
@@ -300,7 +300,7 @@ export function TennisStatsTable({
           ]
         : []),
     ];
-  }, [t, colT, boxScoreT, format, canEdit, maxStats, data.length]);
+  }, [t, colT, statsT, format, canEdit, maxStats, data.length]);
 
   const table = useReactTable({
     data,
@@ -319,7 +319,7 @@ export function TennisStatsTable({
         items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={boxScoreT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectPlayer")} />
         </SelectTrigger>
         <SelectContent>
           {playersWithoutStats.map((player) => (
@@ -334,7 +334,7 @@ export function TennisStatsTable({
         onClick={handleAddPlayerStats}
         disabled={!selectedPlayerId || isPending}
       >
-        {boxScoreT("addPlayerStats")}
+        {statsT("addPlayerStats")}
       </Button>
     </div>
   );
@@ -349,7 +349,7 @@ export function TennisStatsTable({
         <CardContent>
           <Empty className="border-none">
             <EmptyHeader>
-              <EmptyDescription>{boxScoreT("noBoxScores")}</EmptyDescription>
+              <EmptyDescription>{statsT("noStats")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         </CardContent>
