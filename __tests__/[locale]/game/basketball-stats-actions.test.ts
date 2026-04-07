@@ -275,12 +275,12 @@ describe("saveBasketballStatsBulk", () => {
     const mutationInput = getMutationInput("saveBasketballStatsBulk");
     expect(mutationInput.gameId).toBe(42);
 
-    const boxScores = mutationInput.stats as Record<string, unknown>[];
-    expect(boxScores).toHaveLength(1);
-    expect(boxScores[0].playerId).toBe(10);
-    expect(boxScores[0].assists).toBe(4);
-    expect(boxScores[0].blocks).toBe(2);
-    expect("steals" in boxScores[0]).toBe(false);
+    const stats = mutationInput.stats as Record<string, unknown>[];
+    expect(stats).toHaveLength(1);
+    expect(stats[0].playerId).toBe(10);
+    expect(stats[0].assists).toBe(4);
+    expect(stats[0].blocks).toBe(2);
+    expect("steals" in stats[0]).toBe(false);
   });
 
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
