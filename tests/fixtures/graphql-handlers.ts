@@ -3,7 +3,7 @@ import { mockMeResponse } from "./mock-data/me";
 import {
   mockGamesListResponse,
   mockGameDetailResponse,
-  mockBasketballBoxScoresResponse,
+  mockBasketballStatsResponse,
 } from "./mock-data/games";
 import { mockFeedResponse } from "./mock-data/feed";
 import { mockChatRoomsResponse } from "./mock-data/chat";
@@ -50,7 +50,7 @@ const defaultResponses: Record<string, unknown> = {
   user: mockUserResponse(),
   blockedUsers: mockEmptyBlockedResponse(),
   followRequests: mockEmptyFollowRequestsResponse(),
-  basketballStats: mockBasketballBoxScoresResponse(),
+  basketballStats: mockBasketballStatsResponse(),
   ...emptyStatResponses,
 };
 

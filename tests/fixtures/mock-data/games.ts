@@ -47,7 +47,7 @@ export function mockGameNotFoundResponse() {
   return { data: { game: null } };
 }
 
-export function mockBasketballBoxScoresResponse() {
+export function mockBasketballStatsResponse() {
   return { data: { basketballStats: [] } };
 }
 
