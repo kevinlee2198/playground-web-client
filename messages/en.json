@@ -620,11 +620,13 @@
     "discover": {
       "title": "Discover",
       "gamesNear": "Games near {location}",
+      "gamesNearYou": "Games near you",
       "gamesEverywhere": "Games everywhere",
       "changeLocation": "Change",
       "setLocation": "Set location",
       "detectingLocation": "Finding your location\u2026",
       "noGamesNear": "No games near {location}",
+      "noGamesNearYou": "No games near you",
       "noGamesNearDescription": "Try expanding your search radius or create a game.",
       "noGamesEverywhere": "No games found",
       "noGamesEverywhereDescription": "Be the first to create a game!",
@@ -640,10 +642,13 @@
       "live": "Live",
       "completed": "Completed",
       "noGamesNearWithSport": "No {sport} games near {location}",
+      "noGamesNearYouWithSport": "No {sport} games near you",
       "noGamesEverywhereWithSport": "No {sport} games found",
       "noGamesWithStatus": "No {status} games found",
       "noGamesNearWithStatus": "No {status} games near {location}",
-      "noGamesNearWithSportAndStatus": "No {status} {sport} games near {location}"
+      "noGamesNearYouWithStatus": "No {status} games near you",
+      "noGamesNearWithSportAndStatus": "No {status} {sport} games near {location}",
+      "noGamesNearYouWithSportAndStatus": "No {status} {sport} games near you"
     },
     "validation": {
       "sportTypeRequired": "Sport type is required",

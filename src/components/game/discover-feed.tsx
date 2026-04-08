@@ -213,25 +213,42 @@ export function DiscoverFeed({
     const statusLabel = activeGameStatus
       ? t(`game.discover.${GAME_STATUS_LABEL_KEY[activeGameStatus]}`)
       : null;
+    // Bind the place name only when a location filter is active. This both
+    // expresses the "near you" fallback (browser geolocation gives coords with
+    // no name) and lets TypeScript narrow `namedLocation` to `string` inside
+    // each branch — no non-null assertions needed.
+    const namedLocation = hasLocation ? locationName : null;
 
-    if (sportName && statusLabel && hasLocation) {
+    if (sportName && statusLabel && namedLocation) {
       return t("game.discover.noGamesNearWithSportAndStatus", {
         sport: sportName,
         status: statusLabel,
-        location: locationName ?? "",
+        location: namedLocation,
+      });
+    }
+    if (sportName && statusLabel && hasLocation) {
+      return t("game.discover.noGamesNearYouWithSportAndStatus", {
+        sport: sportName,
+        status: statusLabel,
+      });
+    }
+    if (sportName && namedLocation) {
+      return t("game.discover.noGamesNearWithSport", {
+        sport: sportName,
+        location: namedLocation,
       });
     }
     if (sportName && hasLocation) {
-      return t("game.discover.noGamesNearWithSport", {
-        sport: sportName,
-        location: locationName ?? "",
+      return t("game.discover.noGamesNearYouWithSport", { sport: sportName });
+    }
+    if (statusLabel && namedLocation) {
+      return t("game.discover.noGamesNearWithStatus", {
+        status: statusLabel,
+        location: namedLocation,
       });
     }
     if (statusLabel && hasLocation) {
-      return t("game.discover.noGamesNearWithStatus", {
-        status: statusLabel,
-        location: locationName ?? "",
-      });
+      return t("game.discover.noGamesNearYouWithStatus", { status: statusLabel });
     }
     if (sportName) {
       return t("game.discover.noGamesEverywhereWithSport", { sport: sportName });
@@ -239,8 +256,11 @@ export function DiscoverFeed({
     if (statusLabel) {
       return t("game.discover.noGamesWithStatus", { status: statusLabel });
     }
+    if (namedLocation) {
+      return t("game.discover.noGamesNear", { location: namedLocation });
+    }
     if (hasLocation) {
-      return t("game.discover.noGamesNear", { location: locationName ?? "" });
+      return t("game.discover.noGamesNearYou");
     }
     return t("game.discover.noGamesEverywhere");
   }
@@ -261,6 +281,7 @@ export function DiscoverFeed({
       >
         <LocationIndicator
           locationName={locationName}
+          hasLocation={hasLocation}
           isDetecting={isDetecting}
           onChangeClick={() => setShowLocationSearch((prev) => !prev)}
         />

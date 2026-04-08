@@ -6,6 +6,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, string>) => {
     const translations: Record<string, string> = {
       "game.discover.gamesNear": `Games near ${values?.location ?? ""}`,
+      "game.discover.gamesNearYou": "Games near you",
       "game.discover.gamesEverywhere": "Games everywhere",
       "game.discover.changeLocation": "Change",
       "game.discover.setLocation": "Set location",
@@ -18,10 +19,11 @@ vi.mock("next-intl", () => ({
 import { LocationIndicator } from "@/components/game/location-indicator";
 
 describe("LocationIndicator", () => {
-  it("shows location name when location is active", () => {
+  it("shows location name when location is active with a name", () => {
     render(
       <LocationIndicator
         locationName="Austin, TX"
+        hasLocation={true}
         isDetecting={false}
         onChangeClick={() => {}}
       />,
@@ -30,10 +32,26 @@ describe("LocationIndicator", () => {
     expect(screen.getByRole("button", { name: "Change" })).toBeInTheDocument();
   });
 
+  it("shows 'Games near you' when location is active but has no name (browser geolocation)", () => {
+    render(
+      <LocationIndicator
+        locationName={null}
+        hasLocation={true}
+        isDetecting={false}
+        onChangeClick={() => {}}
+      />,
+    );
+    expect(screen.getByText("Games near you")).toBeInTheDocument();
+    // Button must say "Change" — the user already has a location, they just
+    // don't have a place name for it.
+    expect(screen.getByRole("button", { name: "Change" })).toBeInTheDocument();
+  });
+
   it("shows 'Games everywhere' when no location", () => {
     render(
       <LocationIndicator
         locationName={null}
+        hasLocation={false}
         isDetecting={false}
         onChangeClick={() => {}}
       />,
@@ -48,6 +66,7 @@ describe("LocationIndicator", () => {
     render(
       <LocationIndicator
         locationName={null}
+        hasLocation={false}
         isDetecting={true}
         onChangeClick={() => {}}
       />,
