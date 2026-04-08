@@ -37,6 +37,7 @@ export function ProfilePicturePreviewDialog({
 
         <div className="flex justify-center py-4">
           {/* TODO: Add image cropping support here */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- previewUrl is a blob: URL for a local file chosen via <input type="file">, which next/image cannot handle */}
           <img
             src={previewUrl}
             alt=""

@@ -53,6 +53,7 @@ export function EmbedPlayer({
     <div className="w-full">
       <div className={cn("relative overflow-hidden rounded-lg bg-muted", aspectClass)}>
         {thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- thumbnail comes from third-party embed providers (YouTube, Vimeo, etc.) on their CDNs; hosts are only known at runtime and cannot be pre-declared in images.remotePatterns
           <img
             src={thumbnailUrl}
             alt={title ?? source}

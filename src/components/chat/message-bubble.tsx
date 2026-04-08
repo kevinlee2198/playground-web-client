@@ -191,6 +191,7 @@ export function MessageBubble({
                     rel="noopener noreferrer"
                     className="block"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded image hosted on the backend file server; converting to next/image requires adding images.remotePatterns in next.config and handling unknown intrinsic dimensions */}
                     <img
                       src={
                         message.resource.thumbnailUrl ??

@@ -39,10 +39,6 @@ vi.mock("next-intl", () => ({
   }),
 }));
 
-vi.mock("next/image", () => ({
-  default: (props: Record<string, unknown>) => <img {...props} />,
-}));
-
 import { GameCard } from "@/components/game/game-card";
 import { GameStatus, GameRole, GameVisibility, SportType, SportFormat, StatEntryMode } from "@/lib/constants";
 import type { GameNode } from "@/lib/types/game";

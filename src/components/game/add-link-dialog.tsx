@@ -254,6 +254,7 @@ export function AddLinkDialog({
               <div className="rounded-lg border p-3">
                 <div className="flex gap-3">
                   {preview.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- thumbnailUrl comes from user-supplied link preview metadata on arbitrary third-party hosts; cannot be pre-configured in images.remotePatterns
                     <img
                       src={preview.thumbnailUrl}
                       alt={preview.title ?? "Link preview"}

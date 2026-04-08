@@ -66,6 +66,7 @@ function VideoMediaItem({
           aria-label={t("playVideo", { title: media.title ?? media.source })}
         >
           {media.thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- video thumbnail from third-party embed providers (YouTube, Vimeo, etc.); see embed-player.tsx for rationale
             <img
               src={media.thumbnailUrl}
               alt={media.title ?? "Video thumbnail"}
@@ -146,6 +147,7 @@ function LinkCardFallback({
       >
         {media.thumbnailUrl ? (
           <div className="flex h-full w-full flex-col">
+            {/* eslint-disable-next-line @next/next/no-img-element -- link preview thumbnail on arbitrary third-party hosts; cannot be pre-declared in images.remotePatterns */}
             <img
               src={media.thumbnailUrl}
               alt={media.title ?? t("opensInNewTab")}
@@ -221,6 +223,7 @@ export function GameMediaItem({
           className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-4"
         >
           {media.thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- link media thumbnail on arbitrary third-party hosts; cannot be pre-declared in images.remotePatterns
             <img
               src={media.thumbnailUrl}
               alt={media.title ?? t("opensInNewTab")}
@@ -254,6 +257,7 @@ export function GameMediaItem({
         rel="noopener noreferrer"
         className="block h-full w-full"
       >
+        {/* eslint-disable-next-line @next/next/no-img-element -- image media hosted on the backend file server; converting to next/image requires adding images.remotePatterns in next.config and tracking intrinsic dimensions from uploads */}
         <img
           src={thumbnailSrc}
           alt={media.title ?? t("title")}

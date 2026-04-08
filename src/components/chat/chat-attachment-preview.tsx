@@ -25,6 +25,7 @@ export function ChatAttachmentPreview({
     <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border">
         {isImage && previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- previewUrl is a blob: URL for an unsaved local file, which next/image cannot handle
           <img src={previewUrl} alt="" className="h-full w-full object-cover" />
         ) : (
           <Film className="h-6 w-6 text-muted-foreground" />
