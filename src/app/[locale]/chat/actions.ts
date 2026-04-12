@@ -32,12 +32,12 @@ const updateMessageSchema = z.object({
 });
 
 const createDirectMessageSchema = z.object({
-  userId: z.string().min(1),
+  userId: z.number().int().positive(),
 });
 
 const createGroupChatSchema = z.object({
   name: z.string().min(1).max(100),
-  userIds: z.array(z.string().min(1)).min(1),
+  userIds: z.array(z.number().int().positive()).min(1),
 });
 
 /** Reusable chat room list node selection */
@@ -221,7 +221,7 @@ export async function loadMutualFollows(first: number, after?: string) {
  * Find existing direct message room with a user
  */
 export async function findDirectMessageRoom(
-  userId: string,
+  userId: number,
 ): Promise<ChatRoomListNode | null> {
   try {
     const response = await authQuery({
@@ -246,7 +246,7 @@ export async function findDirectMessageRoom(
  * Create a direct message conversation with another user.
  * Idempotent: returns the existing DM if one already exists.
  */
-export async function createDirectMessage(userId: string): Promise<{
+export async function createDirectMessage(userId: number): Promise<{
   success: boolean;
   chatRoom?: ChatRoomListNode;
   errorType?: string;
@@ -290,7 +290,7 @@ export async function createDirectMessage(userId: string): Promise<{
  */
 export async function createGroupChat(
   name: string,
-  userIds: string[],
+  userIds: number[],
 ): Promise<{
   success: boolean;
   chatRoom?: ChatRoomListNode;
@@ -524,7 +524,7 @@ export async function deleteMessage(id: string): Promise<{
 /**
  * Add a member to a chat room
  */
-export async function addMember(chatRoomId: string, userId: string): Promise<{
+export async function addMember(chatRoomId: string, userId: number): Promise<{
   success: boolean;
   member?: ChatRoomMemberNode;
   errorType?: string;
@@ -571,7 +571,7 @@ export async function addMember(chatRoomId: string, userId: string): Promise<{
  */
 export async function updateMemberRole(
   chatRoomId: string,
-  userId: string,
+  userId: number,
   role: ChatRoomRoleType,
 ): Promise<{ success: boolean; errorType?: string; message?: string }> {
   try {
@@ -640,7 +640,7 @@ export async function leaveChat(
 /**
  * Remove a member from a chat room
  */
-export async function removeMember(chatRoomId: string, userId: string): Promise<{
+export async function removeMember(chatRoomId: string, userId: number): Promise<{
   success: boolean;
   errorType?: string;
   message?: string;

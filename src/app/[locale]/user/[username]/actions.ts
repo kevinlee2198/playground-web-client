@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 interface FollowUserState {
-  id: string;
+  id: number;
   viewerFollowsUser: boolean;
   userFollowsViewer: boolean;
   viewerSentFollowRequest: { id: string } | null;
@@ -26,7 +26,7 @@ export type FollowUserResult =
   | { success: true; type: "requested"; requestId: string }
   | { success: false; errorType: string; message: string };
 
-export async function followUser(userId: string): Promise<FollowUserResult> {
+export async function followUser(userId: number): Promise<FollowUserResult> {
   try {
     const response = await authMutate({
       followUser: {
@@ -75,7 +75,7 @@ export async function followUser(userId: string): Promise<FollowUserResult> {
   }
 }
 
-export async function unfollowUser(userId: string) {
+export async function unfollowUser(userId: number) {
   try {
     const response = await authMutate({
       unfollowUser: {
@@ -105,7 +105,7 @@ export async function unfollowUser(userId: string) {
   }
 }
 
-export async function removeFollower(userId: string) {
+export async function removeFollower(userId: number) {
   try {
     const response = await authMutate({
       removeFollower: {
@@ -134,7 +134,7 @@ export async function removeFollower(userId: string) {
   }
 }
 
-export async function blockUser(userId: string) {
+export async function blockUser(userId: number) {
   try {
     const response = await authMutate({
       blockUser: {
@@ -163,7 +163,7 @@ export async function blockUser(userId: string) {
   }
 }
 
-export async function unblockUser(userId: string) {
+export async function unblockUser(userId: number) {
   try {
     const response = await authMutate({
       unblockUser: {
@@ -193,7 +193,7 @@ export async function unblockUser(userId: string) {
 }
 
 async function loadFollowConnection(
-  userId: string,
+  userId: number,
   field: "followers" | "following",
   nodeFragment: Record<string, unknown>,
   first: number,
@@ -229,7 +229,7 @@ async function loadFollowConnection(
   }
 }
 
-export async function loadFollowers(userId: string, first: number, after?: string) {
+export async function loadFollowers(userId: number, first: number, after?: string) {
   return loadFollowConnection(userId, "followers", {
     id: true,
     follower: followUserRefFragment,
@@ -238,7 +238,7 @@ export async function loadFollowers(userId: string, first: number, after?: strin
   }, first, after);
 }
 
-export async function loadFollowing(userId: string, first: number, after?: string) {
+export async function loadFollowing(userId: number, first: number, after?: string) {
   return loadFollowConnection(userId, "following", {
     id: true,
     follower: { id: true },
@@ -249,7 +249,7 @@ export async function loadFollowing(userId: string, first: number, after?: strin
 
 interface UpdateUserResult {
   success: boolean;
-  user?: { id: string; displayName: string; biography: string | null };
+  user?: { id: number; displayName: string; biography: string | null };
   errorType?: string;
   message?: string;
 }

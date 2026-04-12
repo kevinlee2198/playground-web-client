@@ -18,7 +18,7 @@ interface PageProps {
 
 interface BlockedUserEdge {
   node: {
-    id: string;
+    id: number;
     displayName: string;
     username: string;
   };
