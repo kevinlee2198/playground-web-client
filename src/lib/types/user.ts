@@ -1,6 +1,6 @@
 /** A user as returned from the searchUsers query */
 export interface UserSearchNode {
-  id: string;
+  id: number;
   username: string;
   firstName: string | null;
   lastName: string | null;

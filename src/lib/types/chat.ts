@@ -2,7 +2,7 @@ import type { Resource } from "@/lib/types/resource";
 
 /** A user reference as returned in chat-related queries */
 export interface ChatUser {
-  id: string;
+  id: number;
   firstName: string | null;
   lastName: string | null;
   displayName: string;
@@ -150,7 +150,7 @@ export type ChatRoomDetailNode =
 
 /** A mutual follow user for the people selector in chat */
 export interface MutualFollowUser {
-  id: string;
+  id: number;
   displayName: string;
   username: string;
   profilePicture: {

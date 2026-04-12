@@ -207,7 +207,7 @@ export type GameParticipantDetail =
  * User reference within a game member
  */
 export interface GameMemberUser {
-  id: string;
+  id: number;
   firstName: string | null;
   lastName: string | null;
   displayName: string;

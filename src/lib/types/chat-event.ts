@@ -37,7 +37,7 @@ export interface ChatRoomMemberAddedEvent extends ChatEventBase {
 /** A member was removed from a chat room */
 export interface ChatRoomMemberRemovedEvent extends ChatEventBase {
   __typename: "ChatRoomMemberRemovedEvent";
-  userId: string;
+  userId: number;
 }
 
 /** Discriminated union for all chat event types */

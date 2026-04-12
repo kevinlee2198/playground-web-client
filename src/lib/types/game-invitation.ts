@@ -2,7 +2,7 @@ import type { GameInvitationStatus } from "@/lib/constants";
 
 /** User reference on an invitation */
 export interface InvitationUserRef {
-  id: string;
+  id: number;
   displayName: string;
   username: string;
 }
@@ -22,7 +22,7 @@ export interface ViewerGameInvitation {
   id: string;
   status: GameInvitationStatus;
   inviter: {
-    id: string;
+    id: number;
     displayName: string;
   };
 }
@@ -37,7 +37,7 @@ export interface SendInvitationResult {
 
 /** One entry in bulk send response */
 export interface GameInvitationBulkItemResult {
-  userId: string;
+  userId: number;
   invitation: { id: string; status: GameInvitationStatus } | null;
   error: { message: string } | null;
 }

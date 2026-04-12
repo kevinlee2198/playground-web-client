@@ -7,7 +7,7 @@ import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
  * Minimal user info nested inside a Player for feed display.
  */
 export interface FeedPlayerUser {
-  id: string;
+  id: number;
   displayName: string;
   profilePicture: FeedProfilePicture | null;
 }
