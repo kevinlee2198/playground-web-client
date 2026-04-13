@@ -56,7 +56,7 @@ interface MemberListPanelProps {
   onOpenChange: (open: boolean) => void;
   roomId: string;
   members: Edge<ChatRoomMemberNode>[];
-  currentUserId: string;
+  currentUserId: number;
   isDirectMessage: boolean;
   onMembersChange: (members: Edge<ChatRoomMemberNode>[]) => void;
   currentUserRole: ChatRoomRoleType | null;
@@ -76,17 +76,17 @@ export function MemberListPanel({
   const t = useTranslations("chat.members");
   const tChat = useTranslations("chat");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{
-    userId: string;
+    userId: number;
     name: string;
   } | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  const [transferTarget, setTransferTarget] = useState<{ userId: string; name: string } | null>(null);
+  const [transferTarget, setTransferTarget] = useState<{ userId: number; name: string } | null>(null);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   const memberUserIds = members.map((edge) => edge.node.user.id);
@@ -135,7 +135,7 @@ export function MemberListPanel({
     });
   };
 
-  const handleRemoveClick = (userId: string, name: string) => {
+  const handleRemoveClick = (userId: number, name: string) => {
     setMemberToRemove({ userId, name });
     setRemoveDialogOpen(true);
   };
@@ -166,7 +166,7 @@ export function MemberListPanel({
     }
   };
 
-  const handleRoleChange = (userId: string, name: string, newRole: ChatRoomRole, successKey: "promoteSuccess" | "demoteSuccess") => {
+  const handleRoleChange = (userId: number, name: string, newRole: ChatRoomRole, successKey: "promoteSuccess" | "demoteSuccess") => {
     startTransition(async () => {
       const result = await updateMemberRole(roomId, userId, newRole);
       if (result.success) {

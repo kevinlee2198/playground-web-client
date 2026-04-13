@@ -18,7 +18,7 @@ interface GameMediaSectionProps {
   initialMedia: Edge<GameMediaNode>[];
   initialPageInfo: PageInfo;
   canContribute: boolean;
-  currentUserId: string | null;
+  currentUserId: number | null;
   viewerGameRole: GameRole | null;
   gameVisibility: GameVisibility;
 }

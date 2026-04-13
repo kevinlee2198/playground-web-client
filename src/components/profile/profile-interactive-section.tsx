@@ -6,7 +6,7 @@ import { FollowActions } from "./follow-actions";
 import { FollowCounts } from "./follow-counts";
 
 interface ProfileInteractiveSectionProps {
-  userId: string;
+  userId: number;
   displayName: string;
   initialFollowerCount: number;
   initialFollowingCount: number;

@@ -9,7 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface MessageButtonProps {
-  userId: string;
+  userId: number;
 }
 
 export function MessageButton({ userId }: MessageButtonProps) {

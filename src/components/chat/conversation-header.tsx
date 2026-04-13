@@ -7,7 +7,7 @@ import { getChatRoomDisplayName } from "./chat-utils";
 
 interface ConversationHeaderProps {
   room: ChatRoomDetailNode;
-  currentUserId: string;
+  currentUserId: number;
   onToggleMembers: () => void;
   onBack: () => void;
 }

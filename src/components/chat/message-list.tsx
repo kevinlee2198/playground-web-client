@@ -18,7 +18,7 @@ import { SystemMessageBubble } from "./system-message-bubble";
 
 interface MessageListProps {
   messages: Edge<ChatMessageNode>[];
-  currentUserId: string;
+  currentUserId: number;
   currentUserRole: ChatRoomRole | null;
   onReply: (message: UserChatMessageNode) => void;
   onDelete: (messageId: string) => void;

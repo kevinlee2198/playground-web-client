@@ -31,7 +31,7 @@ interface ChatRoomListProps {
   initialRooms: Edge<ChatRoomListNode>[];
   initialPageInfo: PageInfo;
   selectedRoomId: string | null;
-  currentUserId: string;
+  currentUserId: number;
   onSelectRoom: (roomId: string) => void;
   onNewChatClick: () => void;
   newRoom: ChatRoomListNode | null;

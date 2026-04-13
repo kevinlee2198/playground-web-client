@@ -30,7 +30,7 @@ interface CreateChatRoomDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRoomCreated: (room: ChatRoomListNode) => void;
-  currentUserId: string;
+  currentUserId: number;
 }
 
 export function CreateChatRoomDialog({
@@ -40,7 +40,7 @@ export function CreateChatRoomDialog({
   currentUserId,
 }: CreateChatRoomDialogProps) {
   const t = useTranslations("chat");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [groupName, setGroupName] = useState("");
   const [isPending, startTransition] = useTransition();
 

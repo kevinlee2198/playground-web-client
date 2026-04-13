@@ -63,7 +63,7 @@ interface GameDetailClientProps {
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
   initialVolleyballStats?: { node: VolleyballStatsNode }[];
   playerId: number | null;
-  currentUserId: string | null;
+  currentUserId: number | null;
   children: ReactNode;
 }
 

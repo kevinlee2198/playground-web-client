@@ -12,7 +12,7 @@ const FollowListDialog = dynamic(
 );
 
 interface FollowCountsProps {
-  userId: string;
+  userId: number;
   followerCount: number;
   followingCount: number;
   isOwnProfile: boolean;

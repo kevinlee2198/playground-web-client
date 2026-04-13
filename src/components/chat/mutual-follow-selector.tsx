@@ -19,10 +19,10 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface MutualFollowSelectorProps {
-  selectedIds: string[];
-  onSelectionChange: (ids: string[]) => void;
-  excludeUserIds?: string[];
-  currentUserId: string;
+  selectedIds: number[];
+  onSelectionChange: (ids: number[]) => void;
+  excludeUserIds?: number[];
+  currentUserId: number;
 }
 
 export function MutualFollowSelector({
@@ -129,7 +129,7 @@ export function MutualFollowSelector({
   );
 
   const handleToggle = useCallback(
-    (userId: string) => {
+    (userId: number) => {
       if (selectedIds.includes(userId)) {
         onSelectionChange(selectedIds.filter((id) => id !== userId));
       } else {
@@ -222,7 +222,7 @@ export function MutualFollowSelector({
 interface MutualFollowItemProps {
   user: MutualFollowUser;
   isSelected: boolean;
-  onToggle: (userId: string) => void;
+  onToggle: (userId: number) => void;
 }
 
 function MutualFollowItem({ user, isSelected, onToggle }: MutualFollowItemProps) {

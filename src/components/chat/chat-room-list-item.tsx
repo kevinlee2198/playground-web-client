@@ -14,7 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 interface ChatRoomListItemProps {
   room: ChatRoomListNode;
   isSelected: boolean;
-  currentUserId: string;
+  currentUserId: number;
   onClick: () => void;
   hasUnread: boolean;
 }
