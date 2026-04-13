@@ -1,10 +1,10 @@
-import { TEST_USER } from "../auth.fixture";
+import { TEST_BACKEND_USER_ID, TEST_USER } from "../auth.fixture";
 
 export function mockUserResponse(overrides?: Record<string, unknown>) {
   return {
     data: {
       user: {
-        id: "other-user-id",
+        id: 2,
         username: "otheruser",
         firstName: "Other",
         lastName: "User",
@@ -29,7 +29,7 @@ export function mockUserNotFoundResponse() {
 
 export function mockOwnUserResponse() {
   return mockUserResponse({
-    id: TEST_USER.id,
+    id: TEST_BACKEND_USER_ID,
     username: TEST_USER.username,
     firstName: "Test",
     lastName: "User",

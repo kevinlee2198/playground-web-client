@@ -4,7 +4,7 @@ export function mockFollowRequest(overrides?: Record<string, unknown>) {
   return {
     id: "follow-req-1",
     requester: {
-      id: "requester-user-id",
+      id: 4,
       username: "requesteruser",
       displayName: "Requester User",
       profilePicture: null,
@@ -29,7 +29,7 @@ export function mockFollowUserResponse() {
       followUser: {
         __typename: "FollowUserResponse",
         user: {
-          id: "other-user-id",
+          id: 2,
           viewerFollowsUser: true,
           userFollowsViewer: false,
           viewerSentFollowRequest: null,

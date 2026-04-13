@@ -90,7 +90,7 @@ describe("fetchNotifications", () => {
         id: "n1",
         isRead: false,
         createdDate: "2025-01-01",
-        follower: { id: "u1", username: "alice", displayName: "Alice" },
+        follower: { id: 1, username: "alice", displayName: "Alice" },
       },
     },
   ];
@@ -214,7 +214,7 @@ describe("markNotificationsAsRead", () => {
       id: "n1",
       isRead: true,
       createdDate: "2025-01-01",
-      follower: { id: "u1", username: "alice", displayName: "Alice" },
+      follower: { id: 1, username: "alice", displayName: "Alice" },
     },
     {
       __typename: "GameStartedNotification",

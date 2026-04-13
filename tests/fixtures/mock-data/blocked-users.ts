@@ -1,7 +1,7 @@
 import { buildConnection, emptyConnection } from "./connection";
 
 const defaultBlockedUser = {
-  id: "blocked-user-id",
+  id: 3,
   displayName: "Blocked User",
   username: "blockeduser",
 };

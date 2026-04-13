@@ -270,7 +270,7 @@ describe("loadMutualFollows", () => {
         {
           cursor: "c1",
           node: {
-            id: "u1",
+            id: 1,
             displayName: "Alice",
             username: "alice",
             profilePicture: null,
@@ -342,7 +342,7 @@ describe("findDirectMessageRoom", () => {
     };
     mockQuerySuccess({ directMessageChatRoom: mockRoom });
 
-    const result = await findDirectMessageRoom("user1");
+    const result = await findDirectMessageRoom(1);
 
     expect(result).toEqual(mockRoom);
   });
@@ -350,7 +350,7 @@ describe("findDirectMessageRoom", () => {
   it("returns null on GraphQL errors", async () => {
     mockQueryGraphqlError("Not found");
 
-    const result = await findDirectMessageRoom("user1");
+    const result = await findDirectMessageRoom(1);
 
     expect(result).toBeNull();
   });
@@ -358,7 +358,7 @@ describe("findDirectMessageRoom", () => {
   it("returns null when no room exists", async () => {
     mockQuerySuccess({ directMessageChatRoom: null });
 
-    const result = await findDirectMessageRoom("user1");
+    const result = await findDirectMessageRoom(1);
 
     expect(result).toBeNull();
   });
@@ -366,7 +366,7 @@ describe("findDirectMessageRoom", () => {
   it("returns null on network failure", async () => {
     mockQueryNetworkError();
 
-    const result = await findDirectMessageRoom("user1");
+    const result = await findDirectMessageRoom(1);
 
     expect(result).toBeNull();
   });
@@ -390,14 +390,14 @@ describe("createDirectMessage", () => {
       chatRoom: mockChatRoom,
     });
 
-    const result = await createDirectMessage("user1");
+    const result = await createDirectMessage(1);
 
     expect(result).toEqual({ success: true, chatRoom: mockChatRoom });
     expect(mockAuthMutate).toHaveBeenCalledOnce();
   });
 
-  it("returns VALIDATION_ERROR when userId is empty without calling authMutate", async () => {
-    const result = await createDirectMessage("");
+  it("returns VALIDATION_ERROR when userId is not positive without calling authMutate", async () => {
+    const result = await createDirectMessage(0);
 
     expect(result).toEqual({
       success: false,
@@ -410,7 +410,7 @@ describe("createDirectMessage", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await createDirectMessage("user1");
+    const result = await createDirectMessage(1);
 
     expect(result).toEqual({
       success: false,
@@ -422,7 +422,7 @@ describe("createDirectMessage", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("createDirectMessage", "UserNotFoundError", "User not found");
 
-    const result = await createDirectMessage("user1");
+    const result = await createDirectMessage(1);
 
     expect(result).toEqual({
       success: false,
@@ -434,7 +434,7 @@ describe("createDirectMessage", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await createDirectMessage("user1");
+    const result = await createDirectMessage(1);
 
     expect(result).toEqual({
       success: false,
@@ -462,14 +462,14 @@ describe("createGroupChat", () => {
       chatRoom: mockChatRoom,
     });
 
-    const result = await createGroupChat("My Group", ["user1", "user2"]);
+    const result = await createGroupChat("My Group", [1, 2]);
 
     expect(result).toEqual({ success: true, chatRoom: mockChatRoom });
     expect(mockAuthMutate).toHaveBeenCalledOnce();
   });
 
   it("returns VALIDATION_ERROR when name is empty without calling authMutate", async () => {
-    const result = await createGroupChat("", ["user1"]);
+    const result = await createGroupChat("", [1]);
 
     expect(result).toEqual({
       success: false,
@@ -492,7 +492,7 @@ describe("createGroupChat", () => {
 
   it("returns VALIDATION_ERROR when name exceeds 100 chars without calling authMutate", async () => {
     const longName = "a".repeat(101);
-    const result = await createGroupChat(longName, ["user1"]);
+    const result = await createGroupChat(longName, [1]);
 
     expect(result).toEqual({
       success: false,
@@ -505,7 +505,7 @@ describe("createGroupChat", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await createGroupChat("My Group", ["user1"]);
+    const result = await createGroupChat("My Group", [1]);
 
     expect(result).toEqual({
       success: false,
@@ -517,7 +517,7 @@ describe("createGroupChat", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("createGroupChat", "ChatRoomCreationError", "Cannot create chat");
 
-    const result = await createGroupChat("My Group", ["user1"]);
+    const result = await createGroupChat("My Group", [1]);
 
     expect(result).toEqual({
       success: false,
@@ -529,7 +529,7 @@ describe("createGroupChat", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await createGroupChat("My Group", ["user1"]);
+    const result = await createGroupChat("My Group", [1]);
 
     expect(result).toEqual({
       success: false,
@@ -887,7 +887,7 @@ describe("addMember", () => {
 
   const mockMember = {
     id: "m1",
-    user: { id: "u1", username: "alice" },
+    user: { id: 1, username: "alice" },
     role: "MEMBER",
     joinedDate: "2025-01-01",
   };
@@ -897,7 +897,7 @@ describe("addMember", () => {
       member: mockMember,
     });
 
-    const result = await addMember("room1", "user1");
+    const result = await addMember("room1", 1);
 
     expect(result).toEqual({ success: true, member: mockMember });
     expect(mockAuthMutate).toHaveBeenCalledOnce();
@@ -906,7 +906,7 @@ describe("addMember", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Not authorized");
 
-    const result = await addMember("room1", "user1");
+    const result = await addMember("room1", 1);
 
     expect(result).toEqual({
       success: false,
@@ -918,7 +918,7 @@ describe("addMember", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("addChatRoomMember", "UserAlreadyMemberError", "User is already a member");
 
-    const result = await addMember("room1", "user1");
+    const result = await addMember("room1", 1);
 
     expect(result).toEqual({
       success: false,
@@ -930,7 +930,7 @@ describe("addMember", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await addMember("room1", "user1");
+    const result = await addMember("room1", 1);
 
     expect(result).toEqual({
       success: false,
@@ -952,7 +952,7 @@ describe("updateMemberRole", () => {
       member: { id: "m1", role: "ADMIN" },
     });
 
-    const result = await updateMemberRole("room1", "user1", "ADMIN");
+    const result = await updateMemberRole("room1", 1, "ADMIN");
 
     expect(result).toEqual({ success: true });
     expect(mockAuthMutate).toHaveBeenCalledOnce();
@@ -963,7 +963,7 @@ describe("updateMemberRole", () => {
       member: { id: "m1", role: "ADMIN" },
     });
 
-    await updateMemberRole("room1", "user1", "ADMIN");
+    await updateMemberRole("room1", 1, "ADMIN");
 
     const callArg = mockAuthMutate.mock.calls[0][0] as Record<string, unknown>;
     const roleInput = (
@@ -976,7 +976,7 @@ describe("updateMemberRole", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await updateMemberRole("room1", "user1", "ADMIN");
+    const result = await updateMemberRole("room1", 1, "ADMIN");
 
     expect(result).toEqual({
       success: false,
@@ -988,7 +988,7 @@ describe("updateMemberRole", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("updateChatRoomMemberRole", "MemberNotFoundError", "Member not found");
 
-    const result = await updateMemberRole("room1", "user1", "ADMIN");
+    const result = await updateMemberRole("room1", 1, "ADMIN");
 
     expect(result).toEqual({
       success: false,
@@ -1000,7 +1000,7 @@ describe("updateMemberRole", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await updateMemberRole("room1", "user1", "ADMIN");
+    const result = await updateMemberRole("room1", 1, "ADMIN");
 
     expect(result).toEqual({
       success: false,
@@ -1073,10 +1073,10 @@ describe("removeMember", () => {
   it("returns success on member removal", async () => {
     mockMutateSuccess("removeChatRoomMember", "RemoveChatRoomMemberResponse", {
       chatRoomId: "room1",
-      userId: "user1",
+      userId: 1,
     });
 
-    const result = await removeMember("room1", "user1");
+    const result = await removeMember("room1", 1);
 
     expect(result).toEqual({ success: true });
     expect(mockAuthMutate).toHaveBeenCalledOnce();
@@ -1085,7 +1085,7 @@ describe("removeMember", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Forbidden");
 
-    const result = await removeMember("room1", "user1");
+    const result = await removeMember("room1", 1);
 
     expect(result).toEqual({
       success: false,
@@ -1097,7 +1097,7 @@ describe("removeMember", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("removeChatRoomMember", "MemberNotFoundError", "Member not found");
 
-    const result = await removeMember("room1", "user1");
+    const result = await removeMember("room1", 1);
 
     expect(result).toEqual({
       success: false,
@@ -1109,7 +1109,7 @@ describe("removeMember", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await removeMember("room1", "user1");
+    const result = await removeMember("room1", 1);
 
     expect(result).toEqual({
       success: false,

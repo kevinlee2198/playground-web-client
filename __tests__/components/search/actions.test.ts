@@ -49,7 +49,7 @@ const mockSearchData = {
       {
         cursor: "c1",
         node: {
-          id: "u1",
+          id: 1,
           username: "alice",
           firstName: "Alice",
           lastName: "Smith",

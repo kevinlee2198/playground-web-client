@@ -49,7 +49,7 @@ function makeGameMedia(overrides: Partial<GameMediaNode> = {}): GameMediaNode {
     embedWidth: 560,
     embedHeight: 315,
     addedBy: {
-      id: "user-1",
+      id: 1,
       displayName: "Alice",
       username: "alice",
     },

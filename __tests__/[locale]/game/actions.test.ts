@@ -742,7 +742,7 @@ describe("loadGameMembers", () => {
       cursor: "c1",
       node: {
         id: "m1",
-        user: { id: "u1", firstName: "Alice", lastName: "Smith", username: "alice" },
+        user: { id: 1, firstName: "Alice", lastName: "Smith", username: "alice" },
         role: "OWNER",
       },
     },
@@ -789,7 +789,7 @@ describe("addGameEditor", () => {
 
   const mockMember = {
     id: "m1",
-    user: { id: "u1", firstName: "Bob", lastName: "Jones", username: "bob" },
+    user: { id: 10, firstName: "Bob", lastName: "Jones", username: "bob" },
     role: "EDITOR",
   };
 
@@ -798,7 +798,7 @@ describe("addGameEditor", () => {
       gameMember: mockMember,
     });
 
-    const result = await addGameEditor(1, "u1");
+    const result = await addGameEditor(1, 10);
 
     expect(result).toEqual({ success: true, gameMember: mockMember });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
@@ -807,7 +807,7 @@ describe("addGameEditor", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("User not found");
 
-    const result = await addGameEditor(1, "u1");
+    const result = await addGameEditor(1, 10);
 
     expect(result).toEqual({
       success: false,
@@ -820,7 +820,7 @@ describe("addGameEditor", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("addGameEditor", "UserAlreadyEditorError", "User is already an editor");
 
-    const result = await addGameEditor(1, "u1");
+    const result = await addGameEditor(1, 10);
 
     expect(result).toEqual({
       success: false,
@@ -833,7 +833,7 @@ describe("addGameEditor", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await addGameEditor(1, "u1");
+    const result = await addGameEditor(1, 10);
 
     expect(result).toEqual({
       success: false,
@@ -854,7 +854,7 @@ describe("removeGameEditor", () => {
   it("returns success on removal", async () => {
     mockMutateSuccess("removeGameEditor", "RemoveGameEditorResponse", { id: "m1" });
 
-    const result = await removeGameEditor(1, "u1");
+    const result = await removeGameEditor(1, 10);
 
     expect(result).toEqual({ success: true });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
@@ -863,7 +863,7 @@ describe("removeGameEditor", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Member not found");
 
-    const result = await removeGameEditor(1, "u1");
+    const result = await removeGameEditor(1, 10);
 
     expect(result).toEqual({
       success: false,
@@ -876,7 +876,7 @@ describe("removeGameEditor", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("removeGameEditor", "GameMemberNotFoundError", "Editor not found");
 
-    const result = await removeGameEditor(1, "u1");
+    const result = await removeGameEditor(1, 10);
 
     expect(result).toEqual({
       success: false,
@@ -889,7 +889,7 @@ describe("removeGameEditor", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await removeGameEditor(1, "u1");
+    const result = await removeGameEditor(1, 10);
 
     expect(result).toEqual({
       success: false,
@@ -909,7 +909,7 @@ describe("transferGameOwnership", () => {
 
   const mockMember = {
     id: "m2",
-    user: { id: "u2", firstName: "Carol", lastName: "White", username: "carol" },
+    user: { id: 20, firstName: "Carol", lastName: "White", username: "carol" },
     role: "OWNER",
   };
 
@@ -918,7 +918,7 @@ describe("transferGameOwnership", () => {
       gameMember: mockMember,
     });
 
-    const result = await transferGameOwnership(1, "u2");
+    const result = await transferGameOwnership(1, 20);
 
     expect(result).toEqual({ success: true, gameMember: mockMember });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
@@ -927,7 +927,7 @@ describe("transferGameOwnership", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Target user not found");
 
-    const result = await transferGameOwnership(1, "u2");
+    const result = await transferGameOwnership(1, 20);
 
     expect(result).toEqual({
       success: false,
@@ -940,7 +940,7 @@ describe("transferGameOwnership", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("transferGameOwnership", "UserNotGameMemberError", "User is not a member");
 
-    const result = await transferGameOwnership(1, "u2");
+    const result = await transferGameOwnership(1, 20);
 
     expect(result).toEqual({
       success: false,
@@ -953,7 +953,7 @@ describe("transferGameOwnership", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await transferGameOwnership(1, "u2");
+    const result = await transferGameOwnership(1, 20);
 
     expect(result).toEqual({
       success: false,

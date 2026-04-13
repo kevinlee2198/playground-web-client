@@ -1,7 +1,7 @@
 import { buildConnection, emptyConnection } from "./connection";
 
 const defaultUser = {
-  id: "search-user-1",
+  id: 1,
   username: "founduser",
   firstName: "Found",
   lastName: "User",

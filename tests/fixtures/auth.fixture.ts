@@ -27,6 +27,9 @@ export const TEST_SESSION = {
 
 export const TEST_PLAYER_ID = 1;
 
+// Backend schema user ID — numeric, used in GraphQL mock responses
+export const TEST_BACKEND_USER_ID = 1;
+
 const SECRET =
   process.env.BETTER_AUTH_SECRET ||
   "test-secret-for-playwright-integ-tests-32chars!!";

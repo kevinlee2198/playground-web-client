@@ -1,4 +1,4 @@
-import { TEST_USER } from "../auth.fixture";
+import { TEST_BACKEND_USER_ID, TEST_USER } from "../auth.fixture";
 
 export function mockImageMedia(overrides?: Record<string, unknown>) {
   return {
@@ -9,7 +9,7 @@ export function mockImageMedia(overrides?: Record<string, unknown>) {
     thumbnailUrl: "https://s3.example.com/game-media/thumb.jpg",
     title: "Game photo",
     addedBy: {
-      id: TEST_USER.id,
+      id: TEST_BACKEND_USER_ID,
       displayName: "Test User",
       username: TEST_USER.username,
     },
@@ -32,7 +32,7 @@ export function mockVideoMedia(overrides?: Record<string, unknown>) {
     embedWidth: 560,
     embedHeight: 315,
     addedBy: {
-      id: TEST_USER.id,
+      id: TEST_BACKEND_USER_ID,
       displayName: "Test User",
       username: TEST_USER.username,
     },
@@ -55,7 +55,7 @@ export function mockLivestreamMedia(overrides?: Record<string, unknown>) {
     embedWidth: 560,
     embedHeight: 315,
     addedBy: {
-      id: TEST_USER.id,
+      id: TEST_BACKEND_USER_ID,
       displayName: "Test User",
       username: TEST_USER.username,
     },
@@ -75,7 +75,7 @@ export function mockLinkMedia(overrides?: Record<string, unknown>) {
     title: "Game Recap Article",
     description: "A recap of the game",
     addedBy: {
-      id: TEST_USER.id,
+      id: TEST_BACKEND_USER_ID,
       displayName: "Test User",
       username: TEST_USER.username,
     },

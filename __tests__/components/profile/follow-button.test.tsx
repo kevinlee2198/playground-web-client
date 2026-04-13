@@ -79,7 +79,7 @@ function makeUnfollowResponse(overrides: { viewerFollowsUser?: boolean; wasMutua
 }
 
 const defaultProps = {
-  userId: "user-1",
+  userId: 1,
   displayName: "Alice",
   initialViewerFollowsUser: false,
 };
@@ -155,7 +155,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Follow Alice/i }));
 
     await waitFor(() => {
-      expect(mockFollowUser).toHaveBeenCalledWith("user-1");
+      expect(mockFollowUser).toHaveBeenCalledWith(1);
     });
   });
 
@@ -169,7 +169,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(mockUnfollowUser).toHaveBeenCalledWith("user-1");
+      expect(mockUnfollowUser).toHaveBeenCalledWith(1);
     });
   });
 
@@ -226,7 +226,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(mockUnfollowUser).toHaveBeenCalledWith("user-1");
+      expect(mockUnfollowUser).toHaveBeenCalledWith(1);
     });
 
     expect(mockToast).not.toHaveBeenCalled();
