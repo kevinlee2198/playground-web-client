@@ -1,4 +1,5 @@
-import { TEST_BACKEND_USER_ID, TEST_USER } from "../auth.fixture";
+import { TEST_USER } from "../auth.fixture";
+import { TEST_BACKEND_USER_ID } from "../test-ids";
 
 export function mockImageMedia(overrides?: Record<string, unknown>) {
   return {

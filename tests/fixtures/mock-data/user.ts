@@ -1,10 +1,11 @@
-import { TEST_BACKEND_USER_ID, TEST_USER } from "../auth.fixture";
+import { TEST_USER } from "../auth.fixture";
+import { OTHER_USER_ID, TEST_BACKEND_USER_ID } from "../test-ids";
 
 export function mockUserResponse(overrides?: Record<string, unknown>) {
   return {
     data: {
       user: {
-        id: 2,
+        id: OTHER_USER_ID,
         username: "otheruser",
         firstName: "Other",
         lastName: "User",

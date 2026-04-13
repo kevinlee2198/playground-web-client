@@ -1,7 +1,8 @@
+import { BLOCKED_USER_ID } from "../test-ids";
 import { buildConnection, emptyConnection } from "./connection";
 
 const defaultBlockedUser = {
-  id: 3,
+  id: BLOCKED_USER_ID,
   displayName: "Blocked User",
   username: "blockeduser",
 };

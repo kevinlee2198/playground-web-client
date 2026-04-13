@@ -1,10 +1,11 @@
+import { FOLLOW_REQUESTER_USER_ID, OTHER_USER_ID } from "../test-ids";
 import { buildConnection, emptyConnection } from "./connection";
 
 export function mockFollowRequest(overrides?: Record<string, unknown>) {
   return {
     id: "follow-req-1",
     requester: {
-      id: 4,
+      id: FOLLOW_REQUESTER_USER_ID,
       username: "requesteruser",
       displayName: "Requester User",
       profilePicture: null,
@@ -29,7 +30,7 @@ export function mockFollowUserResponse() {
       followUser: {
         __typename: "FollowUserResponse",
         user: {
-          id: 2,
+          id: OTHER_USER_ID,
           viewerFollowsUser: true,
           userFollowsViewer: false,
           viewerSentFollowRequest: null,
