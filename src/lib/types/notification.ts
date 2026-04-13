@@ -16,7 +16,7 @@ export interface NotificationUser {
 
 /** Game fields needed for game-related notifications */
 export interface NotificationGame {
-  id: string;
+  id: number;
   sportType: SportType;
 }
 

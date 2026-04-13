@@ -221,7 +221,7 @@ describe("markNotificationsAsRead", () => {
       id: "n2",
       isRead: true,
       createdDate: "2025-01-02",
-      game: { id: "g1", sportType: "BASKETBALL" },
+      game: { id: 1, sportType: "BASKETBALL" },
     },
   ];
 
