@@ -1,7 +1,8 @@
+import { TEST_BACKEND_USER_ID } from "../test-ids";
 import { buildConnection, emptyConnection } from "./connection";
 
 const defaultUser = {
-  id: "search-user-1",
+  id: TEST_BACKEND_USER_ID,
   username: "founduser",
   firstName: "Found",
   lastName: "User",

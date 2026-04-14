@@ -114,7 +114,7 @@ export default async function GameDetailPage({ params }: PageProps) {
   const session = await auth.api.getSession({ headers: await headers() });
 
   let game: GameDetail | null;
-  let currentUserId: string | null = null;
+  let currentUserId: number | null = null;
   let playerId: number | null = null;
   if (session?.user) {
     // Authenticated flow: fetch user info and game with auth

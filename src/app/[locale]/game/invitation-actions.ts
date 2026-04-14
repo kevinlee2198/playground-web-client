@@ -21,7 +21,7 @@ import { revalidatePath } from "next/cache";
  */
 export async function sendGameInvitation(
   gameId: number,
-  userId: string,
+  userId: number,
 ): Promise<SendInvitationResult> {
   try {
     const response = await authMutate({
@@ -58,7 +58,7 @@ export async function sendGameInvitation(
  */
 export async function sendGameInvitations(
   gameId: number,
-  userIds: string[],
+  userIds: number[],
 ): Promise<SendInvitationsResult> {
   try {
     const response = await authMutate({

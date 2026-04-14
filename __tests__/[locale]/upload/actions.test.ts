@@ -382,7 +382,7 @@ describe("confirmGameMediaUpload", () => {
       thumbnailUrl: "https://storage.example.com/game-thumb.jpg",
     },
     createdDate: "2025-01-01",
-    uploader: { id: "u1" },
+    uploader: { id: 1 },
   };
 
   it("returns success with gameMedia on confirmation", async () => {

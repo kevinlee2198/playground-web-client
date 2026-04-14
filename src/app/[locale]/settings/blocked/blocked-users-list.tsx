@@ -9,7 +9,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export interface BlockedUserEntry {
-  userId: string;
+  userId: number;
   displayName: string;
   username: string;
 }

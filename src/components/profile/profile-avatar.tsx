@@ -19,7 +19,7 @@ import { RemovePictureDialog } from "./remove-picture-dialog";
 
 interface ProfileAvatarProps {
   user: {
-    id: string;
+    id: number;
     firstName: string | null;
     lastName: string | null;
     displayName: string;

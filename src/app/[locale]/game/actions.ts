@@ -620,7 +620,7 @@ export async function loadGameMembers(gameId: number): Promise<{
  */
 export async function addGameEditor(
   gameId: number,
-  userId: string,
+  userId: number,
 ): Promise<GameMemberActionResult> {
   try {
     const response = await authMutate({
@@ -657,7 +657,7 @@ export async function addGameEditor(
  */
 export async function removeGameEditor(
   gameId: number,
-  userId: string,
+  userId: number,
 ): Promise<GameActionResult> {
   try {
     const response = await authMutate({
@@ -691,7 +691,7 @@ export async function removeGameEditor(
  */
 export async function transferGameOwnership(
   gameId: number,
-  userId: string,
+  userId: number,
 ): Promise<GameMemberActionResult> {
   try {
     const response = await authMutate({

@@ -19,7 +19,7 @@ function makeLivestream(overrides: Partial<LivestreamMediaNode> = {}): Livestrea
     embedWidth: 560,
     embedHeight: 315,
     addedBy: {
-      id: "user-42",
+      id: 42,
       displayName: "Bob",
       username: "bob",
     },
@@ -58,7 +58,7 @@ describe("LiveStreamSection", () => {
   });
 
   it("shows added by username", () => {
-    renderLiveStream({ addedBy: { id: "u1", displayName: "Bob", username: "bob" } });
+    renderLiveStream({ addedBy: { id: 1, displayName: "Bob", username: "bob" } });
 
     expect(screen.getByText(/Added by @bob/)).toBeInTheDocument();
   });

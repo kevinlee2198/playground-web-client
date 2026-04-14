@@ -134,7 +134,7 @@ describe("useNotificationSubscription", () => {
       id: "n1",
       isRead: false,
       createdDate: "2026-03-16T10:00:00Z",
-      game: { id: "g1", sportType: "BASKETBALL" },
+      game: { id: 1, sportType: "BASKETBALL" },
     };
     act(() => {
       capturedState.sink?.next({
@@ -223,7 +223,7 @@ describe("useNotificationSubscription", () => {
       id: "n2",
       isRead: false,
       createdDate: "2026-03-16T10:00:00Z",
-      follower: { id: "u1", username: "alice", displayName: "Alice" },
+      follower: { id: 1, username: "alice", displayName: "Alice" },
     };
     act(() => {
       capturedState.sink?.next({

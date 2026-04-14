@@ -122,7 +122,7 @@ export function InvitePlayersDialog({
     setSearchResults([]);
   }
 
-  function handleRemoveStaged(userId: string): void {
+  function handleRemoveStaged(userId: number): void {
     setStagedUsers((prev) => prev.filter((u) => u.id !== userId));
   }
 
@@ -186,7 +186,7 @@ export function InvitePlayersDialog({
             const staged = stagedUsers.find((u) => u.id === result.userId);
             const displayName = staged
               ? getFullName(staged)
-              : result.userId;
+              : String(result.userId);
             const isSuccess =
               result.invitation !== null && result.error === null;
 

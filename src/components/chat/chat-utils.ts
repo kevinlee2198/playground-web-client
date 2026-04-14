@@ -144,7 +144,7 @@ export function isDirectMessageRoom(
  */
 export function getChatRoomDisplayName(
   room: ChatRoomListNode | ChatRoomDetailNode,
-  currentUserId: string,
+  currentUserId: number,
 ): string {
   if (room.__typename === "GroupChatRoom") return room.name;
   const otherMember = room.members.edges.find(

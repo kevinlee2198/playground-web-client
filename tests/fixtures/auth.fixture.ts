@@ -25,8 +25,6 @@ export const TEST_SESSION = {
   userAgent: "Playwright",
 } as const;
 
-export const TEST_PLAYER_ID = 1;
-
 const SECRET =
   process.env.BETTER_AUTH_SECRET ||
   "test-secret-for-playwright-integ-tests-32chars!!";

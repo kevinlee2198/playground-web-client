@@ -141,7 +141,7 @@ function makeReceivedNotification(
     id: "notif-1",
     isRead: false,
     createdDate: new Date().toISOString(),
-    requester: { id: "user-1", username: "alice", displayName: "Alice" },
+    requester: { id: 1, username: "alice", displayName: "Alice" },
     followRequest: { id: "req-1" },
     ...overrides,
   };
@@ -155,7 +155,7 @@ function makeApprovedNotification(
     id: "notif-2",
     isRead: false,
     createdDate: new Date().toISOString(),
-    approver: { id: "user-2", username: "bob", displayName: "Bob" },
+    approver: { id: 2, username: "bob", displayName: "Bob" },
     ...overrides,
   };
 }

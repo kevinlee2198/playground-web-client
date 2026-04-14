@@ -37,7 +37,7 @@ interface GameMediaGalleryProps {
   media: Edge<GameMediaNode>[];
   pageInfo: PageInfo;
   canContribute: boolean;
-  currentUserId: string | null;
+  currentUserId: number | null;
   viewerGameRole: GameRole | null;
   gameVisibility: GameVisibility;
   onFileInputReady?: (click: () => void) => void;

@@ -9,14 +9,14 @@ interface BaseNotification {
 
 /** User fields needed for follower/game notifications */
 export interface NotificationUser {
-  id: string;
+  id: number;
   username: string;
   displayName: string;
 }
 
 /** Game fields needed for game-related notifications */
 export interface NotificationGame {
-  id: string;
+  id: number;
   sportType: SportType;
 }
 

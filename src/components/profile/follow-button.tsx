@@ -18,7 +18,7 @@ type FollowButtonState =
   | { type: "following" };
 
 interface FollowButtonProps {
-  userId: string;
+  userId: number;
   displayName: string;
   initialViewerFollowsUser: boolean;
   initialViewerSentFollowRequest?: { id: string } | null;

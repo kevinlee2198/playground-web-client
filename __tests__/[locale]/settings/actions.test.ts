@@ -96,7 +96,7 @@ describe("loadBlockedUsers", () => {
         {
           cursor: "c1",
           node: {
-            id: "u2",
+            id: 2,
             displayName: "Bob Jones",
             username: "bob",
           },

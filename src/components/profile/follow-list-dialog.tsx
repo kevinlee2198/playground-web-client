@@ -33,7 +33,7 @@ import { FollowButton } from "./follow-button";
 import { FollowsYouBadge } from "./follows-you-badge";
 
 interface FollowUser {
-  id: string;
+  id: number;
   username: string;
   displayName: string;
   profilePicture: {
@@ -54,7 +54,7 @@ interface FollowListItem {
 interface FollowListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userId: string;
+  userId: number;
   type: "followers" | "following";
   isOwnProfile: boolean;
 }
@@ -147,7 +147,7 @@ export function FollowListDialog({
     return () => observer.disconnect();
   }, [open, hasNextPage, endCursor, fetchPage, isInitialLoad]);
 
-  function handleRemoveFollower(targetUserId: string) {
+  function handleRemoveFollower(targetUserId: number) {
     startTransition(async () => {
       const result = await removeFollower(targetUserId);
       if (result.success) {
@@ -159,7 +159,7 @@ export function FollowListDialog({
     });
   }
 
-  function handleFollowChange(itemUserId: string, change: FollowStateChange) {
+  function handleFollowChange(itemUserId: number, change: FollowStateChange) {
     if (isOwnProfile && type === "following" && change.type === "unfollowed") {
       setItems((prev) => prev.filter((item) => item.user.id !== itemUserId));
       return;

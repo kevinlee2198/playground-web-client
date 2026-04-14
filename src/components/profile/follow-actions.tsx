@@ -39,7 +39,7 @@ import { FollowButton } from "./follow-button";
 import { FollowsYouBadge } from "./follows-you-badge";
 
 interface FollowActionsProps {
-  userId: string;
+  userId: number;
   displayName: string;
   viewerFollowsUser: boolean;
   userFollowsViewer: boolean;

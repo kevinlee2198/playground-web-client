@@ -10,7 +10,7 @@ import { ProfileInteractiveSection } from "./profile-interactive-section";
 
 interface ProfileHeaderProps {
   user: {
-    id: string;
+    id: number;
     username: string;
     firstName: string | null;
     lastName: string | null;

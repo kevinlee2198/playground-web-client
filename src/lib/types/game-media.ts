@@ -24,7 +24,7 @@ interface GameMediaBase {
   thumbnailUrl: string | null;
   title: string | null;
   addedBy: {
-    id: string;
+    id: number;
     displayName: string;
     username: string;
   };
