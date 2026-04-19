@@ -55,7 +55,7 @@ function buildBattingStatFields(
 
 const BATTING_RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   atBats: true,
   runs: true,
   hits: true,
@@ -80,7 +80,7 @@ export async function saveBaseballBattingStats(
 ): Promise<BaseballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildBattingStatFields(input),
     };
@@ -130,7 +130,7 @@ export async function saveBaseballBattingStatsBulk(
     }
 
     const battingStatsInput = battingStats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildBattingStatFields(stat),
     }));
 
@@ -204,7 +204,7 @@ function buildPitchingStatFields(
 
 const PITCHING_RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   inningsPitched: true,
   hitsAllowed: true,
   runsAllowed: true,
@@ -229,7 +229,7 @@ export async function saveBaseballPitchingStats(
 ): Promise<BaseballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildPitchingStatFields(input),
     };
@@ -279,7 +279,7 @@ export async function saveBaseballPitchingStatsBulk(
     }
 
     const pitchingStatsInput = pitchingStats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildPitchingStatFields(stat),
     }));
 
@@ -343,7 +343,7 @@ function buildFieldingStatFields(
 
 const FIELDING_RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   putouts: true,
   assists: true,
   errors: true,
@@ -358,7 +358,7 @@ export async function saveBaseballFieldingStats(
 ): Promise<BaseballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildFieldingStatFields(input),
     };
@@ -408,7 +408,7 @@ export async function saveBaseballFieldingStatsBulk(
     }
 
     const fieldingStatsInput = fieldingStats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildFieldingStatFields(stat),
     }));
 

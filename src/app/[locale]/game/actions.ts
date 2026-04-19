@@ -7,7 +7,7 @@ import {
   gameMetadataFragment,
   normalizeGameMediaEdges,
   participantNodeFragment,
-  viewerFollowingPlayersFragment,
+  viewerFollowingUsersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery, query } from "@/lib/graphql-request";
@@ -502,7 +502,7 @@ export async function loadMoreGames(
     if (filters.endBefore) filterInput.endBefore = filters.endBefore;
     if (filters.sportType)
       filterInput.sportType = new EnumType(filters.sportType);
-    if (filters.playerId) filterInput.playerId = filters.playerId;
+    if (filters.userId) filterInput.userId = filters.userId;
     if (filters.gameStatus)
       filterInput.gameStatus = new EnumType(filters.gameStatus);
     if (filters.organizedByMe) filterInput.organizedByMe = filters.organizedByMe;
@@ -540,7 +540,7 @@ export async function loadMoreGames(
     if (isAuthenticated) {
       nodeSelection.viewerGameRole = true;
       nodeSelection.viewerInvitation = viewerInvitationFragment;
-      nodeSelection.viewerFollowingPlayers = viewerFollowingPlayersFragment;
+      nodeSelection.viewerFollowingUsers = viewerFollowingUsersFragment;
     }
 
     const gamesQuery = {

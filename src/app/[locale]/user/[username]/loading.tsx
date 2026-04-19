@@ -1,5 +1,4 @@
 import { GameCardSkeleton } from "@/components/game/game-card-skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfileLoading() {
@@ -20,25 +19,6 @@ export default function ProfileLoading() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Player Stats */}
-      <section className="mb-8">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-24" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex flex-col items-center gap-2">
-                  <Skeleton className="h-4 w-14" />
-                  <Skeleton className="h-8 w-20" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       {/* Game History */}

@@ -74,7 +74,7 @@ describe("addTeamParticipant", () => {
         id: 42,
         name: "Team A",
         description: null,
-        players: [],
+        roster: [],
         metadata: null,
       },
     });
@@ -92,7 +92,7 @@ describe("addTeamParticipant", () => {
         id: 7,
         name: "Team B",
         description: "A great team",
-        players: [],
+        roster: [],
         metadata: null,
       },
     });
@@ -101,13 +101,13 @@ describe("addTeamParticipant", () => {
       gameId: 1,
       name: "Team B",
       description: "A great team",
-      playerIds: [10, 11],
+      userIds: [10, 11],
     });
 
     const callArg = mockAuthMutate.mock.calls[0][0];
     const teamInput = callArg.addGameParticipant.__args.input.teamInstance;
     expect(teamInput.description).toBe("A great team");
-    expect(teamInput.playerIds).toEqual([10, 11]);
+    expect(teamInput.userIds).toEqual([10, 11]);
   });
 
   it("returns union error type on mutation error", async () => {
@@ -160,26 +160,26 @@ describe("addIndividualParticipant", () => {
       participant: {
         __typename: "IndividualParticipant",
         id: 55,
-        player: { id: 10, user: { displayName: "Alice" } },
+        participant: { __typename: "User", id: 10, displayName: "Alice" },
         metadata: null,
       },
     });
 
-    const result = await addIndividualParticipant({ gameId: 1, playerId: 10 });
+    const result = await addIndividualParticipant({ gameId: 1, userId: 10 });
 
     expect(result).toEqual({ success: true, participantId: 55 });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("addGameParticipant", "PlayerAlreadyParticipatingError", "Player is already participating");
+    mockMutateUnionError("addGameParticipant", "UserAlreadyParticipatingError", "User is already participating");
 
-    const result = await addIndividualParticipant({ gameId: 1, playerId: 10 });
+    const result = await addIndividualParticipant({ gameId: 1, userId: 10 });
 
     expect(result).toEqual({
       success: false,
-      errorType: "PlayerAlreadyParticipatingError",
-      message: "Player is already participating",
+      errorType: "UserAlreadyParticipatingError",
+      message: "User is already participating",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -187,7 +187,7 @@ describe("addIndividualParticipant", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await addIndividualParticipant({ gameId: 1, playerId: 10 });
+    const result = await addIndividualParticipant({ gameId: 1, userId: 10 });
 
     expect(result).toEqual({
       success: false,
@@ -199,7 +199,7 @@ describe("addIndividualParticipant", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await addIndividualParticipant({ gameId: 1, playerId: 10 });
+    const result = await addIndividualParticipant({ gameId: 1, userId: 10 });
 
     expect(result).toEqual({
       success: false,
@@ -223,7 +223,7 @@ describe("updateTeamParticipant", () => {
         id: 42,
         name: "Updated Team",
         description: null,
-        players: [],
+        roster: [],
         metadata: null,
       },
     });
@@ -244,7 +244,7 @@ describe("updateTeamParticipant", () => {
         id: 7,
         name: "Team",
         description: null,
-        players: [],
+        roster: [],
         metadata: null,
       },
     });
@@ -263,7 +263,7 @@ describe("updateTeamParticipant", () => {
         id: 7,
         name: "Team",
         description: "New desc",
-        players: [],
+        roster: [],
         metadata: null,
       },
     });
@@ -272,14 +272,14 @@ describe("updateTeamParticipant", () => {
       teamInstanceId: 7,
       name: "Team",
       description: "New desc",
-      playerIds: [1, 2],
+      userIds: [1, 2],
     });
 
     const callArg = mockAuthMutate.mock.calls[0][0];
     const teamInput = callArg.updateGameParticipant.__args.input.teamInstance;
     expect(teamInput.name).toBe("Team");
     expect(teamInput.description).toBe("New desc");
-    expect(teamInput.playerIds).toEqual([1, 2]);
+    expect(teamInput.userIds).toEqual([1, 2]);
   });
 
   it("returns union error type on mutation error", async () => {
@@ -328,42 +328,42 @@ describe("joinTeam", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns success when mutation succeeds", async () => {
-    mockMutateSuccess("addPlayerToTeamInstance", "AddPlayerToTeamInstanceResponse", {
+    mockMutateSuccess("addUserToTeamInstance", "AddUserToTeamInstanceResponse", {
       teamInstance: {
         id: 42,
         name: "Team A",
-        players: [{ id: 10, user: { displayName: "Alice" } }],
+        roster: [{ id: 10, displayName: "Alice" }],
       },
     });
 
-    const result = await joinTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await joinTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({ success: true });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
   });
 
-  it("passes teamInstanceId and playerId in mutation input", async () => {
-    mockMutateSuccess("addPlayerToTeamInstance", "AddPlayerToTeamInstanceResponse", {
-      teamInstance: { id: 42, name: "Team A", players: [] },
+  it("passes teamInstanceId and userId in mutation input", async () => {
+    mockMutateSuccess("addUserToTeamInstance", "AddUserToTeamInstanceResponse", {
+      teamInstance: { id: 42, name: "Team A", roster: [] },
     });
 
-    await joinTeam({ teamInstanceId: 42, playerId: 10 });
+    await joinTeam({ teamInstanceId: 42, userId: 10 });
 
     const callArg = mockAuthMutate.mock.calls[0][0];
-    const input = callArg.addPlayerToTeamInstance.__args.input;
+    const input = callArg.addUserToTeamInstance.__args.input;
     expect(input.teamInstanceId).toBe(42);
-    expect(input.playerId).toBe(10);
+    expect(input.userId).toBe(10);
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("addPlayerToTeamInstance", "PlayerAlreadyOnTeamError", "Player is already on this team");
+    mockMutateUnionError("addUserToTeamInstance", "UserAlreadyOnTeamError", "User is already on this team");
 
-    const result = await joinTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await joinTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({
       success: false,
-      errorType: "PlayerAlreadyOnTeamError",
-      message: "Player is already on this team",
+      errorType: "UserAlreadyOnTeamError",
+      message: "User is already on this team",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -371,7 +371,7 @@ describe("joinTeam", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await joinTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await joinTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({
       success: false,
@@ -383,7 +383,7 @@ describe("joinTeam", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await joinTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await joinTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({
       success: false,
@@ -401,38 +401,38 @@ describe("leaveTeam", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns success when mutation succeeds", async () => {
-    mockMutateSuccess("removePlayerFromTeamInstance", "RemovePlayerFromTeamInstanceResponse", {
-      teamInstance: { id: 42, name: "Team A", players: [] },
+    mockMutateSuccess("removeUserFromTeamInstance", "RemoveUserFromTeamInstanceResponse", {
+      teamInstance: { id: 42, name: "Team A", roster: [] },
     });
 
-    const result = await leaveTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await leaveTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({ success: true });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]/game/[id]", "page");
   });
 
-  it("passes teamInstanceId and playerId in mutation input", async () => {
-    mockMutateSuccess("removePlayerFromTeamInstance", "RemovePlayerFromTeamInstanceResponse", {
-      teamInstance: { id: 42, name: "Team A", players: [] },
+  it("passes teamInstanceId and userId in mutation input", async () => {
+    mockMutateSuccess("removeUserFromTeamInstance", "RemoveUserFromTeamInstanceResponse", {
+      teamInstance: { id: 42, name: "Team A", roster: [] },
     });
 
-    await leaveTeam({ teamInstanceId: 42, playerId: 10 });
+    await leaveTeam({ teamInstanceId: 42, userId: 10 });
 
     const callArg = mockAuthMutate.mock.calls[0][0];
-    const input = callArg.removePlayerFromTeamInstance.__args.input;
+    const input = callArg.removeUserFromTeamInstance.__args.input;
     expect(input.teamInstanceId).toBe(42);
-    expect(input.playerId).toBe(10);
+    expect(input.userId).toBe(10);
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("removePlayerFromTeamInstance", "PlayerNotOnTeamError", "Player is not on this team");
+    mockMutateUnionError("removeUserFromTeamInstance", "UserNotOnTeamError", "User is not on this team");
 
-    const result = await leaveTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await leaveTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({
       success: false,
-      errorType: "PlayerNotOnTeamError",
-      message: "Player is not on this team",
+      errorType: "UserNotOnTeamError",
+      message: "User is not on this team",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -440,7 +440,7 @@ describe("leaveTeam", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const result = await leaveTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await leaveTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({
       success: false,
@@ -452,7 +452,7 @@ describe("leaveTeam", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const result = await leaveTeam({ teamInstanceId: 42, playerId: 10 });
+    const result = await leaveTeam({ teamInstanceId: 42, userId: 10 });
 
     expect(result).toEqual({
       success: false,

@@ -57,10 +57,10 @@ function buildDefaultValues(
 
 function buildInput(
   value: Record<StatField, number | undefined>,
-  playerId: number,
+  userId: number,
   gameId: number,
 ): SavePickleballStatsInput {
-  const input: SavePickleballStatsInput = { playerId, gameId };
+  const input: SavePickleballStatsInput = { userId, gameId };
   for (const field of STAT_FIELDS) {
     input[field] = undefinedToNull(value[field]);
   }
@@ -83,7 +83,7 @@ export function PickleballStatsForm({
       setError(null);
 
       startTransition(async () => {
-        const input = buildInput(value, initialData.player.id, gameId);
+        const input = buildInput(value, initialData.user.id, gameId);
         const result = await savePickleballStats(input);
 
         if (result.success) {
@@ -97,14 +97,14 @@ export function PickleballStatsForm({
     },
   });
 
-  const playerName = initialData.player.user.displayName;
+  const userName = initialData.user.displayName;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.stats.editStats")} - {playerName}
+            {t("game.stats.editStats")} - {userName}
           </DialogTitle>
         </DialogHeader>
 

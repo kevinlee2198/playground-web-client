@@ -16,14 +16,14 @@ import { Gamepad2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 interface GameHistoryProps {
-  playerId?: string | null;
+  userId?: string | null;
   initialGames?: {
     edges: Edge<GameNode>[];
     pageInfo: PageInfo;
   } | null;
 }
 
-export async function GameHistory({ playerId, initialGames }: GameHistoryProps) {
+export async function GameHistory({ userId, initialGames }: GameHistoryProps) {
   const t = await getTranslations("profile.games");
 
   const games = initialGames?.edges ?? [];
@@ -35,7 +35,7 @@ export async function GameHistory({ playerId, initialGames }: GameHistoryProps) 
         {t("title")}
       </TypographyH2>
 
-      {!playerId || games.length === 0 ? (
+      {!userId || games.length === 0 ? (
         <Empty className="border-none py-12">
           <EmptyHeader>
             {/* TODO: Replace with custom illustration */}

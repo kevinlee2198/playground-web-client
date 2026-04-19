@@ -12,14 +12,14 @@ import type { ReactNode } from "react";
 
 interface CollapsibleStatsProps {
   teamName: string;
-  playerCount: number;
+  memberCount: number;
   defaultOpen: boolean;
   children: ReactNode;
 }
 
 export function CollapsibleStats({
   teamName,
-  playerCount,
+  memberCount,
   defaultOpen,
   children,
 }: CollapsibleStatsProps) {
@@ -39,7 +39,7 @@ export function CollapsibleStats({
             {teamName}
           </span>
           <span className="text-sm text-muted-foreground">
-            {t("playerCount", { count: playerCount })}
+            {t("memberCount", { count: memberCount })}
           </span>
         </div>
         <ChevronDown

@@ -33,8 +33,11 @@ vi.mock("@/components/game/score/game-score", () => ({
 }));
 
 vi.mock("@/components/game/score/participant-utils", () => ({
-  getParticipantName: (p: { __typename: string; name?: string }) =>
-    p.__typename === "TeamInstance" ? p.name : "Player Name",
+  getParticipantName: (
+    p: { __typename: string; name?: string | null },
+    fallback: string,
+  ) =>
+    p.__typename === "TeamInstance" ? (p.name ?? fallback) : "User Name",
 }));
 
 vi.mock("@/components/game/scoreboard/basketball-score-form", () => ({
@@ -157,7 +160,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
             id: 10,
             name: "Team Alpha",
             description: null,
-            players: [],
+            roster: [], guests: [],
             metadata: {
               __typename: "BasketballParticipantMetadata",
               score: 45,
@@ -171,7 +174,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
             id: 11,
             name: "Team Beta",
             description: null,
-            players: [],
+            roster: [], guests: [],
             metadata: {
               __typename: "BasketballParticipantMetadata",
               score: 38,
@@ -210,7 +213,7 @@ function makeGameWithFewParticipants(): GameDetail {
             id: 10,
             name: "Team Alpha",
             description: null,
-            players: [],
+            roster: [], guests: [],
             metadata: null,
           },
         },
@@ -457,7 +460,7 @@ describe("GameScoreBlock", () => {
                   id: 10,
                   name: "Team Alpha",
                   description: null,
-                  players: [],
+                  roster: [], guests: [],
                   metadata: {
                     __typename: "VolleyballParticipantMetadata",
                     setsWon: 2,
@@ -472,7 +475,7 @@ describe("GameScoreBlock", () => {
                   id: 11,
                   name: "Team Beta",
                   description: null,
-                  players: [],
+                  roster: [], guests: [],
                   metadata: {
                     __typename: "VolleyballParticipantMetadata",
                     setsWon: 1,

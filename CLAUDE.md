@@ -183,7 +183,7 @@ Always use these file names in the `app/` directory:
 - `null` — clear the value in the database
 - A value — update to that value
 
-Model these as `field?: T | null`. For non-nullable schema fields on update inputs (e.g., `firstName` on a player), null is not allowed — use `field?: T`.
+Model these as `field?: T | null`. For non-nullable schema fields on update inputs (e.g., `firstName` on a user), null is not allowed — use `field?: T`.
 
 **No barrel files**: import directly from source files, not from `index.ts` re-exports.
 

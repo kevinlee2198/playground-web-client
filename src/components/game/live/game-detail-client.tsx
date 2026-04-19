@@ -5,6 +5,7 @@ import { GameDetailActions } from "@/components/game/game-detail-actions";
 import { GameMediaSection } from "@/components/game/game-media-section";
 import { GameParticipants } from "@/components/game/game-participants";
 import { InvitationActionCard } from "@/components/game/invitation-action-card";
+import { deriveTeamName } from "@/components/game/score/participant-utils";
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
@@ -62,7 +63,6 @@ interface GameDetailClientProps {
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
   initialVolleyballStats?: { node: VolleyballStatsNode }[];
-  playerId: number | null;
   currentUserId: number | null;
   children: ReactNode;
 }
@@ -79,7 +79,6 @@ export function GameDetailClient({
   initialBaseballPitchingStats,
   initialBaseballFieldingStats,
   initialVolleyballStats,
-  playerId,
   currentUserId,
   children,
 }: GameDetailClientProps) {
@@ -133,8 +132,8 @@ export function GameDetailClient({
         const node = newParticipant.node;
         const name =
           node.__typename === "TeamInstance"
-            ? node.name
-            : node.player.user.displayName;
+            ? deriveTeamName(node, t("leagues.team.unnamed"))
+            : node.participant.displayName;
         message = t("game.live.participantAdded", { name });
       } else {
         message = t("game.live.participantRemoved");
@@ -163,14 +162,17 @@ export function GameDetailClient({
   });
 
   const isParticipant =
-    playerId != null &&
+    currentUserId != null &&
     state.game.participants.edges.some((edge) => {
       const node = edge.node;
       if (node.__typename === "TeamInstance") {
-        return node.players.some((p) => p.id === playerId);
+        return node.roster.some((u) => u.id === currentUserId);
       }
       if (node.__typename === "IndividualParticipant") {
-        return node.player.id === playerId;
+        return (
+          node.participant.__typename === "User" &&
+          node.participant.id === currentUserId
+        );
       }
       return false;
     });
@@ -210,8 +212,8 @@ export function GameDetailClient({
       <GameDetailActions game={state.game} />
 
       <section className="mt-8">
-        {playerId != null && (
-          <GameParticipants game={state.game} currentPlayerId={playerId} />
+        {currentUserId != null && (
+          <GameParticipants game={state.game} currentUserId={currentUserId} />
         )}
       </section>
 

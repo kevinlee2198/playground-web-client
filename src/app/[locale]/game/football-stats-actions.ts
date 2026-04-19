@@ -58,7 +58,7 @@ function buildOffensiveStatFields(
 
 const OFFENSIVE_RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   completions: true,
   passAttempts: true,
   passingYards: true,
@@ -85,7 +85,7 @@ export async function saveFootballOffensiveStats(
 ): Promise<FootballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildOffensiveStatFields(input),
     };
@@ -135,7 +135,7 @@ export async function saveFootballOffensiveStatsBulk(
     }
 
     const offensiveStatsInput = offensiveStats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildOffensiveStatFields(stat),
     }));
 
@@ -209,7 +209,7 @@ function buildDefensiveStatFields(
 
 const DEFENSIVE_RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   soloTackles: true,
   assistedTackles: true,
   sacks: true,
@@ -233,7 +233,7 @@ export async function saveFootballDefensiveStats(
 ): Promise<FootballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildDefensiveStatFields(input),
     };
@@ -283,7 +283,7 @@ export async function saveFootballDefensiveStatsBulk(
     }
 
     const defensiveStatsInput = defensiveStats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildDefensiveStatFields(stat),
     }));
 
@@ -358,7 +358,7 @@ function buildSpecialTeamsStatFields(
 
 const SPECIAL_TEAMS_RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   fieldGoalsMade: true,
   fieldGoalsAttempted: true,
   longestFieldGoal: true,
@@ -383,7 +383,7 @@ export async function saveFootballSpecialTeamsStats(
 ): Promise<FootballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildSpecialTeamsStatFields(input),
     };
@@ -433,7 +433,7 @@ export async function saveFootballSpecialTeamsStatsBulk(
     }
 
     const specialTeamsStatsInput = specialTeamsStats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildSpecialTeamsStatFields(stat),
     }));
 

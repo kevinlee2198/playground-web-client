@@ -55,7 +55,7 @@ describe("loadFeedGames", () => {
             metadata: {},
             location: null,
             participants: { edges: [] },
-            viewerFollowingPlayers: [],
+            viewerFollowingUsers: [],
           },
         },
       ],

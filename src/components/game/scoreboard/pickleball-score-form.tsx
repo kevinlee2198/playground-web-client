@@ -198,7 +198,7 @@ export function PickleballScoreForm({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[150px]">{t("game.scoreboard.player")}</TableHead>
+                      <TableHead className="w-[150px]">{t("game.scoreboard.user")}</TableHead>
                       {field.state.value.map((_, i) => (
                         <TableHead key={i} className="text-center">
                           <div className="flex items-center justify-center gap-2">

@@ -1,5 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
 
 import { VolleyballScore } from "@/components/game/score/volleyball-score";
 import type { GameParticipant } from "@/lib/types/game";
@@ -14,7 +18,7 @@ function makeParticipant(
     __typename: "TeamInstance",
     id,
     name,
-    players: [],
+    roster: [], guests: [],
     metadata: {
       __typename: "VolleyballParticipantMetadata",
       setsWon,
@@ -75,14 +79,14 @@ describe("VolleyballScore", () => {
       __typename: "TeamInstance",
       id: 1,
       name: "Team A",
-      players: [],
+      roster: [], guests: [],
       metadata: null,
     };
     const b: GameParticipant = {
       __typename: "TeamInstance",
       id: 2,
       name: "Team B",
-      players: [],
+      roster: [], guests: [],
       metadata: null,
     };
 

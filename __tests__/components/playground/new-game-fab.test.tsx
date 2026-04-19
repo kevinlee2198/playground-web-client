@@ -104,7 +104,7 @@ describe("NewGameFab", () => {
   });
 
   it("renders null on profile page", () => {
-    setup({ pathname: "/player" });
+    setup({ pathname: "/user/someone" });
 
     const { container } = render(<NewGameFab />);
     expect(container.firstChild).toBeNull();

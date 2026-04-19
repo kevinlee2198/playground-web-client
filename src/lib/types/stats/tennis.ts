@@ -47,11 +47,11 @@ export interface SaveTennisStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player stats data for bulk save (gameId is at parent level).
+ * Per-user stats data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveTennisStatsInput.
  */
 export interface SaveTennisStatsData {
-  playerId: number;
+  userId: number;
   aces?: number | null;
   doubleFaults?: number | null;
   firstServesIn?: number | null;

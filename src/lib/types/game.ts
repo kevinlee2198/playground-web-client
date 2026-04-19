@@ -36,19 +36,36 @@ export type GameEdgeWithDistance = Edge<GameNode> & {
 };
 
 /**
- * Player reference used in game participants
+ * User reference used in game rosters and participant records.
  */
-export interface PlayerRef {
+export interface UserRef {
+  __typename: "User";
   id: number;
-  user: {
-    displayName: string;
-    username: string;
-    profilePicture: {
-      __typename: "ImageResource";
-      thumbnailUrl: string | null;
-    } | null;
-  };
+  displayName: string;
+  username: string;
+  profilePicture: {
+    __typename: "ImageResource";
+    thumbnailUrl: string | null;
+  } | null;
 }
+
+/**
+ * Guest participant — a named non-registered participant added by a manager.
+ * Distinguishable from User via the __typename discriminator.
+ * `addedBy` is declared on the schema but not selected in v1 fragments yet;
+ * add the type field together with the fragment + consumer when needed.
+ */
+export interface GuestParticipant {
+  __typename: "GuestParticipant";
+  id: string;
+  displayName: string;
+}
+
+/**
+ * Union of a registered user or a named guest for individual participants.
+ * Discriminate via `__typename`.
+ */
+export type IndividualParticipantWho = UserRef | GuestParticipant;
 
 // ---------- Game Metadata (response types -- fields are T | null for nullable) ----------
 
@@ -159,35 +176,40 @@ export type ParticipantMetadata =
   | VolleyballParticipantMetadata;
 
 /**
- * Team instance participant in a game (basic info)
+ * Team instance participant in a game (basic info).
+ * Name is nullable — teams without a chosen name render via the i18n fallback.
  */
 export interface TeamInstanceNode {
   __typename: "TeamInstance";
   id: number;
-  name: string;
-  players: PlayerRef[];
+  name: string | null;
+  roster: UserRef[];
+  guests: GuestParticipant[];
   metadata: ParticipantMetadata | null;
 }
 
 /**
- * Team instance with full details (for game detail page)
+ * Team instance with full details (for game detail page).
  */
 export interface TeamInstanceDetail {
   __typename: "TeamInstance";
   id: number;
-  name: string;
+  name: string | null;
   description: string | null;
-  players: PlayerRef[];
+  roster: UserRef[];
+  guests: GuestParticipant[];
   metadata: ParticipantMetadata | null;
 }
 
 /**
- * Individual participant in a game (e.g., tennis singles)
+ * Individual participant in a game (e.g., tennis singles).
+ * The `participant` field is a union — discriminate via `__typename`
+ * to tell a registered user from a named guest.
  */
 export interface IndividualParticipantNode {
   __typename: "IndividualParticipant";
   id: number;
-  player: PlayerRef;
+  participant: IndividualParticipantWho;
   metadata: ParticipantMetadata | null;
 }
 
@@ -531,7 +553,7 @@ export interface AddTeamInput {
   gameId: number;
   name: string;
   description?: string;
-  playerIds?: number[];
+  userIds?: number[];
 }
 
 /**
@@ -539,7 +561,7 @@ export interface AddTeamInput {
  */
 export interface AddIndividualParticipantInput {
   gameId: number;
-  playerId: number;
+  userId: number;
 }
 
 // ---------- Participant Metadata Input (@oneOf -- exactly one key) ----------
@@ -571,7 +593,7 @@ export interface UpdateTeamParticipantInput {
   teamInstanceId: number;
   name?: string;
   description?: string;
-  playerIds?: number[];
+  userIds?: number[];
   metadata?: ParticipantMetadataInput;
 }
 
@@ -599,23 +621,23 @@ export interface RemoveIndividualParticipantInput {
 }
 
 /**
- * Input for joining a team (adding a player to an existing team).
+ * Input for joining a team (adding a user to an existing team).
  * Requires a dedicated backend mutation to avoid race conditions
- * with concurrent joins via full playerIds replacement.
+ * with concurrent joins via full userIds replacement.
  */
 export interface JoinTeamInput {
   teamInstanceId: number;
-  playerId: number;
+  userId: number;
 }
 
 /**
- * Input for leaving a team (removing a player from an existing team).
+ * Input for leaving a team (removing a user from an existing team).
  * Requires a dedicated backend mutation to avoid race conditions
- * with concurrent leaves via full playerIds replacement.
+ * with concurrent leaves via full userIds replacement.
  */
 export interface LeaveTeamInput {
   teamInstanceId: number;
-  playerId: number;
+  userId: number;
 }
 
 /**
@@ -637,7 +659,7 @@ export interface GameFilterParams {
   endAfter?: string;
   endBefore?: string;
   sportType?: SportType;
-  playerId?: number;
+  userId?: number;
   gameStatus?: GameStatus;
   organizedByMe?: boolean;
   invitedToMe?: boolean;

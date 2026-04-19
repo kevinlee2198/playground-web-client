@@ -6,20 +6,21 @@ import type {
   TennisParticipantMetadata,
   TennisSetScore,
 } from "@/lib/types/game";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 function formatSetScore(
-  playerASet: TennisSetScore,
-  playerBSet: TennisSetScore,
+  sideASet: TennisSetScore,
+  sideBSet: TennisSetScore,
 ): string {
-  const a = playerASet.gamesWon;
-  const b = playerBSet.gamesWon;
+  const a = sideASet.gamesWon;
+  const b = sideBSet.gamesWon;
 
-  if (a === 7 && b === 6 && playerBSet.tiebreakPoints !== null) {
-    return `${a}-${b}(${playerBSet.tiebreakPoints})`;
+  if (a === 7 && b === 6 && sideBSet.tiebreakPoints !== null) {
+    return `${a}-${b}(${sideBSet.tiebreakPoints})`;
   }
-  if (b === 7 && a === 6 && playerASet.tiebreakPoints !== null) {
-    return `${a}(${playerASet.tiebreakPoints})-${b}`;
+  if (b === 7 && a === 6 && sideASet.tiebreakPoints !== null) {
+    return `${a}(${sideASet.tiebreakPoints})-${b}`;
   }
 
   return `${a}-${b}`;
@@ -40,10 +41,12 @@ interface TennisScoreProps {
 }
 
 export function TennisScore({ participantA, participantB, statusPill, size = "sm" }: TennisScoreProps) {
+  const t = useTranslations();
+  const unnamedTeam = t("leagues.team.unnamed");
   const tennisA = getTennisMeta(participantA);
   const tennisB = getTennisMeta(participantB);
-  const nameA = getParticipantName(participantA);
-  const nameB = getParticipantName(participantB);
+  const nameA = getParticipantName(participantA, unnamedTeam);
+  const nameB = getParticipantName(participantB, unnamedTeam);
 
   const setsA = tennisA?.setsWon ?? 0;
   const setsB = tennisB?.setsWon ?? 0;

@@ -51,11 +51,11 @@ export interface SaveBasketballStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player stats data for bulk save (gameId is at parent level).
+ * Per-user stats data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveBasketballStatsInput.
  */
 export interface SaveBasketballStatsData {
-  playerId: number;
+  userId: number;
   assists?: number | null;
   steals?: number | null;
   blocks?: number | null;

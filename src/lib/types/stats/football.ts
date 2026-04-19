@@ -49,11 +49,11 @@ export interface SaveFootballOffensiveStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player offensive statistics data for bulk save (gameId is at parent level).
+ * Per-user offensive statistics data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveFootballOffensiveStatsInput.
  */
 export interface SaveFootballOffensiveStatsData {
-  playerId: number;
+  userId: number;
   completions?: number | null;
   passAttempts?: number | null;
   passingYards?: number | null;
@@ -115,11 +115,11 @@ export interface SaveFootballDefensiveStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player defensive statistics data for bulk save (gameId is at parent level).
+ * Per-user defensive statistics data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveFootballDefensiveStatsInput.
  */
 export interface SaveFootballDefensiveStatsData {
-  playerId: number;
+  userId: number;
   soloTackles?: number | null;
   assistedTackles?: number | null;
   sacks?: number | null;
@@ -180,11 +180,11 @@ export interface SaveFootballSpecialTeamsStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player special teams statistics data for bulk save (gameId is at parent level).
+ * Per-user special teams statistics data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveFootballSpecialTeamsStatsInput.
  */
 export interface SaveFootballSpecialTeamsStatsData {
-  playerId: number;
+  userId: number;
   fieldGoalsMade?: number | null;
   fieldGoalsAttempted?: number | null;
   longestFieldGoal?: number | null;

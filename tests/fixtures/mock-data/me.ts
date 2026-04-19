@@ -1,5 +1,5 @@
 import { TEST_USER } from "../auth.fixture";
-import { TEST_BACKEND_USER_ID, TEST_PLAYER_ID } from "../test-ids";
+import { TEST_BACKEND_USER_ID } from "../test-ids";
 
 export function mockMeResponse(overrides?: Record<string, unknown>) {
   return {
@@ -13,7 +13,6 @@ export function mockMeResponse(overrides?: Record<string, unknown>) {
         email: TEST_USER.email,
         biography: "A test user biography",
         profilePicture: null,
-        player: { id: TEST_PLAYER_ID, age: 25, height: 72, weight: 180 },
         preferences: {
           measurementUnit: "METRIC",
           notificationsEnabled: true,

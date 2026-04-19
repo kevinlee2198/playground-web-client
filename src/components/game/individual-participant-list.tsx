@@ -4,7 +4,7 @@ import {
   addIndividualParticipant,
   removeIndividualParticipant,
 } from "@/app/[locale]/game/participant-actions";
-import { PlayerAvatar } from "@/components/game/player-avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographySmall } from "@/components/ui/typography";
@@ -13,6 +13,7 @@ import { GameInvitationStatus, GameRole, GameVisibility } from "@/lib/constants"
 import type {
   GameParticipantDetail,
   IndividualParticipantNode,
+  UserRef,
 } from "@/lib/types/game";
 import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ import { toast } from "sonner";
 interface IndividualParticipantListProps {
   participants: GameParticipantDetail[];
   gameId: number;
-  currentPlayerId: number;
+  currentUserId: number;
   atParticipantLimit: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
@@ -34,7 +35,7 @@ interface IndividualParticipantListProps {
 export function IndividualParticipantList({
   participants,
   gameId,
-  currentPlayerId,
+  currentUserId,
   atParticipantLimit,
   viewerGameRole,
   visibility,
@@ -43,17 +44,22 @@ export function IndividualParticipantList({
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
 
-  const individualParticipants = participants.filter(
-    (p): p is IndividualParticipantNode =>
-      p.__typename === "IndividualParticipant",
+  // v1 scope: only render individual participants backed by a registered
+  // User. Guests have no username to link to and no user profile to deep-link
+  // into — the leagues feature will add a richer guest-display pass later.
+  const userParticipants = participants.filter(
+    (p): p is IndividualParticipantNode & { participant: UserRef } =>
+      p.__typename === "IndividualParticipant" &&
+      p.participant.__typename === "User",
   );
 
-  const currentPlayerParticipant =
-    individualParticipants.find((p) => p.player.id === currentPlayerId);
+  const currentUserParticipant = userParticipants.find(
+    (p) => p.participant.id === currentUserId,
+  );
 
   const canJoin =
     !atParticipantLimit &&
-    !currentPlayerParticipant &&
+    !currentUserParticipant &&
     (viewerGameRole != null ||
       visibility === GameVisibility.PUBLIC ||
       viewerInvitation?.status === GameInvitationStatus.ACCEPTED);
@@ -62,7 +68,7 @@ export function IndividualParticipantList({
     startTransition(async () => {
       const result = await addIndividualParticipant({
         gameId,
-        playerId: currentPlayerId,
+        userId: currentUserId,
       });
 
       if (result.success) {
@@ -91,11 +97,11 @@ export function IndividualParticipantList({
     <div className="space-y-4">
       {/* Join/Leave Game Button */}
       <div className="flex justify-end">
-        {currentPlayerParticipant ? (
+        {currentUserParticipant ? (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleRemoveParticipant(currentPlayerParticipant.id)}
+            onClick={() => handleRemoveParticipant(currentUserParticipant.id)}
             disabled={isPending}
           >
             {t("game.participants.leaveGame")}
@@ -116,7 +122,7 @@ export function IndividualParticipantList({
       </div>
 
       {/* Participant List */}
-      {individualParticipants.length === 0 ? (
+      {userParticipants.length === 0 ? (
         <Empty className="border-none">
           <EmptyHeader>
             <EmptyDescription>
@@ -127,13 +133,13 @@ export function IndividualParticipantList({
       ) : (
         <div
           className={cn(
-            individualParticipants.length === 2
+            userParticipants.length === 2
               ? "grid md:grid-cols-2 gap-4"
               : "flex flex-col gap-4",
           )}
         >
-          {individualParticipants.map((participant) => {
-            const player = participant.player;
+          {userParticipants.map((participant) => {
+            const user = participant.participant;
 
             return (
               <div
@@ -145,14 +151,14 @@ export function IndividualParticipantList({
                   "motion-safe:hover:shadow-card-hover motion-safe:hover:-translate-y-0.5 transition-[transform,box-shadow]",
                 )}
               >
-                <PlayerAvatar player={player} size="lg" loading="lazy" />
+                <UserAvatar user={user} size="lg" loading="lazy" />
 
                 <TypographySmall className="font-semibold truncate min-w-0 flex-1">
                   <Link
-                    href={`/user/${player.user.username}`}
+                    href={`/user/${user.username}`}
                     className="after:absolute after:inset-0 after:z-[1] text-foreground hover:text-primary transition-colors focus-visible:outline-none"
                   >
-                    {player.user.displayName}
+                    {user.displayName}
                   </Link>
                 </TypographySmall>
 
@@ -162,7 +168,7 @@ export function IndividualParticipantList({
                     size="icon"
                     onClick={() => handleRemoveParticipant(participant.id)}
                     disabled={isPending}
-                    aria-label={`${t("game.participants.removePlayer")} ${player.user.displayName}`}
+                    aria-label={`${t("game.participants.removeMember")} ${user.displayName}`}
                     className="relative z-10 min-h-11 min-w-11 shrink-0"
                   >
                     <X className="h-4 w-4" />

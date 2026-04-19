@@ -1,8 +1,6 @@
 import { fetchCurrentUser } from "@/components/auth/actions";
 import { GameCardSkeleton } from "@/components/game/game-card-skeleton";
 import { GameHistory } from "@/components/profile/game-history";
-import { PlayerStatsEditorLoader } from "@/components/profile/player-stats-editor-loader";
-import { PlayerStats } from "@/components/profile/player-stats";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TypographyH2, TypographyMuted } from "@/components/ui/typography";
@@ -70,21 +68,15 @@ function buildUserQuery(username: string) {
       viewerFollowsUser: true,
       userFollowsViewer: true,
       viewerSentFollowRequest: { id: true },
-      player: {
-        id: true,
-        age: true,
-        height: true,
-        weight: true,
-      },
     },
   };
 }
 
-function buildGamesQuery(playerId: number) {
+function buildGamesQuery(userId: number) {
   return {
     games: {
       __args: {
-        input: { playerId: playerId },
+        input: { userId: userId },
         sort: [
           {
             field: new EnumType(GameSortField.START_DATE),
@@ -128,11 +120,11 @@ function buildGamesQuery(playerId: number) {
   };
 }
 
-async function GameHistorySection({ playerId }: { playerId: number }) {
-  const gamesResponse = await query(buildGamesQuery(playerId));
+async function GameHistorySection({ userId }: { userId: number }) {
+  const gamesResponse = await query(buildGamesQuery(userId));
   return (
     <GameHistory
-      playerId={String(playerId)}
+      userId={String(userId)}
       initialGames={gamesResponse.data?.games}
     />
   );
@@ -198,8 +190,6 @@ export default async function UserProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const player = user.player;
-
   const isPrivateProfile =
     !isOwnProfile &&
     user.profileVisibility === "PRIVATE" &&
@@ -216,17 +206,9 @@ export default async function UserProfilePage({ params }: PageProps) {
       {isPrivateProfile ? (
         <PrivateProfileNotice />
       ) : (
-        <>
-          {isOwnProfile ? (
-            <PlayerStatsEditorLoader initialPlayer={player} />
-          ) : (
-            <PlayerStats player={player} />
-          )}
-
-          <Suspense fallback={<GameHistorySkeleton />}>
-            <GameHistorySection playerId={player.id} />
-          </Suspense>
-        </>
+        <Suspense fallback={<GameHistorySkeleton />}>
+          <GameHistorySection userId={user.id} />
+        </Suspense>
       )}
     </main>
   );

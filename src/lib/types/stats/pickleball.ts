@@ -43,11 +43,11 @@ export interface SavePickleballStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player stats data for bulk save (gameId is at parent level).
+ * Per-user stats data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SavePickleballStatsInput.
  */
 export interface SavePickleballStatsData {
-  playerId: number;
+  userId: number;
   aces?: number | null;
   faults?: number | null;
   doubleFaults?: number | null;

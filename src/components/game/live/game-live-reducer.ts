@@ -46,20 +46,20 @@ export function gameLiveReducer(
       };
 
       if (event.__typename === "BasketballStatsSavedEvent") {
-        const incomingByPlayerId = new Map(
-          event.basketballStats.map((bs) => [bs.player.id, bs])
+        const incomingByUserId = new Map(
+          event.basketballStats.map((bs) => [bs.user.id, bs])
         );
 
         const updated = state.basketballStats.map((entry) => {
-          const replacement = incomingByPlayerId.get(entry.node.player.id);
+          const replacement = incomingByUserId.get(entry.node.user.id);
           return replacement ? { node: replacement } : entry;
         });
 
-        const existingPlayerIds = new Set(
-          state.basketballStats.map((entry) => entry.node.player.id)
+        const existingUserIds = new Set(
+          state.basketballStats.map((entry) => entry.node.user.id)
         );
         const appended = event.basketballStats
-          .filter((bs) => !existingPlayerIds.has(bs.player.id))
+          .filter((bs) => !existingUserIds.has(bs.user.id))
           .map((bs) => ({ node: bs }));
 
         return {

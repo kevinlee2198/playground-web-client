@@ -27,12 +27,12 @@ import { TeamCard } from "./team-card";
 
 interface GameParticipantsProps {
   game: GameDetail;
-  currentPlayerId: number;
+  currentUserId: number;
 }
 
 export function GameParticipants({
   game,
-  currentPlayerId,
+  currentUserId,
 }: GameParticipantsProps) {
   const t = useTranslations();
   const [showAddTeamDialog, setShowAddTeamDialog] = useState(false);
@@ -44,12 +44,12 @@ export function GameParticipants({
   const maxParticipants = getSportMaxParticipants(game.sportType, sportFormat);
   const atParticipantLimit = game.participants.edges.length >= maxParticipants;
 
-  const isPlayerOnAnyTeam =
+  const isUserOnAnyTeam =
     isTeamBased &&
     game.participants.edges.some(
       (edge) =>
         edge.node.__typename === "TeamInstance" &&
-        edge.node.players.some((p) => p.id === currentPlayerId),
+        edge.node.roster.some((u) => u.id === currentUserId),
     );
 
   const teamCount = isTeamBased ? game.participants.edges.length : 0;
@@ -100,8 +100,8 @@ export function GameParticipants({
                   key={participant.id}
                   team={participant}
                   gameStatus={game.gameStatus}
-                  currentPlayerId={currentPlayerId}
-                  isPlayerOnAnyTeam={isPlayerOnAnyTeam}
+                  currentUserId={currentUserId}
+                  isUserOnAnyTeam={isUserOnAnyTeam}
                   viewerGameRole={game.viewerGameRole}
                   visibility={game.visibility}
                   participantIndex={index}
@@ -118,7 +118,7 @@ export function GameParticipants({
         <IndividualParticipantList
           participants={game.participants.edges.map((edge) => edge.node)}
           gameId={game.id}
-          currentPlayerId={currentPlayerId}
+          currentUserId={currentUserId}
           atParticipantLimit={atParticipantLimit}
           viewerGameRole={game.viewerGameRole}
           visibility={game.visibility}

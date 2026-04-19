@@ -41,7 +41,7 @@ function buildStatFields(
 
 const RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   kills: true,
   attackErrors: true,
   attackAttempts: true,
@@ -63,7 +63,7 @@ export async function saveVolleyballStats(
 ): Promise<VolleyballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildStatFields(input),
     };
@@ -110,7 +110,7 @@ export async function saveVolleyballStatsBulk(
     }
 
     const statsInput = stats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildStatFields(stat),
     }));
 

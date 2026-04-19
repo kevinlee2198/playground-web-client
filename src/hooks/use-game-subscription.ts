@@ -5,7 +5,7 @@ import {
   gameMetadataFragment,
   participantDetailNodeFragment,
   participantMetadataFragment,
-  playerRefFragment,
+  userRefFragment,
 } from "@/lib/graphql-fragments";
 import { getGraphQLWsClient } from "@/lib/graphql-ws-client";
 import type { GameEvent } from "@/lib/types/game-event";
@@ -82,7 +82,8 @@ export function useGameSubscription({
                   id: true,
                   name: true,
                   description: true,
-                  players: playerRefFragment,
+                  roster: userRefFragment,
+                  guests: { __typename: true, id: true, displayName: true },
                   metadata: participantMetadataFragment,
                 },
               },
@@ -90,7 +91,7 @@ export function useGameSubscription({
                 __typeName: "BasketballStatsSavedEvent",
                 basketballStats: {
                   id: true,
-                  player: playerRefFragment,
+                  user: userRefFragment,
                   points: true,
                   assists: true,
                   totalRebounds: true,

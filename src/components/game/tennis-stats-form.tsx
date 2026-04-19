@@ -72,10 +72,10 @@ function buildDefaultValues(
 
 function buildInput(
   value: Record<StatField, number | undefined>,
-  playerId: number,
+  userId: number,
   gameId: number,
 ): SaveTennisStatsInput {
-  const input: SaveTennisStatsInput = { playerId, gameId };
+  const input: SaveTennisStatsInput = { userId, gameId };
   for (const field of STAT_FIELDS) {
     input[field] = undefinedToNull(value[field]);
   }
@@ -99,7 +99,7 @@ export function TennisStatsForm({
       setError(null);
 
       startTransition(async () => {
-        const input = buildInput(value, initialData.player.id, gameId);
+        const input = buildInput(value, initialData.user.id, gameId);
         const result = await saveTennisStats(input);
 
         if (result.success) {
@@ -113,7 +113,7 @@ export function TennisStatsForm({
     },
   });
 
-  const playerName = initialData.player.user.displayName;
+  const userName = initialData.user.displayName;
 
   function renderFieldGroup(fields: readonly StatField[]) {
     return (
@@ -140,7 +140,7 @@ export function TennisStatsForm({
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.stats.editStats")} - {playerName}
+            {t("game.stats.editStats")} - {userName}
           </DialogTitle>
         </DialogHeader>
 

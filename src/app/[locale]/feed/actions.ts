@@ -4,7 +4,7 @@ import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import {
   gameMetadataFragment,
   participantNodeFragment,
-  viewerFollowingPlayersFragment,
+  viewerFollowingUsersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
@@ -60,7 +60,7 @@ export async function loadFeedGames(
                 node: participantNodeFragment,
               },
             },
-            viewerFollowingPlayers: viewerFollowingPlayersFragment,
+            viewerFollowingUsers: viewerFollowingUsersFragment,
           },
         },
         pageInfo: {

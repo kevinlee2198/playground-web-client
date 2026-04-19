@@ -2,6 +2,7 @@ import { AnimatedScore } from "@/components/game/score/animated-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { cn } from "@/lib/utils";
 import type { GameParticipant, ParticipantMetadata } from "@/lib/types/game";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 function getSimpleScore(
@@ -26,10 +27,12 @@ interface SimpleScoreProps {
 }
 
 export function SimpleScore({ participantA, participantB, statusPill, size = "sm" }: SimpleScoreProps) {
+  const t = useTranslations();
+  const unnamedTeam = t("leagues.team.unnamed");
   const scoreA = getSimpleScore(participantA.metadata);
   const scoreB = getSimpleScore(participantB.metadata);
-  const nameA = getParticipantName(participantA);
-  const nameB = getParticipantName(participantB);
+  const nameA = getParticipantName(participantA, unnamedTeam);
+  const nameB = getParticipantName(participantB, unnamedTeam);
 
   const aWins = scoreA !== null && scoreB !== null && scoreA > scoreB;
   const bWins = scoreA !== null && scoreB !== null && scoreB > scoreA;

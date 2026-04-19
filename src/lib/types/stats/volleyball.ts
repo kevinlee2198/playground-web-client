@@ -38,11 +38,11 @@ export interface SaveVolleyballStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player stats data for bulk save (gameId is at parent level).
+ * Per-user stats data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveVolleyballStatsInput.
  */
 export interface SaveVolleyballStatsData {
-  playerId: number;
+  userId: number;
   kills?: number | null;
   attackErrors?: number | null;
   attackAttempts?: number | null;

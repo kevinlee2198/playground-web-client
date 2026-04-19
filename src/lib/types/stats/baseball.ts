@@ -48,11 +48,11 @@ export interface SaveBaseballBattingStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player batting statistics data for bulk save (gameId is at parent level).
+ * Per-user batting statistics data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveBaseballBattingStatsInput.
  */
 export interface SaveBaseballBattingStatsData {
-  playerId: number;
+  userId: number;
   atBats?: number | null;
   runs?: number | null;
   hits?: number | null;
@@ -116,11 +116,11 @@ export interface SaveBaseballPitchingStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player pitching statistics data for bulk save (gameId is at parent level).
+ * Per-user pitching statistics data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveBaseballPitchingStatsInput.
  */
 export interface SaveBaseballPitchingStatsData {
-  playerId: number;
+  userId: number;
   inningsPitched?: number | null;
   hitsAllowed?: number | null;
   runsAllowed?: number | null;
@@ -164,11 +164,11 @@ export interface SaveBaseballFieldingStatsInput extends SaveStatsInput {
 }
 
 /**
- * Per-player fielding statistics data for bulk save (gameId is at parent level).
+ * Per-user fielding statistics data for bulk save (gameId is at parent level).
  * Independent interface mirroring schema — not derived from SaveBaseballFieldingStatsInput.
  */
 export interface SaveBaseballFieldingStatsData {
-  playerId: number;
+  userId: number;
   putouts?: number | null;
   assists?: number | null;
   errors?: number | null;
