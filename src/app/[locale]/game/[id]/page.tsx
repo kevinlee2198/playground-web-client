@@ -15,7 +15,7 @@ import {
   locationFragment,
   normalizeGameMediaEdges,
   participantDetailNodeFragment,
-  playerRefFragment,
+  userRefFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery, query } from "@/lib/graphql-request";
@@ -115,20 +115,15 @@ export default async function GameDetailPage({ params }: PageProps) {
 
   let game: GameDetail | null;
   let currentUserId: number | null = null;
-  let playerId: number | null = null;
   if (session?.user) {
     // Authenticated flow: fetch user info and game with auth
     const meResponse = await authQuery({
       me: {
         id: true,
-        player: {
-          id: true,
-        },
       },
     });
 
     currentUserId = meResponse.data?.me?.id ?? null;
-    playerId = meResponse.data?.me?.player?.id ?? null;
 
     const gameResponse = await authQuery({
       game: { ...gameQueryFields, __args: { id } },
@@ -186,7 +181,7 @@ export default async function GameDetailPage({ params }: PageProps) {
           edges: {
             node: {
               id: true,
-              player: playerRefFragment,
+              user: userRefFragment,
               points: true,
               assists: true,
               totalRebounds: true,
@@ -226,7 +221,7 @@ export default async function GameDetailPage({ params }: PageProps) {
           edges: {
             node: {
               id: true,
-              player: playerRefFragment,
+              user: userRefFragment,
               aces: true,
               faults: true,
               doubleFaults: true,
@@ -258,7 +253,7 @@ export default async function GameDetailPage({ params }: PageProps) {
           edges: {
             node: {
               id: true,
-              player: playerRefFragment,
+              user: userRefFragment,
               kills: true,
               attackErrors: true,
               attackAttempts: true,
@@ -288,7 +283,7 @@ export default async function GameDetailPage({ params }: PageProps) {
           edges: {
             node: {
               id: true,
-              player: playerRefFragment,
+              user: userRefFragment,
               aces: true,
               doubleFaults: true,
               firstServesIn: true,
@@ -323,7 +318,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             edges: {
               node: {
                 id: true,
-                player: playerRefFragment,
+                user: userRefFragment,
                 completions: true,
                 passAttempts: true,
                 passingYards: true,
@@ -350,7 +345,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             edges: {
               node: {
                 id: true,
-                player: playerRefFragment,
+                user: userRefFragment,
                 soloTackles: true,
                 assistedTackles: true,
                 sacks: true,
@@ -374,7 +369,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             edges: {
               node: {
                 id: true,
-                player: playerRefFragment,
+                user: userRefFragment,
                 fieldGoalsMade: true,
                 fieldGoalsAttempted: true,
                 longestFieldGoal: true,
@@ -414,7 +409,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             edges: {
               node: {
                 id: true,
-                player: playerRefFragment,
+                user: userRefFragment,
                 atBats: true,
                 runs: true,
                 hits: true,
@@ -439,7 +434,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             edges: {
               node: {
                 id: true,
-                player: playerRefFragment,
+                user: userRefFragment,
                 inningsPitched: true,
                 hitsAllowed: true,
                 runsAllowed: true,
@@ -464,7 +459,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             edges: {
               node: {
                 id: true,
-                player: playerRefFragment,
+                user: userRefFragment,
                 putouts: true,
                 assists: true,
                 errors: true,
@@ -502,7 +497,6 @@ export default async function GameDetailPage({ params }: PageProps) {
         initialBaseballPitchingStats={initialBaseballPitchingStats}
         initialBaseballFieldingStats={initialBaseballFieldingStats}
         initialVolleyballStats={initialVolleyballStats}
-        playerId={playerId}
         currentUserId={currentUserId}
       >
         <GameDetailHero game={game} locationText={locationText} />

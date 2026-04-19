@@ -76,7 +76,7 @@ function buildGamesQuery(userId: number) {
   return {
     games: {
       __args: {
-        input: { playerId: userId },
+        input: { userId: userId },
         sort: [
           {
             field: new EnumType(GameSortField.START_DATE),
@@ -124,7 +124,7 @@ async function GameHistorySection({ userId }: { userId: number }) {
   const gamesResponse = await query(buildGamesQuery(userId));
   return (
     <GameHistory
-      playerId={String(userId)}
+      userId={String(userId)}
       initialGames={gamesResponse.data?.games}
     />
   );

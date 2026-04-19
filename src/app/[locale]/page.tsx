@@ -210,7 +210,7 @@ async function PublicHomePage({
     };
   }
 
-  // Unauthenticated query -- omits viewerGameRole, viewerInvitation, viewerFollowingPlayers
+  // Unauthenticated query -- omits viewerGameRole, viewerInvitation, viewerFollowingUsers
   const gamesResponse = await query({
     games: {
       __args: {

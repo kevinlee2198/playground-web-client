@@ -24,7 +24,7 @@ import {
 import {
   gameMetadataFragment,
   participantNodeFragment,
-  viewerFollowingPlayersFragment,
+  viewerFollowingUsersFragment,
   viewerInvitationFragment,
 } from "@/lib/graphql-fragments";
 import { authQuery } from "@/lib/graphql-request";
@@ -191,7 +191,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
             viewerGameRole: true,
             visibility: true,
             viewerInvitation: viewerInvitationFragment,
-            viewerFollowingPlayers: viewerFollowingPlayersFragment,
+            viewerFollowingUsers: viewerFollowingUsersFragment,
             location: {
               name: true,
               address: { city: true, state: true, country: true },

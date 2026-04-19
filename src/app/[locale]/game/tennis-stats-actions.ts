@@ -46,7 +46,7 @@ function buildStatFields(
 
 const RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   aces: true,
   doubleFaults: true,
   firstServesIn: true,
@@ -72,7 +72,7 @@ export async function saveTennisStats(
 ): Promise<TennisStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildStatFields(input),
     };
@@ -119,7 +119,7 @@ export async function saveTennisStatsBulk(
     }
 
     const statsInput = stats.map((stat) => ({
-      playerId: stat.playerId,
+      userId: stat.userId,
       ...buildStatFields(stat),
     }));
 

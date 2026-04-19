@@ -30,8 +30,8 @@ export async function addTeamParticipant(
 
     if (input.description !== undefined)
       mutationInput.description = input.description;
-    if (input.playerIds !== undefined)
-      mutationInput.playerIds = input.playerIds;
+    if (input.userIds !== undefined)
+      mutationInput.userIds = input.userIds;
 
     const response = await authMutate({
       addGameParticipant: {
@@ -50,10 +50,8 @@ export async function addTeamParticipant(
                 id: true,
                 name: true,
                 description: true,
-                players: {
-                  id: true,
-                  user: { displayName: true },
-                },
+                roster: { id: true, displayName: true },
+                guests: { id: true, displayName: true },
                 metadata: participantMetadataFragment,
               },
             },
@@ -91,7 +89,7 @@ export async function addIndividualParticipant(
           input: {
             individual: {
               gameId: input.gameId,
-              playerId: input.playerId,
+              userId: input.userId,
             },
           },
         },
@@ -103,9 +101,12 @@ export async function addIndividualParticipant(
               __on: {
                 __typeName: "IndividualParticipant",
                 id: true,
-                player: {
-                  id: true,
-                  user: { displayName: true },
+                participant: {
+                  __typename: true,
+                  __on: [
+                    { __typeName: "User", id: true, displayName: true },
+                    { __typeName: "GuestParticipant", id: true, displayName: true },
+                  ],
                 },
                 metadata: participantMetadataFragment,
               },
@@ -132,7 +133,7 @@ export async function addIndividualParticipant(
 }
 
 /**
- * Update a team participant (name, description, players, attributes)
+ * Update a team participant (name, description, roster, attributes)
  */
 export async function updateTeamParticipant(
   input: UpdateTeamParticipantInput,
@@ -145,8 +146,8 @@ export async function updateTeamParticipant(
     if (input.name !== undefined) mutationInput.name = input.name;
     if (input.description !== undefined)
       mutationInput.description = input.description;
-    if (input.playerIds !== undefined)
-      mutationInput.playerIds = input.playerIds;
+    if (input.userIds !== undefined)
+      mutationInput.userIds = input.userIds;
     if (input.metadata !== undefined) mutationInput.metadata = input.metadata;
 
     const response = await authMutate({
@@ -166,10 +167,8 @@ export async function updateTeamParticipant(
                 id: true,
                 name: true,
                 description: true,
-                players: {
-                  id: true,
-                  user: { displayName: true },
-                },
+                roster: { id: true, displayName: true },
+                guests: { id: true, displayName: true },
                 metadata: participantMetadataFragment,
               },
             },
@@ -197,8 +196,8 @@ export async function updateTeamParticipant(
 }
 
 /**
- * Join a team (add a player to an existing team instance).
- * Uses the addPlayerToTeamInstance mutation to atomically add a player
+ * Join a team (add a user to an existing team instance).
+ * Uses the addUserToTeamInstance mutation to atomically add a user
  * without race conditions from concurrent roster modifications.
  */
 export async function joinTeam(
@@ -206,24 +205,21 @@ export async function joinTeam(
 ): Promise<ParticipantActionResult> {
   try {
     const response = await authMutate({
-      addPlayerToTeamInstance: {
+      addUserToTeamInstance: {
         __args: {
           input: {
             teamInstanceId: input.teamInstanceId,
-            playerId: input.playerId,
+            userId: input.userId,
           },
         },
         __typename: true,
         __on: [
           {
-            __typeName: "AddPlayerToTeamInstanceResponse",
+            __typeName: "AddUserToTeamInstanceResponse",
             teamInstance: {
               id: true,
               name: true,
-              players: {
-                id: true,
-                user: { displayName: true },
-              },
+              roster: { id: true, displayName: true },
             },
           },
           errorFragment,
@@ -235,7 +231,7 @@ export async function joinTeam(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.addPlayerToTeamInstance, "AddPlayerToTeamInstanceResponse");
+    const result = extractMutationResult(response.data.addUserToTeamInstance, "AddUserToTeamInstanceResponse");
     if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");
@@ -247,8 +243,8 @@ export async function joinTeam(
 }
 
 /**
- * Leave a team (remove a player from an existing team instance).
- * Uses the removePlayerFromTeamInstance mutation to atomically remove a player
+ * Leave a team (remove a user from an existing team instance).
+ * Uses the removeUserFromTeamInstance mutation to atomically remove a user
  * without race conditions from concurrent roster modifications.
  */
 export async function leaveTeam(
@@ -256,24 +252,21 @@ export async function leaveTeam(
 ): Promise<ParticipantActionResult> {
   try {
     const response = await authMutate({
-      removePlayerFromTeamInstance: {
+      removeUserFromTeamInstance: {
         __args: {
           input: {
             teamInstanceId: input.teamInstanceId,
-            playerId: input.playerId,
+            userId: input.userId,
           },
         },
         __typename: true,
         __on: [
           {
-            __typeName: "RemovePlayerFromTeamInstanceResponse",
+            __typeName: "RemoveUserFromTeamInstanceResponse",
             teamInstance: {
               id: true,
               name: true,
-              players: {
-                id: true,
-                user: { displayName: true },
-              },
+              roster: { id: true, displayName: true },
             },
           },
           errorFragment,
@@ -285,7 +278,7 @@ export async function leaveTeam(
       return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
     }
 
-    const result = extractMutationResult(response.data.removePlayerFromTeamInstance, "RemovePlayerFromTeamInstanceResponse");
+    const result = extractMutationResult(response.data.removeUserFromTeamInstance, "RemoveUserFromTeamInstanceResponse");
     if (!result.success) return result;
 
     revalidatePath("/[locale]/game/[id]", "page");

@@ -49,7 +49,7 @@ function buildStatFields(
 
 const RESPONSE_FIELDS = {
   id: true,
-  player: { id: true, user: { displayName: true } },
+  user: { id: true, displayName: true },
   points: true,
   assists: true,
   totalRebounds: true,
@@ -74,14 +74,14 @@ const RESPONSE_FIELDS = {
 } as const;
 
 /**
- * Save basketball stats for a single player
+ * Save basketball stats for a single user
  */
 export async function saveBasketballStats(
   input: SaveBasketballStatsInput,
 ): Promise<BasketballStatsActionResult> {
   try {
     const mutationInput: Record<string, unknown> = {
-      playerId: input.playerId,
+      userId: input.userId,
       gameId: input.gameId,
       ...buildStatFields(input),
     };
@@ -116,7 +116,7 @@ export async function saveBasketballStats(
 }
 
 /**
- * Save basketball stats for multiple players
+ * Save basketball stats for multiple users
  */
 export async function saveBasketballStatsBulk(
   gameId: number,
@@ -128,7 +128,7 @@ export async function saveBasketballStatsBulk(
     }
 
     const stats = scores.map((score) => ({
-      playerId: score.playerId,
+      userId: score.userId,
       ...buildStatFields(score),
     }));
 
