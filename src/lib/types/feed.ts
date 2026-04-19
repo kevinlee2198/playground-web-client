@@ -4,9 +4,9 @@ import type { GameMetadata, GameParticipant } from "@/lib/types/game";
 import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 
 /**
- * Minimal user info nested inside a Player for feed display.
+ * Minimal user info for feed display.
  */
-export interface FeedPlayerUser {
+export interface FeedUser {
   id: number;
   displayName: string;
   profilePicture: FeedProfilePicture | null;
@@ -22,21 +22,11 @@ export interface FeedProfilePicture {
 }
 
 /**
- * Player node returned within viewerFollowingPlayers.
- * Includes a user reference since Player implements HasUser in the schema.
+ * The viewer's followed users who are participants in a game.
+ * `nodes` is capped by the server at 10.
  */
-export interface FeedPlayerNode {
-  id: number;
-  user: FeedPlayerUser;
-}
-
-/**
- * The viewer's followed users who are players in a game.
- * nodes is capped by the server.
- */
-export interface ViewerFollowingPlayers {
-  nodes: FeedPlayerNode[];
-  totalCount: number;
+export interface ViewerFollowingUsers {
+  nodes: FeedUser[];
 }
 
 /**
@@ -53,7 +43,7 @@ export interface FeedLocation {
 
 /**
  * Game node returned from the followingActivityFeed query.
- * A separate type from GameNode — includes location and viewerFollowingPlayers.
+ * A separate type from GameNode — includes location and viewerFollowingUsers.
  */
 export interface FeedGameNode {
   id: number;
@@ -71,7 +61,7 @@ export interface FeedGameNode {
   participants: {
     edges: Edge<GameParticipant>[];
   };
-  viewerFollowingPlayers: ViewerFollowingPlayers;
+  viewerFollowingUsers: ViewerFollowingUsers;
 }
 
 /**
