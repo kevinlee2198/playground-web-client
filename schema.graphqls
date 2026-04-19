@@ -478,12 +478,6 @@ type InvalidGameStatusTransitionError implements Error {
   currentStatus: GameStatus!
 }
 
-type PlayerNotFoundError implements Error {
-  message: String!
-  playerId: ID
-  playerIds: [ID!]
-}
-
 type ParticipantNotFoundError implements Error {
   message: String!
   participantId: ID!
@@ -1457,21 +1451,41 @@ type VolleyballSetScore {
 }
 
 """
-A grouping of players in a game. Is game-specific
+A named guest participant (non-registered user) added to a game by a manager.
+"""
+type GuestParticipant implements Node {
+  id: ID!
+  displayName: String!
+  addedBy: User!
+}
+
+"""
+A grouping of users in a game. Is game-specific.
 """
 type TeamInstance implements Node & GameParticipant {
   id: ID!
-  name: String!
+  name: String
   description: String
-  players: [Player!]!
+  roster: [User!]!
+  guests: [GuestParticipant!]!
   metadata: ParticipantMetadata
 }
 
 type IndividualParticipant implements Node & GameParticipant {
   id: ID!
-  player: Player!
+  """
+  The participant — either a registered user or a named guest.
+  Use __typename to distinguish; IDs are not globally unique across User and GuestParticipant.
+  """
+  participant: IndividualParticipantWho!
   metadata: ParticipantMetadata
 }
+
+"""
+The participant — either a registered user or a named guest.
+Use __typename to distinguish; IDs are not globally unique across User and GuestParticipant.
+"""
+union IndividualParticipantWho = User | GuestParticipant
 
 interface GameParticipant implements Node {
   id: ID!
@@ -1504,7 +1518,7 @@ type Game implements Node & HasLocation {
   metadata: GameMetadata!
   location: Location
   """
-  Whether this game is open for anyone with a player profile to join, or invite-only.
+  Whether this game is open for anyone with a user account to join, or invite-only.
   """
   visibility: GameVisibility!
   """
@@ -1530,12 +1544,11 @@ type Game implements Node & HasLocation {
     before: String
   ): GameMediaConnection!
   """
-  The current user's followed users who are players in this game.
+  The current user's followed users who are participants in this game.
   Returns an empty wrapper if the viewer is unauthenticated or has no followed users in the game.
-  Nodes are server-capped at 10 players; totalCount reflects the true number
-  so the UI can render "Sarah, Kevin, and 3 others played basketball".
+  Nodes are server-capped at 10 users.
   """
-  viewerFollowingPlayers: ViewerFollowingPlayers!
+  viewerFollowingUsers: ViewerFollowingUsers!
   """
   The current viewer's management role in this game, if any. Null if the viewer
   has no management role (or is unauthenticated). Independent from being a
@@ -1570,15 +1583,11 @@ type Game implements Node & HasLocation {
   viewerInvitation: GameInvitation
 }
 
-type ViewerFollowingPlayers {
+type ViewerFollowingUsers {
   """
-  First up to 10 following players in this game.
+  First up to 10 followed users who are participants in this game.
   """
-  nodes: [Player!]!
-  """
-  Total number of the viewer's followed users who are players in this game.
-  """
-  totalCount: Int!
+  nodes: [User!]!
 }
 
 type GameEdge implements Edge {
@@ -1630,9 +1639,9 @@ input GameFilterInput {
   """
   sportType: SportType
   """
-  Equals - player is present in the game
+  Equals - user is a participant in the game
   """
-  playerId: ID
+  userId: ID
   """
   Equals
   """
@@ -1648,7 +1657,7 @@ input GameFilterInput {
   invitedToMe: Boolean
   """
   When true, returns games where the current viewer is a participant, organizer, or has a PENDING/ACCEPTED invitation.
-  Combines the effects of organizedByMe, playerId (for own player), and invitedToMe into a single unified filter.
+  Combines the effects of organizedByMe, userId (for own participation), and invitedToMe into a single unified filter.
   """
   myGames: Boolean
   """
@@ -1692,7 +1701,7 @@ input AddTeamInstanceInput {
   gameId: ID!
   name: String!
   description: String
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
@@ -1701,7 +1710,7 @@ Use for individual sports (singles tennis, 3v3 basketball).
 """
 input AddIndividualParticipantInput {
   gameId: ID!
-  playerId: ID!
+  userId: ID!
 }
 
 """
@@ -1729,7 +1738,7 @@ Team instance data for bulk add (gameId is at parent level).
 input AddTeamInstanceData {
   name: String!
   description: String
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
@@ -1745,7 +1754,7 @@ Add multiple individual participants to a game.
 """
 input AddIndividualParticipantsInput {
   gameId: ID!
-  playerIds: [ID!]!
+  userIds: [ID!]!
 }
 
 """
@@ -1777,7 +1786,7 @@ input UpdateTeamInstanceInput {
   """
   name: String
   description: String
-  playerIds: [ID!]
+  userIds: [ID!]
   """
   Sport-specific participant metadata (e.g. score).
   If null will not be updated.
@@ -1903,66 +1912,66 @@ type RemoveGameParticipantsResponse {
 }
 
 # ============================================================================
-# Add Player to Team Instance (Singular)
+# Add User to Team Instance (Singular)
 # ============================================================================
 
 """
-Add a player to an existing team instance.
+Add a user to an existing team instance.
 """
-input AddPlayerToTeamInstanceInput {
+input AddUserToTeamInstanceInput {
   teamInstanceId: ID!
-  playerId: ID!
+  userId: ID!
 }
 
-type AddPlayerToTeamInstanceResponse {
+type AddUserToTeamInstanceResponse {
   teamInstance: TeamInstance!
 }
 
 # ============================================================================
-# Add Players to Team Instance (Bulk)
+# Add Users to Team Instance (Bulk)
 # ============================================================================
 
 """
-Add multiple players to an existing team instance.
+Add multiple users to an existing team instance.
 """
-input AddPlayersToTeamInstanceInput {
+input AddUsersToTeamInstanceInput {
   teamInstanceId: ID!
-  playerIds: [ID!]!
+  userIds: [ID!]!
 }
 
-type AddPlayersToTeamInstanceResponse {
+type AddUsersToTeamInstanceResponse {
   teamInstance: TeamInstance!
 }
 
 # ============================================================================
-# Remove Player from Team Instance (Singular)
+# Remove User from Team Instance (Singular)
 # ============================================================================
 
 """
-Remove a player from a team instance.
+Remove a user from a team instance.
 """
-input RemovePlayerFromTeamInstanceInput {
+input RemoveUserFromTeamInstanceInput {
   teamInstanceId: ID!
-  playerId: ID!
+  userId: ID!
 }
 
-type RemovePlayerFromTeamInstanceResponse {
+type RemoveUserFromTeamInstanceResponse {
   teamInstance: TeamInstance!
 }
 
 # ============================================================================
-# Remove Players from Team Instance (Bulk)
+# Remove Users from Team Instance (Bulk)
 # ============================================================================
 
 """
-Remove multiple players from a team instance.
+Remove multiple users from a team instance.
 """
-input RemovePlayersFromTeamInstanceInput {
+input RemoveUsersFromTeamInstanceInput {
   teamInstanceId: ID!
-  playerIds: [ID!]!
+  userIds: [ID!]!
 }
 
-type RemovePlayersFromTeamInstanceResponse {
+type RemoveUsersFromTeamInstanceResponse {
   teamInstance: TeamInstance!
 }
 
@@ -2347,12 +2356,12 @@ union UnfinalizeGameResultsResult =
 union AddGameParticipantResult =
   | AddGameParticipantResponse
   | GameNotFoundError
-  | PlayerNotFoundError
+  | UserNotFoundError
   | InvalidParticipantTypeError
 union AddGameParticipantsResult =
   | AddGameParticipantsResponse
   | GameNotFoundError
-  | PlayerNotFoundError
+  | UserNotFoundError
   | InvalidParticipantTypeError
 union UpdateGameParticipantResult =
   | UpdateGameParticipantResponse
@@ -2370,22 +2379,22 @@ union RemoveGameParticipantsResult =
   | RemoveGameParticipantsResponse
   | GameNotFoundError
   | ParticipantNotFoundError
-union AddPlayerToTeamInstanceResult =
-  | AddPlayerToTeamInstanceResponse
+union AddUserToTeamInstanceResult =
+  | AddUserToTeamInstanceResponse
   | TeamInstanceNotFoundError
-  | PlayerNotFoundError
-union AddPlayersToTeamInstanceResult =
-  | AddPlayersToTeamInstanceResponse
+  | UserNotFoundError
+union AddUsersToTeamInstanceResult =
+  | AddUsersToTeamInstanceResponse
   | TeamInstanceNotFoundError
-  | PlayerNotFoundError
-union RemovePlayerFromTeamInstanceResult =
-  | RemovePlayerFromTeamInstanceResponse
+  | UserNotFoundError
+union RemoveUserFromTeamInstanceResult =
+  | RemoveUserFromTeamInstanceResponse
   | TeamInstanceNotFoundError
-  | PlayerNotFoundError
-union RemovePlayersFromTeamInstanceResult =
-  | RemovePlayersFromTeamInstanceResponse
+  | UserNotFoundError
+union RemoveUsersFromTeamInstanceResult =
+  | RemoveUsersFromTeamInstanceResponse
   | TeamInstanceNotFoundError
-  | PlayerNotFoundError
+  | UserNotFoundError
 
 # ============================================================================
 # Game Editor Management
@@ -2684,46 +2693,6 @@ union CancelGameInvitationResult =
   | CancelGameInvitationResponse
   | InvitationNotFoundError
   | InvalidInvitationStatusError
-"""
-A player in a game. Persists across games.
-Physical attributes (age, height, weight) may be null if the viewer has
-a blocking relationship with this player's user.
-"""
-type Player implements Node {
-  id: ID!
-  """
-  Null when the viewer has a blocking relationship with this player's user.
-  """
-  age: Int
-  """
-  Null when the viewer has a blocking relationship with this player's user.
-  """
-  height: Float
-  """
-  Null when the viewer has a blocking relationship with this player's user.
-  """
-  weight: Float
-  """
-  Null when the viewer has a blocking relationship with this player's user.
-  """
-  user: User
-}
-
-"""
-Updates the current user's player profile.
-Omit a field to leave it unchanged. Setting a field to null will clear it.
-"""
-input UpdatePlayerInput {
-  age: Int
-  height: Float
-  weight: Float
-}
-
-type UpdatePlayerResponse {
-  player: Player!
-}
-
-union UpdatePlayerResult = UpdatePlayerResponse
 # ============================================================================
 # Resource / File Management (v2)
 #
@@ -2910,6 +2879,10 @@ A 64-bit signed integer. Represents values from -(2^63) to 2^63-1.
 Serialized as a JSON number when within safe integer range, otherwise as a string.
 """
 scalar Long
+"""
+An ISO-8601 calendar date (e.g. 2026-04-17).
+"""
+scalar Date
 
 """
 The direction to sort results
@@ -3044,10 +3017,6 @@ type Query {
     last: Int
     before: String
   ): GameConnection!
-  """
-  Get a player by ID
-  """
-  player(id: ID!): Player
   """
   Get a game by ID
   """
@@ -3239,10 +3208,6 @@ type Mutation {
   """
   updateUser(input: UpdateUserInput!): UpdateUserResult!
   """
-  Update the current user's player profile.
-  """
-  updatePlayer(input: UpdatePlayerInput!): UpdatePlayerResult!
-  """
   Create a game.
   """
   createGame(input: CreateGameInput!): CreateGameResult!
@@ -3291,29 +3256,35 @@ type Mutation {
     input: RemoveGameParticipantsInput!
   ): RemoveGameParticipantsResult!
   """
-  Add a player to an existing team instance.
+  Add a user to an existing team instance.
   """
-  addPlayerToTeamInstance(
-    input: AddPlayerToTeamInstanceInput!
-  ): AddPlayerToTeamInstanceResult!
+  addUserToTeamInstance(
+    input: AddUserToTeamInstanceInput!
+  ): AddUserToTeamInstanceResult!
   """
-  Add multiple players to an existing team instance.
+  Add multiple users to an existing team instance.
   """
-  addPlayersToTeamInstance(
-    input: AddPlayersToTeamInstanceInput!
-  ): AddPlayersToTeamInstanceResult!
+  addUsersToTeamInstance(
+    input: AddUsersToTeamInstanceInput!
+  ): AddUsersToTeamInstanceResult!
   """
-  Remove a player from a team instance.
+  Remove a user from a team instance.
   """
-  removePlayerFromTeamInstance(
-    input: RemovePlayerFromTeamInstanceInput!
-  ): RemovePlayerFromTeamInstanceResult!
+  removeUserFromTeamInstance(
+    input: RemoveUserFromTeamInstanceInput!
+  ): RemoveUserFromTeamInstanceResult!
   """
-  Remove multiple players from a team instance.
+  Remove multiple users from a team instance.
   """
-  removePlayersFromTeamInstance(
-    input: RemovePlayersFromTeamInstanceInput!
-  ): RemovePlayersFromTeamInstanceResult!
+  removeUsersFromTeamInstance(
+    input: RemoveUsersFromTeamInstanceInput!
+  ): RemoveUsersFromTeamInstanceResult!
+  """
+  Update the current user's athletic profile (birth date, height, weight, visibility).
+  """
+  updateAthleticProfile(
+    input: UpdateAthleticProfileInput!
+  ): UpdateAthleticProfileResult!
   """
   Start a game.
   Enables saving of statistics to the game.
@@ -3480,7 +3451,7 @@ type Mutation {
     input: SaveBasketballStatsInput!
   ): SaveBasketballStatsResult!
   """
-  Save stats for multiple players in a basketball game.
+  Save stats for multiple users in a basketball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveBasketballStatsBulk(
@@ -3494,7 +3465,7 @@ type Mutation {
     input: SaveFootballOffensiveStatsInput!
   ): SaveFootballOffensiveStatsResult!
   """
-  Save offensive stats for multiple players in a football game.
+  Save offensive stats for multiple users in a football game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveFootballOffensiveStatsBulk(
@@ -3508,7 +3479,7 @@ type Mutation {
     input: SaveFootballDefensiveStatsInput!
   ): SaveFootballDefensiveStatsResult!
   """
-  Save defensive stats for multiple players in a football game.
+  Save defensive stats for multiple users in a football game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveFootballDefensiveStatsBulk(
@@ -3522,7 +3493,7 @@ type Mutation {
     input: SaveFootballSpecialTeamsStatsInput!
   ): SaveFootballSpecialTeamsStatsResult!
   """
-  Save special teams stats for multiple players in a football game.
+  Save special teams stats for multiple users in a football game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveFootballSpecialTeamsStatsBulk(
@@ -3536,7 +3507,7 @@ type Mutation {
     input: SavePickleballStatsInput!
   ): SavePickleballStatsResult!
   """
-  Save stats for multiple players in a pickleball game.
+  Save stats for multiple users in a pickleball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   savePickleballStatsBulk(
@@ -3548,7 +3519,7 @@ type Mutation {
   """
   saveTennisStats(input: SaveTennisStatsInput!): SaveTennisStatsResult!
   """
-  Save stats for multiple players in a tennis match.
+  Save stats for multiple users in a tennis match.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveTennisStatsBulk(
@@ -3562,7 +3533,7 @@ type Mutation {
     input: SaveBaseballBattingStatsInput!
   ): SaveBaseballBattingStatsResult!
   """
-  Save batting stats for multiple players in a baseball game.
+  Save batting stats for multiple users in a baseball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveBaseballBattingStatsBulk(
@@ -3576,7 +3547,7 @@ type Mutation {
     input: SaveBaseballPitchingStatsInput!
   ): SaveBaseballPitchingStatsResult!
   """
-  Save pitching stats for multiple players in a baseball game.
+  Save pitching stats for multiple users in a baseball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveBaseballPitchingStatsBulk(
@@ -3590,7 +3561,7 @@ type Mutation {
     input: SaveBaseballFieldingStatsInput!
   ): SaveBaseballFieldingStatsResult!
   """
-  Save fielding stats for multiple players in a baseball game.
+  Save fielding stats for multiple users in a baseball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveBaseballFieldingStatsBulk(
@@ -3604,7 +3575,7 @@ type Mutation {
     input: SaveVolleyballStatsInput!
   ): SaveVolleyballStatsResult!
   """
-  Save stats for multiple players in a volleyball game.
+  Save stats for multiple users in a volleyball game.
   Only available for games that are IN_PROGRESS or COMPLETE
   """
   saveVolleyballStatsBulk(
@@ -3686,12 +3657,12 @@ type Subscription {
   gameEvents(gameId: ID!): GameEvent!
 }
 """
-Filter for basketball stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for basketball stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input BasketballStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
@@ -3699,7 +3670,7 @@ Stats for basketball
 """
 type BasketballStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   defensiveRebounds: Int
   offensiveRebounds: Int
@@ -3753,10 +3724,10 @@ input SaveBasketballStatsBulkInput {
 }
 
 """
-Stats data for a single player within a bulk save (gameId is at parent level).
+Stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveBasketballStatsData {
-  playerId: ID!
+  userId: ID!
   defensiveRebounds: Int
   offensiveRebounds: Int
   assists: Int
@@ -3773,7 +3744,7 @@ input SaveBasketballStatsData {
 }
 
 input SaveBasketballStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   defensiveRebounds: Int
   offensiveRebounds: Int
@@ -3816,21 +3787,21 @@ union SaveBasketballStatsBulkResult =
 # ============================================================================
 
 """
-Filter for football offensive stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for football offensive stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input FootballOffensiveStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Football offensive statistics for a single player in a game.
+Football offensive statistics for a single user in a game.
 Covers passing, rushing, and receiving.
 """
 type FootballOffensiveStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   completions: Int
   passAttempts: Int
@@ -3876,7 +3847,7 @@ input FootballOffensiveStatsSortInput {
 }
 
 input SaveFootballOffensiveStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   completions: Int
   passAttempts: Int
@@ -3897,10 +3868,10 @@ input SaveFootballOffensiveStatsInput {
 }
 
 """
-Offensive stats data for a single player within a bulk save (gameId is at parent level).
+Offensive stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveFootballOffensiveStatsData {
-  playerId: ID!
+  userId: ID!
   completions: Int
   passAttempts: Int
   passingYards: Int
@@ -3946,20 +3917,20 @@ union SaveFootballOffensiveStatsBulkResult =
 # ============================================================================
 
 """
-Filter for football defensive stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for football defensive stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input FootballDefensiveStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Football defensive statistics for a single player in a game.
+Football defensive statistics for a single user in a game.
 """
 type FootballDefensiveStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   soloTackles: Int
   assistedTackles: Int
@@ -4001,7 +3972,7 @@ input FootballDefensiveStatsSortInput {
 }
 
 input SaveFootballDefensiveStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   soloTackles: Int
   assistedTackles: Int
@@ -4019,10 +3990,10 @@ input SaveFootballDefensiveStatsInput {
 }
 
 """
-Defensive stats data for a single player within a bulk save (gameId is at parent level).
+Defensive stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveFootballDefensiveStatsData {
-  playerId: ID!
+  userId: ID!
   soloTackles: Int
   assistedTackles: Int
   sacks: Int
@@ -4065,21 +4036,21 @@ union SaveFootballDefensiveStatsBulkResult =
 # ============================================================================
 
 """
-Filter for football special teams stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for football special teams stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input FootballSpecialTeamsStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Football special teams statistics for a single player in a game.
+Football special teams statistics for a single user in a game.
 Covers kicking, punting, and return stats.
 """
 type FootballSpecialTeamsStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   fieldGoalsMade: Int
   fieldGoalsAttempted: Int
@@ -4122,7 +4093,7 @@ input FootballSpecialTeamsStatsSortInput {
 }
 
 input SaveFootballSpecialTeamsStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   fieldGoalsMade: Int
   fieldGoalsAttempted: Int
@@ -4141,10 +4112,10 @@ input SaveFootballSpecialTeamsStatsInput {
 }
 
 """
-Special teams stats data for a single player within a bulk save (gameId is at parent level).
+Special teams stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveFootballSpecialTeamsStatsData {
-  playerId: ID!
+  userId: ID!
   fieldGoalsMade: Int
   fieldGoalsAttempted: Int
   longestFieldGoal: Int
@@ -4188,20 +4159,20 @@ union SaveFootballSpecialTeamsStatsBulkResult =
 # ============================================================================
 
 """
-Filter for pickleball stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for pickleball stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input PickleballStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Pickleball stats for a single player in a game.
+Pickleball stats for a single user in a game.
 """
 type PickleballStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   aces: Int
   faults: Int
@@ -4242,7 +4213,7 @@ input PickleballStatsSortInput {
 }
 
 input SavePickleballStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   aces: Int
   faults: Int
@@ -4260,10 +4231,10 @@ input SavePickleballStatsInput {
 }
 
 """
-Pickleball stats data for a single player within a bulk save (gameId is at parent level).
+Pickleball stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SavePickleballStatsData {
-  playerId: ID!
+  userId: ID!
   aces: Int
   faults: Int
   doubleFaults: Int
@@ -4306,21 +4277,21 @@ union SavePickleballStatsBulkResult =
 # ============================================================================
 
 """
-Filter for tennis stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for tennis stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input TennisStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Tennis match stats for a single player in a game.
+Tennis match stats for a single user in a game.
 Covers serving, returning, and general point play.
 """
 type TennisStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   """
   Number of aces served
@@ -4408,7 +4379,7 @@ input TennisStatsSortInput {
 }
 
 input SaveTennisStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   aces: Int
   doubleFaults: Int
@@ -4428,10 +4399,10 @@ input SaveTennisStatsInput {
 }
 
 """
-Tennis stats data for a single player within a bulk save (gameId is at parent level).
+Tennis stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveTennisStatsData {
-  playerId: ID!
+  userId: ID!
   aces: Int
   doubleFaults: Int
   firstServesIn: Int
@@ -4476,20 +4447,20 @@ union SaveTennisStatsBulkResult =
 # ============================================================================
 
 """
-Filter for baseball batting stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for baseball batting stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input BaseballBattingStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Baseball batting statistics for a single player in a game.
+Baseball batting statistics for a single user in a game.
 """
 type BaseballBattingStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   atBats: Int
   runs: Int
@@ -4531,7 +4502,7 @@ input BaseballBattingStatsSortInput {
 }
 
 input SaveBaseballBattingStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   atBats: Int
   runs: Int
@@ -4549,10 +4520,10 @@ input SaveBaseballBattingStatsInput {
 }
 
 """
-Batting stats data for a single player within a bulk save (gameId is at parent level).
+Batting stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveBaseballBattingStatsData {
-  playerId: ID!
+  userId: ID!
   atBats: Int
   runs: Int
   hits: Int
@@ -4595,21 +4566,21 @@ union SaveBaseballBattingStatsBulkResult =
 # ============================================================================
 
 """
-Filter for baseball pitching stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for baseball pitching stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input BaseballPitchingStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Baseball pitching statistics for a single player in a game.
+Baseball pitching statistics for a single user in a game.
 inningsPitched uses standard baseball notation: 6.1 = 6⅓ innings, 6.2 = 6⅔ innings.
 """
 type BaseballPitchingStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   inningsPitched: Float
   hitsAllowed: Int
@@ -4650,7 +4621,7 @@ input BaseballPitchingStatsSortInput {
 }
 
 input SaveBaseballPitchingStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   inningsPitched: Float
   hitsAllowed: Int
@@ -4668,10 +4639,10 @@ input SaveBaseballPitchingStatsInput {
 }
 
 """
-Pitching stats data for a single player within a bulk save (gameId is at parent level).
+Pitching stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveBaseballPitchingStatsData {
-  playerId: ID!
+  userId: ID!
   inningsPitched: Float
   hitsAllowed: Int
   runsAllowed: Int
@@ -4714,20 +4685,20 @@ union SaveBaseballPitchingStatsBulkResult =
 # ============================================================================
 
 """
-Filter for baseball fielding stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for baseball fielding stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input BaseballFieldingStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Baseball fielding statistics for a single player in a game.
+Baseball fielding statistics for a single user in a game.
 """
 type BaseballFieldingStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   putouts: Int
   assists: Int
@@ -4758,7 +4729,7 @@ input BaseballFieldingStatsSortInput {
 }
 
 input SaveBaseballFieldingStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   putouts: Int
   assists: Int
@@ -4766,10 +4737,10 @@ input SaveBaseballFieldingStatsInput {
 }
 
 """
-Fielding stats data for a single player within a bulk save (gameId is at parent level).
+Fielding stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveBaseballFieldingStatsData {
-  playerId: ID!
+  userId: ID!
   putouts: Int
   assists: Int
   errors: Int
@@ -4802,20 +4773,20 @@ union SaveBaseballFieldingStatsBulkResult =
 # ============================================================================
 
 """
-Filter for volleyball stats by game and/or player.
-At least one of gameIds or playerIds must be provided.
+Filter for volleyball stats by game and/or user.
+At least one of gameIds or userIds must be provided.
 """
 input VolleyballStatsFilterInput {
   gameIds: [ID!]
-  playerIds: [ID!]
+  userIds: [ID!]
 }
 
 """
-Volleyball stats for a single player in a game.
+Volleyball stats for a single user in a game.
 """
 type VolleyballStats implements Node {
   id: ID!
-  player: Player!
+  user: User!
   game: Game!
   kills: Int
   attackErrors: Int
@@ -4858,7 +4829,7 @@ input VolleyballStatsSortInput {
 }
 
 input SaveVolleyballStatsInput {
-  playerId: ID!
+  userId: ID!
   gameId: ID!
   kills: Int
   attackErrors: Int
@@ -4873,10 +4844,10 @@ input SaveVolleyballStatsInput {
 }
 
 """
-Volleyball stats data for a single player within a bulk save (gameId is at parent level).
+Volleyball stats data for a single user within a bulk save (gameId is at parent level).
 """
 input SaveVolleyballStatsData {
-  playerId: ID!
+  userId: ID!
   kills: Int
   attackErrors: Int
   attackAttempts: Int
@@ -4987,7 +4958,22 @@ type User implements Node {
   """
   profileVisibility: ProfileVisibility!
   biography: String
-  player: Player!
+  """
+  Birth date. Null when the user's athleticProfileVisibility gates this from the viewer.
+  """
+  birthDate: Date
+  """
+  Age derived from birthDate. Null when birthDate is not visible.
+  """
+  age: Int
+  """
+  Height in cm. Null when the user's athleticProfileVisibility gates this from the viewer.
+  """
+  height: Float
+  """
+  Weight in kg. Null when the user's athleticProfileVisibility gates this from the viewer.
+  """
+  weight: Float
   """
   Whether the authenticated viewer follows this user.
   Null when unauthenticated.
@@ -5053,7 +5039,26 @@ type CurrentUser implements Node {
   displayName: String!
   biography: String
   email: String!
-  player: Player!
+  """
+  Birth date (owner always sees own data).
+  """
+  birthDate: Date
+  """
+  Age derived from birthDate.
+  """
+  age: Int
+  """
+  Height in cm (owner always sees own data).
+  """
+  height: Float
+  """
+  Weight in kg (owner always sees own data).
+  """
+  weight: Float
+  """
+  Controls who can see athletic profile fields on the public User type.
+  """
+  athleticProfileVisibility: AthleticProfileVisibility!
   """
   The user's profile picture. Null if no profile picture has been set.
   """
@@ -5320,3 +5325,35 @@ union UnblockUserResult = UnblockUserResponse | BlockNotFoundError
 union ReadNotificationsResult =
   | ReadNotificationsResponse
   | NotificationNotFoundError
+
+# ============================================================================
+# Athletic Profile
+# ============================================================================
+
+"""
+Controls who can see a user's athletic profile fields (birthDate, age, height, weight).
+"""
+enum AthleticProfileVisibility {
+  PUBLIC
+  FOLLOWERS_ONLY
+  PRIVATE
+}
+
+"""
+Update the current user's athletic profile.
+Fields not specified will not be updated.
+"""
+input UpdateAthleticProfileInput {
+  birthDate: Date
+  height: Float
+  weight: Float
+  athleticProfileVisibility: AthleticProfileVisibility
+}
+
+type UpdateAthleticProfileResponse {
+  user: CurrentUser!
+}
+
+union UpdateAthleticProfileResult =
+  | UpdateAthleticProfileResponse
+  | UserNotFoundError
