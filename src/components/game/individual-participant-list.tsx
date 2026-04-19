@@ -13,6 +13,7 @@ import { GameInvitationStatus, GameRole, GameVisibility } from "@/lib/constants"
 import type {
   GameParticipantDetail,
   IndividualParticipantNode,
+  UserRef,
 } from "@/lib/types/game";
 import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
@@ -47,12 +48,7 @@ export function IndividualParticipantList({
   // User. Guests have no username to link to and no user profile to deep-link
   // into — the leagues feature will add a richer guest-display pass later.
   const userParticipants = participants.filter(
-    (p): p is IndividualParticipantNode & {
-      participant: Extract<
-        IndividualParticipantNode["participant"],
-        { __typename: "User" }
-      >;
-    } =>
+    (p): p is IndividualParticipantNode & { participant: UserRef } =>
       p.__typename === "IndividualParticipant" &&
       p.participant.__typename === "User",
   );

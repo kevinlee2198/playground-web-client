@@ -6,6 +6,7 @@ import type {
   TennisParticipantMetadata,
   TennisSetScore,
 } from "@/lib/types/game";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 function formatSetScore(
@@ -40,10 +41,12 @@ interface TennisScoreProps {
 }
 
 export function TennisScore({ participantA, participantB, statusPill, size = "sm" }: TennisScoreProps) {
+  const t = useTranslations();
+  const unnamedTeam = t("leagues.team.unnamed");
   const tennisA = getTennisMeta(participantA);
   const tennisB = getTennisMeta(participantB);
-  const nameA = getParticipantName(participantA) ?? "";
-  const nameB = getParticipantName(participantB) ?? "";
+  const nameA = getParticipantName(participantA, unnamedTeam);
+  const nameB = getParticipantName(participantB, unnamedTeam);
 
   const setsA = tennisA?.setsWon ?? 0;
   const setsB = tennisB?.setsWon ?? 0;

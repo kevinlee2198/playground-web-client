@@ -71,8 +71,9 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
   }
 
   const [participantA, participantB] = participants;
-  const nameA = getParticipantName(participantA) ?? "";
-  const nameB = getParticipantName(participantB) ?? "";
+  const unnamedTeam = t("leagues.team.unnamed");
+  const nameA = getParticipantName(participantA, unnamedTeam);
+  const nameB = getParticipantName(participantB, unnamedTeam);
 
   function renderScoreForm(): ReactNode {
     switch (game.sportType) {

@@ -79,8 +79,9 @@ export function GameCard({ game, distance }: GameCardProps) {
     </Badge>
   );
 
+  const unnamedTeam = t("leagues.team.unnamed");
   const participantsDisplay = participants.length >= 2
-    ? `${getParticipantName(participants[0]) ?? ""} ${t("profile.games.vs")} ${getParticipantName(participants[1]) ?? ""}`
+    ? `${getParticipantName(participants[0], unnamedTeam)} ${t("profile.games.vs")} ${getParticipantName(participants[1], unnamedTeam)}`
     : null;
 
   return (

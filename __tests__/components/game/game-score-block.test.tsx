@@ -33,8 +33,11 @@ vi.mock("@/components/game/score/game-score", () => ({
 }));
 
 vi.mock("@/components/game/score/participant-utils", () => ({
-  getParticipantName: (p: { __typename: string; name?: string }) =>
-    p.__typename === "TeamInstance" ? p.name : "User Name",
+  getParticipantName: (
+    p: { __typename: string; name?: string | null },
+    fallback: string,
+  ) =>
+    p.__typename === "TeamInstance" ? (p.name ?? fallback) : "User Name",
 }));
 
 vi.mock("@/components/game/scoreboard/basketball-score-form", () => ({

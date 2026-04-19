@@ -5,6 +5,7 @@ import type {
   GameParticipant,
   PickleballParticipantMetadata,
 } from "@/lib/types/game";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 function getPickleballMeta(
@@ -27,10 +28,12 @@ export function PickleballScore({
   statusPill,
   size = "sm",
 }: PickleballScoreProps) {
+  const t = useTranslations();
+  const unnamedTeam = t("leagues.team.unnamed");
   const metaA = getPickleballMeta(participantA);
   const metaB = getPickleballMeta(participantB);
-  const nameA = getParticipantName(participantA) ?? "";
-  const nameB = getParticipantName(participantB) ?? "";
+  const nameA = getParticipantName(participantA, unnamedTeam);
+  const nameB = getParticipantName(participantB, unnamedTeam);
 
   const gamesA = metaA?.gamesWon ?? 0;
   const gamesB = metaB?.gamesWon ?? 0;

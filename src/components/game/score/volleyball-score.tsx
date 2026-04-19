@@ -5,6 +5,7 @@ import type {
   GameParticipant,
   VolleyballParticipantMetadata,
 } from "@/lib/types/game";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 function getVolleyballMeta(
@@ -27,10 +28,12 @@ export function VolleyballScore({
   statusPill,
   size = "sm",
 }: VolleyballScoreProps) {
+  const t = useTranslations();
+  const unnamedTeam = t("leagues.team.unnamed");
   const metaA = getVolleyballMeta(participantA);
   const metaB = getVolleyballMeta(participantB);
-  const nameA = getParticipantName(participantA) ?? "";
-  const nameB = getParticipantName(participantB) ?? "";
+  const nameA = getParticipantName(participantA, unnamedTeam);
+  const nameB = getParticipantName(participantB, unnamedTeam);
 
   const setsA = metaA?.setsWon ?? 0;
   const setsB = metaB?.setsWon ?? 0;

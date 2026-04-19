@@ -3,6 +3,11 @@
     "title": "Playground",
     "close": "Close"
   },
+  "leagues": {
+    "team": {
+      "unnamed": "Unnamed Team"
+    }
+  },
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -304,8 +309,6 @@
       "removeParticipant": "Remove",
       "teamName": "Team Name",
       "teamDescription": "Team Description",
-      "users": "Members",
-      "noMembers": "No members on this team",
       "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?",
       "teamOptions": "Team options",
       "noMembersYet": "This team is waiting for members",

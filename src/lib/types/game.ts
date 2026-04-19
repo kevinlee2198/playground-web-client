@@ -52,16 +52,13 @@ export interface UserRef {
 /**
  * Guest participant — a named non-registered participant added by a manager.
  * Distinguishable from User via the __typename discriminator.
+ * `addedBy` is declared on the schema but not selected in v1 fragments yet;
+ * add the type field together with the fragment + consumer when needed.
  */
 export interface GuestParticipant {
   __typename: "GuestParticipant";
   id: string;
   displayName: string;
-  addedBy: {
-    id: number;
-    displayName: string;
-    username: string;
-  };
 }
 
 /**
