@@ -21,7 +21,7 @@ describe("isEmbeddable", () => {
     ).toBe(true);
   });
 
-  it("returns true for Vimeo player domain", () => {
+  it("returns true for Vimeo embed domain", () => {
     expect(isEmbeddable("https://player.vimeo.com/video/123456")).toBe(true);
   });
 
@@ -29,7 +29,7 @@ describe("isEmbeddable", () => {
     expect(isEmbeddable("https://www.tiktok.com/embed/v2/123456")).toBe(true);
   });
 
-  it("returns true for Twitch player domain", () => {
+  it("returns true for Twitch embed domain", () => {
     expect(
       isEmbeddable("https://player.twitch.tv/?channel=example"),
     ).toBe(true);

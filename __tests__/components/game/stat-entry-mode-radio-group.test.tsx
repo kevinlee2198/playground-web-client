@@ -8,7 +8,7 @@ vi.mock("next-intl", () => ({
       "open": "Open",
       "openDescription": "Any game participant can enter stats for anyone",
       "selfReport": "Self-report",
-      "selfReportDescription": "Players can only enter their own stats",
+      "selfReportDescription": "Users can only enter their own stats",
       "managerOnly": "Manager only",
       "managerOnlyDescription": "Only the game organizer can enter stats",
     };
@@ -45,7 +45,7 @@ describe("StatEntryModeRadioGroup", () => {
       screen.getByText("Any game participant can enter stats for anyone"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Players can only enter their own stats"),
+      screen.getByText("Users can only enter their own stats"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Only the game organizer can enter stats"),

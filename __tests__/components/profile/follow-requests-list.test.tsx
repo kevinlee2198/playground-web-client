@@ -68,7 +68,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-vi.mock("@/components/game/player-avatar", () => ({
+vi.mock("@/components/ui/user-avatar", () => ({
   getInitials: () => "AB",
 }));
 

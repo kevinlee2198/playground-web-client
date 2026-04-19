@@ -93,7 +93,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
             id: 10,
             name: "Team Alpha",
             description: null,
-            players: [],
+            roster: [], guests: [],
             metadata: {
               __typename: "BasketballParticipantMetadata",
               score: 45,
@@ -107,7 +107,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
             id: 11,
             name: "Team Beta",
             description: null,
-            players: [],
+            roster: [], guests: [],
             metadata: {
               __typename: "BasketballParticipantMetadata",
               score: 38,

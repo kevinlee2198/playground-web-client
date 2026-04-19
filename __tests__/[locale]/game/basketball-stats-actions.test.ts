@@ -61,7 +61,7 @@ function makeStatsFields(id: string) {
   return {
     basketballStats: {
       id,
-      player: { id: "10", user: { displayName: "Alice" } },
+      user: { id: "10", displayName: "Alice" },
       points: 20,
       assists: 5,
       totalRebounds: 8,
@@ -91,7 +91,7 @@ function makeStatsBulkFields(ids: string[]) {
   return {
     stats: ids.map((id) => ({
       id,
-      player: { id: "10", user: { displayName: "Alice" } },
+      user: { id: "10", displayName: "Alice" },
       points: 10,
       assists: 3,
       totalRebounds: 4,
@@ -128,7 +128,7 @@ describe("saveBasketballStats", () => {
     mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeStatsFields("abc-123"));
 
     const input: SaveBasketballStatsInput = {
-      playerId: 10,
+      userId: 10,
       gameId: 1,
       assists: 5,
       steals: 2,
@@ -144,7 +144,7 @@ describe("saveBasketballStats", () => {
     mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeStatsFields("def-456"));
 
     const input: SaveBasketballStatsInput = {
-      playerId: 10,
+      userId: 10,
       gameId: 1,
       assists: 7,
       blocks: 3,
@@ -154,7 +154,7 @@ describe("saveBasketballStats", () => {
 
     const mutationInput = getMutationInput("saveBasketballStats");
 
-    expect(mutationInput.playerId).toBe(10);
+    expect(mutationInput.userId).toBe(10);
     expect(mutationInput.gameId).toBe(1);
     expect(mutationInput.assists).toBe(7);
     expect(mutationInput.blocks).toBe(3);
@@ -175,7 +175,7 @@ describe("saveBasketballStats", () => {
     mockMutateSuccess("saveBasketballStats", "SaveBasketballStatsResponse", makeStatsFields("ghi-789"));
 
     const input: SaveBasketballStatsInput = {
-      playerId: 10,
+      userId: 10,
       gameId: 1,
       assists: null,
     };
@@ -190,7 +190,7 @@ describe("saveBasketballStats", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
-    const input: SaveBasketballStatsInput = { playerId: 10, gameId: 1 };
+    const input: SaveBasketballStatsInput = { userId: 10, gameId: 1 };
     const result = await saveBasketballStats(input);
 
     expect(result).toEqual({
@@ -204,7 +204,7 @@ describe("saveBasketballStats", () => {
   it("returns union error type on mutation error", async () => {
     mockMutateUnionError("saveBasketballStats", "BasketballStatsNotFoundError", "Stats not found");
 
-    const input: SaveBasketballStatsInput = { playerId: 10, gameId: 1 };
+    const input: SaveBasketballStatsInput = { userId: 10, gameId: 1 };
     const result = await saveBasketballStats(input);
 
     expect(result).toEqual({
@@ -218,7 +218,7 @@ describe("saveBasketballStats", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const input: SaveBasketballStatsInput = { playerId: 10, gameId: 1 };
+    const input: SaveBasketballStatsInput = { userId: 10, gameId: 1 };
     const result = await saveBasketballStats(input);
 
     expect(result).toEqual({
@@ -241,8 +241,8 @@ describe("saveBasketballStatsBulk", () => {
     mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeStatsBulkFields(["id-1", "id-2"]));
 
     const scores: SaveBasketballStatsData[] = [
-      { playerId: 10, assists: 5 },
-      { playerId: 11, steals: 3 },
+      { userId: 10, assists: 5 },
+      { userId: 11, steals: 3 },
     ];
 
     const result = await saveBasketballStatsBulk(1, scores);
@@ -263,11 +263,11 @@ describe("saveBasketballStatsBulk", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("passes the gameId and per-player stat fields to the mutation", async () => {
+  it("passes the gameId and per-user stat fields to the mutation", async () => {
     mockMutateSuccess("saveBasketballStatsBulk", "SaveBasketballStatsBulkResponse", makeStatsBulkFields(["id-1"]));
 
     const scores: SaveBasketballStatsData[] = [
-      { playerId: 10, assists: 4, blocks: 2 },
+      { userId: 10, assists: 4, blocks: 2 },
     ];
 
     await saveBasketballStatsBulk(42, scores);
@@ -277,7 +277,7 @@ describe("saveBasketballStatsBulk", () => {
 
     const stats = mutationInput.stats as Record<string, unknown>[];
     expect(stats).toHaveLength(1);
-    expect(stats[0].playerId).toBe(10);
+    expect(stats[0].userId).toBe(10);
     expect(stats[0].assists).toBe(4);
     expect(stats[0].blocks).toBe(2);
     expect("steals" in stats[0]).toBe(false);
@@ -286,7 +286,7 @@ describe("saveBasketballStatsBulk", () => {
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Server error");
 
-    const scores: SaveBasketballStatsData[] = [{ playerId: 10 }];
+    const scores: SaveBasketballStatsData[] = [{ userId: 10 }];
     const result = await saveBasketballStatsBulk(1, scores);
 
     expect(result).toEqual({
@@ -300,7 +300,7 @@ describe("saveBasketballStatsBulk", () => {
   it("returns UNEXPECTED_ERROR on network failure", async () => {
     mockMutateNetworkError();
 
-    const scores: SaveBasketballStatsData[] = [{ playerId: 10 }];
+    const scores: SaveBasketballStatsData[] = [{ userId: 10 }];
     const result = await saveBasketballStatsBulk(1, scores);
 
     expect(result).toEqual({

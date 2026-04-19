@@ -131,8 +131,8 @@ export function GameDetailClient({
         const node = newParticipant.node;
         const name =
           node.__typename === "TeamInstance"
-            ? node.name
-            : node.user.displayName;
+            ? (node.name ?? t("leagues.team.unnamed"))
+            : node.participant.displayName;
         message = t("game.live.participantAdded", { name });
       } else {
         message = t("game.live.participantRemoved");

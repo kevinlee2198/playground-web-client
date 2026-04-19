@@ -12,7 +12,6 @@ export function mockUserResponse(overrides?: Record<string, unknown>) {
         displayName: "Other User",
         biography: "Another user",
         profilePicture: null,
-        player: { id: "other-player-id", age: 30, height: 68, weight: 170 },
         followerCount: 0,
         followingCount: 0,
         viewerFollowsUser: null,

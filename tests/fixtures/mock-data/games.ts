@@ -57,7 +57,8 @@ export function mockParticipant(overrides?: Record<string, unknown>) {
     id: "participant-1",
     name: "Team A",
     metadata: null,
-    players: [],
+    roster: [],
+    guests: [],
     ...overrides,
   };
 }

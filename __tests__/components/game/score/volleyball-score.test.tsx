@@ -14,7 +14,7 @@ function makeParticipant(
     __typename: "TeamInstance",
     id,
     name,
-    players: [],
+    roster: [], guests: [],
     metadata: {
       __typename: "VolleyballParticipantMetadata",
       setsWon,
@@ -75,14 +75,14 @@ describe("VolleyballScore", () => {
       __typename: "TeamInstance",
       id: 1,
       name: "Team A",
-      players: [],
+      roster: [], guests: [],
       metadata: null,
     };
     const b: GameParticipant = {
       __typename: "TeamInstance",
       id: 2,
       name: "Team B",
-      players: [],
+      roster: [], guests: [],
       metadata: null,
     };
 

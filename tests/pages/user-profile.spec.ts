@@ -52,13 +52,6 @@ test.describe("User Profile Page", () => {
     ).toBeVisible();
   });
 
-  test("player stats section renders", async ({ unauthenticatedPage }) => {
-    await unauthenticatedPage.goto("/en/user/otheruser");
-    await expect(
-      unauthenticatedPage.getByText(/age|height|weight/i).first(),
-    ).toBeVisible();
-  });
-
   test("game history section renders", async ({ unauthenticatedPage }) => {
     await unauthenticatedPage.goto("/en/user/otheruser");
     await expect(

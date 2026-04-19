@@ -577,13 +577,13 @@ describe("loadMoreGames", () => {
     expect(typeof gamesArgs.gameStatus).toBe("object");
   });
 
-  it("includes playerId filter when provided", async () => {
+  it("includes userId filter when provided", async () => {
     mockQuerySuccess({ games: emptyConnection });
 
-    await loadMoreGames({ playerId: 5 }, defaultSort, "");
+    await loadMoreGames({ userId: 5 }, defaultSort, "");
 
     const gamesArgs = getQueryInput();
-    expect(gamesArgs).toHaveProperty("playerId", 5);
+    expect(gamesArgs).toHaveProperty("userId", 5);
   });
 
   it("includes organizedByMe filter when provided", async () => {
@@ -710,7 +710,7 @@ describe("loadMoreGames", () => {
     const nodeSelection = (gamesQuery.edges as { node: Record<string, unknown> }).node;
     expect(nodeSelection).toHaveProperty("viewerGameRole");
     expect(nodeSelection).toHaveProperty("viewerInvitation");
-    expect(nodeSelection).toHaveProperty("viewerFollowingPlayers");
+    expect(nodeSelection).toHaveProperty("viewerFollowingUsers");
   });
 
   it("uses unauthenticated query and omits viewer fields when no session", async () => {
@@ -726,7 +726,7 @@ describe("loadMoreGames", () => {
     const nodeSelection = (gamesQuery.edges as { node: Record<string, unknown> }).node;
     expect(nodeSelection).not.toHaveProperty("viewerGameRole");
     expect(nodeSelection).not.toHaveProperty("viewerInvitation");
-    expect(nodeSelection).not.toHaveProperty("viewerFollowingPlayers");
+    expect(nodeSelection).not.toHaveProperty("viewerFollowingUsers");
   });
 });
 

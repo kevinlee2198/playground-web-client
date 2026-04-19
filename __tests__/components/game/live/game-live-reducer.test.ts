@@ -69,7 +69,8 @@ function makeTeamParticipant(id: number, score: number): { cursor: string; node:
     id,
     name: `Team ${id}`,
     description: null,
-    players: [],
+    roster: [],
+    guests: [],
     metadata: {
       __typename: "BasketballParticipantMetadata",
       score,
@@ -78,16 +79,15 @@ function makeTeamParticipant(id: number, score: number): { cursor: string; node:
   return { cursor: `cursor-${id}`, node };
 }
 
-function makeStats(playerId: number, points: number): BasketballStatsNode {
+function makeStats(userId: number, points: number): BasketballStatsNode {
   return {
-    id: playerId,
-    player: {
-      id: playerId,
-      user: {
-        displayName: `Player ${playerId}`,
-        username: `player${playerId}`,
-        profilePicture: null,
-      },
+    id: userId,
+    user: {
+      __typename: "User",
+      id: userId,
+      displayName: `User ${userId}`,
+      username: `user${userId}`,
+      profilePicture: null,
     },
     points,
     assists: null,
@@ -285,15 +285,15 @@ describe("gameLiveReducer", () => {
 
       expect(nextState.basketballStats).toHaveLength(2);
 
-      const player1Entry = nextState.basketballStats.find(
-        (e) => e.node.player.id === 1
+      const user1Entry = nextState.basketballStats.find(
+        (e) => e.node.user.id === 1
       )!;
-      const player2Entry = nextState.basketballStats.find(
-        (e) => e.node.player.id === 2
+      const user2Entry = nextState.basketballStats.find(
+        (e) => e.node.user.id === 2
       )!;
 
-      expect(player1Entry.node.points).toBe(20);
-      expect(player2Entry.node.points).toBe(15);
+      expect(user1Entry.node.points).toBe(20);
+      expect(user2Entry.node.points).toBe(15);
     });
   });
 

@@ -16,6 +16,3 @@ export const BLOCKED_USER_ID = 3;
 
 /** Backend user ID for a follow requester */
 export const FOLLOW_REQUESTER_USER_ID = 4;
-
-/** Backend player ID for the primary test user */
-export const TEST_PLAYER_ID = 1;

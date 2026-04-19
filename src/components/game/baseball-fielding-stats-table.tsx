@@ -267,7 +267,7 @@ export function BaseballFieldingStatsTable({
       <Select
         value={selectedUserId || null}
         onValueChange={(val) => setSelectedUserId(val ?? "")}
-        items={usersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
+        items={usersWithoutStats.map((p) => ({ value: String(p.id), label: p.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder={statsT("selectUser")} />
