@@ -13,16 +13,27 @@ export const profilePictureThumbnailFragment = {
 };
 
 /**
- * Player reference fragment matching the PlayerRef type.
- * Use as: player: playerRefFragment or players: playerRefFragment
+ * User reference fragment matching the UserRef type.
+ * Use as: user: userRefFragment or roster: userRefFragment.
+ * Selects against a GraphQL User object (fields are flat, no nested "user").
  */
-export const playerRefFragment = {
+export const userRefFragment = {
+  __typename: true,
   id: true,
-  user: {
-    displayName: true,
-    username: true,
-    profilePicture: profilePictureThumbnailFragment,
-  },
+  displayName: true,
+  username: true,
+  profilePicture: profilePictureThumbnailFragment,
+};
+
+/**
+ * Guest-participant fragment for non-registered game participants.
+ * Use as: guests: guestParticipantFragment, or inside an IndividualParticipant
+ * participant union with __on.
+ */
+export const guestParticipantFragment = {
+  __typename: true,
+  id: true,
+  displayName: true,
 };
 
 /**
@@ -322,6 +333,8 @@ export const participantMetadataFragment = {
 /**
  * Participant node fragment for game card queries (basic info + metadata).
  * Fetches TeamInstance and IndividualParticipant inline fragments.
+ * IndividualParticipant.participant is a union — both User and GuestParticipant
+ * are selected so callers can discriminate via __typename.
  */
 export const participantNodeFragment = {
   __typename: true,
@@ -330,31 +343,36 @@ export const participantNodeFragment = {
       __typeName: "TeamInstance",
       id: true,
       name: true,
-      players: playerRefFragment,
+      roster: userRefFragment,
+      guests: guestParticipantFragment,
       metadata: participantMetadataFragment,
     },
     {
       __typeName: "IndividualParticipant",
       id: true,
-      player: playerRefFragment,
+      participant: {
+        __typename: true,
+        __on: [
+          { __typeName: "User", ...userRefFragment },
+          { __typeName: "GuestParticipant", ...guestParticipantFragment },
+        ],
+      },
       metadata: participantMetadataFragment,
     },
   ],
 };
 
 /**
- * Fragment for viewerFollowingPlayers on feed game nodes.
+ * Fragment for viewerFollowingUsers on feed game nodes.
+ * Server caps `nodes` at 10. There is no `totalCount` — the UI uses the
+ * "{names} and others played" copy pattern in place of a count.
  */
-export const viewerFollowingPlayersFragment = {
+export const viewerFollowingUsersFragment = {
   nodes: {
     id: true,
-    user: {
-      id: true,
-      displayName: true,
-      profilePicture: profilePictureThumbnailFragment,
-    },
+    displayName: true,
+    profilePicture: profilePictureThumbnailFragment,
   },
-  totalCount: true,
 };
 
 /**
@@ -369,13 +387,20 @@ export const participantDetailNodeFragment = {
       id: true,
       name: true,
       description: true,
-      players: playerRefFragment,
+      roster: userRefFragment,
+      guests: guestParticipantFragment,
       metadata: participantMetadataFragment,
     },
     {
       __typeName: "IndividualParticipant",
       id: true,
-      player: playerRefFragment,
+      participant: {
+        __typename: true,
+        __on: [
+          { __typeName: "User", ...userRefFragment },
+          { __typeName: "GuestParticipant", ...guestParticipantFragment },
+        ],
+      },
       metadata: participantMetadataFragment,
     },
   ],
@@ -402,10 +427,10 @@ export const locationFragment = {
 };
 
 /**
- * User reference fragment with id, username, and displayName.
- * Shared across notification and invitation fragments.
+ * Minimal user-reference fragment used by notifications and invitations
+ * where we only need id + username + displayName (no profile picture).
  */
-const userRefFragment = {
+const notificationUserRefFragment = {
   id: true,
   username: true,
   displayName: true,
@@ -418,7 +443,7 @@ const userRefFragment = {
 export const notificationInlineFragments = [
   {
     __typeName: "NewFollowerNotification",
-    follower: userRefFragment,
+    follower: notificationUserRefFragment,
   },
   {
     __typeName: "GameStartedNotification",
@@ -429,7 +454,7 @@ export const notificationInlineFragments = [
   },
   {
     __typeName: "GameInvitationReceivedNotification",
-    inviter: userRefFragment,
+    inviter: notificationUserRefFragment,
     game: {
       id: true,
       sportType: true,
@@ -440,12 +465,12 @@ export const notificationInlineFragments = [
   },
   {
     __typeName: "FollowRequestReceivedNotification",
-    requester: userRefFragment,
+    requester: notificationUserRefFragment,
     followRequest: { id: true },
   },
   {
     __typeName: "FollowRequestApprovedNotification",
-    approver: userRefFragment,
+    approver: notificationUserRefFragment,
   },
 ];
 
@@ -455,8 +480,8 @@ export const notificationInlineFragments = [
  */
 export const gameInvitationFragment = {
   id: true,
-  inviter: userRefFragment,
-  invitee: userRefFragment,
+  inviter: notificationUserRefFragment,
+  invitee: notificationUserRefFragment,
   status: true,
   acceptedDate: true,
   createdDate: true,
