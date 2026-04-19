@@ -1,7 +1,7 @@
 "use client";
 
 import { loadMutualFollows } from "@/app/[locale]/chat/actions";
-import { getInitials } from "@/components/game/player-avatar";
+import { getInitials } from "@/components/ui/user-avatar";
 import { FollowButton } from "@/components/profile/follow-button";
 import { searchUsers } from "@/components/search/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

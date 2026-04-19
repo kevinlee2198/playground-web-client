@@ -26,14 +26,14 @@ import {
 import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import { GameInvitationStatus, GameRole, GameStatus, GameVisibility } from "@/lib/constants";
-import type { PlayerRef, TeamInstanceDetail } from "@/lib/types/game";
+import type { TeamInstanceDetail, UserRef } from "@/lib/types/game";
 import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
 import { ChevronRight, MoreHorizontal, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { PlayerAvatar } from "./player-avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 const BORDER_COLORS = [
   "border-l-primary",
@@ -45,8 +45,8 @@ const BORDER_COLORS = [
 interface TeamCardProps {
   team: TeamInstanceDetail;
   gameStatus: GameStatus;
-  currentPlayerId: number;
-  isPlayerOnAnyTeam: boolean;
+  currentUserId: number;
+  isUserOnAnyTeam: boolean;
   viewerGameRole: GameRole | null;
   visibility: GameVisibility;
   participantIndex: number;
@@ -56,8 +56,8 @@ interface TeamCardProps {
 export function TeamCard({
   team,
   gameStatus,
-  currentPlayerId,
-  isPlayerOnAnyTeam,
+  currentUserId,
+  isUserOnAnyTeam,
   viewerGameRole,
   visibility,
   participantIndex,
@@ -67,10 +67,10 @@ export function TeamCard({
   const [isPending, startTransition] = useTransition();
   const [showRemoveTeamDialog, setShowRemoveTeamDialog] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
-  const [playerToRemove, setPlayerToRemove] = useState<PlayerRef | null>(null);
+  const [userToRemove, setUserToRemove] = useState<UserRef | null>(null);
 
-  const isPlayerOnTeam =
-    team.players.some((p) => p.id === currentPlayerId);
+  const isUserOnTeam =
+    team.roster.some((u) => u.id === currentUserId);
   const gameHasStarted =
     gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
@@ -79,17 +79,18 @@ export function TeamCard({
     visibility === GameVisibility.PUBLIC ||
     viewerInvitation?.status === GameInvitationStatus.ACCEPTED;
   const showJoinButton =
-    !isPlayerOnTeam && !isPlayerOnAnyTeam && canJoinOrLeave;
-  const showLeaveButton = isPlayerOnTeam;
+    !isUserOnTeam && !isUserOnAnyTeam && canJoinOrLeave;
+  const showLeaveButton = isUserOnTeam;
   const isEditor = viewerGameRole != null;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
+  const teamName = team.name ?? t("leagues.team.unnamed");
 
   function handleJoinTeam(): void {
     startTransition(async () => {
       const result = await joinTeam({
         teamInstanceId: team.id,
-        playerId: currentPlayerId,
+        userId: currentUserId,
       });
 
       if (result.success) {
@@ -100,16 +101,16 @@ export function TeamCard({
     });
   }
 
-  function handleRemovePlayerFromTeam(playerId: number): void {
+  function handleRemoveUserFromTeam(userId: number): void {
     startTransition(async () => {
       const result = await leaveTeam({
         teamInstanceId: team.id,
-        playerId,
+        userId,
       });
 
       if (result.success) {
         toast.success(t("game.success.participantRemoved"));
-        setPlayerToRemove(null);
+        setUserToRemove(null);
       } else {
         toast.error(result.message || t("game.errors.participantError"));
       }
@@ -143,10 +144,10 @@ export function TeamCard({
         {/* Header */}
         <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
           <div className="flex items-center gap-2 min-w-0">
-            <TypographySmall className="font-bold truncate">{team.name}</TypographySmall>
+            <TypographySmall className="font-bold truncate">{teamName}</TypographySmall>
             <Badge variant="secondary" className="shrink-0">
-              {t("game.participants.playerCount", {
-                count: team.players.length,
+              {t("game.participants.memberCount", {
+                count: team.roster.length,
               })}
             </Badge>
           </div>
@@ -158,7 +159,7 @@ export function TeamCard({
                 onClick={
                   gameHasStarted
                     ? () => setShowLeaveDialog(true)
-                    : () => handleRemovePlayerFromTeam(currentPlayerId)
+                    : () => handleRemoveUserFromTeam(currentUserId)
                 }
                 disabled={isPending}
               >
@@ -204,25 +205,25 @@ export function TeamCard({
           </div>
         </div>
 
-        {/* Player rows */}
+        {/* Roster rows */}
         <div className="px-4 pb-4">
-          {team.players.length > 0 ? (
+          {team.roster.length > 0 ? (
             <div className="divide-y divide-border">
-              {team.players.map((player) => (
-                <PlayerRow
-                  key={player.id}
-                  player={player}
-                  isCurrentUser={player.id === currentPlayerId}
+              {team.roster.map((user) => (
+                <RosterRow
+                  key={user.id}
+                  user={user}
+                  isCurrentUser={user.id === currentUserId}
                   isEditor={isEditor}
                   isPending={isPending}
-                  onRemove={() => setPlayerToRemove(player)}
+                  onRemove={() => setUserToRemove(user)}
                 />
               ))}
             </div>
           ) : (
             <div className="py-8 flex flex-col items-center gap-3">
               <TypographyMuted className="text-center">
-                {t("game.participants.noPlayersYet")}
+                {t("game.participants.noMembersYet")}
               </TypographyMuted>
               {showJoinButton && (
                 <Button
@@ -256,7 +257,7 @@ export function TeamCard({
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                handleRemovePlayerFromTeam(currentPlayerId);
+                handleRemoveUserFromTeam(currentUserId);
                 setShowLeaveDialog(false);
               }}
               disabled={isPending}
@@ -281,7 +282,7 @@ export function TeamCard({
             </AlertDialogTitle>
             <AlertDialogDescription>
               {t("game.participants.removeTeamConfirm", {
-                teamName: team.name,
+                teamName,
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -302,22 +303,22 @@ export function TeamCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Remove Player Confirmation Dialog */}
+      {/* Remove Member Confirmation Dialog */}
       <AlertDialog
-        open={playerToRemove !== null}
+        open={userToRemove !== null}
         onOpenChange={(open) => {
-          if (!open) setPlayerToRemove(null);
+          if (!open) setUserToRemove(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("game.participants.removePlayer")}
+              {t("game.participants.removeMember")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {playerToRemove
-                ? t("game.participants.removePlayerConfirm", {
-                    playerName: playerToRemove.user.displayName,
+              {userToRemove
+                ? t("game.participants.removeMemberConfirm", {
+                    userName: userToRemove.displayName,
                   })
                 : ""}
             </AlertDialogDescription>
@@ -328,8 +329,8 @@ export function TeamCard({
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (playerToRemove) {
-                  handleRemovePlayerFromTeam(playerToRemove.id);
+                if (userToRemove) {
+                  handleRemoveUserFromTeam(userToRemove.id);
                 }
               }}
               disabled={isPending}
@@ -346,37 +347,37 @@ export function TeamCard({
   );
 }
 
-interface PlayerRowProps {
-  player: PlayerRef;
+interface RosterRowProps {
+  user: UserRef;
   isCurrentUser: boolean;
   isEditor: boolean;
   isPending: boolean;
   onRemove: () => void;
 }
 
-function PlayerRow({
-  player,
+function RosterRow({
+  user,
   isCurrentUser,
   isEditor,
   isPending,
   onRemove,
-}: PlayerRowProps) {
+}: RosterRowProps) {
   const t = useTranslations();
 
   return (
     <div
       className={cn(
-        "group/player-row flex items-center gap-3 py-2.5 px-1",
+        "group/roster-row flex items-center gap-3 py-2.5 px-1",
         isCurrentUser && "bg-secondary rounded-md",
       )}
     >
-      <PlayerAvatar player={player} size="default" loading="lazy" />
+      <UserAvatar user={user} size="default" loading="lazy" />
 
       <Link
-        href={`/user/${player.user.username}`}
+        href={`/user/${user.username}`}
         className="text-sm text-foreground hover:text-primary active:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm truncate"
       >
-        {player.user.displayName}
+        {user.displayName}
       </Link>
 
       {isCurrentUser && (
@@ -403,10 +404,10 @@ function PlayerRow({
             size="icon"
             onClick={onRemove}
             disabled={isPending}
-            aria-label={t("game.participants.removePlayer")}
+            aria-label={t("game.participants.removeMember")}
             className={cn(
               "min-h-11 min-w-11",
-              "[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/player-row:flex [@media(hover:hover)]:group-focus-within/player-row:flex",
+              "[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/roster-row:flex [@media(hover:hover)]:group-focus-within/roster-row:flex",
             )}
           >
             <X className="h-4 w-4" />

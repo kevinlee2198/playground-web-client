@@ -69,21 +69,6 @@
     },
     "message": "Message",
     "cannotMessageBlocked": "Cannot message this user",
-    "stats": {
-      "title": "Player Stats",
-      "age": "Age",
-      "height": "Height",
-      "weight": "Weight",
-      "years": "years",
-      "agePlaceholder": "e.g. 25",
-      "heightPlaceholder": "cm",
-      "weightPlaceholder": "kg",
-      "edit": "Edit Stats",
-      "save": "Save",
-      "saving": "Saving...",
-      "saved": "Stats updated",
-      "error": "Failed to save stats"
-    },
     "games": {
       "title": "Game History",
       "noGames": "No games played yet",
@@ -166,7 +151,6 @@
     },
     "errors": {
       "notFound": "User not found",
-      "playerDataUnavailable": "Player information unavailable",
       "loadError": "Failed to load profile"
     },
     "block": {
@@ -320,29 +304,29 @@
       "removeParticipant": "Remove",
       "teamName": "Team Name",
       "teamDescription": "Team Description",
-      "players": "Players",
-      "noPlayers": "No players on this team",
+      "users": "Members",
+      "noMembers": "No members on this team",
       "leaveTeamStatsWarning": "If you have recorded stats in this game, they will move with you to your new team. Are you sure you want to leave?",
       "teamOptions": "Team options",
-      "noPlayersYet": "This team is waiting for players",
+      "noMembersYet": "This team is waiting for members",
       "currentUser": "You",
-      "removePlayer": "Remove player",
-      "playerCount": "{count, plural, one {# player} other {# players}}",
+      "removeMember": "Remove member",
+      "memberCount": "{count, plural, one {# member} other {# members}}",
       "removeTeamConfirm": "Are you sure you want to remove {teamName}? This action cannot be undone.",
-      "removePlayerConfirm": "Are you sure you want to remove {playerName} from this team? This action cannot be undone."
+      "removeMemberConfirm": "Are you sure you want to remove {userName} from this team? This action cannot be undone."
     },
     "stats": {
       "title": "Stats",
       "noStats": "No stats recorded yet",
-      "playerCount": "{count, plural, one {# player} other {# players}}",
-      "selectPlayer": "Select player...",
-      "addPlayerStats": "Add Player Stats",
-      "playerStatsAdded": "Player stats row added",
-      "playerStatsError": "Failed to add player stats",
+      "memberCount": "{count, plural, one {# member} other {# members}}",
+      "selectUser": "Select user...",
+      "addStatsForUser": "Add Stats Row",
+      "statsAddedForUser": "Stats row added",
+      "statsErrorForUser": "Failed to add stats",
       "addStats": "Add Stats",
       "editStats": "Edit Stats",
       "saveStats": "Save Stats",
-      "player": "Player",
+      "user": "User",
       "tennis": {
         "aces": "ACE",
         "doubleFaults": "DF",
@@ -602,7 +586,6 @@
       "endDateRange": "End Date Range",
       "sportType": "Sport Type",
       "gameStatus": "Status",
-      "player": "Player",
       "clearFilters": "Clear Filters",
       "from": "From",
       "to": "To",
@@ -696,7 +679,7 @@
       "tiebreakPoints": "TB",
       "setsWon": "Sets Won",
       "points": "Points",
-      "player": "Player"
+      "user": "User"
     },
     "detail": {
       "location": "Location",
@@ -754,14 +737,14 @@
       "protected": "Protected",
       "protectedDescription": "Anyone can find this game, but joining requires an invitation",
       "private": "Private",
-      "privateDescription": "Only invited players can find or join this game"
+      "privateDescription": "Only invited users can find or join this game"
     },
     "statEntryMode": {
       "label": "Who can enter stats?",
       "open": "Open",
       "openDescription": "Any game participant can enter stats for anyone",
       "selfReport": "Self-report",
-      "selfReportDescription": "Players can only enter their own stats",
+      "selfReportDescription": "Users can only enter their own stats",
       "managerOnly": "Manager only",
       "managerOnlyDescription": "Only the game organizer can enter stats"
     },
@@ -769,10 +752,10 @@
       "invited": "Invited"
     },
     "invitations": {
-      "invitePlayers": "Invite Players",
-      "dialogTitle": "Invite Players",
+      "inviteUsers": "Invite Users",
+      "dialogTitle": "Invite Users",
       "searchPlaceholder": "Search users to invite...",
-      "stagedCount": "{count, plural, one {# player selected} other {# players selected}}",
+      "stagedCount": "{count, plural, one {# user selected} other {# users selected}}",
       "sendInvitations": "Send Invitations",
       "sending": "Sending...",
       "cancelInvitation": "Cancel",
@@ -1094,7 +1077,7 @@
       },
       "stats": {
         "title": "Track Your Stats",
-        "description": "Every point, every assist, every questionable foul call \u2014 tracked. Build your player profile and finally settle who\u2019s really the best on the court."
+        "description": "Every point, every assist, every questionable foul call \u2014 tracked. Build your profile and finally settle who\u2019s really the best on the court."
       },
       "friends": {
         "title": "Play With Friends",
@@ -1145,7 +1128,7 @@
       },
       "trackScores": {
         "title": "4. Track Scores & Stats",
-        "description": "Keep score in real time and build your player stats over time. Finally, proof that you\u2019re not as bad as your friends say."
+        "description": "Keep score in real time and build your stats over time. Finally, proof that you\u2019re not as bad as your friends say."
       },
       "shareMemories": {
         "title": "5. Share the Moments",
@@ -1169,7 +1152,7 @@
         "answer": "Basketball, football, tennis, pickleball, and baseball so far. We\u2019re adding more all the time \u2014 if your sport isn\u2019t here yet, it probably will be soon."
       },
       "competitive": {
-        "question": "Is this for competitive players?",
+        "question": "Is this for competitive users?",
         "answer": "It\u2019s for everyone. Whether you\u2019re training for a league or just trying to remember which end of the racket to hold, Playground is your spot."
       },
       "strangers": {

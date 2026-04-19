@@ -18,7 +18,7 @@ import {
   GameVisibility,
   getFormatFromMetadata,
 } from "@/lib/constants";
-import type { ViewerFollowingPlayers } from "@/lib/types/feed";
+import type { ViewerFollowingUsers } from "@/lib/types/feed";
 import type { GameNode } from "@/lib/types/game";
 import { formatDistance } from "@/lib/location-detection";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ function getLocationText(location: {
 
 interface GameCardProps {
   game: GameNode & {
-    viewerFollowingPlayers?: ViewerFollowingPlayers;
+    viewerFollowingUsers?: ViewerFollowingUsers;
   };
   /** Distance in meters from the search center. Null when not in a location search. */
   distance?: number | null;
@@ -80,7 +80,7 @@ export function GameCard({ game, distance }: GameCardProps) {
   );
 
   const participantsDisplay = participants.length >= 2
-    ? `${getParticipantName(participants[0])} ${t("profile.games.vs")} ${getParticipantName(participants[1])}`
+    ? `${getParticipantName(participants[0]) ?? ""} ${t("profile.games.vs")} ${getParticipantName(participants[1]) ?? ""}`
     : null;
 
   return (
@@ -99,9 +99,9 @@ export function GameCard({ game, distance }: GameCardProps) {
 
         <div className="space-y-3 p-4 sm:p-5">
           {/* Following context — only shown in feed when data is present */}
-          {game.viewerFollowingPlayers ? (
+          {game.viewerFollowingUsers ? (
             <FollowingAvatars
-              followingPlayers={game.viewerFollowingPlayers}
+              followingUsers={game.viewerFollowingUsers}
             />
           ) : null}
 

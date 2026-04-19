@@ -35,17 +35,17 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-interface InvitePlayersDialogProps {
+interface InviteUsersDialogProps {
   gameId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function InvitePlayersDialog({
+export function InviteUsersDialog({
   gameId,
   open,
   onOpenChange,
-}: InvitePlayersDialogProps) {
+}: InviteUsersDialogProps) {
   const t = useTranslations("game.invitations");
 
   const [searchQuery, setSearchQuery] = useState("");

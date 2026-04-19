@@ -29,8 +29,8 @@ export function VolleyballScore({
 }: VolleyballScoreProps) {
   const metaA = getVolleyballMeta(participantA);
   const metaB = getVolleyballMeta(participantB);
-  const nameA = getParticipantName(participantA);
-  const nameB = getParticipantName(participantB);
+  const nameA = getParticipantName(participantA) ?? "";
+  const nameB = getParticipantName(participantB) ?? "";
 
   const setsA = metaA?.setsWon ?? 0;
   const setsB = metaB?.setsWon ?? 0;

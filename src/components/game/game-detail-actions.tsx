@@ -23,7 +23,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { DeleteGameDialog } from "./delete-game-dialog";
-import { InvitePlayersDialog } from "./invite-players-dialog";
+import { InviteUsersDialog } from "./invite-users-dialog";
 import { ManageEditorsDialog } from "./manage-editors-dialog";
 import { UpdateGameForm } from "./update-game-form";
 
@@ -134,7 +134,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
             {game.gameStatus !== GameStatus.COMPLETE && game.gameStatus !== GameStatus.FINALIZED && (
               <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
                 <UserPlus className="h-4 w-4" />
-                {t("game.invitations.invitePlayers")}
+                {t("game.invitations.inviteUsers")}
               </DropdownMenuItem>
             )}
             {canUnfinalize && (
@@ -182,7 +182,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
         onOpenChange={setShowEditorsDialog}
       />
 
-      <InvitePlayersDialog
+      <InviteUsersDialog
         gameId={game.id}
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}

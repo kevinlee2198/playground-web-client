@@ -3,10 +3,10 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
-import type { PlayerRef } from "@/lib/types/game";
+import type { UserRef } from "@/lib/types/game";
 
-interface PlayerAvatarProps {
-  player: PlayerRef;
+interface UserAvatarProps {
+  user: UserRef;
   size?: "sm" | "default" | "lg";
   loading?: "lazy" | "eager";
 }
@@ -24,19 +24,19 @@ export function getInitials(displayName: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
-export function PlayerAvatar({
-  player,
+export function UserAvatar({
+  user,
   size = "default",
   loading = "eager",
-}: PlayerAvatarProps) {
-  const thumbnailUrl = player.user.profilePicture?.thumbnailUrl;
+}: UserAvatarProps) {
+  const thumbnailUrl = user.profilePicture?.thumbnailUrl;
 
   return (
     <Avatar size={size}>
       {thumbnailUrl ? (
         <AvatarImage src={thumbnailUrl} alt="" loading={loading} />
       ) : null}
-      <AvatarFallback>{getInitials(player.user.displayName)}</AvatarFallback>
+      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
     </Avatar>
   );
 }

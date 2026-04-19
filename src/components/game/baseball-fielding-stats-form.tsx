@@ -48,7 +48,7 @@ export function BaseballFieldingStatsForm({
 
       startTransition(async () => {
         const input: SaveBaseballFieldingStatsInput = {
-          playerId: initialData.player.id,
+          userId: initialData.user.id,
           gameId,
           putouts: undefinedToNull(value.putouts),
           assists: undefinedToNull(value.assists),
@@ -68,14 +68,14 @@ export function BaseballFieldingStatsForm({
     },
   });
 
-  const playerName = initialData.player.user.displayName;
+  const userName = initialData.user.displayName;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {t("game.stats.editStats")} - {playerName}
+            {t("game.stats.editStats")} - {userName}
           </DialogTitle>
         </DialogHeader>
 

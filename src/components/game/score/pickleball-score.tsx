@@ -29,8 +29,8 @@ export function PickleballScore({
 }: PickleballScoreProps) {
   const metaA = getPickleballMeta(participantA);
   const metaB = getPickleballMeta(participantB);
-  const nameA = getParticipantName(participantA);
-  const nameB = getParticipantName(participantB);
+  const nameA = getParticipantName(participantA) ?? "";
+  const nameB = getParticipantName(participantB) ?? "";
 
   const gamesA = metaA?.gamesWon ?? 0;
   const gamesB = metaB?.gamesWon ?? 0;

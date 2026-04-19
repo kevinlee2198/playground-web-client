@@ -5,7 +5,7 @@ import {
   approveFollowRequest,
   declineFollowRequest,
 } from "@/components/profile/follow-request-actions";
-import { getInitials } from "@/components/game/player-avatar";
+import { getInitials } from "@/components/ui/user-avatar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { TypographyMuted } from "@/components/ui/typography";

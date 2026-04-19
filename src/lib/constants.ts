@@ -39,8 +39,8 @@ export enum SportFormat {
 
 /**
  * Configuration for each sport format including participation type and limits.
- * maxTeamSize is only defined for team sports and includes bench players.
- * maxParticipants is the max number of teams (team sports) or individual players (individual sports).
+ * maxTeamSize is only defined for team sports and includes bench users.
+ * maxParticipants is the max number of teams (team sports) or individual users (individual sports).
  */
 export const SportFormatConfig = {
   FIVE_ON_FIVE: {

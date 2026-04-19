@@ -62,7 +62,6 @@ interface GameDetailClientProps {
   initialBaseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   initialBaseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
   initialVolleyballStats?: { node: VolleyballStatsNode }[];
-  playerId: number | null;
   currentUserId: number | null;
   children: ReactNode;
 }
@@ -79,7 +78,6 @@ export function GameDetailClient({
   initialBaseballPitchingStats,
   initialBaseballFieldingStats,
   initialVolleyballStats,
-  playerId,
   currentUserId,
   children,
 }: GameDetailClientProps) {
@@ -134,7 +132,7 @@ export function GameDetailClient({
         const name =
           node.__typename === "TeamInstance"
             ? node.name
-            : node.player.user.displayName;
+            : node.user.displayName;
         message = t("game.live.participantAdded", { name });
       } else {
         message = t("game.live.participantRemoved");
@@ -163,14 +161,17 @@ export function GameDetailClient({
   });
 
   const isParticipant =
-    playerId != null &&
+    currentUserId != null &&
     state.game.participants.edges.some((edge) => {
       const node = edge.node;
       if (node.__typename === "TeamInstance") {
-        return node.players.some((p) => p.id === playerId);
+        return node.roster.some((u) => u.id === currentUserId);
       }
       if (node.__typename === "IndividualParticipant") {
-        return node.player.id === playerId;
+        return (
+          node.participant.__typename === "User" &&
+          node.participant.id === currentUserId
+        );
       }
       return false;
     });
@@ -210,8 +211,8 @@ export function GameDetailClient({
       <GameDetailActions game={state.game} />
 
       <section className="mt-8">
-        {playerId != null && (
-          <GameParticipants game={state.game} currentPlayerId={playerId} />
+        {currentUserId != null && (
+          <GameParticipants game={state.game} currentUserId={currentUserId} />
         )}
       </section>
 

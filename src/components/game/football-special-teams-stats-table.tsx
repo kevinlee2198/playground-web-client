@@ -1,7 +1,7 @@
 "use client";
 
 import { saveFootballSpecialTeamsStats } from "@/app/[locale]/game/football-stats-actions";
-import { PlayerAvatar } from "@/components/game/player-avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GameStatus, type GameRole } from "@/lib/constants";
-import type { PlayerRef } from "@/lib/types/game";
+import type { UserRef } from "@/lib/types/game";
 import type { FootballSpecialTeamsStatsNode } from "@/lib/types/stats/football";
 import { cn } from "@/lib/utils";
 import {
@@ -53,7 +53,7 @@ interface FootballSpecialTeamsStatsTableProps {
   teamName: string;
   stats: { node: FootballSpecialTeamsStatsNode }[];
   gameStatus: GameStatus;
-  availablePlayers?: PlayerRef[];
+  availableUsers?: UserRef[];
   viewerGameRole: GameRole | null;
 }
 
@@ -81,7 +81,7 @@ export function FootballSpecialTeamsStatsTable({
   teamName,
   stats,
   gameStatus,
-  availablePlayers = [],
+  availableUsers = [],
   viewerGameRole,
 }: FootballSpecialTeamsStatsTableProps) {
   const t = useTranslations("game.stats.football.specialTeams");
@@ -92,35 +92,35 @@ export function FootballSpecialTeamsStatsTable({
   ]);
   const [editingStats, setEditingStats] =
     useState<FootballSpecialTeamsStatsNode | null>(null);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
   const canEdit =
     viewerGameRole != null &&
     (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
 
-  const existingPlayerIds = useMemo(
-    () => new Set(stats.map((edge) => edge.node.player.id)),
+  const existingUserIds = useMemo(
+    () => new Set(stats.map((edge) => edge.node.user.id)),
     [stats],
   );
 
-  const playersWithoutStats = useMemo(
-    () => availablePlayers.filter((p) => !existingPlayerIds.has(p.id)),
-    [availablePlayers, existingPlayerIds],
+  const usersWithoutStats = useMemo(
+    () => availableUsers.filter((p) => !existingUserIds.has(p.id)),
+    [availableUsers, existingUserIds],
   );
 
-  function handleAddPlayerStats() {
-    if (!selectedPlayerId) return;
+  function handleAddStats() {
+    if (!selectedUserId) return;
     startTransition(async () => {
       const result = await saveFootballSpecialTeamsStats({
-        playerId: Number(selectedPlayerId),
+        userId: Number(selectedUserId),
         gameId,
       });
       if (result.success) {
-        toast.success(statsT("playerStatsAdded"));
-        setSelectedPlayerId("");
+        toast.success(statsT("statsAddedForUser"));
+        setSelectedUserId("");
       } else {
-        toast.error(result.message ?? statsT("playerStatsError"));
+        toast.error(result.message ?? statsT("statsErrorForUser"));
       }
     });
   }
@@ -218,14 +218,14 @@ export function FootballSpecialTeamsStatsTable({
 
     return [
       {
-        accessorKey: "player",
-        header: statsT("player"),
+        accessorKey: "user",
+        header: statsT("user"),
         cell: ({ row }) => {
-          const player = row.original.player;
+          const user = row.original.user;
           return (
             <div className="flex items-center gap-2">
-              <PlayerAvatar player={player} size="sm" loading="lazy" />
-              <span className="truncate">{player.user.displayName}</span>
+              <UserAvatar user={user} size="sm" loading="lazy" />
+              <span className="truncate">{user.displayName}</span>
             </div>
           );
         },
@@ -320,30 +320,30 @@ export function FootballSpecialTeamsStatsTable({
     state: { sorting },
   });
 
-  const addPlayerControls = canEdit && playersWithoutStats.length > 0 && (
+  const addStatsControls = canEdit && usersWithoutStats.length > 0 && (
     <div className="flex items-center gap-2">
       <Select
-        value={selectedPlayerId || null}
-        onValueChange={(val) => setSelectedPlayerId(val ?? "")}
-        items={playersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
+        value={selectedUserId || null}
+        onValueChange={(val) => setSelectedUserId(val ?? "")}
+        items={usersWithoutStats.map((p) => ({ value: String(p.id), label: p.user.displayName }))}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={statsT("selectPlayer")} />
+          <SelectValue placeholder={statsT("selectUser")} />
         </SelectTrigger>
         <SelectContent>
-          {playersWithoutStats.map((player) => (
-            <SelectItem key={player.id} value={String(player.id)}>
-              {player.user.displayName}
+          {usersWithoutStats.map((user) => (
+            <SelectItem key={user.id} value={String(user.id)}>
+              {user.displayName}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <Button
         size="sm"
-        onClick={handleAddPlayerStats}
-        disabled={!selectedPlayerId || isPending}
+        onClick={handleAddStats}
+        disabled={!selectedUserId || isPending}
       >
-        {statsT("addPlayerStats")}
+        {statsT("addStatsForUser")}
       </Button>
     </div>
   );
@@ -353,7 +353,7 @@ export function FootballSpecialTeamsStatsTable({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{teamName}</CardTitle>
-          {addPlayerControls}
+          {addStatsControls}
         </CardHeader>
         <CardContent>
           <Empty className="border-none">
@@ -370,7 +370,7 @@ export function FootballSpecialTeamsStatsTable({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{teamName}</CardTitle>
-        {addPlayerControls}
+        {addStatsControls}
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

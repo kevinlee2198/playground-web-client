@@ -1,6 +1,6 @@
 "use client";
 
-import { getInitials } from "@/components/game/player-avatar";
+import { getInitials } from "@/components/ui/user-avatar";
 import {
   Avatar,
   AvatarFallback,
@@ -8,60 +8,59 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import { TypographySmall } from "@/components/ui/typography";
-import type { ViewerFollowingPlayers } from "@/lib/types/feed";
+import type { ViewerFollowingUsers } from "@/lib/types/feed";
 import { useTranslations } from "next-intl";
 
 interface FollowingAvatarsProps {
-  followingPlayers: ViewerFollowingPlayers;
+  followingUsers: ViewerFollowingUsers;
 }
 
-export function FollowingAvatars({ followingPlayers }: FollowingAvatarsProps) {
+export function FollowingAvatars({ followingUsers }: FollowingAvatarsProps) {
   const t = useTranslations();
 
-  const { nodes, totalCount } = followingPlayers;
+  const { nodes } = followingUsers;
 
+  // Backend caps `nodes` at 10 and no longer exposes a total count for this
+  // field. For v1 migration we use "and others played" instead of the prior
+  // "Sarah, Kevin, and 3 others played" pattern. Revisit with a dedicated
+  // copy decision if product wants the count back.
   function buildSummaryText(): string {
     if (nodes.length === 0) {
       return t("feed.youPlayed");
     }
 
-    const name0 = nodes[0].user.displayName;
+    const name0 = nodes[0].displayName;
 
     if (nodes.length === 1) {
-      const othersCount = totalCount - 1;
-      if (othersCount === 0) {
-        return `${name0} ${t("feed.played")}`;
-      }
-      const othersKey = othersCount === 1 ? "feed.other" : "feed.others";
-      return `${name0} ${t("feed.and")} ${othersCount} ${t(othersKey)} ${t("feed.played")}`;
+      return `${name0} ${t("feed.played")}`;
     }
 
-    const name1 = nodes[1].user.displayName;
-    const othersCount = totalCount - 2;
-    if (othersCount === 0) {
+    const name1 = nodes[1].displayName;
+
+    if (nodes.length === 2) {
       return `${name0} ${t("feed.and")} ${name1} ${t("feed.played")}`;
     }
-    const othersKey = othersCount === 1 ? "feed.other" : "feed.others";
-    return `${name0}, ${name1}, ${t("feed.and")} ${othersCount} ${t(othersKey)} ${t("feed.played")}`;
+
+    return `${name0}, ${name1}, ${t("feed.and")} ${t("feed.others")} ${t("feed.played")}`;
   }
 
   const summaryText = buildSummaryText();
 
-  const visiblePlayers = nodes.slice(0, 3);
+  const visibleUsers = nodes.slice(0, 3);
 
   return (
     <div className="flex items-center gap-3">
-      {visiblePlayers.length > 0 ? (
+      {visibleUsers.length > 0 ? (
         <AvatarGroup>
-          {visiblePlayers.map((player) => (
-            <Avatar key={player.id} size="sm">
-              {player.user.profilePicture?.thumbnailUrl ? (
+          {visibleUsers.map((user) => (
+            <Avatar key={user.id} size="sm">
+              {user.profilePicture?.thumbnailUrl ? (
                 <AvatarImage
-                  src={player.user.profilePicture.thumbnailUrl}
-                  alt={player.user.displayName}
+                  src={user.profilePicture.thumbnailUrl}
+                  alt={user.displayName}
                 />
               ) : null}
-              <AvatarFallback>{getInitials(player.user.displayName)}</AvatarFallback>
+              <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
             </Avatar>
           ))}
         </AvatarGroup>

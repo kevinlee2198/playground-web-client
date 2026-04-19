@@ -68,7 +68,7 @@ const tennisSetSchema = z
         return data.tiebreakPointsA === null && data.tiebreakPointsB === null;
       }
 
-      // On a tiebreak set, the losing player (with 6 games) has tiebreak points
+      // On a tiebreak set, the losing side (with 6 games) has tiebreak points
       if (is76) {
         return data.tiebreakPointsB !== null && data.tiebreakPointsA === null;
       }
@@ -77,7 +77,7 @@ const tennisSetSchema = z
     },
     {
       message:
-        "Tiebreak points only valid on 7-6 sets, assigned to losing player",
+        "Tiebreak points only valid on 7-6 sets, assigned to losing side",
     },
   );
 
@@ -250,7 +250,7 @@ export function TennisScoreForm({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[150px]">Player</TableHead>
+                      <TableHead className="w-[150px]">User</TableHead>
                       {field.state.value.map((_, i) => (
                         <TableHead key={i} className="text-center">
                           <div className="flex items-center justify-center gap-2">
