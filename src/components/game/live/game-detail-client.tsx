@@ -5,6 +5,7 @@ import { GameDetailActions } from "@/components/game/game-detail-actions";
 import { GameMediaSection } from "@/components/game/game-media-section";
 import { GameParticipants } from "@/components/game/game-participants";
 import { InvitationActionCard } from "@/components/game/invitation-action-card";
+import { deriveTeamName } from "@/components/game/score/participant-utils";
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
@@ -131,7 +132,7 @@ export function GameDetailClient({
         const node = newParticipant.node;
         const name =
           node.__typename === "TeamInstance"
-            ? (node.name ?? t("leagues.team.unnamed"))
+            ? deriveTeamName(node, t("leagues.team.unnamed"))
             : node.participant.displayName;
         message = t("game.live.participantAdded", { name });
       } else {

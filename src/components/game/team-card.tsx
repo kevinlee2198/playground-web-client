@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
+import { deriveTeamName } from "@/components/game/score/participant-utils";
 import { Link } from "@/i18n/navigation";
 import { GameInvitationStatus, GameRole, GameStatus, GameVisibility } from "@/lib/constants";
 import type { TeamInstanceDetail, UserRef } from "@/lib/types/game";
@@ -84,7 +85,7 @@ export function TeamCard({
   const isEditor = viewerGameRole != null;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
-  const teamName = team.name ?? t("leagues.team.unnamed");
+  const teamName = deriveTeamName(team, t("leagues.team.unnamed"));
 
   function handleJoinTeam(): void {
     startTransition(async () => {

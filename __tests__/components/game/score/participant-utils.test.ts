@@ -1,8 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { getParticipantName } from "@/components/game/score/participant-utils";
+import {
+  deriveTeamName,
+  getParticipantName,
+} from "@/components/game/score/participant-utils";
 import type {
   GameParticipant,
   GuestParticipant,
+  TeamInstanceDetail,
   UserRef,
 } from "@/lib/types/game";
 
@@ -57,6 +61,18 @@ describe("getParticipantName", () => {
     expect(getParticipantName(team, "Unnamed")).toBe("Alice & Bob");
   });
 
+  it("formats exactly three roster members with +1 overflow", () => {
+    const team: GameParticipant = {
+      __typename: "TeamInstance",
+      id: 1,
+      name: null,
+      roster: [user(1, "Alice"), user(2, "Bob"), user(3, "Carol")],
+      guests: [],
+      metadata: null,
+    };
+    expect(getParticipantName(team, "Unnamed")).toBe("Alice, Bob +1");
+  });
+
   it("shows the first two names and a +N overflow for larger rosters", () => {
     const team: GameParticipant = {
       __typename: "TeamInstance",
@@ -67,6 +83,43 @@ describe("getParticipantName", () => {
       metadata: null,
     };
     expect(getParticipantName(team, "Unnamed")).toBe("Alice, Bob +2");
+  });
+
+  it("treats an empty-string team name the same as null (falls through to roster)", () => {
+    const team: GameParticipant = {
+      __typename: "TeamInstance",
+      id: 1,
+      name: "",
+      roster: [user(1, "Alice")],
+      guests: [],
+      metadata: null,
+    };
+    expect(getParticipantName(team, "Unnamed")).toBe("Alice");
+  });
+
+  it("filters out blank/whitespace displayNames when deriving a roster label", () => {
+    const team: GameParticipant = {
+      __typename: "TeamInstance",
+      id: 1,
+      name: null,
+      roster: [user(1, ""), user(2, "Bob"), user(3, "   ")],
+      guests: [],
+      metadata: null,
+    };
+    expect(getParticipantName(team, "Unnamed")).toBe("Bob");
+  });
+
+  it("exposes deriveTeamName for non-union call sites (team-card, game-stats)", () => {
+    const team: TeamInstanceDetail = {
+      __typename: "TeamInstance",
+      id: 1,
+      name: null,
+      description: null,
+      roster: [user(1, "Alice"), user(2, "Bob")],
+      guests: [],
+      metadata: null,
+    };
+    expect(deriveTeamName(team, "Unnamed")).toBe("Alice & Bob");
   });
 
   it("includes guests alongside roster members when deriving a team name", () => {

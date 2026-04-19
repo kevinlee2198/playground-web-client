@@ -2,6 +2,7 @@
 
 import { BasketballStatsTable } from "@/components/game/basketball-stats-table";
 import { CollapsibleStats } from "@/components/game/collapsible-stats";
+import { deriveTeamName } from "@/components/game/score/participant-utils";
 import { FootballDefensiveStatsTable } from "@/components/game/football-defensive-stats-table";
 import { FootballOffensiveStatsTable } from "@/components/game/football-offensive-stats-table";
 import { FootballSpecialTeamsStatsTable } from "@/components/game/football-special-teams-stats-table";
@@ -72,7 +73,7 @@ function groupByTeam<T extends StatsNode>(
     if (edge.node.__typename === "TeamInstance") {
       const team = edge.node as TeamInstanceDetail;
       teams.push({
-        name: team.name ?? fallbackTeamName,
+        name: deriveTeamName(team, fallbackTeamName),
         userIds: new Set(team.roster.map((u) => u.id)),
         users: team.roster,
       });
