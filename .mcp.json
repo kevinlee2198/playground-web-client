@@ -8,28 +8,13 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-memory"]
     },
-    "fetch": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-fetch"]
-    },
-    "postgres": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres"],
-      "env": {
-        "POSTGRES_CONNECTION_STRING": "<connection-string>"
-      }
-    },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     "better-auth": {
       "type": "http",
-      "url": "https://mcp.inkeep.com/better-auth/mcp"
-    },
-    "tanstack": {
-      "command": "npx",
-      "args": ["@tanstack/cli", "mcp"]
+      "url": "https://mcp.better-auth.com/mcp"
     },
     "inkeepMcp": {
       "command": "npx",

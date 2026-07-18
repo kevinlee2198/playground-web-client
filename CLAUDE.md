@@ -34,21 +34,21 @@ End-to-end tests use Playwright with Next.js experimental `testProxy` mode (`nex
 
 **Critical limitation**: The proxy only intercepts fetches for requests with the test header. Playwright's `webServer.url` health check does NOT go through the proxy. If the health check URL hits a page that makes server-side fetches to an unavailable backend, it returns 500 and Playwright times out (it requires 2xx/3xx/400-403). The `webServer.url` must point to an endpoint that responds without a backend (e.g., `/api/health`).
 
-### Debugging with playwright-cli
+### Debugging with the Playwright MCP plugin
 
-Use `npx @playwright/cli` to interactively control a browser for debugging test failures or inspecting page state. No global install needed.
+The `playwright` plugin (`@playwright/mcp`) exposes browser automation as MCP tools for interactively controlling a browser to debug test failures or inspect page state. Call the tools directly — no shell commands needed.
 
-```bash
-# Open a page and inspect it
-npx @playwright/cli open http://localhost:3000/en
-npx @playwright/cli snapshot                    # accessibility tree with element refs
-npx @playwright/cli click e15                   # click element by ref from snapshot
-npx @playwright/cli console                     # view console errors
-npx @playwright/cli network                     # view network requests
-npx @playwright/cli eval "document.title"       # run JS in page context
-npx @playwright/cli screenshot --filename=debug.png
-npx @playwright/cli close
-```
+| Tool | Purpose |
+| --- | --- |
+| `browser_navigate` | Open a URL (e.g. `http://localhost:3000/en`) |
+| `browser_snapshot` | Accessibility tree with element refs |
+| `browser_click` | Click an element by ref from the snapshot |
+| `browser_type` | Type/fill text into an element |
+| `browser_console_messages` | View console errors |
+| `browser_network_requests` | Inspect network requests |
+| `browser_evaluate` | Run JS in the page context |
+| `browser_take_screenshot` | Capture a screenshot |
+| `browser_close` | Close the browser |
 
 This is invaluable for debugging why a test assertion fails — take a snapshot to see the actual DOM/accessibility tree, check console for errors, inspect network requests, etc. Much faster than re-running tests with different assertions.
 
@@ -168,6 +168,14 @@ Always use these file names in the `app/` directory:
 **Routing**: next-intl wraps around these NextJS components for routing. Use these instead of the built-in NextJS ones: `Link, redirect, usePathname, useRouter, getPathname` should all be imported from `"@/i18n/navigation"`
 
 **Forms**: We use TanStack Form as the form control in this project. Forms should be validated with Zod v4 (not v3 — e.g., `z.number()` does not accept `invalid_type_error`; use `{ error: "..." }` or `{ message: "..." }` instead).
+
+**TanStack docs lookup**: The `@tanstack/cli` MCP server was removed upstream (see their [MCP migration](https://tanstack.com/cli/latest/docs/mcp-migration)). Look up TanStack docs via direct CLI commands with `--json` instead:
+
+```bash
+npx @tanstack/cli search-docs "<query>" [--library <id>] [--framework <name>] --json
+npx @tanstack/cli doc <library> <path> --json   # e.g. doc query framework/react/overview
+npx @tanstack/cli libraries [--group state|headlessUI|performance|tooling] --json
+```
 
 **Styling**: Tailwind CSS v4 with CSS variables. Use `cn()` utility from `@/lib/utils` to merge class names. Use the Typography from `src/components/ui/typography`. All text should be wrapped in a `src/components/ui/typography.tsx` component
 
