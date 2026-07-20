@@ -1,5 +1,6 @@
 import { AnimatedScore } from "@/components/game/score/animated-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
+import { WinnerMark } from "@/components/game/score/winner-mark";
 import { cn } from "@/lib/utils";
 import type {
   GameParticipant,
@@ -20,6 +21,7 @@ interface PickleballScoreProps {
   participantB: GameParticipant;
   statusPill?: ReactNode;
   size?: "sm" | "lg";
+  showWinner?: boolean;
 }
 
 export function PickleballScore({
@@ -27,6 +29,7 @@ export function PickleballScore({
   participantB,
   statusPill,
   size = "sm",
+  showWinner = false,
 }: PickleballScoreProps) {
   const t = useTranslations();
   const unnamedTeam = t("leagues.team.unnamed");
@@ -62,8 +65,10 @@ export function PickleballScore({
             className={cn(
               "truncate font-semibold font-heading",
               nameClass,
+              showWinner && bWins ? "text-muted-foreground" : null,
             )}
           >
+            {showWinner && aWins ? <WinnerMark className="mr-1" /> : null}
             {nameA}
           </p>
           <AnimatedScore
@@ -80,8 +85,10 @@ export function PickleballScore({
             className={cn(
               "truncate font-semibold font-heading",
               nameClass,
+              showWinner && aWins ? "text-muted-foreground" : null,
             )}
           >
+            {showWinner && bWins ? <WinnerMark className="mr-1" /> : null}
             {nameB}
           </p>
           <AnimatedScore

@@ -1,5 +1,6 @@
 import { AnimatedScore } from "@/components/game/score/animated-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
+import { WinnerMark } from "@/components/game/score/winner-mark";
 import { cn } from "@/lib/utils";
 import type { GameParticipant, ParticipantMetadata } from "@/lib/types/game";
 import { useTranslations } from "next-intl";
@@ -24,9 +25,10 @@ interface SimpleScoreProps {
   participantB: GameParticipant;
   statusPill?: ReactNode;
   size?: "sm" | "lg";
+  showWinner?: boolean;
 }
 
-export function SimpleScore({ participantA, participantB, statusPill, size = "sm" }: SimpleScoreProps) {
+export function SimpleScore({ participantA, participantB, statusPill, size = "sm", showWinner = false }: SimpleScoreProps) {
   const t = useTranslations();
   const unnamedTeam = t("leagues.team.unnamed");
   const scoreA = getSimpleScore(participantA.metadata);
@@ -43,14 +45,32 @@ export function SimpleScore({ participantA, participantB, statusPill, size = "sm
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex-1 text-center min-w-0">
-        <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameA}</p>
+        <p
+          className={cn(
+            "truncate font-semibold font-heading",
+            nameClass,
+            showWinner && bWins ? "text-muted-foreground" : null,
+          )}
+        >
+          {showWinner && aWins ? <WinnerMark className="mr-1" /> : null}
+          {nameA}
+        </p>
         <AnimatedScore value={scoreA} winning={aWins} scoreClass={scoreClass} />
       </div>
 
       {statusPill ? <div className="shrink-0">{statusPill}</div> : null}
 
       <div className="flex-1 text-center min-w-0">
-        <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameB}</p>
+        <p
+          className={cn(
+            "truncate font-semibold font-heading",
+            nameClass,
+            showWinner && aWins ? "text-muted-foreground" : null,
+          )}
+        >
+          {showWinner && bWins ? <WinnerMark className="mr-1" /> : null}
+          {nameB}
+        </p>
         <AnimatedScore value={scoreB} winning={bWins} scoreClass={scoreClass} />
       </div>
     </div>

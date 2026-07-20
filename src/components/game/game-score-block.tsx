@@ -177,6 +177,7 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
         participants={participants}
         statusPill={statusPill}
         size="lg"
+        showWinner={!isLive}
       />
       {canEdit && (
         <Button
