@@ -20,6 +20,8 @@ vi.mock("next-intl/server", () => ({
         "sports.BASKETBALL": "Basketball",
         "sports.TENNIS": "Tennis",
         "sports.FOOTBALL": "Football",
+        "profile.games.vs": "vs",
+        "leagues.team.unnamed": "Unnamed Team",
       };
       return map[key] ?? key;
     };
@@ -189,6 +191,20 @@ describe("GameDetailHero", () => {
     );
   });
 
+  it("renders matchup headline for SCHEDULED game", async () => {
+    await renderHero({ gameStatus: GameStatus.SCHEDULED });
+
+    expect(screen.getByText("Team Alpha vs Team Beta")).toBeInTheDocument();
+  });
+
+  it("does not render matchup headline for live games", async () => {
+    await renderHero({ gameStatus: GameStatus.IN_PROGRESS });
+
+    expect(
+      screen.queryByText("Team Alpha vs Team Beta"),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders venue and date metadata", async () => {
     await renderHero({}, "Los Angeles, CA");
 
@@ -201,14 +217,14 @@ describe("GameDetailHero", () => {
     expect(screen.queryByTestId("map-pin")).not.toBeInTheDocument();
   });
 
-  it("applies sport-themed gradient background for basketball", async () => {
+  it("applies sport wash background for basketball", async () => {
     const { container } = await renderHero({
       sportType: SportType.BASKETBALL,
       gameStatus: GameStatus.COMPLETE,
     });
 
     const section = container.querySelector("section");
-    expect(section?.className).toContain("bg-sport-basketball/5");
+    expect(section?.className).toContain("from-sport-basketball");
   });
 
   it("applies sport-themed gradient background for tennis", async () => {
@@ -224,7 +240,7 @@ describe("GameDetailHero", () => {
     });
 
     const section = container.querySelector("section");
-    expect(section?.className).toContain("bg-sport-tennis/5");
+    expect(section?.className).toContain("from-sport-tennis");
   });
 
   it("applies sport-themed gradient background for football", async () => {
@@ -239,7 +255,7 @@ describe("GameDetailHero", () => {
     });
 
     const section = container.querySelector("section");
-    expect(section?.className).toContain("bg-sport-football/5");
+    expect(section?.className).toContain("from-sport-football");
   });
 
   it("renders formatted date in metadata row", async () => {
