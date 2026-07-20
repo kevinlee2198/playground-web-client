@@ -105,6 +105,7 @@ export const SportTypeConfig = {
     fgClass: "text-sport-baseball-foreground",
     accentClass: "bg-sport-baseball-foreground",
     gradientClass: "bg-sport-baseball/5 dark:bg-sport-baseball/15",
+    washClass: "bg-linear-150 from-sport-baseball from-0% to-card to-58%",
   },
   BASKETBALL: {
     formats: [SportFormat.FIVE_ON_FIVE, SportFormat.THREE_ON_THREE],
@@ -113,6 +114,7 @@ export const SportTypeConfig = {
     fgClass: "text-sport-basketball-foreground",
     accentClass: "bg-sport-basketball-foreground",
     gradientClass: "bg-sport-basketball/5 dark:bg-sport-basketball/15",
+    washClass: "bg-linear-150 from-sport-basketball from-0% to-card to-58%",
   },
   FOOTBALL: {
     formats: [SportFormat.FLAG_FOOTBALL, SportFormat.AMERICAN_FOOTBALL],
@@ -121,6 +123,7 @@ export const SportTypeConfig = {
     fgClass: "text-sport-football-foreground",
     accentClass: "bg-sport-football-foreground",
     gradientClass: "bg-sport-football/5 dark:bg-sport-football/15",
+    washClass: "bg-linear-150 from-sport-football from-0% to-card to-58%",
   },
   TENNIS: {
     formats: [SportFormat.SINGLES, SportFormat.DOUBLES],
@@ -129,6 +132,7 @@ export const SportTypeConfig = {
     fgClass: "text-sport-tennis-foreground",
     accentClass: "bg-sport-tennis-foreground",
     gradientClass: "bg-sport-tennis/5 dark:bg-sport-tennis/15",
+    washClass: "bg-linear-150 from-sport-tennis from-0% to-card to-58%",
   },
   PICKLEBALL: {
     formats: [SportFormat.SINGLES, SportFormat.DOUBLES],
@@ -137,6 +141,7 @@ export const SportTypeConfig = {
     fgClass: "text-sport-pickleball-foreground",
     accentClass: "bg-sport-pickleball-foreground",
     gradientClass: "bg-sport-pickleball/5 dark:bg-sport-pickleball/15",
+    washClass: "bg-linear-150 from-sport-pickleball from-0% to-card to-58%",
   },
   VOLLEYBALL: {
     formats: [SportFormat.INDOOR, SportFormat.BEACH],
@@ -145,6 +150,7 @@ export const SportTypeConfig = {
     fgClass: "text-sport-volleyball-foreground",
     accentClass: "bg-sport-volleyball-foreground",
     gradientClass: "bg-sport-volleyball/5 dark:bg-sport-volleyball/15",
+    washClass: "bg-linear-150 from-sport-volleyball from-0% to-card to-58%",
   },
 } as const;
 
@@ -170,6 +176,10 @@ export function getSportAccentClass(sport: SportType): string {
 
 export function getSportGradientClass(sport: SportType): string {
   return SportTypeConfig[sport].gradientClass;
+}
+
+export function getSportWashClass(sport: SportType): string {
+  return SportTypeConfig[sport].washClass;
 }
 
 export function getParticipationType(sportFormat: SportFormat) {
