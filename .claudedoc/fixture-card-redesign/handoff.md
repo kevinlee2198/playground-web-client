@@ -49,13 +49,33 @@ simplifier-proposed): clean — byte-identical markup confirmed, A/B prop wiring
 orphaned imports. Non-blocking note: component keeps the raw `<p>` (not Typography), carried
 forward deliberately for byte-identical parity.
 
-## Open items (unchanged priority order)
+## Visual screenshot pass — DONE 2026-07-22
 
-- **Visual screenshot pass — still never done; biggest gap.** The new card has not been
-  rendered by a human or screenshot once. Reviewer computed dark-mode pickleball/football chip
-  contrast at borderline ~4.5:1 (spec §6 flagged the same). Use the Playwright-harness
-  screenshot trick (see `docs/ui-review.md` provenance): upcoming/live/final, light+dark,
-  390px + desktop, plus game-detail hero; add a 2-participant fixture to see matchup/scores/crown.
+Temp Playwright spec (deleted after the run) rendered all 6 sports across upcoming/live/final
+on `/en/games` plus the game-detail hero, light+dark × 390px+desktop (8 shots, reviewed by
+Claude; user has not seen them — regenerate on request). Results:
+
+- **Rendering: clean everywhere.** Washes, watermarks, crowns, muted losers, live borders,
+  set/game pills, status corners all render as spec'd in both themes and widths. No layout
+  breakage. Live-card wash pulse peaks at 0.9 opacity — peak state looks good, not
+  overpowering.
+- **Chip contrast: passes AA, no token change required.** Computed from the OKLCH tokens at
+  the worst case (chip over the wash's from-color): dark 4.61–4.99:1 (lowest is baseball,
+  not pickleball/football as previously estimated), light 4.66–4.76:1; over the plain card
+  6.6–7.2:1 dark. Optional: bump dark fg lightness ~+0.02 for margin.
+- **Finding — headline duplication (design decision needed):** cards without 2 participants
+  show the chip ("BASKETBALL · 5V5") directly above an identical headline ("Basketball ·
+  5v5") — the sport+format fallback repeats the chip text verbatim. Most upcoming/discover
+  cards will look like this until the backend `title` field lands.
+- **Minor — FINAL vs FINALIZED:** completed cards show "FINAL" (COMPLETE) but "FINALIZED"
+  (FINALIZED status) in the corner. Two labels for what reads as the same viewer-facing
+  state.
+- Next dev overlay "1 Issue" during the run = graphql-ws WebSocket to `ws://localhost:8080`
+  refused (no backend in harness; MSW can't intercept WS). Environment artifact, not a bug.
+- The known mobile-navbar Create-Game-over-logo bug is plainly visible in the dark-mobile
+  shots (separate branch, tracked below).
+
+## Open items (unchanged priority order)
 - **Orphan cleanup — awaiting user decision.** `SportAccentStrip` and
   `getSportGradientClass`/`gradientClass` have zero references (LSP findReferences:
   declaration-only). Why: the redesign replaced their only call sites — the strip was the old
