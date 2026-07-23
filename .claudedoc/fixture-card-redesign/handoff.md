@@ -63,10 +63,10 @@ Claude; user has not seen them — regenerate on request). Results:
   the worst case (chip over the wash's from-color): dark 4.61–4.99:1 (lowest is baseball,
   not pickleball/football as previously estimated), light 4.66–4.76:1; over the plain card
   6.6–7.2:1 dark. Optional: bump dark fg lightness ~+0.02 for margin.
-- **Finding — headline duplication (design decision needed):** cards without 2 participants
-  show the chip ("BASKETBALL · 5V5") directly above an identical headline ("Basketball ·
-  5v5") — the sport+format fallback repeats the chip text verbatim. Most upcoming/discover
-  cards will look like this until the backend `title` field lands.
+- **Finding — headline duplication (decided 2026-07-22, implementation pending):** cards
+  without 2 participants show the chip ("BASKETBALL · 5V5") directly above an identical
+  headline ("Basketball · 5v5"). Decision: icon-only chip whenever the headline is the
+  sport+format fallback — full rule + rationale in design.md §4 ("Chip de-dup rule").
 - **Minor — FINAL vs FINALIZED:** completed cards show "FINAL" (COMPLETE) but "FINALIZED"
   (FINALIZED status) in the corner. Two labels for what reads as the same viewer-facing
   state.
@@ -76,6 +76,12 @@ Claude; user has not seen them — regenerate on request). Results:
   shots (separate branch, tracked below).
 
 ## Open items (unchanged priority order)
+
+- **Implement the chip de-dup rule** (design.md §4, decided 2026-07-22): icon-only chip when
+  the headline is the sport+format fallback. One condition in `game-card.tsx` (roughly
+  `chipText = participantsDisplay ? sportFormatLabel : null`, i.e. hide chip text when the
+  headline would repeat it); keep icon `aria-hidden`; adjust the card chip test for the
+  fallback case.
 - **Orphan cleanup — awaiting user decision.** `SportAccentStrip` and
   `getSportGradientClass`/`gradientClass` have zero references (LSP findReferences:
   declaration-only). Why: the redesign replaced their only call sites — the strip was the old

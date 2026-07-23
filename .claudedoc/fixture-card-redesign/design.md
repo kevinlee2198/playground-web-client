@@ -80,6 +80,18 @@ distance formatting) is reused, not rewritten.
 - **Headline** (Quicksand, ~19px/700): `title ?? matchup`. Matchup built from the first two
   participants via `getParticipantName` (already implemented with the unnamed-team fallback,
   `game-card.tsx:82-85`). If neither exists (no title, <2 participants): sport + format label.
+- **Chip de-dup rule (decided 2026-07-22, not yet implemented)**: when the headline is the
+  sport+format fallback, the chip drops its text and shows the icon only — otherwise the chip
+  and headline repeat the same string verbatim (confirmed redundant in the screenshot pass;
+  see handoff.md). Chip text returns whenever the headline says something the chip doesn't
+  (matchup now, title later). The icon stays `aria-hidden`; the visible headline provides the
+  accessible sport name. Untitled <2-participant games remain the majority of discover cards
+  even after `title` ships (title will be optional), so this rule is permanent, not a stopgap.
+  Rationale over alternatives: suppressing the *headline* instead would hollow out the card —
+  the bold headline is the fixture card's visual anchor; the sport stays announced three ways
+  (icon, wash, headline). Deferred, separate decision: venue name (`location.name`) as a
+  headline tier for untitled games — an IA change (fourth fallback tier, nullable location),
+  not bundled into the de-dup fix.
 - **Backend dependency**: `GameNode` has no `title` — only nullable `description`
   (`src/lib/types/game.ts:253`). v1 ships with matchup-first (`title` branch dormant);
   a short `title` field is requested backend-side and wired when available. Do NOT use
