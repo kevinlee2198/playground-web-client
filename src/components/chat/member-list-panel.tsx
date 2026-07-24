@@ -36,7 +36,7 @@ import { LogOut, UserPlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { RemoveMemberDialog } from "./remove-member-dialog";
 
 const MutualFollowSelector = dynamic(
@@ -109,11 +109,12 @@ export function MemberListPanel({
           const hasMutualFollowError = failedAdds.some(
             (r) => r.errorType === "MutualFollowRequiredError",
           );
-          toast.error(
-            hasMutualFollowError
+          toast.add({
+            title: hasMutualFollowError
               ? tChat("mutualFollowRequired")
               : tChat("errors.addMember"),
-          );
+            type: "error",
+          });
         } else {
           // Update members list with new members
           const newMembers = results
@@ -124,13 +125,13 @@ export function MemberListPanel({
             }));
 
           onMembersChange([...members, ...newMembers]);
-          toast.success(t("add") + " successful");
+          toast.add({ title: t("add") + " successful", type: "success" });
           setAddDialogOpen(false);
           setSelectedMemberIds([]);
         }
       } catch (error) {
         console.error("Error adding members:", error);
-        toast.error(tChat("errors.addMember"));
+        toast.add({ title: tChat("errors.addMember"), type: "error" });
       }
     });
   };
@@ -152,15 +153,15 @@ export function MemberListPanel({
         onMembersChange(
           members.filter((edge) => edge.node.user.id !== memberToRemove.userId),
         );
-        toast.success(t("remove") + " successful");
+        toast.add({ title: t("remove") + " successful", type: "success" });
         setRemoveDialogOpen(false);
         setMemberToRemove(null);
       } else {
-        toast.error(result.message || tChat("errors.removeMember"));
+        toast.add({ title: result.message || tChat("errors.removeMember"), type: "error" });
       }
     } catch (error) {
       console.error("Error removing member:", error);
-      toast.error(tChat("errors.removeMember"));
+      toast.add({ title: tChat("errors.removeMember"), type: "error" });
     } finally {
       setIsRemoving(false);
     }
@@ -177,9 +178,9 @@ export function MemberListPanel({
               : edge,
           ),
         );
-        toast.success(t(successKey, { name }));
+        toast.add({ title: t(successKey, { name }), type: "success" });
       } else {
-        toast.error(result.message || tChat("errors.updateRole"));
+        toast.add({ title: result.message || tChat("errors.updateRole"), type: "error" });
       }
     });
   };
@@ -201,10 +202,10 @@ export function MemberListPanel({
             return edge;
           }),
         );
-        toast.success(t("transferSuccess"));
+        toast.add({ title: t("transferSuccess"), type: "success" });
         setTransferTarget(null);
       } else {
-        toast.error(result.message || tChat("errors.updateRole"));
+        toast.add({ title: result.message || tChat("errors.updateRole"), type: "error" });
       }
     });
   };
@@ -213,7 +214,7 @@ export function MemberListPanel({
     startTransition(async () => {
       const result = await leaveChat(roomId);
       if (result.success) {
-        toast.success(t("leaveSuccess"));
+        toast.add({ title: t("leaveSuccess"), type: "success" });
         setLeaveDialogOpen(false);
         onOpenChange(false);
         router.push("/chat");
@@ -223,7 +224,7 @@ export function MemberListPanel({
       const errorMessage = result.errorType === "OwnerCannotLeaveError"
         ? t("cannotLeaveAsOwner")
         : result.message || tChat("errors.leaveChat");
-      toast.error(errorMessage);
+      toast.add({ title: errorMessage, type: "error" });
     });
   };
 

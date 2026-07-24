@@ -31,7 +31,7 @@ import { useForm, useStore } from "@tanstack/react-form";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { createGameFormSchema } from "./game-form-fields";
 import { StatEntryModeRadioGroup } from "./stat-entry-mode-radio-group";
 import { VisibilityRadioGroup } from "./visibility-radio-group";
@@ -200,12 +200,12 @@ export function CreateGameForm({ onSuccess }: CreateGameFormProps) {
         const result = await createGame(input);
 
         if (result.success && result.gameId) {
-          toast.success(t("game.success.created"));
+          toast.add({ title: t("game.success.created"), type: "success" });
           router.push(`/game/${result.gameId}`);
           onSuccess?.();
         } else {
           setError(result.message || t("game.errors.createError"));
-          toast.error(result.message || t("game.errors.createError"));
+          toast.add({ title: result.message || t("game.errors.createError"), type: "error" });
         }
       });
     },

@@ -11,7 +11,7 @@ import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { CheckCircle, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface InvitationActionCardProps {
   invitation: ViewerGameInvitation;
@@ -33,9 +33,9 @@ export function InvitationActionCard({
     startTransition(async () => {
       const result = await acceptGameInvitation(invitation.id);
       if (result.success) {
-        toast.success(t("success.accepted"));
+        toast.add({ title: t("success.accepted"), type: "success" });
       } else {
-        toast.error(result.message ?? t("errors.acceptFailed"));
+        toast.add({ title: result.message ?? t("errors.acceptFailed"), type: "error" });
       }
     });
   }
@@ -44,9 +44,9 @@ export function InvitationActionCard({
     startTransition(async () => {
       const result = await declineGameInvitation(invitation.id);
       if (result.success) {
-        toast.success(t("success.declined"));
+        toast.add({ title: t("success.declined"), type: "success" });
       } else {
-        toast.error(result.message ?? t("errors.declineFailed"));
+        toast.add({ title: result.message ?? t("errors.declineFailed"), type: "error" });
       }
     });
   }

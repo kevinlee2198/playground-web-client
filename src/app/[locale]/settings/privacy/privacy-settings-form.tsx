@@ -12,7 +12,7 @@ import { useForm } from "@tanstack/react-form";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface PrivacySettingsFormProps {
   profileVisibility: string;
@@ -52,14 +52,14 @@ export function PrivacySettingsForm({
           input.profileVisibility = value.profileVisibility;
         }
         if (Object.keys(input).length === 0) {
-          toast.success(t("saveSuccess"));
+          toast.add({ title: t("saveSuccess"), type: "success" });
           return;
         }
         const result = await updatePreferences(input);
         if (result.success) {
-          toast.success(t("saveSuccess"));
+          toast.add({ title: t("saveSuccess"), type: "success" });
         } else {
-          toast.error(t("saveError"));
+          toast.add({ title: t("saveError"), type: "error" });
         }
       });
     },
@@ -76,9 +76,9 @@ export function PrivacySettingsForm({
         const result = await updatePreferences({ [fieldName]: newValue });
         if (!result.success) {
           form.setFieldValue(fieldName, previousValue);
-          toast.error(t("saveError"));
+          toast.add({ title: t("saveError"), type: "error" });
         } else {
-          toast.success(t("saveSuccess"));
+          toast.add({ title: t("saveSuccess"), type: "success" });
         }
       });
     },

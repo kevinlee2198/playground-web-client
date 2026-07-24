@@ -1,11 +1,11 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast } = vi.hoisted(() => {
   const mockFollowUser = vi.fn();
   const mockUnfollowUser = vi.fn();
   const mockCancelFollowRequest = vi.fn();
-  const mockToast = Object.assign(vi.fn(), { error: vi.fn() });
+  const mockToast = { add: vi.fn(), close: vi.fn() };
   return { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast };
 });
 
@@ -48,7 +48,7 @@ vi.mock("@/components/profile/follow-request-actions", () => ({
   cancelFollowRequest: (...args: unknown[]) => mockCancelFollowRequest(...args),
 }));
 
-vi.mock("sonner", () => ({
+vi.mock("@/components/ui/toast", () => ({
   toast: mockToast,
 }));
 
@@ -202,15 +202,43 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        "Unfollowed Alice. You can no longer message each other.",
+      expect(mockToast.add).toHaveBeenCalledWith(
         expect.objectContaining({
-          duration: 5000,
-          action: expect.objectContaining({
-            label: "Undo",
+          title: "Unfollowed Alice. You can no longer message each other.",
+          timeout: 5000,
+          actionProps: expect.objectContaining({
+            children: "Undo",
           }),
         }),
       );
+    });
+  });
+
+  it("closes the toast and re-follows when Undo is clicked", async () => {
+    mockToast.add.mockReturnValue("toast-1");
+    mockUnfollowUser.mockResolvedValue(
+      makeUnfollowResponse({ wasMutualFollow: true }),
+    );
+    mockFollowUser.mockResolvedValue(makeFollowResponse());
+
+    render(
+      <FollowButton {...defaultProps} initialViewerFollowsUser={true} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
+
+    await waitFor(() => {
+      expect(mockToast.add).toHaveBeenCalled();
+    });
+
+    const { actionProps } = mockToast.add.mock.calls[0][0];
+    await act(async () => {
+      actionProps.onClick();
+    });
+
+    expect(mockToast.close).toHaveBeenCalledWith("toast-1");
+    await waitFor(() => {
+      expect(mockFollowUser).toHaveBeenCalledWith(1);
     });
   });
 
@@ -229,7 +257,7 @@ describe("FollowButton", () => {
       expect(mockUnfollowUser).toHaveBeenCalledWith(1);
     });
 
-    expect(mockToast).not.toHaveBeenCalled();
+    expect(mockToast.add).not.toHaveBeenCalled();
   });
 
   it("transitions to Requested state when followUser returns a request", async () => {
@@ -329,9 +357,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Follow Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith(
-        "Something went wrong. Please try again.",
-      );
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Something went wrong. Please try again.", type: "error" });
     });
 
     const button = screen.getByRole("button");
@@ -349,9 +375,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith(
-        "Something went wrong. Please try again.",
-      );
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Something went wrong. Please try again.", type: "error" });
     });
 
     const button = screen.getByRole("button");
@@ -372,7 +396,9 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Cancel follow request for Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalled();
+      expect(mockToast.add).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "error" }),
+      );
     });
 
     const button = screen.getByRole("button");

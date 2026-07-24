@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { Camera, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { DeleteMediaDialog } from "./delete-media-dialog";
 import { GameMediaItem } from "./game-media-item";
 import { GameMediaUploadPlaceholder } from "./game-media-upload-placeholder";
@@ -123,10 +123,12 @@ export function GameMediaGallery({
           gameId,
         );
         if (!requestResult.success || !requestResult.resourceId) {
-          toast.error(
-            requestResult.message ||
+          toast.add({
+            title:
+              requestResult.message ||
               t("errors.uploadFailed", { filename: file.name }),
-          );
+            type: "error",
+          });
           markUploadError(fileId, file);
           return;
         }
@@ -134,9 +136,7 @@ export function GameMediaGallery({
         if (requestResult.uploadUrl) {
           const s3Result = await uploadToS3(file, requestResult.uploadUrl);
           if (!s3Result.success) {
-            toast.error(
-              t("errors.uploadFailed", { filename: file.name }),
-            );
+            toast.add({ title: t("errors.uploadFailed", { filename: file.name }), type: "error" });
             markUploadError(fileId, file);
             return;
           }
@@ -144,7 +144,7 @@ export function GameMediaGallery({
 
         const confirmResult = await confirmGameMediaUpload(requestResult.resourceId);
         if (!confirmResult.success) {
-          toast.error(t("errors.saveFailed", { filename: file.name }));
+          toast.add({ title: t("errors.saveFailed", { filename: file.name }), type: "error" });
           markUploadError(fileId, file);
           return;
         }
@@ -156,10 +156,10 @@ export function GameMediaGallery({
           return next;
         });
         onMediaAdded(gameMedia);
-        toast.success(t("success"));
+        toast.add({ title: t("success"), type: "success" });
       } catch {
         markUploadError(fileId, file);
-        toast.error(t("errors.uploadFailed", { filename: file.name }));
+        toast.add({ title: t("errors.uploadFailed", { filename: file.name }), type: "error" });
       }
     },
     [gameId, t, onMediaAdded],
@@ -179,13 +179,14 @@ export function GameMediaGallery({
         const validation = validateFile(file, "gameMedia");
         if (!validation.valid) {
           if (validation.error === "invalidType") {
-            toast.error(t("errors.invalidType"));
+            toast.add({ title: t("errors.invalidType"), type: "error" });
           } else if (validation.error === "fileTooLarge") {
-            toast.error(
-              t("errors.fileTooLarge", {
+            toast.add({
+              title: t("errors.fileTooLarge", {
                 limit: getMaxSizeLabel(file.type),
               }),
-            );
+              type: "error",
+            });
           }
           continue;
         }
@@ -229,13 +230,13 @@ export function GameMediaGallery({
         result.errorType === "GameMediaNotFoundError"
           ? t("errors.deleteFailed")
           : result.message || t("delete.noPermission");
-      toast.error(msg);
+      toast.add({ title: msg, type: "error" });
       setIsDeleting(false);
       return;
     }
 
     onMediaDeleted(mediaToDelete);
-    toast.success(t("deleted"));
+    toast.add({ title: t("deleted"), type: "success" });
     setDeleteDialogOpen(false);
     setMediaToDelete(null);
     setIsDeleting(false);

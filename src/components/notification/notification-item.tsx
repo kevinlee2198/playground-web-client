@@ -12,7 +12,7 @@ import { isKnownNotificationType } from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 type FollowRequestAction = "approved" | "declined";
 
@@ -124,7 +124,7 @@ export function NotificationItem({
       if (result.success) {
         setRequestAction(action);
       } else {
-        toast.error(tFollow(errorKey));
+        toast.add({ title: tFollow(errorKey), type: "error" });
       }
     });
   }

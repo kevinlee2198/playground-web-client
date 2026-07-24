@@ -12,7 +12,7 @@ import { getAcceptAttribute, validateFile } from "@/lib/upload-validation";
 import { getInitials } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { ProfilePictureMenu } from "./profile-picture-menu";
 import { ProfilePicturePreviewDialog } from "./profile-picture-preview-dialog";
 import { RemovePictureDialog } from "./remove-picture-dialog";
@@ -67,9 +67,9 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
       const validation = validateFile(file, "profilePicture");
       if (!validation.valid) {
         if (validation.error === "invalidType") {
-          toast.error(t("errors.invalidType"));
+          toast.add({ title: t("errors.invalidType"), type: "error" });
         } else if (validation.error === "fileTooLarge") {
-          toast.error(t("errors.fileTooLarge"));
+          toast.add({ title: t("errors.fileTooLarge"), type: "error" });
         }
         return;
       }
@@ -97,7 +97,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
         selectedFile.size,
       );
       if (!requestResult.success || !requestResult.resourceId) {
-        toast.error(requestResult.message || t("errors.uploadFailed"));
+        toast.add({ title: requestResult.message || t("errors.uploadFailed"), type: "error" });
         return;
       }
 
@@ -108,7 +108,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
           requestResult.uploadUrl,
         );
         if (!s3Result.success) {
-          toast.error(t("errors.uploadFailed"));
+          toast.add({ title: t("errors.uploadFailed"), type: "error" });
           return;
         }
       }
@@ -116,7 +116,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
       // 3. Confirm upload
       const confirmResult = await confirmUpload(requestResult.resourceId);
       if (!confirmResult.success) {
-        toast.error(t("errors.saveFailed"));
+        toast.add({ title: t("errors.saveFailed"), type: "error" });
         return;
       }
 
@@ -132,7 +132,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
 
       // 5. Update local state
       setProfilePicture(confirmResult.resource);
-      toast.success(t("success"));
+      toast.add({ title: t("success"), type: "success" });
       setShowPreview(false);
       setSelectedFile(null);
       if (previewUrl) {
@@ -151,12 +151,12 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
     try {
       const result = await deleteResource(profilePicture.id);
       if (!result.success) {
-        toast.error(result.message || t("errors.removeFailed"));
+        toast.add({ title: result.message || t("errors.removeFailed"), type: "error" });
         return;
       }
 
       setProfilePicture(null);
-      toast.success(t("removed"));
+      toast.add({ title: t("removed"), type: "success" });
       setShowRemoveDialog(false);
     } finally {
       setIsRemoving(false);

@@ -21,7 +21,7 @@ import type { GameDetail } from "@/lib/types/game";
 import { Lock, LockOpen, MoreHorizontal, Pencil, Play, Square, Trash2, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { DeleteGameDialog } from "./delete-game-dialog";
 import { InviteUsersDialog } from "./invite-users-dialog";
 import { ManageEditorsDialog } from "./manage-editors-dialog";
@@ -55,9 +55,9 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
     startTransition(async () => {
       const result = await action(game.id);
       if (result.success) {
-        toast.success(t(successKey));
+        toast.add({ title: t(successKey), type: "success" });
       } else {
-        toast.error(result.message || t(errorKey));
+        toast.add({ title: result.message || t(errorKey), type: "error" });
       }
     });
   }

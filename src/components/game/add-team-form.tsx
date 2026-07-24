@@ -7,7 +7,7 @@ import type { AddTeamInput } from "@/lib/types/game";
 import { useForm } from "@tanstack/react-form";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { z } from "zod";
 
 const addTeamSchema = z.object({
@@ -51,12 +51,12 @@ export function AddTeamForm({ gameId, onSuccess }: AddTeamFormProps) {
         const result = await addTeamParticipant(input);
 
         if (result.success) {
-          toast.success(t("game.success.participantAdded"));
+          toast.add({ title: t("game.success.participantAdded"), type: "success" });
           form.reset();
           onSuccess?.();
         } else {
           setError(result.message || t("game.errors.participantError"));
-          toast.error(result.message || t("game.errors.participantError"));
+          toast.add({ title: result.message || t("game.errors.participantError"), type: "error" });
         }
       });
     },

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Loader2, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 const MAX_WORDS = 1000;
 
@@ -61,7 +61,7 @@ export function EditableBiography({
         setBiography(previousBiography);
         setInputValue(trimmed);
         setStatusMessage(result.message ?? t("errors.loadError"));
-        toast.error(result.message ?? t("errors.loadError"));
+        toast.add({ title: result.message ?? t("errors.loadError"), type: "error" });
       } else {
         setIsEditing(false);
         requestAnimationFrame(() => editButtonRef.current?.focus());
@@ -69,7 +69,7 @@ export function EditableBiography({
           setBiography(result.user.biography);
         }
         setStatusMessage(t("biography.saved"));
-        toast.success(t("biography.saved"));
+        toast.add({ title: t("biography.saved"), type: "success" });
       }
     });
   };

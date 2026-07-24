@@ -6,7 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Loader2, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface MessageButtonProps {
   userId: number;
@@ -27,13 +27,13 @@ export function MessageButton({ userId }: MessageButtonProps) {
       if (result.success && result.chatRoom) {
         router.push(`/chat?room=${result.chatRoom.id}`);
       } else if (result.errorType === "UserBlockedError") {
-        toast.error(t("cannotMessageBlocked"));
+        toast.add({ title: t("cannotMessageBlocked"), type: "error" });
       } else {
-        toast.error(result.message || "Failed to create conversation");
+        toast.add({ title: result.message || "Failed to create conversation", type: "error" });
       }
     } catch (error) {
       console.error("Error creating/finding DM:", error);
-      toast.error("Failed to start conversation");
+      toast.add({ title: "Failed to start conversation", type: "error" });
     } finally {
       setIsLoading(false);
     }

@@ -18,7 +18,7 @@ import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 const MutualFollowSelector = dynamic(
   () =>
@@ -60,19 +60,19 @@ export function CreateChatRoomDialog({
             onOpenChange(false);
             resetForm();
           } else if (result.errorType === "MutualFollowRequiredError") {
-            toast.error(t("mutualFollowRequired"));
+            toast.add({ title: t("mutualFollowRequired"), type: "error" });
           } else {
-            toast.error(result.message || t("errors.createRoom"));
+            toast.add({ title: result.message || t("errors.createRoom"), type: "error" });
           }
         } catch (error) {
           console.error("Error in DM creation:", error);
-          toast.error(t("errors.createRoom"));
+          toast.add({ title: t("errors.createRoom"), type: "error" });
         }
       });
     } else {
       // Group chat
       if (!groupName.trim()) {
-        toast.error(t("groupNameRequired"));
+        toast.add({ title: t("groupNameRequired"), type: "error" });
         return;
       }
 
@@ -85,11 +85,11 @@ export function CreateChatRoomDialog({
             onOpenChange(false);
             resetForm();
           } else {
-            toast.error(result.message || t("errors.createRoom"));
+            toast.add({ title: result.message || t("errors.createRoom"), type: "error" });
           }
         } catch (error) {
           console.error("Error in group creation:", error);
-          toast.error(t("errors.createRoom"));
+          toast.add({ title: t("errors.createRoom"), type: "error" });
         }
       });
     }

@@ -13,7 +13,7 @@ import { Link } from "@/i18n/navigation";
 import { Check, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface FollowRequestEntry {
   id: string;
@@ -43,9 +43,9 @@ function FollowRequestItem({ item, onRemove }: FollowRequestItemProps) {
       const result = await approveFollowRequest(item.id);
       if (result.success) {
         onRemove(item.id);
-        toast(t("approved"));
+        toast.add({ title: t("approved") });
       } else {
-        toast.error(t("approveError"));
+        toast.add({ title: t("approveError"), type: "error" });
       }
     });
   }
@@ -55,9 +55,9 @@ function FollowRequestItem({ item, onRemove }: FollowRequestItemProps) {
       const result = await declineFollowRequest(item.id);
       if (result.success) {
         onRemove(item.id);
-        toast(t("declined"));
+        toast.add({ title: t("declined") });
       } else {
-        toast.error(t("declineError"));
+        toast.add({ title: t("declineError"), type: "error" });
       }
     });
   }

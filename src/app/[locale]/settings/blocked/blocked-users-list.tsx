@@ -6,7 +6,7 @@ import { TypographyMuted, TypographyP } from "@/components/ui/typography";
 import { Loader2, ShieldOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 export interface BlockedUserEntry {
   userId: number;
@@ -24,9 +24,9 @@ function BlockedUserItem({ entry }: { entry: BlockedUserEntry }) {
       const result = await unblockUser(entry.userId);
       if (result.success) {
         setIsUnblocked(true);
-        toast.success(t("unblockSuccess"));
+        toast.add({ title: t("unblockSuccess"), type: "success" });
       } else {
-        toast.error(t("unblockError"));
+        toast.add({ title: t("unblockError"), type: "error" });
       }
     });
   };

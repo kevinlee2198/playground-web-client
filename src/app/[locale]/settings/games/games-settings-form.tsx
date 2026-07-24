@@ -10,7 +10,7 @@ import { useForm } from "@tanstack/react-form";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 const sportTypes = Object.values(SportType);
 
@@ -54,14 +54,14 @@ export function GamesSettingsForm({
           input.preferredSports = value.preferredSports;
         }
         if (Object.keys(input).length === 0) {
-          toast.success(t("saveSuccess"));
+          toast.add({ title: t("saveSuccess"), type: "success" });
           return;
         }
         const result = await updatePreferences(input);
         if (result.success) {
-          toast.success(t("saveSuccess"));
+          toast.add({ title: t("saveSuccess"), type: "success" });
         } else {
-          toast.error(t("saveError"));
+          toast.add({ title: t("saveError"), type: "error" });
         }
       });
     },

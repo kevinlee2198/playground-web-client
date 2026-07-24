@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Loader2, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface EditableDisplayNameProps {
   initialDisplayName: string;
@@ -51,7 +51,7 @@ export function EditableDisplayName({
         setDisplayName(previousDisplayName);
         setInputValue(trimmed);
         setStatusMessage(result.message ?? t("errors.loadError"));
-        toast.error(result.message ?? t("errors.loadError"));
+        toast.add({ title: result.message ?? t("errors.loadError"), type: "error" });
       } else {
         setIsEditing(false);
         requestAnimationFrame(() => editButtonRef.current?.focus());
@@ -59,7 +59,7 @@ export function EditableDisplayName({
           setDisplayName(result.user.displayName);
         }
         setStatusMessage(t("displayName.saved"));
-        toast.success(t("displayName.saved"));
+        toast.add({ title: t("displayName.saved"), type: "success" });
       }
     });
   };

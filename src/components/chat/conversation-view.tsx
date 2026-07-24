@@ -23,7 +23,7 @@ import type { ChatEvent } from "@/lib/types/chat-event";
 import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { ConversationHeader } from "./conversation-header";
 import { DeleteMessageDialog } from "./delete-message-dialog";
 import { DmDisabledBanner } from "./dm-disabled-banner";
@@ -91,7 +91,7 @@ export function ConversationView({
         ]);
 
         if (!roomData) {
-          toast.error(t("errors.roomNotFound"));
+          toast.add({ title: t("errors.roomNotFound"), type: "error" });
           return;
         }
 
@@ -109,7 +109,7 @@ export function ConversationView({
         }
       } catch (error) {
         console.error("Failed to load conversation:", error);
-        toast.error(t("errors.loadMessages"));
+        toast.add({ title: t("errors.loadMessages"), type: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -223,7 +223,7 @@ export function ConversationView({
     if (result.errorType === "MutualFollowRequiredError") {
       setCanMessage(false);
     }
-    toast.error(result.message || t("errors.sendMessage"));
+    toast.add({ title: result.message || t("errors.sendMessage"), type: "error" });
   }
 
   const handleSendText = async (content: string, replyToId?: string) => {
@@ -263,7 +263,7 @@ export function ConversationView({
       roomId,
     );
     if (!uploadResult.success || !uploadResult.resourceId) {
-      toast.error(uploadResult.message || t("errors.sendMessage"));
+      toast.add({ title: uploadResult.message || t("errors.sendMessage"), type: "error" });
       throw new Error("Request upload failed");
     }
 
@@ -271,7 +271,7 @@ export function ConversationView({
     if (uploadResult.uploadUrl) {
       const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
       if (!s3Result.success) {
-        toast.error(t("errors.sendMessage"));
+        toast.add({ title: t("errors.sendMessage"), type: "error" });
         throw new Error("S3 upload failed");
       }
     }
@@ -302,7 +302,7 @@ export function ConversationView({
     const result = await updateMessage(messageId, content);
 
     if (!result.success) {
-      toast.error(result.message || t("errors.editMessage"));
+      toast.add({ title: result.message || t("errors.editMessage"), type: "error" });
       return;
     }
 
@@ -336,7 +336,7 @@ export function ConversationView({
     const result = await deleteMessage(messageToDelete);
 
     if (!result.success) {
-      toast.error(result.message || t("errors.deleteMessage"));
+      toast.add({ title: result.message || t("errors.deleteMessage"), type: "error" });
       setIsDeleting(false);
       return;
     }

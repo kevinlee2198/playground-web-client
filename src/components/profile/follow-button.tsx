@@ -10,7 +10,7 @@ import type { FollowStateChange } from "@/lib/types/follow";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 type FollowButtonState =
   | { type: "not-following" }
@@ -65,7 +65,7 @@ export function FollowButton({
 
       if (!result.success) {
         setState(previousState);
-        toast.error(t("error"));
+        toast.add({ title: t("error"), type: "error" });
         return;
       }
 
@@ -99,11 +99,15 @@ export function FollowButton({
         onFollowChange?.({ type: "unfollowed" });
 
         if (result.wasMutualFollow) {
-          toast(t("unfollowedUndo", { name: displayName }), {
-            duration: 5000,
-            action: {
-              label: t("undo"),
-              onClick: () => executeFollow({ type: "not-following" }),
+          const toastId = toast.add({
+            title: t("unfollowedUndo", { name: displayName }),
+            timeout: 5000,
+            actionProps: {
+              children: t("undo"),
+              onClick: () => {
+                toast.close(toastId);
+                executeFollow({ type: "not-following" });
+              },
             },
           });
         } else {
@@ -111,7 +115,7 @@ export function FollowButton({
         }
       } else {
         setState(previousState);
-        toast.error(t("error"));
+        toast.add({ title: t("error"), type: "error" });
       }
     });
   }
@@ -130,7 +134,7 @@ export function FollowButton({
         onFollowChange?.({ type: "cancelled" });
       } else {
         setState(previousState);
-        toast.error(t("error"));
+        toast.add({ title: t("error"), type: "error" });
       }
     });
   }
