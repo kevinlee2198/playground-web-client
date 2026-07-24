@@ -69,7 +69,7 @@ export default async function AboutPage() {
                   <Icon className="size-7 shrink-0 text-primary" aria-hidden="true" />
                   <TypographyH3>{t(`features.${key}.title`)}</TypographyH3>
                 </div>
-                <TypographyP className="mt-0">
+                <TypographyP>
                   {t(`features.${key}.description`)}
                 </TypographyP>
               </div>

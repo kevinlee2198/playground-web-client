@@ -44,7 +44,7 @@ export default async function FaqPage() {
               <TypographyH3 className="text-xl">
                 {t(`questions.${key}.question`)}
               </TypographyH3>
-              <TypographyP className="mt-0">
+              <TypographyP>
                 {t(`questions.${key}.answer`)}
               </TypographyP>
             </div>
