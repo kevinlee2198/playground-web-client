@@ -90,7 +90,10 @@ Claude; user has not seen them — regenerate on request). Results:
   `getSportGradientClass`/`gradientClass`, and `getSportAccentClass`/`accentClass` (the
   latter's only consumer was the strip itself). Verified by grep (zero references), tsc,
   lint, vitest 724/724.
-- Mobile navbar `hidden lg:inline-flex` bug (`navbar.tsx:47`) — one-liner, **separate branch**.
+- Mobile navbar `hidden lg:inline-flex` bug — **FIXED on this branch** (user chose to fold it
+  in rather than branch separately, 2026-07-23). `cn()` wrap so twMerge drops the conflicting
+  base `inline-flex`; TDD regression test in `__tests__/components/playground/navbar.test.tsx`.
+  Reviewer confirmed the pattern was isolated to this one call site.
 - Backend asks queued: short `title` field on Game (headline branch is commented in
   game-card.tsx/hero); later casual/competitive flag.
 - Dependency upgrades (Next 16.2.10, Tailwind 4.3.3, Base UI 1.6, next-intl 4.13, better-auth

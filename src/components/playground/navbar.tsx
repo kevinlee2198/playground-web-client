@@ -12,6 +12,7 @@ import { NavbarSearch } from "../search/navbar-search";
 import { Button } from "../ui/button";
 import { buttonVariants } from "../ui/button-variants";
 import { TypographyH1 } from "../ui/typography";
+import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 
 export function Navbar() {
@@ -44,7 +45,9 @@ export function Navbar() {
           {session?.user && (
             <Link
               href="/game"
-              className={buttonVariants({ variant: "default", className: "hidden lg:inline-flex" })}
+              // cva concatenates without tailwind-merge — cn() resolves the
+              // base inline-flex vs hidden display conflict
+              className={cn(buttonVariants({ variant: "default" }), "hidden lg:inline-flex")}
             >
               {t("game.actions.create")}
             </Link>
