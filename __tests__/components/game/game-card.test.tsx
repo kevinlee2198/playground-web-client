@@ -173,6 +173,21 @@ describe("GameCard", () => {
     expect(screen.getByText("Basketball · 5v5")).toBeInTheDocument();
   });
 
+  it("drops chip text when the headline is the sport+format fallback", () => {
+    render(
+      <GameCard
+        game={makeGame({
+          gameStatus: GameStatus.SCHEDULED,
+          participants: { edges: [] },
+        })}
+      />,
+    );
+    // Sport + format appears exactly once — the headline; the chip is icon-only
+    const label = screen.getAllByText("Basketball · 5v5");
+    expect(label).toHaveLength(1);
+    expect(label[0].tagName).toBe("P");
+  });
+
   it("links to game detail page", () => {
     render(<GameCard game={makeGame()} />);
     const link = screen.getByRole("link");

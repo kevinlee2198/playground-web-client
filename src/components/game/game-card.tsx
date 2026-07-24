@@ -88,6 +88,9 @@ export function GameCard({ game, distance }: GameCardProps) {
     : null;
   // Headline: game title once the schema has one, else matchup, else sport + format.
   const headline = participantsDisplay ?? sportFormatLabel;
+  // Icon-only chip when the headline is the sport+format fallback — the text
+  // would repeat the headline verbatim (design.md §4 chip de-dup rule).
+  const chipText = headline === sportFormatLabel ? null : sportFormatLabel;
 
   // Status sits at the top-right of the head row and reads differently per state:
   // live pill, the scheduled start time, or a FINAL label.
@@ -173,7 +176,7 @@ export function GameCard({ game, distance }: GameCardProps) {
                 )}
               >
                 <SportIcon sportType={game.sportType} size="sm" />
-                <span className="truncate">{sportFormatLabel}</span>
+                {chipText ? <span className="truncate">{chipText}</span> : null}
               </span>
               {game.viewerInvitation?.status === GameInvitationStatus.PENDING && (
                 <Badge variant="secondary" className="text-xs shrink-0">

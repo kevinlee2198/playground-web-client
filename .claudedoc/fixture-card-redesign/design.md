@@ -80,7 +80,7 @@ distance formatting) is reused, not rewritten.
 - **Headline** (Quicksand, ~19px/700): `title ?? matchup`. Matchup built from the first two
   participants via `getParticipantName` (already implemented with the unnamed-team fallback,
   `game-card.tsx:82-85`). If neither exists (no title, <2 participants): sport + format label.
-- **Chip de-dup rule (decided 2026-07-22, not yet implemented)**: when the headline is the
+- **Chip de-dup rule (decided + implemented 2026-07-22)**: when the headline is the
   sport+format fallback, the chip drops its text and shows the icon only — otherwise the chip
   and headline repeat the same string verbatim (confirmed redundant in the screenshot pass;
   see handoff.md). Chip text returns whenever the headline says something the chip doesn't

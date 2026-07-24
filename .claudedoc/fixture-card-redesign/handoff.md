@@ -1,6 +1,6 @@
 # Handoff: Fixture Card Redesign (updated 2026-07-22)
 
-Branch: **`0099-fixture-card-redesign`**. Six commits landed; working tree clean.
+Branch: **`0099-fixture-card-redesign`**. Working tree clean.
 Previous handoff (2026-07-18, pre-commit state) is in git history at `95fa0db`.
 
 ## Committed
@@ -12,7 +12,10 @@ Previous handoff (2026-07-18, pre-commit state) is in git history at `95fa0db`.
 | `01cfb19` | feat(game): fixture-card rebuild + detail-hero wash/watermark |
 | `139c1c9` | test(game): card/hero tests rewritten for fixture anatomy |
 | `95fa0db` | docs: redesign spec + mocks, `docs/ui-review.md`, `docs/ux-walkthrough.md` |
-| (HEAD) | refactor(game): extract ParticipantName from score components |
+| `d2c771d` | refactor(game): extract ParticipantName from score components |
+| `dc834d6` | docs: visual screenshot pass results |
+| `d3298f1` | docs: chip de-dup decision |
+| (HEAD) | feat(game): icon-only sport chip when headline repeats it |
 
 Verification of the first five commits (2026-07-19): `npx tsc --noEmit` clean, `npm run lint`
 clean, vitest **723/723**, Playwright chromium **112 passed / 1 skipped (pre-existing) /
@@ -30,7 +33,7 @@ Pre-commit review of `01cfb19` (per the user's standing rule, both subagents ran
   producing a `statusIndicator: ReactNode`; simple/tennis score files reformatted to match
   pickleball/volleyball.
 
-### ParticipantName extraction (HEAD commit)
+### ParticipantName extraction (`d2c771d`)
 
 User-approved extraction of the winner-crown `<p>` block duplicated 8× across the four score
 components (originally proposed by the simplifier):
@@ -63,10 +66,16 @@ Claude; user has not seen them — regenerate on request). Results:
   the worst case (chip over the wash's from-color): dark 4.61–4.99:1 (lowest is baseball,
   not pickleball/football as previously estimated), light 4.66–4.76:1; over the plain card
   6.6–7.2:1 dark. Optional: bump dark fg lightness ~+0.02 for margin.
-- **Finding — headline duplication (decided 2026-07-22, implementation pending):** cards
-  without 2 participants show the chip ("BASKETBALL · 5V5") directly above an identical
-  headline ("Basketball · 5v5"). Decision: icon-only chip whenever the headline is the
-  sport+format fallback — full rule + rationale in design.md §4 ("Chip de-dup rule").
+- **Finding — headline duplication: decided and implemented (HEAD commit).** Cards without
+  2 participants showed the chip ("BASKETBALL · 5V5") directly above an identical headline.
+  Rule: icon-only chip whenever the headline is the sport+format fallback — full rationale in
+  design.md §4 ("Chip de-dup rule"). Implemented TDD (red → green) as
+  `chipText = headline === sportFormatLabel ? null : sportFormatLabel` — keyed on headline
+  equality, not `participantsDisplay`, so it stays correct when the `title` field lands
+  (reviewer's catch). Verified: vitest 724/724 (new fallback test asserts the label renders
+  exactly once, as the headline `<p>`), Playwright 112/1/0, tsc + lint clean. Reviewer:
+  clean, all 6 state combinations verified, no Playwright spec depends on chip text, sport
+  always announced via headline (SportIcon is aria-hidden). Simplifier: nothing to change.
 - **Minor — FINAL vs FINALIZED:** completed cards show "FINAL" (COMPLETE) but "FINALIZED"
   (FINALIZED status) in the corner. Two labels for what reads as the same viewer-facing
   state.
@@ -77,11 +86,6 @@ Claude; user has not seen them — regenerate on request). Results:
 
 ## Open items (unchanged priority order)
 
-- **Implement the chip de-dup rule** (design.md §4, decided 2026-07-22): icon-only chip when
-  the headline is the sport+format fallback. One condition in `game-card.tsx` (roughly
-  `chipText = participantsDisplay ? sportFormatLabel : null`, i.e. hide chip text when the
-  headline would repeat it); keep icon `aria-hidden`; adjust the card chip test for the
-  fallback case.
 - **Orphan cleanup — awaiting user decision.** `SportAccentStrip` and
   `getSportGradientClass`/`gradientClass` have zero references (LSP findReferences:
   declaration-only). Why: the redesign replaced their only call sites — the strip was the old
