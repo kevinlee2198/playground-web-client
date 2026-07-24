@@ -10,8 +10,8 @@ vi.mock("@/app/[locale]/game/media-actions", () => ({
   addGameMediaLink: vi.fn(),
 }));
 
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+vi.mock("@/components/ui/toast", () => ({
+  toast: { add: vi.fn() },
 }));
 
 import { AddLinkDialog } from "@/components/game/add-link-dialog";
@@ -227,7 +227,7 @@ describe("AddLinkDialog", () => {
     const { addGameMediaLink } = await import(
       "@/app/[locale]/game/media-actions"
     );
-    const { toast } = await import("sonner");
+    const { toast } = await import("@/components/ui/toast");
     const onOpenChange = vi.fn();
     const onMediaAdded = vi.fn();
     const media = makeGameMedia();
@@ -260,7 +260,9 @@ describe("AddLinkDialog", () => {
     await waitFor(() => {
       expect(onMediaAdded).toHaveBeenCalledWith(media);
       expect(onOpenChange).toHaveBeenCalledWith(false);
-      expect(toast.success).toHaveBeenCalled();
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "success" }),
+      );
     });
   });
 

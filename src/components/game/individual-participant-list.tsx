@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface IndividualParticipantListProps {
   participants: GameParticipantDetail[];
@@ -72,9 +72,9 @@ export function IndividualParticipantList({
       });
 
       if (result.success) {
-        toast.success(t("game.success.participantAdded"));
+        toast.add({ title: t("game.success.participantAdded"), type: "success" });
       } else {
-        toast.error(result.message || t("game.errors.participantError"));
+        toast.add({ title: result.message || t("game.errors.participantError"), type: "error" });
       }
     });
   }
@@ -86,9 +86,9 @@ export function IndividualParticipantList({
       });
 
       if (result.success) {
-        toast.success(t("game.success.participantRemoved"));
+        toast.add({ title: t("game.success.participantRemoved"), type: "success" });
       } else {
-        toast.error(result.message || t("game.errors.participantError"));
+        toast.add({ title: result.message || t("game.errors.participantError"), type: "error" });
       }
     });
   }

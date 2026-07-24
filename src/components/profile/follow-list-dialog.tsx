@@ -28,7 +28,7 @@ import type { FollowStateChange } from "@/lib/types/follow";
 import { MoreVertical, UserMinus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { FollowButton } from "./follow-button";
 import { FollowsYouBadge } from "./follows-you-badge";
 
@@ -152,9 +152,9 @@ export function FollowListDialog({
       const result = await removeFollower(targetUserId);
       if (result.success) {
         setItems((prev) => prev.filter((item) => item.user.id !== targetUserId));
-        toast.success(t("removeFollowerSuccess"));
+        toast.add({ title: t("removeFollowerSuccess"), type: "success" });
       } else {
-        toast.error(t("removeFollowerError"));
+        toast.add({ title: t("removeFollowerError"), type: "error" });
       }
     });
   }

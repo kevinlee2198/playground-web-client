@@ -35,7 +35,7 @@ import {
 import { ArrowUpDown, Pencil } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { BaseballPitchingStatsForm } from "./baseball-pitching-stats-form";
 
 const STICKY_FIRST_COL =
@@ -119,10 +119,10 @@ export function BaseballPitchingStatsTable({
         gameId,
       });
       if (result.success) {
-        toast.success(statsT("statsAddedForUser"));
+        toast.add({ title: statsT("statsAddedForUser"), type: "success" });
         setSelectedUserId("");
       } else {
-        toast.error(result.message ?? statsT("statsErrorForUser"));
+        toast.add({ title: result.message ?? statsT("statsErrorForUser"), type: "error" });
       }
     });
   }

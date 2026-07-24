@@ -18,7 +18,7 @@ import { nullToUndefined, undefinedToNull } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 const STAT_FIELDS = [
   "aces",
@@ -87,11 +87,11 @@ export function PickleballStatsForm({
         const result = await savePickleballStats(input);
 
         if (result.success) {
-          toast.success(t("game.success.statsSaved"));
+          toast.add({ title: t("game.success.statsSaved"), type: "success" });
           onOpenChange(false);
         } else {
           setError(result.message || t("game.errors.statsError"));
-          toast.error(result.message || t("game.errors.statsError"));
+          toast.add({ title: result.message || t("game.errors.statsError"), type: "error" });
         }
       });
     },

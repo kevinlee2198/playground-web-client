@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import { ChevronRight, MoreHorizontal, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 const BORDER_COLORS = [
@@ -95,9 +95,9 @@ export function TeamCard({
       });
 
       if (result.success) {
-        toast.success(t("game.success.participantAdded"));
+        toast.add({ title: t("game.success.participantAdded"), type: "success" });
       } else {
-        toast.error(result.message || t("game.errors.participantError"));
+        toast.add({ title: result.message || t("game.errors.participantError"), type: "error" });
       }
     });
   }
@@ -110,10 +110,10 @@ export function TeamCard({
       });
 
       if (result.success) {
-        toast.success(t("game.success.participantRemoved"));
+        toast.add({ title: t("game.success.participantRemoved"), type: "success" });
         setUserToRemove(null);
       } else {
-        toast.error(result.message || t("game.errors.participantError"));
+        toast.add({ title: result.message || t("game.errors.participantError"), type: "error" });
       }
     });
   }
@@ -125,10 +125,10 @@ export function TeamCard({
       });
 
       if (result.success) {
-        toast.success(t("game.success.participantRemoved"));
+        toast.add({ title: t("game.success.participantRemoved"), type: "success" });
         setShowRemoveTeamDialog(false);
       } else {
-        toast.error(result.message || t("game.errors.participantError"));
+        toast.add({ title: result.message || t("game.errors.participantError"), type: "error" });
       }
     });
   }

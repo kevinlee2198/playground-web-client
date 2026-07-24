@@ -26,7 +26,7 @@ import { useForm } from "@tanstack/react-form";
 import { Link as LinkIcon, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { z } from "zod";
 
 interface AddLinkDialogProps {
@@ -147,22 +147,22 @@ export function AddLinkDialog({
       if (result.success && result.gameMedia) {
         onMediaAdded(result.gameMedia);
         handleOpenChange(false);
-        toast.success(t("linkAdded"));
+        toast.add({ title: t("linkAdded"), type: "success" });
       } else if (result.errorType === "RateLimitedError") {
         const seconds = result.retryAfterSeconds ?? 60;
         setRateLimitCountdown(seconds);
         setRateLimitAnnouncement(t("errors.rateLimited", { seconds }));
       } else if (result.errorType === "DuplicateMediaError") {
         setPreview(null);
-        toast.error(t("errors.duplicateLink"));
+        toast.add({ title: t("errors.duplicateLink"), type: "error" });
       } else if (result.errorType === "UrlResolutionError" && result.errorCode) {
-        toast.error(URL_ERROR_MESSAGES[result.errorCode] ?? result.message ?? t("errors.urlCannotBeAccessed"));
+        toast.add({ title: URL_ERROR_MESSAGES[result.errorCode] ?? result.message ?? t("errors.urlCannotBeAccessed"), type: "error" });
       } else if (result.errorType === "GameNotFoundError") {
-        toast.error(t("errors.gameNotFound"));
+        toast.add({ title: t("errors.gameNotFound"), type: "error" });
       } else if (result.errorType === "GameNotInProgressError") {
-        toast.error(t("errors.gameNotInProgress"));
+        toast.add({ title: t("errors.gameNotInProgress"), type: "error" });
       } else {
-        toast.error(result.message ?? t("errors.urlCannotBeAccessed"));
+        toast.add({ title: result.message ?? t("errors.urlCannotBeAccessed"), type: "error" });
       }
     });
   }

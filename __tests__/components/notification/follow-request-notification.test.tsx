@@ -12,7 +12,7 @@ const {
 } = vi.hoisted(() => {
   const mockApproveFollowRequest = vi.fn();
   const mockDeclineFollowRequest = vi.fn();
-  const mockToast = Object.assign(vi.fn(), { error: vi.fn() });
+  const mockToast = { add: vi.fn() };
   const mockOnMarkAsRead = vi.fn().mockResolvedValue(undefined);
   return {
     mockApproveFollowRequest,
@@ -103,7 +103,7 @@ vi.mock("@/components/profile/follow-request-actions", () => ({
     mockDeclineFollowRequest(...args),
 }));
 
-vi.mock("sonner", () => ({
+vi.mock("@/components/ui/toast", () => ({
   toast: mockToast,
 }));
 
@@ -245,7 +245,7 @@ describe("FollowRequestReceivedNotification", () => {
     fireEvent.click(screen.getByRole("button", { name: /Approve Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("Failed to approve request");
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Failed to approve request", type: "error" });
     });
   });
 
@@ -256,7 +256,7 @@ describe("FollowRequestReceivedNotification", () => {
     fireEvent.click(screen.getByRole("button", { name: /Decline Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("Failed to decline request");
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Failed to decline request", type: "error" });
     });
   });
 

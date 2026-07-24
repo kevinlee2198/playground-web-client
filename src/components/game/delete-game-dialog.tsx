@@ -14,7 +14,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface DeleteGameDialogProps {
   gameId: number;
@@ -35,10 +35,10 @@ export function DeleteGameDialog({
     startTransition(async () => {
       const result = await deleteGame(gameId);
       if (result.success) {
-        toast.success(t("game.success.deleted"));
+        toast.add({ title: t("game.success.deleted"), type: "success" });
         router.push("/games");
       } else {
-        toast.error(result.message || t("game.errors.deleteError"));
+        toast.add({ title: result.message || t("game.errors.deleteError"), type: "error" });
         onOpenChange(false);
       }
     });

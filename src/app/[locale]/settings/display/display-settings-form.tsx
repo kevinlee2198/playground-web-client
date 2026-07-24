@@ -6,7 +6,7 @@ import { FormSelectField } from "@/components/ui/form-field";
 import { useForm } from "@tanstack/react-form";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 export function DisplaySettingsForm() {
   const t = useTranslations("settings");
@@ -27,7 +27,7 @@ export function DisplaySettingsForm() {
     },
     onSubmit: async ({ value }) => {
       setTheme(value.theme);
-      toast.success(t("saveSuccess"));
+      toast.add({ title: t("saveSuccess"), type: "success" });
     },
   });
 

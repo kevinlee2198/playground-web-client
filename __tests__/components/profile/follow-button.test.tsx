@@ -5,7 +5,7 @@ const { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast } =
   const mockFollowUser = vi.fn();
   const mockUnfollowUser = vi.fn();
   const mockCancelFollowRequest = vi.fn();
-  const mockToast = Object.assign(vi.fn(), { error: vi.fn() });
+  const mockToast = { add: vi.fn() };
   return { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast };
 });
 
@@ -48,7 +48,7 @@ vi.mock("@/components/profile/follow-request-actions", () => ({
   cancelFollowRequest: (...args: unknown[]) => mockCancelFollowRequest(...args),
 }));
 
-vi.mock("sonner", () => ({
+vi.mock("@/components/ui/toast", () => ({
   toast: mockToast,
 }));
 
@@ -202,12 +202,12 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        "Unfollowed Alice. You can no longer message each other.",
+      expect(mockToast.add).toHaveBeenCalledWith(
         expect.objectContaining({
-          duration: 5000,
-          action: expect.objectContaining({
-            label: "Undo",
+          title: "Unfollowed Alice. You can no longer message each other.",
+          timeout: 5000,
+          actionProps: expect.objectContaining({
+            children: "Undo",
           }),
         }),
       );
@@ -229,7 +229,7 @@ describe("FollowButton", () => {
       expect(mockUnfollowUser).toHaveBeenCalledWith(1);
     });
 
-    expect(mockToast).not.toHaveBeenCalled();
+    expect(mockToast.add).not.toHaveBeenCalled();
   });
 
   it("transitions to Requested state when followUser returns a request", async () => {
@@ -329,9 +329,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Follow Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith(
-        "Something went wrong. Please try again.",
-      );
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Something went wrong. Please try again.", type: "error" });
     });
 
     const button = screen.getByRole("button");
@@ -349,9 +347,7 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith(
-        "Something went wrong. Please try again.",
-      );
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Something went wrong. Please try again.", type: "error" });
     });
 
     const button = screen.getByRole("button");
@@ -372,7 +368,9 @@ describe("FollowButton", () => {
     fireEvent.click(screen.getByRole("button", { name: /Cancel follow request for Alice/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalled();
+      expect(mockToast.add).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "error" }),
+      );
     });
 
     const button = screen.getByRole("button");

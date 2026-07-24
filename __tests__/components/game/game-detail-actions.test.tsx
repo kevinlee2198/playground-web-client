@@ -32,8 +32,8 @@ vi.mock("@/app/[locale]/game/actions", () => ({
   endGame: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+vi.mock("@/components/ui/toast", () => ({
+  toast: { add: vi.fn() },
 }));
 
 vi.mock("@/components/game/delete-game-dialog", () => ({
@@ -256,7 +256,7 @@ describe("GameDetailActions", () => {
 
   it("calls startGame action and shows success toast when Start is clicked", async () => {
     const { startGame } = await import("@/app/[locale]/game/actions");
-    const { toast } = await import("sonner");
+    const { toast } = await import("@/components/ui/toast");
 
     render(
       <GameDetailActions
@@ -268,13 +268,13 @@ describe("GameDetailActions", () => {
 
     await waitFor(() => {
       expect(startGame).toHaveBeenCalledWith(1);
-      expect(toast.success).toHaveBeenCalledWith("Game started");
+      expect(toast.add).toHaveBeenCalledWith({ title: "Game started", type: "success" });
     });
   });
 
   it("calls endGame action and shows success toast when End is clicked", async () => {
     const { endGame } = await import("@/app/[locale]/game/actions");
-    const { toast } = await import("sonner");
+    const { toast } = await import("@/components/ui/toast");
 
     render(
       <GameDetailActions
@@ -286,7 +286,7 @@ describe("GameDetailActions", () => {
 
     await waitFor(() => {
       expect(endGame).toHaveBeenCalledWith(1);
-      expect(toast.success).toHaveBeenCalledWith("Game ended");
+      expect(toast.add).toHaveBeenCalledWith({ title: "Game ended", type: "success" });
     });
   });
 });

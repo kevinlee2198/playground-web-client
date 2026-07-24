@@ -5,7 +5,7 @@ import { NewGameFab } from "@/components/playground/new-game-fab";
 import { ScrollDirectionProvider } from "@/components/playground/scroll-direction-provider";
 import { SkipNavLink } from "@/components/playground/skip-nav-link";
 import { TabBar } from "@/components/playground/tab-bar";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toast";
 import { routing } from "@/i18n/routing";
 import { auth } from "@/lib/auth";
 import { cn } from "@/lib/utils";

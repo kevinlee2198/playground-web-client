@@ -35,7 +35,7 @@ import { getFullName } from "@/lib/utils";
 import { Loader2, Trash2, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface ManageEditorsDialogProps {
   gameId: number;
@@ -112,9 +112,9 @@ export function ManageEditorsDialog({
         ]);
         setSearchQuery("");
         setSearchResults([]);
-        toast.success(t("success.added"));
+        toast.add({ title: t("success.added"), type: "success" });
       } else {
-        toast.error(result.message ?? t("errors.addFailed"));
+        toast.add({ title: result.message ?? t("errors.addFailed"), type: "error" });
       }
     });
   };
@@ -127,10 +127,10 @@ export function ManageEditorsDialog({
         setMembers((prev) =>
           prev.filter((e) => e.node.id !== removeTarget.id),
         );
-        toast.success(t("success.removed"));
+        toast.add({ title: t("success.removed"), type: "success" });
         setRemoveTarget(null);
       } else {
-        toast.error(result.message ?? t("errors.removeFailed"));
+        toast.add({ title: result.message ?? t("errors.removeFailed"), type: "error" });
       }
     });
   };
@@ -140,11 +140,11 @@ export function ManageEditorsDialog({
     startTransition(async () => {
       const result = await transferGameOwnership(gameId, transferTarget.user.id);
       if (result.success) {
-        toast.success(t("success.transferred"));
+        toast.add({ title: t("success.transferred"), type: "success" });
         setTransferTarget(null);
         await loadMembers();
       } else {
-        toast.error(result.message ?? t("errors.transferFailed"));
+        toast.add({ title: result.message ?? t("errors.transferFailed"), type: "error" });
       }
     });
   };

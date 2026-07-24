@@ -3,7 +3,7 @@
 import { Lock, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { GameScore } from "@/components/game/score/game-score";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { BaseballScoreForm } from "@/components/game/scoreboard/baseball-score-form";
@@ -51,7 +51,7 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
     if (prevStatus !== GameStatus.FINALIZED && game.gameStatus === GameStatus.FINALIZED && isEditing) {
       requestAnimationFrame(() => {
         setIsEditing(false);
-        toast.error(t("game.live.resultsFinalizedWhileEditing"));
+        toast.add({ title: t("game.live.resultsFinalizedWhileEditing"), type: "error" });
         editButtonRef.current?.focus();
       });
     }

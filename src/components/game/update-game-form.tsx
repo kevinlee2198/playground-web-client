@@ -30,7 +30,7 @@ import { useForm } from "@tanstack/react-form";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { updateGameFormSchema } from "./game-form-fields";
 import { StatEntryModeRadioGroup } from "./stat-entry-mode-radio-group";
 import { VisibilityRadioGroup } from "./visibility-radio-group";
@@ -296,11 +296,11 @@ export function UpdateGameForm({
 
         if (result.success) {
           locationDirtyRef.current = false;
-          toast.success(t("game.success.updated"));
+          toast.add({ title: t("game.success.updated"), type: "success" });
           onSuccess?.();
         } else {
           setError(result.message || t("game.errors.updateError"));
-          toast.error(result.message || t("game.errors.updateError"));
+          toast.add({ title: result.message || t("game.errors.updateError"), type: "error" });
         }
       });
     },

@@ -10,7 +10,7 @@ const {
   const mockLoadFollowRequests = vi.fn();
   const mockApproveFollowRequest = vi.fn();
   const mockDeclineFollowRequest = vi.fn();
-  const mockToast = Object.assign(vi.fn(), { error: vi.fn() });
+  const mockToast = { add: vi.fn() };
   return {
     mockLoadFollowRequests,
     mockApproveFollowRequest,
@@ -48,7 +48,7 @@ vi.mock("@/components/profile/follow-request-actions", () => ({
     mockDeclineFollowRequest(...args),
 }));
 
-vi.mock("sonner", () => ({
+vi.mock("@/components/ui/toast", () => ({
   toast: mockToast,
 }));
 
@@ -192,7 +192,7 @@ describe("FollowRequestsList", () => {
     fireEvent.click(screen.getByRole("button", { name: /Approve User 0/i }));
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith("Approved");
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Approved" });
     });
   });
 
@@ -203,7 +203,7 @@ describe("FollowRequestsList", () => {
     fireEvent.click(screen.getByRole("button", { name: /Decline User 0/i }));
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith("Declined");
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Declined" });
     });
   });
 
@@ -214,7 +214,7 @@ describe("FollowRequestsList", () => {
     fireEvent.click(screen.getByRole("button", { name: /Approve User 0/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("Failed to approve request");
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Failed to approve request", type: "error" });
     });
     expect(screen.getByText("User 0")).toBeInTheDocument();
   });
@@ -226,7 +226,7 @@ describe("FollowRequestsList", () => {
     fireEvent.click(screen.getByRole("button", { name: /Decline User 0/i }));
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("Failed to decline request");
+      expect(mockToast.add).toHaveBeenCalledWith({ title: "Failed to decline request", type: "error" });
     });
     expect(screen.getByText("User 0")).toBeInTheDocument();
   });

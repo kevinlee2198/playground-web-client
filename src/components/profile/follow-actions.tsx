@@ -34,7 +34,7 @@ import type { FollowStateChange } from "@/lib/types/follow";
 import { Ban, MessageCircle, MoreVertical, ShieldOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { FollowButton } from "./follow-button";
 import { FollowsYouBadge } from "./follows-you-badge";
 
@@ -81,15 +81,15 @@ export function FollowActions({
       const result = await blockUser(userId);
       if (result.success) {
         setIsBlocked(true);
-        toast.success(tBlock("success"));
+        toast.add({ title: tBlock("success"), type: "success" });
         setBlockDialogOpen(false);
         router.refresh();
       } else if (result.errorType === "UserBlockedYouError") {
-        toast.error(tBlock("alreadyBlockedYou"));
+        toast.add({ title: tBlock("alreadyBlockedYou"), type: "error" });
       } else if (result.errorType === "SelfActionError") {
-        toast.error(tBlock("cannotBlockSelf"));
+        toast.add({ title: tBlock("cannotBlockSelf"), type: "error" });
       } else {
-        toast.error(tBlock("error"));
+        toast.add({ title: tBlock("error"), type: "error" });
       }
     });
   }
@@ -99,10 +99,10 @@ export function FollowActions({
       const result = await unblockUser(userId);
       if (result.success) {
         setIsBlocked(false);
-        toast.success(tBlock("unblockSuccess"));
+        toast.add({ title: tBlock("unblockSuccess"), type: "success" });
         router.refresh();
       } else {
-        toast.error(tBlock("error"));
+        toast.add({ title: tBlock("error"), type: "error" });
       }
     });
   }

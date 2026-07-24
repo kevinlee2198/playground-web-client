@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 
 interface InviteUsersDialogProps {
   gameId: number;
@@ -135,7 +135,7 @@ export function InviteUsersDialog({
       if (result.success && result.results) {
         setSendResults(result.results);
       } else {
-        toast.error(result.message ?? t("errors.sendFailed"));
+        toast.add({ title: result.message ?? t("errors.sendFailed"), type: "error" });
       }
     });
   }
@@ -147,9 +147,9 @@ export function InviteUsersDialog({
         setExistingInvitations((prev) =>
           prev.filter((inv) => inv.id !== invitationId),
         );
-        toast.success(t("success.cancelled"));
+        toast.add({ title: t("success.cancelled"), type: "success" });
       } else {
-        toast.error(result.message ?? t("errors.cancelFailed"));
+        toast.add({ title: result.message ?? t("errors.cancelFailed"), type: "error" });
       }
     });
   }

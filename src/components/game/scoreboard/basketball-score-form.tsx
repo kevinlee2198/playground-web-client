@@ -11,7 +11,7 @@ import type {
 import { useForm } from "@tanstack/react-form";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { z } from "zod";
 
 interface BasketballScoreFormProps {
@@ -98,13 +98,13 @@ export function BasketballScoreForm({
       startTransition(async () => {
         const result = await updateParticipantScores(entries);
         if (result.success) {
-          toast.success(t("game.scoreboard.scoreUpdated"));
+          toast.add({ title: t("game.scoreboard.scoreUpdated"), type: "success" });
           onSuccess();
         } else {
           const errorMsg =
             result.message || t("game.scoreboard.scoreUpdateError");
           setError(errorMsg);
-          toast.error(errorMsg);
+          toast.add({ title: errorMsg, type: "error" });
         }
       });
     },
