@@ -59,7 +59,7 @@ export default async function GetStartedPage() {
                   <Icon className="size-7 shrink-0 text-primary" aria-hidden="true" />
                   <TypographyH3>{t(`steps.${key}.title`)}</TypographyH3>
                 </div>
-                <TypographyP className="mt-0">
+                <TypographyP>
                   {t(`steps.${key}.description`)}
                 </TypographyP>
               </div>

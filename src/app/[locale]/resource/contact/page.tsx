@@ -31,7 +31,7 @@ export default async function ContactPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <Mail className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <TypographyP className="mt-0">
+              <TypographyP>
                 <a href={`mailto:${t("email")}`} className="underline hover:text-primary">
                   {t("email")}
                 </a>
@@ -39,7 +39,7 @@ export default async function ContactPage() {
             </div>
             <div className="flex items-center gap-3">
               <Phone className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <TypographyP className="mt-0">{t("phone")}</TypographyP>
+              <TypographyP>{t("phone")}</TypographyP>
             </div>
           </CardContent>
         </Card>

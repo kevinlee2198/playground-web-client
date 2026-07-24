@@ -55,7 +55,7 @@ export default function AuthButton() {
   if (!session?.data?.user) {
     return (
       <Button onClick={handleSignIn}>
-        <TypographyP>{t("auth.signIn")}</TypographyP>
+        <TypographyP as="span">{t("auth.signIn")}</TypographyP>
       </Button>
     );
   }
