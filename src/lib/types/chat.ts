@@ -62,6 +62,8 @@ export type ChatMessageNode = UserChatMessageNode | SystemChatMessageNode;
 interface ChatMessageReplyToBase {
   id: string;
   user: ChatUser;
+  /** Present, may be null. Server-resolved: reflects the original's current state. */
+  deletedDate: string | null;
 }
 
 /** Reply-to reference for a text message */

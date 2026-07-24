@@ -164,6 +164,7 @@ const userChatMessageFields = {
   replyTo: {
     __typename: true,
     id: true,
+    deletedDate: true,
     user: chatUserFragment,
     __on: [
       { __typeName: "TextChatMessage", content: true },

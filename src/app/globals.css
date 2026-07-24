@@ -266,6 +266,43 @@
   100% { background-color: var(--secondary); }
 }
 
+/* Scrollbar utilities referenced by message-scroller.tsx's Viewport (the
+   registry component ships classes for these but not the CSS behind them).
+   Composable via CSS custom properties so `scrollbar-thumb-transparent` /
+   `scrollbar-track-transparent` can be layered on top of `scrollbar-thin`
+   behind a data-attribute variant (e.g. `data-autoscrolling:`). */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-color, var(--border))
+    var(--scrollbar-track-color, transparent);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: var(--scrollbar-track-color, transparent);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-color, var(--border));
+    border-radius: 9999px;
+  }
+}
+
+@utility scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
+@utility scrollbar-thumb-transparent {
+  --scrollbar-thumb-color: transparent;
+}
+
+@utility scrollbar-track-transparent {
+  --scrollbar-track-color: transparent;
+}
+
 @keyframes ptr-bounce {
   0%, 80%, 100% { transform: translateY(0); }
   40% { transform: translateY(-4px); }
