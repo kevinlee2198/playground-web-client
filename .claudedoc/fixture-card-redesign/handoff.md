@@ -86,11 +86,10 @@ Claude; user has not seen them — regenerate on request). Results:
 
 ## Open items (unchanged priority order)
 
-- **Orphan cleanup — awaiting user decision.** `SportAccentStrip` and
-  `getSportGradientClass`/`gradientClass` have zero references (LSP findReferences:
-  declaration-only). Why: the redesign replaced their only call sites — the strip was the old
-  card's top accent, the gradient was the old hero's flat tint; both superseded by the wash.
-  User asked *why* but has **not** said delete. If approved: small `chore` commit.
+- **Orphan cleanup — DONE (user-approved 2026-07-23).** Deleted `SportAccentStrip`,
+  `getSportGradientClass`/`gradientClass`, and `getSportAccentClass`/`accentClass` (the
+  latter's only consumer was the strip itself). Verified by grep (zero references), tsc,
+  lint, vitest 724/724.
 - Mobile navbar `hidden lg:inline-flex` bug (`navbar.tsx:47`) — one-liner, **separate branch**.
 - Backend asks queued: short `title` field on Game (headline branch is commented in
   game-card.tsx/hero); later casual/competitive flag.
