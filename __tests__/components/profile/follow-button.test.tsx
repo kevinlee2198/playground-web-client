@@ -1,11 +1,11 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast } = vi.hoisted(() => {
   const mockFollowUser = vi.fn();
   const mockUnfollowUser = vi.fn();
   const mockCancelFollowRequest = vi.fn();
-  const mockToast = { add: vi.fn() };
+  const mockToast = { add: vi.fn(), close: vi.fn() };
   return { mockFollowUser, mockUnfollowUser, mockCancelFollowRequest, mockToast };
 });
 
@@ -211,6 +211,34 @@ describe("FollowButton", () => {
           }),
         }),
       );
+    });
+  });
+
+  it("closes the toast and re-follows when Undo is clicked", async () => {
+    mockToast.add.mockReturnValue("toast-1");
+    mockUnfollowUser.mockResolvedValue(
+      makeUnfollowResponse({ wasMutualFollow: true }),
+    );
+    mockFollowUser.mockResolvedValue(makeFollowResponse());
+
+    render(
+      <FollowButton {...defaultProps} initialViewerFollowsUser={true} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Unfollow Alice/i }));
+
+    await waitFor(() => {
+      expect(mockToast.add).toHaveBeenCalled();
+    });
+
+    const { actionProps } = mockToast.add.mock.calls[0][0];
+    await act(async () => {
+      actionProps.onClick();
+    });
+
+    expect(mockToast.close).toHaveBeenCalledWith("toast-1");
+    await waitFor(() => {
+      expect(mockFollowUser).toHaveBeenCalledWith(1);
     });
   });
 
