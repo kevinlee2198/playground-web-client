@@ -11,9 +11,11 @@ interface GameScoreProps {
   participants: GameParticipant[];
   statusPill?: ReactNode;
   size?: "sm" | "lg";
+  /** Highlight the winner with the amber crown (completed games). */
+  showWinner?: boolean;
 }
 
-export function GameScore({ sportType, participants, statusPill, size = "sm" }: GameScoreProps) {
+export function GameScore({ sportType, participants, statusPill, size = "sm", showWinner = false }: GameScoreProps) {
   if (participants.length < 2) return null;
 
   const [a, b] = participants;
@@ -23,13 +25,13 @@ export function GameScore({ sportType, participants, statusPill, size = "sm" }: 
     case SportType.BASEBALL:
     case SportType.BASKETBALL:
     case SportType.FOOTBALL:
-      return <SimpleScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
+      return <SimpleScore participantA={a} participantB={b} statusPill={statusPill} size={size} showWinner={showWinner} />;
     case SportType.TENNIS:
-      return <TennisScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
+      return <TennisScore participantA={a} participantB={b} statusPill={statusPill} size={size} showWinner={showWinner} />;
     case SportType.PICKLEBALL:
-      return <PickleballScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
+      return <PickleballScore participantA={a} participantB={b} statusPill={statusPill} size={size} showWinner={showWinner} />;
     case SportType.VOLLEYBALL:
-      return <VolleyballScore participantA={a} participantB={b} statusPill={statusPill} size={size} />;
+      return <VolleyballScore participantA={a} participantB={b} statusPill={statusPill} size={size} showWinner={showWinner} />;
     default:
       return null;
   }

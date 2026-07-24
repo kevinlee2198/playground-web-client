@@ -24,6 +24,8 @@ vi.mock("next-intl", () => ({
       "game.status.final": "Final",
       "game.status.live": "Live",
       "game.status.upcoming": "Upcoming",
+      "game.status.ariaLabel.upcoming": "Game not yet started",
+      "game.winner": "Winner",
       "profile.games.vs": "vs",
       "sports.BASKETBALL": "Basketball",
       "sports.TENNIS": "Tennis",
@@ -35,8 +37,15 @@ vi.mock("next-intl", () => ({
     return map[key] ?? key;
   },
   useFormatter: () => ({
-    dateTime: () => "Mar 10, 2026, 07:00 PM",
+    dateTime: (_date: Date, opts?: Intl.DateTimeFormatOptions) => {
+      if (opts?.year) return "Mar 10, 2026, 07:00 PM";
+      if (opts?.month) return "Mar 10";
+      return "07:00 PM";
+    },
+    relativeTime: () => "2 days ago",
   }),
+  // Two days after the fixture's startDate — recent finals render relative time
+  useNow: () => new Date("2026-03-12T19:00:00Z"),
 }));
 
 import { GameCard } from "@/components/game/game-card";
@@ -93,13 +102,19 @@ function makeGame(overrides: Partial<GameNode> = {}): GameNode {
 }
 
 describe("GameCard", () => {
-  it("renders a completed game with Final pill and scores", () => {
+  it("renders a completed game with Final status, scores, and winner crown", () => {
     render(<GameCard game={makeGame()} />);
     expect(screen.getByText("Final")).toBeInTheDocument();
     expect(screen.getByText("45")).toBeInTheDocument();
     expect(screen.getByText("38")).toBeInTheDocument();
     expect(screen.getByText("Team Alpha")).toBeInTheDocument();
     expect(screen.getByText("Team Beta")).toBeInTheDocument();
+    expect(screen.getByText("Winner")).toBeInTheDocument();
+  });
+
+  it("shows relative date for recently completed games", () => {
+    render(<GameCard game={makeGame()} />);
+    expect(screen.getByText("2 days ago")).toBeInTheDocument();
   });
 
   it("renders a live game with Live pill and breathing dot", () => {
@@ -144,13 +159,33 @@ describe("GameCard", () => {
       },
     });
     render(<GameCard game={upcoming} />);
-    expect(screen.getByText("Upcoming")).toBeInTheDocument();
-    expect(screen.getByText("Mar 10, 2026, 07:00 PM")).toBeInTheDocument();
+    expect(screen.getByText("Team Alpha vs Team Beta")).toBeInTheDocument();
+    expect(screen.getByText("Mar 10 · 07:00 PM")).toBeInTheDocument();
+    // Start time must stay in the accessible name, not just the visible text
+    expect(
+      screen.getByLabelText("Game not yet started, Mar 10 · 07:00 PM"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("45")).not.toBeInTheDocument();
   });
 
-  it("renders sport badge with accessibility label", () => {
+  it("renders sport chip with visible sport and format label", () => {
     render(<GameCard game={makeGame()} />);
-    expect(screen.getByLabelText("Basketball")).toBeInTheDocument();
+    expect(screen.getByText("Basketball · 5v5")).toBeInTheDocument();
+  });
+
+  it("drops chip text when the headline is the sport+format fallback", () => {
+    render(
+      <GameCard
+        game={makeGame({
+          gameStatus: GameStatus.SCHEDULED,
+          participants: { edges: [] },
+        })}
+      />,
+    );
+    // Sport + format appears exactly once — the headline; the chip is icon-only
+    const label = screen.getAllByText("Basketball · 5v5");
+    expect(label).toHaveLength(1);
+    expect(label[0].tagName).toBe("P");
   });
 
   it("links to game detail page", () => {
@@ -164,8 +199,9 @@ describe("GameCard", () => {
     expect(screen.getByText("Los Angeles, CA")).toBeInTheDocument();
   });
 
-  it("shows format badge", () => {
-    render(<GameCard game={makeGame()} />);
-    expect(screen.getByText("5v5")).toBeInTheDocument();
+  it("applies the sport wash to the card", () => {
+    const { container } = render(<GameCard game={makeGame()} />);
+    const card = container.querySelector("article");
+    expect(card?.className).toContain("from-sport-basketball");
   });
 });

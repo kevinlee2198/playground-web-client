@@ -190,6 +190,7 @@
   },
   "game": {
     "title": "Games",
+    "winner": "Winner",
     "myGames": "My Games",
     "allGames": "All Games",
     "createTitle": "Create Game",

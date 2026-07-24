@@ -1,4 +1,5 @@
 import { AnimatedScore } from "@/components/game/score/animated-score";
+import { ParticipantName } from "@/components/game/score/participant-name";
 import { getParticipantName } from "@/components/game/score/participant-utils";
 import { cn } from "@/lib/utils";
 import type {
@@ -20,6 +21,7 @@ interface PickleballScoreProps {
   participantB: GameParticipant;
   statusPill?: ReactNode;
   size?: "sm" | "lg";
+  showWinner?: boolean;
 }
 
 export function PickleballScore({
@@ -27,6 +29,7 @@ export function PickleballScore({
   participantB,
   statusPill,
   size = "sm",
+  showWinner = false,
 }: PickleballScoreProps) {
   const t = useTranslations();
   const unnamedTeam = t("leagues.team.unnamed");
@@ -49,7 +52,6 @@ export function PickleballScore({
         })
       : null;
 
-  const nameClass = size === "lg" ? "text-base sm:text-lg" : "text-sm";
   const scoreClass = size === "lg" ? "text-5xl sm:text-6xl" : "text-3xl";
   const pillClass =
     size === "lg" ? "text-sm px-3 py-1" : "text-xs px-2 py-0.5";
@@ -58,14 +60,12 @@ export function PickleballScore({
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 text-center min-w-0">
-          <p
-            className={cn(
-              "truncate font-semibold font-heading",
-              nameClass,
-            )}
-          >
-            {nameA}
-          </p>
+          <ParticipantName
+            name={nameA}
+            size={size}
+            isWinner={showWinner && aWins}
+            isLoser={showWinner && bWins}
+          />
           <AnimatedScore
             value={gamesA}
             winning={aWins}
@@ -76,14 +76,12 @@ export function PickleballScore({
         {statusPill ? <div className="shrink-0">{statusPill}</div> : null}
 
         <div className="flex-1 text-center min-w-0">
-          <p
-            className={cn(
-              "truncate font-semibold font-heading",
-              nameClass,
-            )}
-          >
-            {nameB}
-          </p>
+          <ParticipantName
+            name={nameB}
+            size={size}
+            isWinner={showWinner && bWins}
+            isLoser={showWinner && aWins}
+          />
           <AnimatedScore
             value={gamesB}
             winning={bWins}

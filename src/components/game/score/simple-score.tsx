@@ -1,6 +1,6 @@
 import { AnimatedScore } from "@/components/game/score/animated-score";
+import { ParticipantName } from "@/components/game/score/participant-name";
 import { getParticipantName } from "@/components/game/score/participant-utils";
-import { cn } from "@/lib/utils";
 import type { GameParticipant, ParticipantMetadata } from "@/lib/types/game";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -24,9 +24,10 @@ interface SimpleScoreProps {
   participantB: GameParticipant;
   statusPill?: ReactNode;
   size?: "sm" | "lg";
+  showWinner?: boolean;
 }
 
-export function SimpleScore({ participantA, participantB, statusPill, size = "sm" }: SimpleScoreProps) {
+export function SimpleScore({ participantA, participantB, statusPill, size = "sm", showWinner = false }: SimpleScoreProps) {
   const t = useTranslations();
   const unnamedTeam = t("leagues.team.unnamed");
   const scoreA = getSimpleScore(participantA.metadata);
@@ -37,20 +38,29 @@ export function SimpleScore({ participantA, participantB, statusPill, size = "sm
   const aWins = scoreA !== null && scoreB !== null && scoreA > scoreB;
   const bWins = scoreA !== null && scoreB !== null && scoreB > scoreA;
 
-  const nameClass = size === "lg" ? "text-base sm:text-lg" : "text-sm";
   const scoreClass = size === "lg" ? "text-5xl sm:text-6xl" : "text-3xl";
 
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex-1 text-center min-w-0">
-        <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameA}</p>
+        <ParticipantName
+          name={nameA}
+          size={size}
+          isWinner={showWinner && aWins}
+          isLoser={showWinner && bWins}
+        />
         <AnimatedScore value={scoreA} winning={aWins} scoreClass={scoreClass} />
       </div>
 
       {statusPill ? <div className="shrink-0">{statusPill}</div> : null}
 
       <div className="flex-1 text-center min-w-0">
-        <p className={cn("truncate font-semibold font-heading", nameClass)}>{nameB}</p>
+        <ParticipantName
+          name={nameB}
+          size={size}
+          isWinner={showWinner && bWins}
+          isLoser={showWinner && aWins}
+        />
         <AnimatedScore value={scoreB} winning={bWins} scoreClass={scoreClass} />
       </div>
     </div>

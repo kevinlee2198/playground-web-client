@@ -44,6 +44,8 @@
   --color-sport-volleyball-foreground: var(--sport-volleyball-foreground);
   --color-live: var(--live);
   --color-live-foreground: var(--live-foreground);
+  --color-celebrate: var(--celebrate);
+  --color-celebrate-foreground: var(--celebrate-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -73,6 +75,7 @@
 
   /* Animation durations */
   --animate-breathe: breathe 2000ms ease-in-out infinite;
+  --animate-wash-pulse: wash-pulse 4000ms ease-in-out infinite;
   --animate-shimmer: shimmer 1.5s linear infinite;
   --animate-score-pop: score-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --animate-score-bg-pulse: score-bg-pulse 600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
@@ -111,23 +114,28 @@
   --input: oklch(0.28 0.03 55 / 10%);
   --ring: oklch(0.54 0.10 155);
 
-  /* Sport accents */
+  /* Sport accents — foreground L values sized for ≥4.5:1 on the pure sport
+     color (the fixture-card wash's darkest region) */
   --sport-basketball: oklch(0.92 0.04 45);
-  --sport-basketball-foreground: oklch(0.60 0.12 45);
+  --sport-basketball-foreground: oklch(0.51 0.12 45);
   --sport-tennis: oklch(0.92 0.04 135);
-  --sport-tennis-foreground: oklch(0.54 0.10 155);
+  --sport-tennis-foreground: oklch(0.49 0.10 155);
   --sport-football: oklch(0.92 0.03 220);
-  --sport-football-foreground: oklch(0.55 0.08 230);
+  --sport-football-foreground: oklch(0.50 0.08 230);
   --sport-pickleball: oklch(0.92 0.06 95);
-  --sport-pickleball-foreground: oklch(0.52 0.12 95);
+  --sport-pickleball-foreground: oklch(0.50 0.12 95);
   --sport-baseball: oklch(0.92 0.04 20);
-  --sport-baseball-foreground: oklch(0.55 0.12 20);
+  --sport-baseball-foreground: oklch(0.51 0.12 20);
   --sport-volleyball: oklch(0.92 0.04 185);
-  --sport-volleyball-foreground: oklch(0.52 0.10 185);
+  --sport-volleyball-foreground: oklch(0.49 0.10 185);
 
   /* Live indicator */
   --live: oklch(0.60 0.14 45);
   --live-foreground: oklch(0.99 0.006 85);
+
+  /* Celebration — the logo amber, reserved for wins/achievements, never chrome */
+  --celebrate: #f9b335;
+  --celebrate-foreground: oklch(0.45 0.09 75);
 
   /* Chart colors (nature-inspired) */
   --chart-1: oklch(0.54 0.10 155);
@@ -183,18 +191,21 @@
   --sport-basketball: oklch(0.35 0.04 45);
   --sport-basketball-foreground: oklch(0.75 0.10 45);
   --sport-tennis: oklch(0.35 0.04 135);
-  --sport-tennis-foreground: oklch(0.70 0.10 155);
+  --sport-tennis-foreground: oklch(0.72 0.10 155);
   --sport-football: oklch(0.35 0.03 220);
-  --sport-football-foreground: oklch(0.70 0.08 230);
+  --sport-football-foreground: oklch(0.73 0.08 230);
   --sport-pickleball: oklch(0.35 0.06 95);
-  --sport-pickleball-foreground: oklch(0.70 0.12 95);
+  --sport-pickleball-foreground: oklch(0.73 0.12 95);
   --sport-baseball: oklch(0.35 0.04 20);
-  --sport-baseball-foreground: oklch(0.70 0.10 20);
+  --sport-baseball-foreground: oklch(0.73 0.10 20);
   --sport-volleyball: oklch(0.35 0.04 185);
-  --sport-volleyball-foreground: oklch(0.70 0.10 185);
+  --sport-volleyball-foreground: oklch(0.72 0.10 185);
 
   --live: oklch(0.70 0.14 45);
   --live-foreground: oklch(0.20 0.02 55);
+
+  --celebrate: #f9b335;
+  --celebrate-foreground: #f9b335;
 
   --chart-1: oklch(0.65 0.10 155);
   --chart-2: oklch(0.65 0.12 45);
@@ -234,6 +245,12 @@
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
+}
+
+/* Slow breathing of the sport wash on live game cards (opacity only — compositor-friendly) */
+@keyframes wash-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.9; }
 }
 
 @keyframes score-pop {
