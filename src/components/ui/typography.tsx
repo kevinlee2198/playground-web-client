@@ -12,10 +12,12 @@ interface TypographyProps {
 export function TypographyH1({
   children,
   className,
+  id,
   as: Tag = "h1",
 }: TypographyProps) {
   return (
     <Tag
+      id={id}
       className={cn(
         "scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance font-heading",
         className,
@@ -48,10 +50,12 @@ export function TypographyH2({
 export function TypographyH3({
   children,
   className,
+  id,
   as: Tag = "h3",
 }: TypographyProps) {
   return (
     <Tag
+      id={id}
       className={cn(
         "scroll-m-20 text-2xl font-semibold tracking-tight text-pretty font-heading",
         className,
@@ -65,10 +69,12 @@ export function TypographyH3({
 export function TypographyH4({
   children,
   className,
+  id,
   as: Tag = "h4",
 }: TypographyProps) {
   return (
     <Tag
+      id={id}
       className={cn(
         "scroll-m-20 text-xl font-semibold tracking-tight text-pretty font-heading",
         className,
@@ -82,10 +88,12 @@ export function TypographyH4({
 export function TypographyH5({
   children,
   className,
+  id,
   as: Tag = "h5",
 }: TypographyProps) {
   return (
     <Tag
+      id={id}
       className={cn(
         "scroll-m-4 text-lg font-semibold tracking-tight text-pretty font-heading",
         className,
@@ -99,18 +107,24 @@ export function TypographyH5({
 export function TypographyP({
   children,
   className,
+  id,
   as: Tag = "p",
 }: TypographyProps) {
-  return <Tag className={cn("leading-7", className)}>{children}</Tag>;
+  return (
+    <Tag id={id} className={cn("leading-7", className)}>
+      {children}
+    </Tag>
+  );
 }
 
 export function TypographyBlockquote({
   children,
   className,
+  id,
   as: Tag = "blockquote",
 }: TypographyProps) {
   return (
-    <Tag className={cn("mt-6 border-l-2 pl-6 italic", className)}>
+    <Tag id={id} className={cn("mt-6 border-l-2 pl-6 italic", className)}>
       {children}
     </Tag>
   );
@@ -119,10 +133,12 @@ export function TypographyBlockquote({
 export function TypographyInlineCode({
   children,
   className,
+  id,
   as: Tag = "code",
 }: TypographyProps) {
   return (
     <Tag
+      id={id}
       className={cn(
         "bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
         className,
@@ -136,10 +152,11 @@ export function TypographyInlineCode({
 export function TypographyLead({
   children,
   className,
+  id,
   as: Tag = "p",
 }: TypographyProps) {
   return (
-    <Tag className={cn("text-muted-foreground text-xl", className)}>
+    <Tag id={id} className={cn("text-muted-foreground text-xl", className)}>
       {children}
     </Tag>
   );
@@ -148,18 +165,24 @@ export function TypographyLead({
 export function TypographyLarge({
   children,
   className,
+  id,
   as: Tag = "div",
 }: TypographyProps) {
-  return <Tag className={cn("text-lg font-semibold", className)}>{children}</Tag>;
+  return (
+    <Tag id={id} className={cn("text-lg font-semibold", className)}>
+      {children}
+    </Tag>
+  );
 }
 
 export function TypographySmall({
   children,
   className,
+  id,
   as: Tag = "small",
 }: TypographyProps) {
   return (
-    <Tag className={cn("text-sm leading-none font-medium", className)}>
+    <Tag id={id} className={cn("text-sm leading-none font-medium", className)}>
       {children}
     </Tag>
   );
@@ -168,10 +191,11 @@ export function TypographySmall({
 export function TypographyMuted({
   children,
   className,
+  id,
   as: Tag = "p",
 }: TypographyProps) {
   return (
-    <Tag className={cn("text-muted-foreground text-sm", className)}>
+    <Tag id={id} className={cn("text-muted-foreground text-sm", className)}>
       {children}
     </Tag>
   );
