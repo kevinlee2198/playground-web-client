@@ -1,5 +1,3 @@
-"use client";
-
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import type { VariantProps } from "class-variance-authority";
 
@@ -21,4 +19,4 @@ function Button({
   );
 }
 
-export { Button };
+export { Button, buttonVariants };
