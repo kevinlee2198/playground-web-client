@@ -182,7 +182,7 @@ export function GameListFilters({ currentFilters }: GameListFiltersProps) {
                 onSelect={(date) =>
                   updateFilter("startAfter", date?.toISOString() || undefined)
                 }
-                initialFocus
+                autoFocus
               />
             </PopoverContent>
           </Popover>
@@ -217,7 +217,7 @@ export function GameListFilters({ currentFilters }: GameListFiltersProps) {
                 onSelect={(date) =>
                   updateFilter("startBefore", date?.toISOString() || undefined)
                 }
-                initialFocus
+                autoFocus
               />
             </PopoverContent>
           </Popover>

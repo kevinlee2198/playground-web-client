@@ -36,7 +36,7 @@ Semantically identical to upstream (our lint reordered imports/exports; the CLI 
 | --- | --- | --- |
 | `button` | New styles (`hover:bg-primary/80`, restyled `destructive`/`secondary`/`outline`), new sizes `xs`, `icon-xs`, `icon-sm`, `icon-lg`, icon-aware padding (`has-data-[icon=…]`), exports `buttonVariants`. Merge into `button-variants.ts` (keep split, see above). | Visual: every button's hover/active states change subtly. Review app-wide. |
 | `card` | Padding refactored to a `--card-spacing` variable (`[--card-spacing:--spacing(6)]`, `sm` → 4). Same rendered spacing; enables per-card spacing override. | Low. Fixture cards (0099 redesign) use Card — spot-check. |
-| `calendar` | ClassNames key `table:` → `month_grid:` (correct react-day-picker v9 key — our current key likely silently no-ops), import cleanup. | Low, likely a bug fix for us. Verify `date-time-picker.tsx` still renders. |
+| `calendar` | ClassNames key `table:` → `month_grid:` (correct key — our old key silently no-oped), import cleanup. **Pulls react-day-picker 9 → 10 (major)** as its registry dependency; the only app breakage was `initialFocus` (removed upstream) → `autoFocus` in `game-list-filters.tsx`. | Medium: verify `date-time-picker.tsx` + game list date filters render/focus correctly. |
 | `dialog` | Content surface `bg-background` → `bg-popover` + `text-popover-foreground`. | Visual only if the theme distinguishes popover from background tokens. |
 | `alert-dialog` | Same token change as dialog. | Same. |
 | `sheet` | Same token change as dialog. | Same. |
@@ -45,7 +45,7 @@ Semantically identical to upstream (our lint reordered imports/exports; the CLI 
 | `toggle-group` | Default `spacing` 0 → 2 (segmented → gapped look); icon-aware padding. | Zero impact today — no app call sites. Future ToggleGroups get the new default. |
 | `table` | Row gains `has-aria-expanded:bg-muted/50`. | None for current tables. |
 | `navigation-menu` | Trigger drops `bg-background` (now transparent); link `rounded-sm` → `rounded-md` with context-aware rounding; exports reordered. | Check navbar rendering on non-default backgrounds. |
-| `field` | `FieldLabel` drops `leading-snug`; removes stale `radio-group-item` selector block. | Check forms + `form-field.tsx`. |
+| `field` | `FieldTitle` drops `leading-snug` (adopted). Upstream also deletes the `has-[[data-slot=radio-group-item]]` card styling on `FieldLabel` — **kept as a local customization**: `visibility-radio-group.tsx` and `stat-entry-mode-radio-group.tsx` rely on it for their bordered radio-card look. | Check forms + `form-field.tsx`. |
 
 ### Merge manually — local customization collides (2)
 
