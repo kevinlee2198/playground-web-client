@@ -230,7 +230,7 @@ export function ChatRoomList({
 
           {isLoading && (
             <div className="p-4 text-center">
-              <TypographyMuted>Loading...</TypographyMuted>
+              <TypographyMuted>{t("loading.rooms")}</TypographyMuted>
             </div>
           )}
         </div>

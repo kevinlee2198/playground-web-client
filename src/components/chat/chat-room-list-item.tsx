@@ -5,7 +5,7 @@ import {
   getChatRoomDisplayName,
 } from "@/components/chat/chat-utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TypographyMuted } from "@/components/ui/typography";
+import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import type { ChatRoomListNode } from "@/lib/types/chat";
 import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { cn } from "@/lib/utils";
@@ -63,7 +63,7 @@ export function ChatRoomListItem({
         const content = lastMessage.content;
         if (content) {
           lastMessagePreview =
-            content.length > 50 ? content.substring(0, 50) + "..." : content;
+            content.length > 50 ? `${content.substring(0, 50)}…` : content;
         }
       } else if (lastMessage.__typename === "MediaChatMessage") {
         if (lastMessage.resource.__typename === "ImageResource") {
@@ -97,7 +97,9 @@ export function ChatRoomListItem({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2 mb-1">
-          <h3 className="font-semibold text-sm truncate">{displayName}</h3>
+          <TypographySmall as="h3" className="truncate font-semibold">
+            {displayName}
+          </TypographySmall>
           <div className="flex items-center gap-1.5 shrink-0">
             {lastMessageTime && (
               <span className="text-xs text-muted-foreground">

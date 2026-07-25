@@ -30,7 +30,7 @@ export function ChatAttachmentMenu({
       <Button
         variant="ghost"
         size="icon"
-        className="h-[60px] w-10 shrink-0"
+        className="h-[60px] w-11 shrink-0"
         disabled={disabled}
         aria-label={t("attachFile")}
         onClick={() => fileInputRef.current?.click()}

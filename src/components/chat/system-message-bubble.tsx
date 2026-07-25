@@ -1,6 +1,6 @@
 "use client";
 
-import { TypographyMuted } from "@/components/ui/typography";
+import { Marker, MarkerContent } from "@/components/ui/marker";
 import type { SystemChatMessageNode } from "@/lib/types/chat";
 import { useTranslations } from "next-intl";
 
@@ -8,6 +8,12 @@ interface SystemMessageBubbleProps {
   message: SystemChatMessageNode;
 }
 
+/**
+ * Centered notice (no flanking lines) — deliberately distinct from a day
+ * separator so "joined/left" is never mistaken for a date. Unlike the day
+ * separator, this IS announced as content (no aria-hidden): it's real
+ * information, not decoration.
+ */
 export function SystemMessageBubble({ message }: SystemMessageBubbleProps) {
   const t = useTranslations("chat.systemMessage");
 
@@ -28,8 +34,8 @@ export function SystemMessageBubble({ message }: SystemMessageBubbleProps) {
   }
 
   return (
-    <div className="flex justify-center py-2">
-      <TypographyMuted className="italic text-sm">{text}</TypographyMuted>
-    </div>
+    <Marker className="justify-center py-2">
+      <MarkerContent className="flex-none italic">{text}</MarkerContent>
+    </Marker>
   );
 }

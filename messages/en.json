@@ -907,7 +907,9 @@
       "fileAttachment": "[File]",
       "captionPlaceholder": "Add a caption…",
       "captionTooLong": "Caption is too long. Keep it under {limit} characters.",
-      "messageTooLong": "Message is too long. Keep it under {limit} characters."
+      "messageTooLong": "Message is too long. Keep it under {limit} characters.",
+      "removeReply": "Remove reply",
+      "moreActions": "More options"
     },
     "notices": {
       "originalNotAvailable": "That message isn't loaded yet. Scroll up to find it.",
@@ -915,6 +917,7 @@
     },
     "members": {
       "title": "Members",
+      "you": "You",
       "add": "Add Member",
       "remove": "Remove",
       "removeConfirm": "Are you sure you want to remove {name} from this chat?",

@@ -27,14 +27,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import { useRouter } from "@/i18n/navigation";
 import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
 import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
-import { getFullName } from "@/lib/utils";
 import { LogOut, UserPlus } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { RemoveMemberDialog } from "./remove-member-dialog";
@@ -75,6 +75,7 @@ export function MemberListPanel({
   const router = useRouter();
   const t = useTranslations("chat.members");
   const tChat = useTranslations("chat");
+  const format = useFormatter();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([]);
   const [isPending, startTransition] = useTransition();
@@ -264,7 +265,7 @@ export function MemberListPanel({
                 {members.map((edge) => {
                   const member = edge.node;
                   const isCurrentUser = member.user.id === currentUserId;
-                  const memberName = getFullName(member.user);
+                  const memberName = member.user.displayName;
 
                   return (
                     <div
@@ -273,10 +274,10 @@ export function MemberListPanel({
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">
+                          <TypographySmall className="font-medium">
                             {memberName}
-                            {isCurrentUser && " (You)"}
-                          </span>
+                            {isCurrentUser && ` (${t("you")})`}
+                          </TypographySmall>
                           {!isDirectMessage && (
                             <Badge
                               variant={ChatRoomRoleBadgeVariant[member.role]}
@@ -290,13 +291,14 @@ export function MemberListPanel({
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <TypographyMuted className="text-xs">
                           {t("joined", {
-                            date: new Date(
-                              member.joinedDate,
-                            ).toLocaleDateString(),
+                            date: format.dateTime(
+                              new Date(member.joinedDate),
+                              { dateStyle: "medium" },
+                            ),
                           })}
-                        </div>
+                        </TypographyMuted>
                       </div>
 
                       {!isDirectMessage && !isCurrentUser && (

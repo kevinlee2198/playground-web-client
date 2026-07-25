@@ -1,7 +1,18 @@
 "use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+} from "@/components/ui/message-scroller";
 import { TypographyMuted } from "@/components/ui/typography";
+import { toast } from "@/components/ui/toast";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import type { Edge } from "@/lib/graphql-connection";
 import type {
   ChatMessageNode,
@@ -11,8 +22,9 @@ import type {
 import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-import { shouldShowSender } from "./chat-utils";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { buildThreadItems } from "./chat-thread-utils";
+import { DaySeparator } from "./day-separator";
 import { MessageBubble } from "./message-bubble";
 import { SystemMessageBubble } from "./system-message-bubble";
 
@@ -20,9 +32,12 @@ interface MessageListProps {
   messages: Edge<ChatMessageNode>[];
   currentUserId: number;
   currentUserRole: ChatRoomRole | null;
+  /** Originals deleted live during this session (see conversation-view). */
+  deletedMessageIds: ReadonlySet<string>;
   onReply: (message: UserChatMessageNode) => void;
   onDelete: (messageId: string) => void;
-  onLoadOlder: () => void;
+  /** Resolves to false on failure so the list can toast + re-arm the trigger. */
+  onLoadOlder: () => Promise<boolean>;
   hasOlderMessages: boolean;
   isLoadingOlder: boolean;
   editingMessageId: string | null;
@@ -31,10 +46,23 @@ interface MessageListProps {
   onCancelEdit: () => void;
 }
 
+/** Briefly highlights a jumped-to message; content-visibility:auto items stay in the DOM. */
+function flashHighlight(messageId: string) {
+  const el = document.getElementById(`message-${messageId}`);
+  if (!el) return;
+  // Permanent (idempotent) transition classes so the highlight fades for
+  // motion-safe users; under reduced motion the class toggle is instant but
+  // still shows a brief static background.
+  el.classList.add("motion-safe:transition-colors", "duration-700");
+  el.classList.add("bg-accent/20");
+  window.setTimeout(() => el.classList.remove("bg-accent/20"), 1000);
+}
+
 export function MessageList({
   messages,
   currentUserId,
   currentUserRole,
+  deletedMessageIds,
   onReply,
   onDelete,
   onLoadOlder,
@@ -46,204 +74,202 @@ export function MessageList({
   onCancelEdit,
 }: MessageListProps) {
   const t = useTranslations("chat");
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const isInitialMount = useRef(true);
-  const previousMessageCount = useRef(messages.length);
-  const scrollHeightBeforeLoad = useRef<number | null>(null);
-  const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
-  const isNearBottomRef = useRef(true);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const viewportRef = useRef<HTMLDivElement>(null);
 
-  const getViewport = () =>
-    scrollAreaRef.current?.querySelector<HTMLDivElement>(
-      '[data-slot="scroll-area-viewport"]',
-    );
+  return (
+    <MessageScrollerProvider
+      autoScroll
+      defaultScrollPosition="end"
+      scrollEdgeThreshold={100}
+    >
+      <MessageScroller className="flex-1">
+        <MessageScrollerViewport ref={viewportRef} aria-label={t("thread.ariaLabel")}>
+          <MessageScrollerContent
+            className="gap-1 py-4"
+            aria-busy={isLoadingOlder || undefined}
+          >
+            <MessageListInner
+              messages={messages}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              deletedMessageIds={deletedMessageIds}
+              onReply={onReply}
+              onDelete={onDelete}
+              onLoadOlder={onLoadOlder}
+              hasOlderMessages={hasOlderMessages}
+              isLoadingOlder={isLoadingOlder}
+              editingMessageId={editingMessageId}
+              onStartEdit={onStartEdit}
+              onSaveEdit={onSaveEdit}
+              onCancelEdit={onCancelEdit}
+              viewportRef={viewportRef}
+            />
+          </MessageScrollerContent>
+        </MessageScrollerViewport>
 
-  // Auto-scroll to bottom on initial mount
-  useEffect(() => {
-    if (isInitialMount.current && messages.length > 0) {
-      const viewport = getViewport();
-      if (viewport) {
-        requestAnimationFrame(() => {
-          viewport.scrollTop = viewport.scrollHeight;
-          isInitialMount.current = false;
-        });
-      }
+        {/* Load-older indicator: absolute overlay, sibling of Viewport — NOT a Content child */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-2"
+          aria-hidden="true"
+        >
+          {isLoadingOlder && (
+            <TypographyMuted className="rounded-full bg-background/90 px-3 py-1 shadow-sm">
+              {t("loading.messages")}
+            </TypographyMuted>
+          )}
+        </div>
+
+        <MessageScrollerButton
+          direction="end"
+          behavior={prefersReducedMotion ? "auto" : "smooth"}
+          aria-label={t("thread.jumpToLatest")}
+        />
+      </MessageScroller>
+    </MessageScrollerProvider>
+  );
+}
+
+interface MessageListInnerProps extends MessageListProps {
+  viewportRef: React.RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * Hooks that depend on `MessageScrollerProvider` context (`useMessageScroller`,
+ * `useMessageScrollerScrollable`) must be called from a component rendered
+ * INSIDE the provider — they throw outside it. Hence this inner component.
+ */
+function MessageListInner({
+  messages,
+  currentUserId,
+  currentUserRole,
+  deletedMessageIds,
+  onReply,
+  onDelete,
+  onLoadOlder,
+  hasOlderMessages,
+  isLoadingOlder,
+  editingMessageId,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  viewportRef,
+}: MessageListInnerProps) {
+  const t = useTranslations("chat");
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const { scrollToMessage } = useMessageScroller();
+  const { start } = useMessageScrollerScrollable();
+
+  const messageNodes = useMemo(() => messages.map((e) => e.node), [messages]);
+  const threadItems = useMemo(
+    () => buildThreadItems(messageNodes),
+    [messageNodes],
+  );
+
+  // Edge-triggered load-older: fire only on the true→false transition of
+  // `start` (the top edge becoming unreachable), never level-triggered —
+  // `useMessageScrollerScrollable` starts as a placeholder before
+  // measurement and updates on a deferred rAF, so a level-triggered check
+  // would eagerly fetch on every mount and double-fire in the stale window.
+  const prevStart = useRef(start);
+
+  const triggerLoadOlder = useCallback(async () => {
+    const success = await onLoadOlder();
+    if (!success) {
+      toast.add({ title: t("errors.loadOlder"), type: "error" });
+      // Re-arm: the consumed true→false transition otherwise wouldn't
+      // re-fire on a subsequent scroll-away/scroll-back to the top.
+      prevStart.current = true;
     }
-  }, [messages.length]);
+  }, [onLoadOlder, t]);
 
-  // Scroll detection: track if user is near bottom and clear indicator when they scroll back
   useEffect(() => {
-    const viewport = getViewport();
-    if (!viewport) return;
-
-    const handleScroll = () => {
-      const nearBottom =
-        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <
-        100;
-      isNearBottomRef.current = nearBottom;
-
-      if (nearBottom) {
-        setShowNewMessageIndicator(false);
-      }
-    };
-
-    viewport.addEventListener("scroll", handleScroll);
-    return () => viewport.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Auto-scroll to bottom when new messages are added (not when loading older)
-  useEffect(() => {
-    if (
-      !isInitialMount.current &&
-      messages.length > previousMessageCount.current
-    ) {
-      const viewport = getViewport();
-      if (viewport) {
-        if (isNearBottomRef.current) {
-          requestAnimationFrame(() => {
-            viewport.scrollTop = viewport.scrollHeight;
-          });
-        } else {
-          // User is scrolled up -- show indicator
-          // Use queueMicrotask to defer state update and avoid synchronous setState in effect
-          queueMicrotask(() => {
-            setShowNewMessageIndicator(true);
-          });
-        }
-      }
+    const was = prevStart.current;
+    prevStart.current = start;
+    if (was && !start && hasOlderMessages && !isLoadingOlder) {
+      void triggerLoadOlder();
     }
-    previousMessageCount.current = messages.length;
-  }, [messages.length]);
+  }, [start, hasOlderMessages, isLoadingOlder, triggerLoadOlder]);
 
-  // Preserve scroll position after older messages are prepended
-  useEffect(() => {
-    if (scrollHeightBeforeLoad.current === null) return;
-
-    const viewport = getViewport();
-    if (!viewport) return;
-
-    const previousHeight = scrollHeightBeforeLoad.current;
-    scrollHeightBeforeLoad.current = null;
-    viewport.scrollTop = viewport.scrollHeight - previousHeight;
-  }, [messages.length]);
-
-  // Intersection observer for loading older messages
+  // Short-thread fallback: if the top edge is never reachable (thread
+  // shorter than the viewport), `start` never transitions. Measure the
+  // viewport directly, guarded against a failure busy-loop by only firing
+  // when the item count changed since the last attempt.
+  const lastFallbackCount = useRef(-1);
   useEffect(() => {
     if (!hasOlderMessages || isLoadingOlder) return;
-
-    const viewport = getViewport();
-    if (!viewport || !sentinelRef.current) return;
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadingOlder) {
-          scrollHeightBeforeLoad.current = viewport.scrollHeight;
-          onLoadOlder();
-        }
-      },
-      {
-        root: viewport,
-        rootMargin: "100px",
-        threshold: 0.1,
-      },
-    );
-
-    observerRef.current.observe(sentinelRef.current);
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+    if (lastFallbackCount.current === threadItems.length) return;
+    const raf = requestAnimationFrame(() => {
+      const vp = viewportRef.current;
+      if (vp && vp.scrollHeight <= vp.clientHeight) {
+        lastFallbackCount.current = threadItems.length;
+        void triggerLoadOlder();
       }
-    };
-  }, [hasOlderMessages, isLoadingOlder, onLoadOlder]);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [hasOlderMessages, isLoadingOlder, threadItems.length, viewportRef, triggerLoadOlder]);
 
-  const scrollToMessage = (messageId: string) => {
-    const element = document.getElementById(`message-${messageId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Brief highlight effect
-      element.classList.add("bg-accent/20");
-      setTimeout(() => {
-        element.classList.remove("bg-accent/20");
-      }, 1000);
-    }
-  };
-
-  const messageNodes = messages.map((edge) => edge.node);
-  const groupingInfo = messageNodes.map((_, index) =>
-    shouldShowSender(messageNodes, index),
+  const onScrollToReply = useCallback(
+    (messageId: string) => {
+      const ok = scrollToMessage(messageId, {
+        align: "center",
+        // JS scroll — CSS `motion-safe` classes don't affect `scrollTo`.
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
+      if (!ok) {
+        toast.add({ title: t("notices.originalNotAvailable"), type: "info" });
+        return;
+      }
+      flashHighlight(messageId);
+    },
+    [scrollToMessage, prefersReducedMotion, t],
   );
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="flex-1">
-      <div className="flex flex-col pb-4 pt-4">
-        {/* Top sentinel for reverse infinite scroll */}
-        {hasOlderMessages && (
-          <div ref={sentinelRef} className="h-4 w-full">
-            {isLoadingOlder && (
-              <div className="flex justify-center py-2">
-                <TypographyMuted>Loading...</TypographyMuted>
-              </div>
-            )}
-          </div>
-        )}
+    <>
+      {threadItems.map((item) => {
+        const dayMarker = item.isDayStart && (
+          <DaySeparator timestamp={item.dayTimestamp} />
+        );
 
-        {/* Message bubbles */}
-        {messageNodes.map((message, index) => {
-          // System messages are rendered separately — must check BEFORE accessing .user
-          if (!isUserChatMessage(message)) {
-            return <SystemMessageBubble key={message.id} message={message} />;
-          }
-
-          // All .user accesses are safe below this point (narrowed to UserChatMessageNode)
-          const isFirstInGroup = groupingInfo[index];
-
+        if (!isUserChatMessage(item.message)) {
           return (
+            <MessageScrollerItem
+              key={item.message.id}
+              messageId={item.message.id}
+              className={cn(item.isGroupStart && "mt-3")}
+            >
+              {dayMarker}
+              <SystemMessageBubble message={item.message} />
+            </MessageScrollerItem>
+          );
+        }
+
+        const message = item.message;
+        return (
+          <MessageScrollerItem
+            key={message.id}
+            messageId={message.id}
+            className={cn(item.isGroupStart && "mt-3")}
+          >
+            {dayMarker}
             <MessageBubble
-              key={message.id}
               message={message}
               isOwn={message.user.id === currentUserId}
-              showSender={isFirstInGroup}
-              isFirstInGroup={isFirstInGroup}
+              isGroupStart={item.isGroupStart}
               currentUserRole={currentUserRole}
               isEditing={editingMessageId === message.id}
+              deletedMessageIds={deletedMessageIds}
               onReply={() => onReply(message)}
               onStartEdit={() => onStartEdit(message.id)}
               onSaveEdit={(content) => onSaveEdit(message.id, content)}
               onCancelEdit={onCancelEdit}
               onDelete={() => onDelete(message.id)}
-              onScrollToReply={scrollToMessage}
+              onScrollToReply={onScrollToReply}
             />
-          );
-        })}
-
-        {/* New messages indicator */}
-        {showNewMessageIndicator && (
-          <div className="sticky bottom-2 flex justify-center px-4">
-            <button
-              onClick={() => {
-                const viewport = getViewport();
-                if (viewport) {
-                  viewport.scrollTo({
-                    top: viewport.scrollHeight,
-                    behavior: "smooth",
-                  });
-                }
-                setShowNewMessageIndicator(false);
-              }}
-              className={cn(
-                "rounded-full bg-primary px-4 py-1.5 text-primary-foreground",
-                "text-sm font-medium shadow-md",
-                "hover:bg-primary/90 transition-colors",
-              )}
-            >
-              {t("newMessages")}
-            </button>
-          </div>
-        )}
-      </div>
-    </ScrollArea>
+          </MessageScrollerItem>
+        );
+      })}
+    </>
   );
 }
