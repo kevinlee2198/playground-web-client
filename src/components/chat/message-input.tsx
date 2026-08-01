@@ -192,6 +192,7 @@ export function MessageInput({
           disabled={!canSend}
           size="icon"
           className="h-[60px] w-[60px] shrink-0"
+          aria-label={t("send")}
         >
           {isSending ? (
             <Loader2 className="h-5 w-5 animate-spin motion-reduce:animate-none" />
