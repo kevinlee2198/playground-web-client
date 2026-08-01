@@ -177,9 +177,11 @@ function MessageListInner({
     const success = await onLoadOlder();
     if (!success) {
       toast.add({ title: t("errors.loadOlder"), type: "error" });
-      // Re-arm: the consumed true→false transition otherwise wouldn't
-      // re-fire on a subsequent scroll-away/scroll-back to the top.
-      prevStart.current = true;
+      // No re-arm here: setting prevStart back to true would be consumed by
+      // the very next effect run (isLoadingOlder flipping is a dependency),
+      // creating an unbounded fetch/toast loop under real network latency.
+      // Retry is the natural start false→true→false transition: scroll away
+      // and back to the top.
     }
   }, [onLoadOlder, t]);
 

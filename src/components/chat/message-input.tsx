@@ -12,7 +12,7 @@ import {
 } from "@/lib/upload-validation";
 import { Loader2, SendHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatAttachmentMenu } from "./chat-attachment-menu";
 import { ChatAttachmentPreview } from "./chat-attachment-preview";
 import { getMessagePreviewContent } from "./message-preview-utils";
@@ -67,16 +67,22 @@ export function MessageInput({
     };
   }, [attachmentPreviewUrl]);
 
+  // Current reply prop, readable after awaits — the closure's `replyTo` is
+  // frozen at send time, but a reply staged mid-send must not be cleared.
+  const replyToRef = useRef(replyTo);
+  replyToRef.current = replyTo;
+
   const handleSend = async () => {
     if (!canSend) return;
     const urlAtSend = attachmentPreviewUrl; // capture for safe revoke
+    const sentReplyId = replyTo?.id; // capture: clear only the reply we sent
     setIsSending(true);
     try {
       if (hasFile) {
         // media + caption + replyToId, one message
-        await onSendMedia(attachedFile!, trimmed || undefined, replyTo?.id);
+        await onSendMedia(attachedFile!, trimmed || undefined, sentReplyId);
       } else {
-        await onSendText(trimmed, replyTo?.id);
+        await onSendText(trimmed, sentReplyId);
       }
       // Success only: clear staged state and revoke the URL captured at
       // send start (never a newly-staged URL, never leaked).
@@ -85,7 +91,11 @@ export function MessageInput({
       setAttachedFile(null);
       setAttachmentPreviewUrl(null);
       setAttachmentError(null);
-      onClearReply();
+      // Clear only the reply this send carried — a reply staged from the
+      // message list DURING the in-flight send must survive.
+      if (replyToRef.current?.id === sentReplyId) {
+        onClearReply();
+      }
     } catch {
       // Failure: KEEP content + attachment + reply for retry (toast
       // surfaced by conversation-view). DM send-disabled: composer will be
@@ -156,6 +166,7 @@ export function MessageInput({
             userName={replyTo.user.displayName}
             content={getMessagePreviewContent(replyTo, t)}
             onDismiss={onClearReply}
+            dismissDisabled={isSending}
           />
         </div>
       )}

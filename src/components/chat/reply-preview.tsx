@@ -9,6 +9,8 @@ interface ReplyPreviewProps {
   userName: string;
   content: string | null;
   onDismiss?: () => void;
+  /** Disable the dismiss control (e.g. while a send is in flight). */
+  dismissDisabled?: boolean;
   onClick?: () => void;
 }
 
@@ -24,6 +26,7 @@ export function ReplyPreview({
   userName,
   content,
   onDismiss,
+  dismissDisabled = false,
   onClick,
 }: ReplyPreviewProps) {
   const t = useTranslations("chat.message");
@@ -64,6 +67,7 @@ export function ReplyPreview({
           size="icon-sm"
           className="size-11 shrink-0"
           onClick={onDismiss}
+          disabled={dismissDisabled}
           aria-label={t("removeReply")}
         >
           <X className="h-4 w-4" />

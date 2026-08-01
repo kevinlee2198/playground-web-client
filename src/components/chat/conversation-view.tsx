@@ -44,6 +44,29 @@ interface ConversationViewProps {
 }
 
 /** True when the edited message's node changed (or vanished) — closes the editor rather than risk silently applying a stale edit. */
+/**
+ * Insert an edge maintaining ascending createdDate order — buildThreadItems
+ * requires it, and every producer (incoming events, optimistic sends,
+ * reconcile) must uphold it or grouping/day separators mis-render.
+ */
+function insertEdgeSorted(
+  prev: Edge<ChatMessageNode>[],
+  newEdge: Edge<ChatMessageNode>,
+): Edge<ChatMessageNode>[] {
+  const insertIndex = prev.findIndex(
+    (edge) =>
+      new Date(edge.node.createdDate).getTime() >
+      new Date(newEdge.node.createdDate).getTime(),
+  );
+  if (insertIndex === -1) {
+    // Append to end (most common case)
+    return [...prev, newEdge];
+  }
+  const next = [...prev];
+  next.splice(insertIndex, 0, newEdge);
+  return next;
+}
+
 function didUserMessageChange(
   prev: ChatMessageNode | undefined,
   next: ChatMessageNode,
@@ -126,22 +149,7 @@ export function ConversationView({
         node: message,
       };
 
-      // Insert sorted by createdDate
-      const insertIndex = prev.findIndex(
-        (edge) =>
-          new Date(edge.node.createdDate).getTime() >
-          new Date(message.createdDate).getTime(),
-      );
-
-      if (insertIndex === -1) {
-        // Append to end (most common case)
-        return [...prev, newEdge];
-      }
-
-      // Insert at correct position
-      const next = [...prev];
-      next.splice(insertIndex, 0, newEdge);
-      return next;
+      return insertEdgeSorted(prev, newEdge);
     });
   }, []);
 
@@ -268,11 +276,18 @@ export function ConversationView({
   useEffect(() => {
     if (reconnectCounter === 0) return; // Skip initial render
 
+    // Staleness guard: if the user switches rooms while the reconnect fetch
+    // is in flight, the resolved data belongs to the old room and must not
+    // be written over the new room's state (mirrors the roomId check in the
+    // WebSocket event handlers).
+    let cancelled = false;
+
     const reconnect = async () => {
       const [messagesData, roomData] = await Promise.all([
         loadMessages(roomId, 25),
         loadChatRoom(roomId),
       ]);
+      if (cancelled) return;
 
       if (roomData) {
         setRoom(roomData);
@@ -285,15 +300,28 @@ export function ConversationView({
       if (messagesData) {
         const prevEdges = messagesRef.current;
         const prevById = new Map(prevEdges.map((e) => [e.node.id, e.node]));
+        const gap = hasReconnectGap(prevEdges, messagesData.edges);
 
-        if (hasReconnectGap(prevEdges, messagesData.edges)) {
+        if (gap) {
           // Honest reset: the retained tail is disconnected from the newest
           // window (>25 messages arrived while offline). Drop it and treat
           // the newest 25 as a fresh load; adopt the fresh pageInfo so
           // load-older resumes correctly. Grouping/separators recompute
           // cleanly; this is the correct trade-off over stitching a
-          // corrupted middle gap.
-          setMessages(messagesData.edges);
+          // corrupted middle gap. Functional update: WebSocket messages that
+          // arrived DURING this fetch live in prev at/after the incoming
+          // window's oldest timestamp — keep those, drop only the stale tail.
+          const oldestIncoming = Date.parse(
+            messagesData.edges[0]?.node.createdDate ?? "",
+          );
+          setMessages((prev) =>
+            reconcileMessages(
+              prev.filter(
+                (e) => Date.parse(e.node.createdDate) >= oldestIncoming,
+              ),
+              messagesData.edges,
+            ),
+          );
           setMessagesPageInfo(messagesData.pageInfo);
         } else {
           // No gap: reconcile in place. Do NOT overwrite messagesPageInfo —
@@ -302,13 +330,20 @@ export function ConversationView({
         }
 
         // Editor-abandon on reconcile: close the editor if the edited
-        // message's node changed (or vanished) while disconnected.
+        // message's node changed while disconnected — or, on the gap path,
+        // if it fell outside the fresh window entirely (its bubble is gone;
+        // leaving editing state pointing at an unloaded id would resurface
+        // an inexplicable open editor if history later reloads it).
         const editingId = editingMessageIdRef.current;
         if (editingId) {
           const next = messagesData.edges.find(
             (e) => e.node.id === editingId,
           )?.node;
-          if (next && didUserMessageChange(prevById.get(editingId), next)) {
+          if (next) {
+            if (didUserMessageChange(prevById.get(editingId), next)) {
+              abandonEdit();
+            }
+          } else if (gap) {
             abandonEdit();
           }
         }
@@ -317,6 +352,9 @@ export function ConversationView({
     };
 
     reconnect();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- t/onRoomLoaded/abandonEdit intentionally omitted (stable enough in practice; re-running this effect on their identity would refire an unwanted reconnect fetch — this effect must run ONLY on reconnectCounter/roomId)
   }, [reconnectCounter, roomId]);
 
@@ -355,7 +393,7 @@ export function ConversationView({
       if (prev.some((edge) => edge.node.id === result.chatMessage!.id)) {
         return prev;
       }
-      return [...prev, newEdge];
+      return insertEdgeSorted(prev, newEdge);
     });
 
     // Update last message in the room list
@@ -410,7 +448,7 @@ export function ConversationView({
       if (prev.some((edge) => edge.node.id === sendResult.chatMessage!.id)) {
         return prev;
       }
-      return [...prev, newEdge];
+      return insertEdgeSorted(prev, newEdge);
     });
 
     onLastMessageUpdate(roomId, sendResult.chatMessage);

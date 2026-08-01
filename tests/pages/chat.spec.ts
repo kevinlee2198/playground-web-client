@@ -144,9 +144,13 @@ test.describe("Chat Page", () => {
     await expect(daySeparators.nth(0)).toContainText(expectedOlderLabel);
     await expect(daySeparators.nth(1)).toHaveText("Today");
 
-    // The day separator must not be selectable/actionable, and sending a
-    // new message afterward must still work (the boundary doesn't break the
-    // room's send flow).
+    // The day separator is decoration: hidden from assistive tech and not
+    // actionable.
+    await expect(daySeparators.nth(0)).toHaveAttribute("aria-hidden", "true");
+    await expect(daySeparators.nth(0).getByRole("button")).toHaveCount(0);
+
+    // Sending a new message after the boundary must still work (the
+    // separator doesn't break the room's send flow).
     await authenticatedPage
       .getByPlaceholder("Type a message...")
       .fill("Sending after the separators");
@@ -288,9 +292,20 @@ test.describe("Chat Page", () => {
     // constant. A literal raw scrollTop equality would NOT hold here
     // (scrollTop necessarily moves off zero once older content is
     // prepended above it).
-    const before = await viewport.evaluate(
-      (el) => el.scrollHeight - el.scrollTop,
-    );
+    // Atomic capture: read the measurement AND whether the older batch has
+    // already prepended in a single evaluate. If the prepend won the race
+    // (fast MSW round-trip vs. Playwright's attribute polling), `before`
+    // would be measured post-prepend and the zero-delta assertion would
+    // pass while measuring nothing — fail loudly instead so the race is
+    // visible as a flake, never as a silent hole.
+    const snapshot = await viewport.evaluate((el) => ({
+      before: el.scrollHeight - el.scrollTop,
+      olderAlreadyRendered: Array.from(
+        el.querySelectorAll('[data-slot="message-scroller-item"]'),
+      ).some((item) => item.textContent?.includes("Older message number 9")),
+    }));
+    expect(snapshot.olderAlreadyRendered).toBe(false);
+    const before = snapshot.before;
 
     // Wait for the older batch to actually prepend.
     await expect(
