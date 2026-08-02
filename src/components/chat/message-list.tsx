@@ -36,7 +36,7 @@ interface MessageListProps {
   deletedMessageIds: ReadonlySet<string>;
   onReply: (message: UserChatMessageNode) => void;
   onDelete: (messageId: string) => void;
-  /** Resolves to false on failure so the list can toast + re-arm the trigger. */
+  /** Resolves to false on failure so the list can toast. Retry is the natural scroll-away/scroll-back transition — deliberately no automatic re-arm (see triggerLoadOlder). */
   onLoadOlder: () => Promise<boolean>;
   hasOlderMessages: boolean;
   isLoadingOlder: boolean;

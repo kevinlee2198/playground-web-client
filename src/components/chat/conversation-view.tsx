@@ -342,7 +342,12 @@ export function ConversationView({
             if (didUserMessageChange(prevById.get(editingId), next)) {
               abandonEdit();
             }
-          } else if (gap) {
+          } else if (gap && prevById.has(editingId)) {
+            // Absent from the fresh window AND present before the fetch →
+            // genuinely dropped by the gap reset. A message absent from
+            // prevById arrived DURING the fetch (optimistic send / echo),
+            // survives the retained-set filter above, and must not have its
+            // fresh edit spuriously abandoned.
             abandonEdit();
           }
         }
@@ -499,7 +504,7 @@ export function ConversationView({
     setIsDeleting(false);
   };
 
-  /** Resolves to false only on an actual fetch failure (so the list can toast + re-arm the trigger). A guarded no-op (already loading / no more pages) resolves true. */
+  /** Resolves to false only on an actual fetch failure (the list toasts; retry is the user's natural scroll-away/scroll-back — deliberately NO automatic re-arm, which looped unboundedly). A guarded no-op (already loading / no more pages) resolves true. */
   const handleLoadOlder = async (): Promise<boolean> => {
     if (!messagesPageInfo?.hasPreviousPage || isLoadingOlder) return true;
 

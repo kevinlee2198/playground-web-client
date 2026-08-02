@@ -147,7 +147,9 @@ test.describe("Chat Page", () => {
     // The day separator is decoration: hidden from assistive tech and not
     // actionable.
     await expect(daySeparators.nth(0)).toHaveAttribute("aria-hidden", "true");
-    await expect(daySeparators.nth(0).getByRole("button")).toHaveCount(0);
+    // Element-level (not role-based) query: aria-hidden empties the a11y
+    // tree, so getByRole would count 0 regardless — check real DOM instead.
+    await expect(daySeparators.nth(0).locator("button, a")).toHaveCount(0);
 
     // Sending a new message after the boundary must still work (the
     // separator doesn't break the room's send flow).
