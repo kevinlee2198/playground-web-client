@@ -51,6 +51,20 @@ dark themes; run the mobile section in a phone-width viewport.
 - [ ] DM where mutual follow was just lost: send fails, composer flips to the
       banner, and the error restates the attempted text so nothing is silently lost.
 
+## Message actions (baseline, self-triggered)
+
+- [ ] Inline edit an own text message: enter edit from the actions menu, change
+      the text, Enter saves (updated content + "edited" indicator), Escape
+      cancels leaving the message unchanged; the Save/Cancel buttons do the same.
+- [ ] Delete an own message: confirmation dialog appears; confirming replaces the
+      message with the deleted placeholder; cancelling leaves it intact.
+- [ ] As Owner/Admin in a group, delete another member's message (same
+      confirmation flow); as a plain Member, verify no delete on others' messages.
+- [ ] Paste text into the composer, and into the caption field with media staged —
+      both always work.
+- [ ] Send a video specifically: stage, caption, send; it renders as an inline
+      player with controls and its caption.
+
 ## Thread rendering & scrolling
 
 - [ ] Open a long room: lands at the newest message; scrolling to the top loads
@@ -85,5 +99,7 @@ dark themes; run the mobile section in a phone-width viewport.
 - [ ] Both themes: own-vs-others bubbles clearly distinguished; contrast holds.
 - [ ] Members panel: add/remove/promote/demote/transfer/leave flows intact; joined
       dates render in the app locale; names use display names.
+- [ ] DM members panel: roster renders WITHOUT the group-management controls
+      (no add member, no promote/demote/remove).
 - [ ] Create DM (idempotent — reopens existing) and create group (2+ members,
       name required) flows intact.
