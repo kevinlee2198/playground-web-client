@@ -177,46 +177,40 @@ export function mockRequestUploadResponse(overrides?: Record<string, unknown>) {
 // ---------------------------------------------------------------------------
 
 export function mockSendChatMessageResponse(queryString: string) {
-  const isMedia = /mediaMessage\s*:/.test(queryString);
-
-  if (isMedia) {
-    const caption = queryString.match(/caption\s*:\s*"([^"]*)"/)?.[1] ?? null;
-    const replyToId = queryString.match(/replyToId\s*:\s*"([^"]*)"/)?.[1];
-    const resourceId =
-      queryString.match(/resourceId\s*:\s*"([^"]*)"/)?.[1] ?? "resource-1";
-
-    return {
-      data: {
-        sendChatMessage: {
-          __typename: "SendChatMessageResponse",
-          chatMessage: mockMediaMessage({
-            id: "msg-echo-media",
-            caption,
-            resource: mockImageResource({ id: resourceId }),
-            ...(replyToId
-              ? { replyTo: { __typename: "TextChatMessage", id: replyToId, deletedDate: null, user: CHAT_OTHER_USER, content: "Original message" } }
-              : {}),
-          }),
-        },
-      },
-    };
-  }
-
-  const content = queryString.match(/content\s*:\s*"([^"]*)"/)?.[1] ?? "";
   const replyToId = queryString.match(/replyToId\s*:\s*"([^"]*)"/)?.[1];
+  const replyTo = replyToId
+    ? {
+        replyTo: {
+          __typename: "TextChatMessage",
+          id: replyToId,
+          deletedDate: null,
+          user: CHAT_OTHER_USER,
+          content: "Original message",
+        },
+      }
+    : {};
+
+  const chatMessage = /mediaMessage\s*:/.test(queryString)
+    ? mockMediaMessage({
+        id: "msg-echo-media",
+        caption: queryString.match(/caption\s*:\s*"([^"]*)"/)?.[1] ?? null,
+        resource: mockImageResource({
+          id: queryString.match(/resourceId\s*:\s*"([^"]*)"/)?.[1] ?? "resource-1",
+        }),
+        ...replyTo,
+      })
+    : mockTextMessage({
+        id: "msg-echo-text",
+        content: queryString.match(/content\s*:\s*"([^"]*)"/)?.[1] ?? "",
+        user: CHAT_CURRENT_USER,
+        ...replyTo,
+      });
 
   return {
     data: {
       sendChatMessage: {
         __typename: "SendChatMessageResponse",
-        chatMessage: mockTextMessage({
-          id: "msg-echo-text",
-          content,
-          user: CHAT_CURRENT_USER,
-          ...(replyToId
-            ? { replyTo: { __typename: "TextChatMessage", id: replyToId, deletedDate: null, user: CHAT_OTHER_USER, content: "Original message" } }
-            : {}),
-        }),
+        chatMessage,
       },
     },
   };

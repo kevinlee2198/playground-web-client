@@ -1,8 +1,8 @@
 "use client";
 
 import { Marker, MarkerContent } from "@/components/ui/marker";
-import { classifyDayLabel } from "./chat-thread-utils";
 import { useFormatter, useNow, useTranslations } from "next-intl";
+import { classifyDayLabel } from "./chat-thread-utils";
 
 interface DaySeparatorProps {
   /** === the day's first message's createdDate; used only to derive the label. */
@@ -24,17 +24,24 @@ export function DaySeparator({ timestamp }: DaySeparatorProps) {
   const now = useNow();
 
   const kind = classifyDayLabel(timestamp, now);
-  const label =
-    kind.kind === "today"
-      ? t("today")
-      : kind.kind === "yesterday"
-        ? tTime("yesterday")
-        : format.dateTime(
-            new Date(timestamp),
-            kind.withYear
-              ? { month: "long", day: "numeric", year: "numeric" }
-              : { month: "long", day: "numeric" },
-          );
+
+  let label: string;
+  switch (kind.kind) {
+    case "today":
+      label = t("today");
+      break;
+    case "yesterday":
+      label = tTime("yesterday");
+      break;
+    case "date":
+      label = format.dateTime(
+        new Date(timestamp),
+        kind.withYear
+          ? { month: "long", day: "numeric", year: "numeric" }
+          : { month: "long", day: "numeric" },
+      );
+      break;
+  }
 
   return (
     <Marker

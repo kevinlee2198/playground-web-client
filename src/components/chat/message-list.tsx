@@ -58,21 +58,8 @@ function flashHighlight(messageId: string) {
   window.setTimeout(() => el.classList.remove("bg-accent/20"), 1000);
 }
 
-export function MessageList({
-  messages,
-  currentUserId,
-  currentUserRole,
-  deletedMessageIds,
-  onReply,
-  onDelete,
-  onLoadOlder,
-  hasOlderMessages,
-  isLoadingOlder,
-  editingMessageId,
-  onStartEdit,
-  onSaveEdit,
-  onCancelEdit,
-}: MessageListProps) {
+export function MessageList(props: MessageListProps) {
+  const { isLoadingOlder } = props;
   const t = useTranslations("chat");
   const prefersReducedMotion = usePrefersReducedMotion();
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -89,22 +76,7 @@ export function MessageList({
             className="gap-1 py-4"
             aria-busy={isLoadingOlder || undefined}
           >
-            <MessageListInner
-              messages={messages}
-              currentUserId={currentUserId}
-              currentUserRole={currentUserRole}
-              deletedMessageIds={deletedMessageIds}
-              onReply={onReply}
-              onDelete={onDelete}
-              onLoadOlder={onLoadOlder}
-              hasOlderMessages={hasOlderMessages}
-              isLoadingOlder={isLoadingOlder}
-              editingMessageId={editingMessageId}
-              onStartEdit={onStartEdit}
-              onSaveEdit={onSaveEdit}
-              onCancelEdit={onCancelEdit}
-              viewportRef={viewportRef}
-            />
+            <MessageListInner {...props} viewportRef={viewportRef} />
           </MessageScrollerContent>
         </MessageScrollerViewport>
 

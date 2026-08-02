@@ -43,7 +43,6 @@ interface ConversationViewProps {
   reconnectCounter: number;
 }
 
-/** True when the edited message's node changed (or vanished) — closes the editor rather than risk silently applying a stale edit. */
 /**
  * Insert an edge maintaining ascending createdDate order — buildThreadItems
  * requires it, and every producer (incoming events, optimistic sends,
@@ -67,6 +66,32 @@ function insertEdgeSorted(
   return next;
 }
 
+/**
+ * Returns a new list with `message` inserted in sorted position, or `prev`
+ * unchanged when the id is already present — the dedup every producer needs
+ * because the WebSocket echo and the mutation response race each other.
+ */
+function appendMessage(
+  prev: Edge<ChatMessageNode>[],
+  message: ChatMessageNode,
+): Edge<ChatMessageNode>[] {
+  if (prev.some((edge) => edge.node.id === message.id)) {
+    return prev;
+  }
+  return insertEdgeSorted(prev, { cursor: message.id, node: message });
+}
+
+/** Returns a new list with an already-loaded message's node swapped for `message`. */
+function replaceMessageNode(
+  prev: Edge<ChatMessageNode>[],
+  message: ChatMessageNode,
+): Edge<ChatMessageNode>[] {
+  return prev.map((edge) =>
+    edge.node.id === message.id ? { ...edge, node: message } : edge,
+  );
+}
+
+/** True when the edited message's node changed (or vanished) — closes the editor rather than risk silently applying a stale edit. */
 function didUserMessageChange(
   prev: ChatMessageNode | undefined,
   next: ChatMessageNode,
@@ -138,31 +163,12 @@ export function ConversationView({
   }, [t]);
 
   const handleIncomingMessage = useCallback((message: ChatMessageNode) => {
-    setMessages((prev) => {
-      // Self-event deduplication: skip if message already exists
-      if (prev.some((edge) => edge.node.id === message.id)) {
-        return prev;
-      }
-
-      const newEdge: Edge<ChatMessageNode> = {
-        cursor: message.id,
-        node: message,
-      };
-
-      return insertEdgeSorted(prev, newEdge);
-    });
+    setMessages((prev) => appendMessage(prev, message));
   }, []);
 
   const handleIncomingUpdate = useCallback(
     (message: ChatMessageNode) => {
-      setMessages((prev) =>
-        prev.map((edge) => {
-          if (edge.node.id === message.id) {
-            return { ...edge, node: message };
-          }
-          return edge;
-        }),
-      );
+      setMessages((prev) => replaceMessageNode(prev, message));
       if (message.id === editingMessageIdRef.current) abandonEdit();
     },
     [abandonEdit],
@@ -170,14 +176,7 @@ export function ConversationView({
 
   const handleIncomingDelete = useCallback(
     (message: ChatMessageNode) => {
-      setMessages((prev) =>
-        prev.map((edge) => {
-          if (edge.node.id === message.id) {
-            return { ...edge, node: message };
-          }
-          return edge;
-        }),
-      );
+      setMessages((prev) => replaceMessageNode(prev, message));
       if (message.id === editingMessageIdRef.current) abandonEdit();
       // Propagate the deletion into the composer's reply-in-progress, if any.
       setReplyTo((r) =>
@@ -383,21 +382,11 @@ export function ConversationView({
       throw new Error("Failed to send message");
     }
 
-    // Append the new message, but deduplicate in case the WebSocket event
-    // arrived before the mutation response
-    const newEdge: Edge<ChatMessageNode> = {
-      cursor: result.chatMessage.id,
-      node: result.chatMessage,
-    };
-    setMessages((prev) => {
-      if (prev.some((edge) => edge.node.id === result.chatMessage!.id)) {
-        return prev;
-      }
-      return insertEdgeSorted(prev, newEdge);
-    });
+    const sent = result.chatMessage;
+    setMessages((prev) => appendMessage(prev, sent));
 
     // Update last message in the room list
-    onLastMessageUpdate(roomId, result.chatMessage);
+    onLastMessageUpdate(roomId, sent);
   };
 
   const handleSendMedia = async (
@@ -439,19 +428,11 @@ export function ConversationView({
       throw new Error("Send message failed");
     }
 
-    // 4. Append message to list (same dedup logic as handleSendText)
-    const newEdge: Edge<ChatMessageNode> = {
-      cursor: sendResult.chatMessage.id,
-      node: sendResult.chatMessage,
-    };
-    setMessages((prev) => {
-      if (prev.some((edge) => edge.node.id === sendResult.chatMessage!.id)) {
-        return prev;
-      }
-      return insertEdgeSorted(prev, newEdge);
-    });
+    // 4. Append message to list
+    const sent = sendResult.chatMessage;
+    setMessages((prev) => appendMessage(prev, sent));
 
-    onLastMessageUpdate(roomId, sendResult.chatMessage);
+    onLastMessageUpdate(roomId, sent);
   };
 
   const handleEdit = async (messageId: string, content: string) => {

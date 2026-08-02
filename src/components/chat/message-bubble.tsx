@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/message";
 import { Textarea } from "@/components/ui/textarea";
 import type { ChatRoomRole, UserChatMessageNode } from "@/lib/types/chat";
+import type { Resource } from "@/lib/types/resource";
 import { formatFileSize, isVideoMimeType } from "@/lib/upload-validation";
 import { cn, getInitials } from "@/lib/utils";
 import { Download, FileIcon } from "lucide-react";
@@ -30,6 +31,67 @@ import { formatMessageTime } from "./chat-utils";
 import { MessageActionsMenu } from "./message-actions-menu";
 import { getReplyPreviewContent } from "./message-preview-utils";
 import { ReplyPreview } from "./reply-preview";
+
+/** Image, inline video, or downloadable-file rendering for a media message. */
+function MediaContent({ resource }: { resource: Resource }) {
+  if (resource.__typename === "ImageResource") {
+    return (
+      <a
+        href={resource.downloadUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded image hosted on the backend file server; converting to next/image requires adding images.remotePatterns in next.config and handling unknown intrinsic dimensions */}
+        <img
+          src={resource.thumbnailUrl ?? resource.downloadUrl}
+          alt={resource.filename}
+          className="max-h-64 rounded-md object-cover"
+        />
+      </a>
+    );
+  }
+
+  if (isVideoMimeType(resource.mimeType)) {
+    return (
+      <video
+        controls
+        preload="metadata"
+        className="max-h-64 max-w-full rounded-md"
+        src={resource.downloadUrl}
+      >
+        Your browser does not support the video element.
+      </video>
+    );
+  }
+
+  return (
+    <Attachment state="done">
+      <AttachmentTrigger
+        render={
+          <a
+            href={resource.downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={resource.filename}
+          />
+        }
+      />
+      <AttachmentMedia variant="icon">
+        <FileIcon />
+      </AttachmentMedia>
+      <AttachmentContent>
+        <AttachmentTitle>{resource.filename}</AttachmentTitle>
+        <AttachmentDescription>
+          {formatFileSize(resource.size)}
+        </AttachmentDescription>
+      </AttachmentContent>
+      <AttachmentActions>
+        <Download aria-hidden="true" className="size-4 opacity-70" />
+      </AttachmentActions>
+    </Attachment>
+  );
+}
 
 interface MessageBubbleProps {
   message: UserChatMessageNode;
@@ -101,6 +163,59 @@ export function MessageBubble({
     }
   };
 
+  /** The bubble's body: deleted placeholder, editor, text, or media. */
+  function renderBody() {
+    if (isDeleted) {
+      return <div>{t("deleted")}</div>;
+    }
+
+    if (message.__typename === "TextChatMessage") {
+      if (isEditing) {
+        return (
+          <div className="flex flex-col gap-2">
+            <Textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-[60px] w-full resize-none"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveEdit}>
+                {t("save")}
+              </Button>
+              <Button size="sm" variant="outline" onClick={onCancelEdit}>
+                {t("cancel")}
+              </Button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <>
+          <div className="whitespace-pre-wrap break-words">
+            {message.content}
+          </div>
+          {message.updatedDate && (
+            <span className="ml-2 text-xs opacity-70">{t("edited")}</span>
+          )}
+        </>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        <MediaContent resource={message.resource} />
+        {message.caption && (
+          <div className="whitespace-pre-wrap break-words">
+            {message.caption}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Message align={isOwn ? "end" : "start"} id={`message-${message.id}`}>
       {!isOwn &&
@@ -143,103 +258,7 @@ export function MessageBubble({
               </div>
             )}
 
-            {isDeleted ? (
-              <div>{t("deleted")}</div>
-            ) : isEditing && isTextMessage ? (
-              <div className="flex flex-col gap-2">
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="min-h-[60px] w-full resize-none"
-                  autoFocus
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSaveEdit}>
-                    {t("save")}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={onCancelEdit}>
-                    {t("cancel")}
-                  </Button>
-                </div>
-              </div>
-            ) : isTextMessage ? (
-              <>
-                <div className="whitespace-pre-wrap break-words">
-                  {message.content}
-                </div>
-                {message.updatedDate && (
-                  <span className="ml-2 text-xs opacity-70">
-                    {t("edited")}
-                  </span>
-                )}
-              </>
-            ) : (
-              <div className="space-y-2">
-                {message.resource.__typename === "ImageResource" ? (
-                  <a
-                    href={message.resource.downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded image hosted on the backend file server; converting to next/image requires adding images.remotePatterns in next.config and handling unknown intrinsic dimensions */}
-                    <img
-                      src={
-                        message.resource.thumbnailUrl ??
-                        message.resource.downloadUrl
-                      }
-                      alt={message.resource.filename}
-                      className="max-h-64 rounded-md object-cover"
-                    />
-                  </a>
-                ) : isVideoMimeType(message.resource.mimeType) ? (
-                  <video
-                    controls
-                    preload="metadata"
-                    className="max-h-64 max-w-full rounded-md"
-                    src={message.resource.downloadUrl}
-                  >
-                    Your browser does not support the video element.
-                  </video>
-                ) : (
-                  <Attachment state="done">
-                    <AttachmentTrigger
-                      render={
-                        <a
-                          href={message.resource.downloadUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={message.resource.filename}
-                        />
-                      }
-                    />
-                    <AttachmentMedia variant="icon">
-                      <FileIcon />
-                    </AttachmentMedia>
-                    <AttachmentContent>
-                      <AttachmentTitle>
-                        {message.resource.filename}
-                      </AttachmentTitle>
-                      <AttachmentDescription>
-                        {formatFileSize(message.resource.size)}
-                      </AttachmentDescription>
-                    </AttachmentContent>
-                    <AttachmentActions>
-                      <Download
-                        aria-hidden="true"
-                        className="size-4 opacity-70"
-                      />
-                    </AttachmentActions>
-                  </Attachment>
-                )}
-                {message.caption && (
-                  <div className="whitespace-pre-wrap break-words">
-                    {message.caption}
-                  </div>
-                )}
-              </div>
-            )}
+            {renderBody()}
           </BubbleContent>
 
           {!isDeleted && !isEditing && (
