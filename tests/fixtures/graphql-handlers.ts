@@ -6,7 +6,7 @@ import {
   mockBasketballStatsResponse,
 } from "./mock-data/games";
 import { mockFeedResponse } from "./mock-data/feed";
-import { mockChatRoomsResponse } from "./mock-data/chat";
+import { mockChatRoomsResponse, mockSendChatMessageResponse } from "./mock-data/chat";
 import { mockSearchUsersResponse } from "./mock-data/search";
 import { mockEmptyBlockedResponse } from "./mock-data/blocked-users";
 import { mockUserResponse } from "./mock-data/user";
@@ -58,6 +58,15 @@ export const defaultGraphQLHandlers = [
   http.post("*/graphql", async ({ request }) => {
     const body = (await request.json()) as { query: string };
     const field = extractOperationField(body.query);
+
+    // sendChatMessage needs to branch on input.mediaMessage vs
+    // input.textMessage (and echo the caption/content) — the actual
+    // argument values live in the raw query text, not a separate
+    // "variables" payload, so this must inspect the query rather than a
+    // static canned response.
+    if (field === "sendChatMessage") {
+      return HttpResponse.json(mockSendChatMessageResponse(body.query));
+    }
 
     if (field && field in defaultResponses) {
       return HttpResponse.json(defaultResponses[field] as Record<string, unknown>);

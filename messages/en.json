@@ -882,7 +882,16 @@
     "mutualFollowRequired": "Mutual follow required to send messages",
     "createRoom": "Create",
     "back": "Back",
-    "newMessages": "New messages",
+    "thread": {
+      "today": "Today",
+      "ariaLabel": "Messages",
+      "jumpToLatest": "Jump to Latest"
+    },
+    "loading": {
+      "conversation": "Loading conversation…",
+      "messages": "Loading messages…",
+      "rooms": "Loading conversations…"
+    },
     "message": {
       "placeholder": "Type a message...",
       "send": "Send",
@@ -895,10 +904,20 @@
       "save": "Save",
       "cancel": "Cancel",
       "imageAttachment": "[Image]",
-      "fileAttachment": "[File]"
+      "fileAttachment": "[File]",
+      "captionPlaceholder": "Add a caption…",
+      "captionTooLong": "Caption is too long. Keep it under {limit} characters.",
+      "messageTooLong": "Message is too long. Keep it under {limit} characters.",
+      "removeReply": "Remove reply",
+      "moreActions": "More options"
+    },
+    "notices": {
+      "originalNotAvailable": "That message isn't loaded yet. Scroll up to find it.",
+      "editingInterrupted": "This message changed, so your edit wasn't saved."
     },
     "members": {
       "title": "Members",
+      "you": "You",
       "add": "Add Member",
       "remove": "Remove",
       "removeConfirm": "Are you sure you want to remove {name} from this chat?",
@@ -952,7 +971,10 @@
       "removeMember": "Failed to remove member",
       "roomNotFound": "Conversation not found",
       "updateRole": "Failed to update role",
-      "leaveChat": "Failed to leave chat"
+      "leaveChat": "Failed to leave chat",
+      "loadOlder": "Couldn't load older messages. Scroll up to try again.",
+      "sendDisabledRecover": "You can no longer message this person. Your unsent message: \"{content}\"",
+      "sendDisabledMedia": "You can no longer message this person, so your photo or video wasn't sent."
     },
     "time": {
       "justNow": "Just now",

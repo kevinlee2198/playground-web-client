@@ -15,6 +15,17 @@ npx playwright test --project=chromium tests/pages/about.spec.ts   # Run a singl
 
 **Important**: Always capture test output to a file (e.g., `2>&1 | tee /tmp/pw-results.txt`), then read the file for analysis. Never re-run tests just to grep for a different part of the output — tests are expensive.
 
+**`--project=chromium` is a deliberate subset, not the whole suite.** CI runs bare
+`npx playwright test`, which is **348 tests across chromium + firefox + webkit** — the
+config's `projects: [chromium]` customizes the chromium project rather than restricting
+the set, because `defineConfig` from `next/experimental/testmode/playwright` merges
+Next's own 3-project default and Playwright merges projects *by name*. Chromium-only is
+the right default for the dev loop (~2.5 min vs ~7 min), so keep using it — just don't
+call a chromium run "the full suite passed". Run the bare command once before marking a
+PR ready. Known engine-specific traps: Firefox ignores synthesized `mouse.wheel` for
+React `onWheel` handlers (use a focused `Home` keypress); WebKit gives a broken `<img>`
+a 0x0 box, so `toBeVisible()` fails where other engines render a placeholder.
+
 ### Unit Tests (Vitest)
 
 Tests use Vitest with `@testing-library/react` and jsdom. Avoid installing additional test packages — use what's already available (e.g., `fireEvent` from `@testing-library/react` instead of `@testing-library/user-event`). Test files live in `__tests__/` and use `.test.ts(x)`.

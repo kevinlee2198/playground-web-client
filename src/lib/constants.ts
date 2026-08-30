@@ -219,6 +219,11 @@ export enum ChatRoomRole {
 }
 
 /**
+ * Shared character limit for chat text messages and media captions.
+ */
+export const CHAT_MESSAGE_MAX_LENGTH = 5000;
+
+/**
  * Badge variant mapping for chat room role display
  */
 export const ChatRoomRoleBadgeVariant = {

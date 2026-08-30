@@ -9,6 +9,7 @@ import {
   updateMessage,
 } from "@/app/[locale]/chat/actions";
 import { requestChatMediaUpload } from "@/app/[locale]/upload/actions";
+import { toast } from "@/components/ui/toast";
 import { TypographyMuted } from "@/components/ui/typography";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
@@ -22,8 +23,8 @@ import type {
 import type { ChatEvent } from "@/lib/types/chat-event";
 import { isUserChatMessage } from "@/lib/types/chat-guards";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { toast } from "@/components/ui/toast";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { hasReconnectGap, reconcileMessages } from "./chat-thread-utils";
 import { ConversationHeader } from "./conversation-header";
 import { DeleteMessageDialog } from "./delete-message-dialog";
 import { DmDisabledBanner } from "./dm-disabled-banner";
@@ -40,6 +41,67 @@ interface ConversationViewProps {
   incomingEventVersion: number;
   getIncomingEvent: () => ChatEvent | null;
   reconnectCounter: number;
+}
+
+/**
+ * Insert an edge maintaining ascending createdDate order — buildThreadItems
+ * requires it, and every producer (incoming events, optimistic sends,
+ * reconcile) must uphold it or grouping/day separators mis-render.
+ */
+function insertEdgeSorted(
+  prev: Edge<ChatMessageNode>[],
+  newEdge: Edge<ChatMessageNode>,
+): Edge<ChatMessageNode>[] {
+  const insertIndex = prev.findIndex(
+    (edge) =>
+      new Date(edge.node.createdDate).getTime() >
+      new Date(newEdge.node.createdDate).getTime(),
+  );
+  if (insertIndex === -1) {
+    // Append to end (most common case)
+    return [...prev, newEdge];
+  }
+  const next = [...prev];
+  next.splice(insertIndex, 0, newEdge);
+  return next;
+}
+
+/**
+ * Returns a new list with `message` inserted in sorted position, or `prev`
+ * unchanged when the id is already present — the dedup every producer needs
+ * because the WebSocket echo and the mutation response race each other.
+ */
+function appendMessage(
+  prev: Edge<ChatMessageNode>[],
+  message: ChatMessageNode,
+): Edge<ChatMessageNode>[] {
+  if (prev.some((edge) => edge.node.id === message.id)) {
+    return prev;
+  }
+  return insertEdgeSorted(prev, { cursor: message.id, node: message });
+}
+
+/** Returns a new list with an already-loaded message's node swapped for `message`. */
+function replaceMessageNode(
+  prev: Edge<ChatMessageNode>[],
+  message: ChatMessageNode,
+): Edge<ChatMessageNode>[] {
+  return prev.map((edge) =>
+    edge.node.id === message.id ? { ...edge, node: message } : edge,
+  );
+}
+
+/** True when the edited message's node changed (or vanished) — closes the editor rather than risk silently applying a stale edit. */
+function didUserMessageChange(
+  prev: ChatMessageNode | undefined,
+  next: ChatMessageNode,
+): boolean {
+  if (!prev) return true; // gone/replaced → treat as changed
+  if (!isUserChatMessage(prev) || !isUserChatMessage(next)) return true;
+  return (
+    prev.updatedDate !== next.updatedDate ||
+    prev.deletedDate !== next.deletedDate
+  );
 }
 
 export function ConversationView({
@@ -68,6 +130,63 @@ export function ConversationView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Mirror refs so the async reconnect closure can read the LATEST values
+  // without a stale-closure bug (the effect only re-runs on
+  // `reconnectCounter`/`roomId`, not on every messages/editingMessageId change).
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+  const editingMessageIdRef = useRef(editingMessageId);
+  useEffect(() => {
+    editingMessageIdRef.current = editingMessageId;
+  }, [editingMessageId]);
+
+  // Live in-session deletes of already-loaded originals; combined with the
+  // authoritative `replyTo.deletedDate` (selected on load) this drives the
+  // reply-quote deleted-first check in both loaded-data and live cases.
+  const deletedMessageIds = useMemo(
+    () =>
+      new Set(
+        messages
+          .filter((e) => isUserChatMessage(e.node) && e.node.deletedDate)
+          .map((e) => e.node.id),
+      ),
+    [messages],
+  );
+
+  /** Clear + non-blocking notice. Runs on remote edit/delete AND on reconcile. */
+  const abandonEdit = useCallback(() => {
+    setEditingMessageId(null);
+    toast.add({ title: t("notices.editingInterrupted"), type: "info" });
+  }, [t]);
+
+  const handleIncomingMessage = useCallback((message: ChatMessageNode) => {
+    setMessages((prev) => appendMessage(prev, message));
+  }, []);
+
+  const handleIncomingUpdate = useCallback(
+    (message: ChatMessageNode) => {
+      setMessages((prev) => replaceMessageNode(prev, message));
+      if (message.id === editingMessageIdRef.current) abandonEdit();
+    },
+    [abandonEdit],
+  );
+
+  const handleIncomingDelete = useCallback(
+    (message: ChatMessageNode) => {
+      setMessages((prev) => replaceMessageNode(prev, message));
+      if (message.id === editingMessageIdRef.current) abandonEdit();
+      // Propagate the deletion into the composer's reply-in-progress, if any.
+      setReplyTo((r) =>
+        r && r.id === message.id
+          ? { ...r, deletedDate: new Date().toISOString() }
+          : r,
+      );
+    },
+    [abandonEdit],
+  );
 
   // Reset all state when roomId changes
   useEffect(() => {
@@ -142,86 +261,120 @@ export function ConversationView({
         break;
       // Member events are handled in ChatLayout
     }
-  }, [incomingEventVersion, roomId, getIncomingEvent]);
+  }, [
+    incomingEventVersion,
+    roomId,
+    getIncomingEvent,
+    handleIncomingMessage,
+    handleIncomingUpdate,
+    handleIncomingDelete,
+  ]);
 
-  // Handle reconnection: re-fetch messages
+  // Reconnect: reconcile the recent window into the existing thread — never
+  // remount the pane (composer, scroll position, and draft all survive).
   useEffect(() => {
     if (reconnectCounter === 0) return; // Skip initial render
 
-    const refetch = async () => {
-      setIsLoading(true);
-      try {
-        const messagesData = await loadMessages(roomId, 25);
-        if (messagesData) {
-          setMessages(messagesData.edges);
-          setMessagesPageInfo(messagesData.pageInfo);
+    // Staleness guard: if the user switches rooms while the reconnect fetch
+    // is in flight, the resolved data belongs to the old room and must not
+    // be written over the new room's state (mirrors the roomId check in the
+    // WebSocket event handlers).
+    let cancelled = false;
+
+    const reconnect = async () => {
+      const [messagesData, roomData] = await Promise.all([
+        loadMessages(roomId, 25),
+        loadChatRoom(roomId),
+      ]);
+      if (cancelled) return;
+
+      if (roomData) {
+        setRoom(roomData);
+        onRoomLoaded(roomData); // re-sync chat-layout activeRoom/members
+        if (roomData.__typename === "DirectMessageChatRoom") {
+          setCanMessage(roomData.canMessage);
         }
-      } catch (error) {
-        console.error("Failed to re-fetch messages on reconnect:", error);
-      } finally {
-        setIsLoading(false);
       }
+
+      if (messagesData) {
+        const prevEdges = messagesRef.current;
+        const prevById = new Map(prevEdges.map((e) => [e.node.id, e.node]));
+        const gap = hasReconnectGap(prevEdges, messagesData.edges);
+
+        if (gap) {
+          // Honest reset: the retained tail is disconnected from the newest
+          // window (>25 messages arrived while offline). Drop it and treat
+          // the newest 25 as a fresh load; adopt the fresh pageInfo so
+          // load-older resumes correctly. Grouping/separators recompute
+          // cleanly; this is the correct trade-off over stitching a
+          // corrupted middle gap. Functional update: WebSocket messages that
+          // arrived DURING this fetch live in prev at/after the incoming
+          // window's oldest timestamp — keep those, drop only the stale tail.
+          const oldestIncoming = Date.parse(
+            messagesData.edges[0]?.node.createdDate ?? "",
+          );
+          setMessages((prev) =>
+            reconcileMessages(
+              prev.filter(
+                (e) => Date.parse(e.node.createdDate) >= oldestIncoming,
+              ),
+              messagesData.edges,
+            ),
+          );
+          setMessagesPageInfo(messagesData.pageInfo);
+        } else {
+          // No gap: reconcile in place. Do NOT overwrite messagesPageInfo —
+          // preserve the older-history cursor.
+          setMessages((prev) => reconcileMessages(prev, messagesData.edges));
+        }
+
+        // Editor-abandon on reconcile: close the editor if the edited
+        // message's node changed while disconnected — or, on the gap path,
+        // if it fell outside the fresh window entirely (its bubble is gone;
+        // leaving editing state pointing at an unloaded id would resurface
+        // an inexplicable open editor if history later reloads it).
+        const editingId = editingMessageIdRef.current;
+        if (editingId) {
+          const next = messagesData.edges.find(
+            (e) => e.node.id === editingId,
+          )?.node;
+          if (next) {
+            if (didUserMessageChange(prevById.get(editingId), next)) {
+              abandonEdit();
+            }
+          } else if (gap && prevById.has(editingId)) {
+            // Absent from the fresh window AND present before the fetch →
+            // genuinely dropped by the gap reset. A message absent from
+            // prevById arrived DURING the fetch (optimistic send / echo),
+            // survives the retained-set filter above, and must not have its
+            // fresh edit spuriously abandoned.
+            abandonEdit();
+          }
+        }
+      }
+      // DO NOT set isLoading — the pane never unmounts the composer.
     };
 
-    refetch();
+    reconnect();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t/onRoomLoaded/abandonEdit intentionally omitted (stable enough in practice; re-running this effect on their identity would refire an unwanted reconnect fetch — this effect must run ONLY on reconnectCounter/roomId)
   }, [reconnectCounter, roomId]);
 
-  const handleIncomingMessage = (message: ChatMessageNode) => {
-    setMessages((prev) => {
-      // Self-event deduplication: skip if message already exists
-      if (prev.some((edge) => edge.node.id === message.id)) {
-        return prev;
-      }
-
-      const newEdge: Edge<ChatMessageNode> = {
-        cursor: message.id,
-        node: message,
-      };
-
-      // Insert sorted by createdDate
-      const insertIndex = prev.findIndex(
-        (edge) =>
-          new Date(edge.node.createdDate).getTime() >
-          new Date(message.createdDate).getTime(),
-      );
-
-      if (insertIndex === -1) {
-        // Append to end (most common case)
-        return [...prev, newEdge];
-      }
-
-      // Insert at correct position
-      const next = [...prev];
-      next.splice(insertIndex, 0, newEdge);
-      return next;
-    });
-  };
-
-  const handleIncomingUpdate = (message: ChatMessageNode) => {
-    setMessages((prev) =>
-      prev.map((edge) => {
-        if (edge.node.id === message.id) {
-          return { ...edge, node: message };
-        }
-        return edge;
-      }),
-    );
-  };
-
-  const handleIncomingDelete = (message: ChatMessageNode) => {
-    setMessages((prev) =>
-      prev.map((edge) => {
-        if (edge.node.id === message.id) {
-          return { ...edge, node: message };
-        }
-        return edge;
-      }),
-    );
-  };
-
-  function handleSendError(result: { errorType?: string; message?: string }) {
+  function handleSendError(
+    result: { errorType?: string; message?: string },
+    attempted: { text?: string },
+  ) {
     if (result.errorType === "MutualFollowRequiredError") {
       setCanMessage(false);
+      toast.add({
+        title: attempted.text
+          ? t("errors.sendDisabledRecover", { content: attempted.text })
+          : t("errors.sendDisabledMedia"),
+        type: "error",
+      });
+      return;
     }
     toast.add({ title: result.message || t("errors.sendMessage"), type: "error" });
   }
@@ -230,31 +383,22 @@ export function ConversationView({
     const result = await sendMessage(roomId, content, replyToId);
 
     if (!result.success || !result.chatMessage) {
-      handleSendError(result);
+      handleSendError(result, { text: content });
       throw new Error("Failed to send message");
     }
 
-    // Append the new message, but deduplicate in case the WebSocket event
-    // arrived before the mutation response
-    const newEdge: Edge<ChatMessageNode> = {
-      cursor: result.chatMessage.id,
-      node: result.chatMessage,
-    };
-    setMessages((prev) => {
-      if (prev.some((edge) => edge.node.id === result.chatMessage!.id)) {
-        return prev;
-      }
-      return [...prev, newEdge];
-    });
+    const sent = result.chatMessage;
+    setMessages((prev) => appendMessage(prev, sent));
 
     // Update last message in the room list
-    onLastMessageUpdate(roomId, result.chatMessage);
-
-    // Clear reply state
-    setReplyTo(null);
+    onLastMessageUpdate(roomId, sent);
   };
 
-  const handleSendMedia = async (file: File) => {
+  const handleSendMedia = async (
+    file: File,
+    caption?: string,
+    replyToId?: string,
+  ) => {
     // 1. Request upload
     const uploadResult = await requestChatMediaUpload(
       file.name,
@@ -276,26 +420,24 @@ export function ConversationView({
       }
     }
 
-    // 3. Send media message (auto-confirms resource -- do NOT call confirmUpload)
-    const sendResult = await sendMediaMessage(roomId, uploadResult.resourceId);
+    // 3. Send media message + caption + reply target, one message
+    //    (auto-confirms resource -- do NOT call confirmUpload)
+    const sendResult = await sendMediaMessage(
+      roomId,
+      uploadResult.resourceId,
+      caption,
+      replyToId,
+    );
     if (!sendResult.success || !sendResult.chatMessage) {
-      handleSendError(sendResult);
+      handleSendError(sendResult, { text: caption });
       throw new Error("Send message failed");
     }
 
-    // 4. Append message to list (same dedup logic as handleSendText)
-    const newEdge: Edge<ChatMessageNode> = {
-      cursor: sendResult.chatMessage.id,
-      node: sendResult.chatMessage,
-    };
-    setMessages((prev) => {
-      if (prev.some((edge) => edge.node.id === sendResult.chatMessage!.id)) {
-        return prev;
-      }
-      return [...prev, newEdge];
-    });
+    // 4. Append message to list
+    const sent = sendResult.chatMessage;
+    setMessages((prev) => appendMessage(prev, sent));
 
-    onLastMessageUpdate(roomId, sendResult.chatMessage);
+    onLastMessageUpdate(roomId, sent);
   };
 
   const handleEdit = async (messageId: string, content: string) => {
@@ -362,22 +504,24 @@ export function ConversationView({
     setIsDeleting(false);
   };
 
-  const handleLoadOlder = async () => {
-    if (!messagesPageInfo?.hasPreviousPage || isLoadingOlder) return;
+  /** Resolves to false only on an actual fetch failure (the list toasts; retry is the user's natural scroll-away/scroll-back — deliberately NO automatic re-arm, which looped unboundedly). A guarded no-op (already loading / no more pages) resolves true. */
+  const handleLoadOlder = async (): Promise<boolean> => {
+    if (!messagesPageInfo?.hasPreviousPage || isLoadingOlder) return true;
 
     setIsLoadingOlder(true);
-    const result = await loadMessages(
-      roomId,
-      25,
-      messagesPageInfo.startCursor || undefined,
-    );
-
-    if (result) {
+    try {
+      const result = await loadMessages(
+        roomId,
+        25,
+        messagesPageInfo.startCursor || undefined,
+      );
+      if (!result) return false;
       setMessages((prev) => [...result.edges, ...prev]);
       setMessagesPageInfo(result.pageInfo);
+      return true;
+    } finally {
+      setIsLoadingOlder(false);
     }
-
-    setIsLoadingOlder(false);
   };
 
   const openDeleteDialog = (messageId: string) => {
@@ -395,7 +539,7 @@ export function ConversationView({
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <TypographyMuted>Loading...</TypographyMuted>
+        <TypographyMuted>{t("loading.conversation")}</TypographyMuted>
       </div>
     );
   }
@@ -421,6 +565,7 @@ export function ConversationView({
         messages={messages}
         currentUserId={currentUser.id}
         currentUserRole={currentUserRole}
+        deletedMessageIds={deletedMessageIds}
         onReply={(message) => setReplyTo(message)}
         onDelete={openDeleteDialog}
         onLoadOlder={handleLoadOlder}

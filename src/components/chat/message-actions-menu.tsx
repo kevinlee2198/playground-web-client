@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { Edit, MoreHorizontal, Reply, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -16,6 +17,7 @@ interface MessageActionsMenuProps {
   onReply: () => void;
   onEdit?: () => void;
   onDelete: () => void;
+  className?: string;
 }
 
 export function MessageActionsMenu({
@@ -24,6 +26,7 @@ export function MessageActionsMenu({
   onReply,
   onEdit,
   onDelete,
+  className,
 }: MessageActionsMenuProps) {
   const t = useTranslations("chat.message");
 
@@ -34,7 +37,13 @@ export function MessageActionsMenu({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
+            aria-label={t("moreActions")}
+            className={cn(
+              // ≥44px touch target on mobile; reverts to the original,
+              // subtle 24px control on desktop (icon itself stays h-4 w-4).
+              "size-11 opacity-0 group-hover/message:opacity-100 group-focus-within/message:opacity-100 motion-safe:transition-opacity md:size-6",
+              className,
+            )}
           />
         }
       >

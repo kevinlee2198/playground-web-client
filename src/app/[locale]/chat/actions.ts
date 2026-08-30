@@ -11,6 +11,7 @@ import {
 } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
+import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/constants";
 import type {
   ChatMessageNode,
   ChatRoomDetailNode,
@@ -22,13 +23,20 @@ import { z } from "zod";
 
 const sendMessageSchema = z.object({
   chatRoomId: z.string().min(1),
-  content: z.string().min(1).max(5000),
+  content: z.string().min(1).max(CHAT_MESSAGE_MAX_LENGTH),
   replyToId: z.string().min(1).optional(),
 });
 
 const updateMessageSchema = z.object({
   id: z.string().min(1),
-  content: z.string().min(1).max(5000),
+  content: z.string().min(1).max(CHAT_MESSAGE_MAX_LENGTH),
+});
+
+const sendMediaMessageSchema = z.object({
+  chatRoomId: z.string().min(1),
+  resourceId: z.string().min(1),
+  caption: z.string().max(CHAT_MESSAGE_MAX_LENGTH).optional(),
+  replyToId: z.string().min(1).optional(),
 });
 
 const createDirectMessageSchema = z.object({
@@ -397,20 +405,34 @@ export async function sendMessage(
 export async function sendMediaMessage(
   chatRoomId: string,
   resourceId: string,
+  caption?: string,
+  replyToId?: string,
 ): Promise<{
   success: boolean;
   chatMessage?: ChatMessageNode;
   errorType?: string;
   message?: string;
 }> {
+  const parsed = sendMediaMessageSchema.safeParse({
+    chatRoomId,
+    resourceId,
+    caption,
+    replyToId,
+  });
+  if (!parsed.success) {
+    return { success: false, errorType: MutationErrorType.VALIDATION_ERROR, message: parsed.error.issues[0].message };
+  }
+
   try {
     const response = await authMutate({
       sendChatMessage: {
         __args: {
           input: {
             mediaMessage: {
-              chatRoomId,
-              resourceId,
+              chatRoomId: parsed.data.chatRoomId,
+              resourceId: parsed.data.resourceId,
+              ...(parsed.data.caption ? { caption: parsed.data.caption } : {}),
+              ...(parsed.data.replyToId ? { replyToId: parsed.data.replyToId } : {}),
             },
           },
         },

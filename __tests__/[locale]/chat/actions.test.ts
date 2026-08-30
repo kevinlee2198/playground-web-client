@@ -699,6 +699,52 @@ describe("sendMediaMessage", () => {
     expect(mediaArgs).toEqual({ chatRoomId: "room1", resourceId: "resource1" });
   });
 
+  it("includes caption and replyToId when provided", async () => {
+    mockMutateSuccess("sendChatMessage", "SendChatMessageResponse", {
+      chatMessage: mockChatMessage,
+    });
+
+    await sendMediaMessage("room1", "resource1", "A caption", "replyMsg1");
+
+    const callArg = mockAuthMutate.mock.calls[0][0] as Record<string, unknown>;
+    const mediaArgs = (
+      callArg.sendChatMessage as { __args: { input: { mediaMessage: Record<string, unknown> } } }
+    ).__args.input.mediaMessage;
+    expect(mediaArgs).toEqual({
+      chatRoomId: "room1",
+      resourceId: "resource1",
+      caption: "A caption",
+      replyToId: "replyMsg1",
+    });
+  });
+
+  it("omits caption and replyToId when not provided", async () => {
+    mockMutateSuccess("sendChatMessage", "SendChatMessageResponse", {
+      chatMessage: mockChatMessage,
+    });
+
+    await sendMediaMessage("room1", "resource1");
+
+    const callArg = mockAuthMutate.mock.calls[0][0] as Record<string, unknown>;
+    const mediaArgs = (
+      callArg.sendChatMessage as { __args: { input: { mediaMessage: Record<string, unknown> } } }
+    ).__args.input.mediaMessage;
+    expect(mediaArgs).not.toHaveProperty("caption");
+    expect(mediaArgs).not.toHaveProperty("replyToId");
+  });
+
+  it("returns VALIDATION_ERROR when caption exceeds 5000 chars without calling authMutate", async () => {
+    const longCaption = "a".repeat(5001);
+    const result = await sendMediaMessage("room1", "resource1", longCaption);
+
+    expect(result).toEqual({
+      success: false,
+      errorType: MutationErrorType.VALIDATION_ERROR,
+      message: expect.any(String),
+    });
+    expect(mockAuthMutate).not.toHaveBeenCalled();
+  });
+
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Unauthorized");
 
