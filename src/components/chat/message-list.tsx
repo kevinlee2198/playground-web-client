@@ -46,7 +46,7 @@ interface MessageListProps {
   onCancelEdit: () => void;
 }
 
-/** Briefly highlights a jumped-to message; content-visibility:auto items stay in the DOM. */
+/** Briefly highlights a jumped-to message; all loaded items stay in the DOM. */
 function flashHighlight(messageId: string) {
   const el = document.getElementById(`message-${messageId}`);
   if (!el) return;

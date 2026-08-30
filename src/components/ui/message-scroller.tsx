@@ -73,7 +73,14 @@ function MessageScrollerItem({
       data-slot="message-scroller-item"
       scrollAnchor={scrollAnchor}
       className={cn(
-        "min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
+        // Deliberate divergence from the registry: it ships
+        // `[content-visibility:auto] [contain-intrinsic-size:auto_10rem]` here.
+        // That breaks prepend scroll-restore outside Chromium — off-screen
+        // items lay out at the 10rem placeholder, then resize to their real
+        // height AFTER the primitive's one-shot restore has run, shrinking the
+        // content above the viewport. Chromium masks it with CSS scroll
+        // anchoring; Firefox and WebKit jump by ~300px. Do not reinstate.
+        "min-w-0 shrink-0",
         className
       )}
       {...props}

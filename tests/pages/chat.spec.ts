@@ -1,3 +1,5 @@
+import { http } from "msw";
+
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import {
   CHAT_OTHER_USER,
@@ -6,6 +8,7 @@ import {
   mockChatRoomListNode,
   mockEmptyChatRoomsResponse,
   mockTextMessage,
+  PNG_1X1_BASE64,
 } from "../fixtures/mock-data/chat";
 
 // Day-boundary logic (buildThreadItems/classifyDayLabel) uses local Date
@@ -18,11 +21,6 @@ const chatRoomsError = () => ({
   data: null,
   errors: [{ message: "Server error", extensions: { classification: "INTERNAL_ERROR" } }],
 });
-
-// A minimal valid 1x1 transparent PNG, used to stage a real file through the
-// composer's hidden file input without touching disk.
-const PNG_1X1_BASE64 =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
 test.describe("Chat Page", () => {
   test("[CRITICAL] unauthenticated: redirects to /", async ({
@@ -133,7 +131,13 @@ test.describe("Chat Page", () => {
 
     // Exactly one separator per calendar day: the older message's absolute
     // date, and "Today" for the same-day message.
-    const daySeparators = authenticatedPage.getByTestId("day-separator");
+    // Select on the design system's own attributes (Marker stamps
+    // data-slot/data-variant via useRender) — no test-only markup needed.
+    // Scoped to the thread, and system notices are default-variant Markers,
+    // so this matches day separators only.
+    const daySeparators = thread.locator(
+      '[data-slot="marker"][data-variant="separator"]',
+    );
     await expect(daySeparators).toHaveCount(2);
 
     const expectedOlderLabel = new Intl.DateTimeFormat("en-US", {
@@ -258,6 +262,25 @@ test.describe("Chat Page", () => {
       }),
     );
 
+    // Hold the older-page response until the test has captured its
+    // pre-prepend baseline — a fast round-trip can otherwise prepend before
+    // the baseline is measured (observed on WebKit in CI). Registered AFTER
+    // the factory so it runs FIRST (the msw fixture unshifts handlers): it
+    // awaits the gate for the older-page request only, then returns
+    // undefined so the request falls through to the factory handler above
+    // (documented MSW fall-through; awaited resolvers delay the chain).
+    const olderPageGate = Promise.withResolvers<void>();
+    msw.use(
+      http.post("*/graphql", async ({ request }) => {
+        // clone(): the factory handler reads this same Request body next.
+        const body = (await request.clone().json()) as { query: string };
+        if (body.query.includes('before: "msg-0"')) {
+          await olderPageGate.promise;
+        }
+        return undefined;
+      }),
+    );
+
     await authenticatedPage.goto("/en/chat?room=room-scroll-preserve");
 
     // Wait for the thread to render and auto-scroll to the bottom.
@@ -275,12 +298,21 @@ test.describe("Chat Page", () => {
     // scroll toward the start) at least once first.
     await expect(viewport).toHaveAttribute("data-scrollable", /start/);
 
-    // Scroll to the top (a real, trusted wheel gesture — not just a raw
-    // `scrollTop` property write — so the primitive's native `scroll`
-    // listener updates its internal anchor-tracking the same way it would
-    // for a real user).
-    await viewport.hover();
-    await authenticatedPage.mouse.wheel(0, -100000);
+    // Scroll to the top with a trusted KEYBOARD gesture, not a wheel or a
+    // raw `scrollTop` write. The viewport is a focusable region
+    // (tabIndex=0) and the primitive's own onKeyDown handler counts Home as
+    // user scroll intent — releasing follow-bottom mode before the engine's
+    // native jump to top. Wheel gestures are engine-dependent here:
+    // Firefox's synthesized wheels never reach the React onWheel handler,
+    // so follow-bottom keeps re-pinning and fights the scroll (observed in
+    // CI as the viewport stranded mid-scroll with data-autoscrolling set).
+    await viewport.focus();
+    await expect(async () => {
+      await authenticatedPage.keyboard.press("Home");
+      expect(
+        await viewport.evaluate((el) => el.scrollTop),
+      ).toBeLessThanOrEqual(100);
+    }).toPass({ timeout: 10_000 });
 
     // Wait for the primitive to register that the top edge is now
     // unreachable — this confirms its scroll-event handling (mode update +
@@ -309,24 +341,24 @@ test.describe("Chat Page", () => {
     expect(snapshot.olderAlreadyRendered).toBe(false);
     const before = snapshot.before;
 
+    // Baseline captured — release the held older-page response.
+    olderPageGate.resolve();
+
     // Wait for the older batch to actually prepend.
     await expect(
       authenticatedPage.getByText("Older message number 9"),
     ).toBeVisible();
 
+    // One-shot, NOT polled. The primitive commits its scroll-restore in the
+    // MutationObserver callback, so it has already run by the time the
+    // prepended text is observable — and once the items render at their real
+    // height (rather than a `content-visibility` placeholder that resizes
+    // afterwards), the value is stable, not converging. Measured drift is
+    // ~35px on all three engines. Polling here would hide exactly the
+    // regression this test exists to catch, so keep the read immediate.
     const after = await viewport.evaluate(
       (el) => el.scrollHeight - el.scrollTop,
     );
-
-    // A small tolerance (not exact equality) absorbs benign noise from
-    // `content-visibility: auto` on off-screen MessageScrollerItems: their
-    // `contain-intrinsic-size` placeholder height vs. real rendered height
-    // can shift by a few pixels as different items cross the viewport
-    // boundary during the prepend. A real scroll-jump regression (the
-    // BLOCKER this test targets) would move this value by roughly the
-    // height of the entire prepended batch (hundreds of pixels), so this
-    // tolerance stays far tighter than any real regression while not being
-    // flaky over rendering noise.
     expect(Math.abs(after - before)).toBeLessThanOrEqual(100);
   });
 });

@@ -44,12 +44,7 @@ export function DaySeparator({ timestamp }: DaySeparatorProps) {
   }
 
   return (
-    <Marker
-      variant="separator"
-      aria-hidden="true"
-      className="my-2"
-      data-testid="day-separator"
-    >
+    <Marker variant="separator" aria-hidden="true" className="my-2">
       <MarkerContent>{label}</MarkerContent>
     </Marker>
   );

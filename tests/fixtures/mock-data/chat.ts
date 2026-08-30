@@ -47,6 +47,20 @@ export function mockTextMessage(overrides?: Record<string, unknown>) {
   };
 }
 
+/**
+ * A real, minimal 1x1 PNG. Specs decode it to stage a file through the
+ * composer's hidden file input without touching disk.
+ */
+export const PNG_1X1_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+
+/**
+ * Inlined so the mock image URLs actually LOAD: a broken image keeps a
+ * placeholder box in Chromium/Firefox but collapses to 0x0 in WebKit, which
+ * makes `toBeVisible()` on the rendered <img> engine-dependent.
+ */
+const PNG_1X1_DATA_URI = `data:image/png;base64,${PNG_1X1_BASE64}`;
+
 export function mockImageResource(overrides?: Record<string, unknown>) {
   return {
     __typename: "ImageResource",
@@ -54,11 +68,11 @@ export function mockImageResource(overrides?: Record<string, unknown>) {
     filename: "photo.png",
     size: 2048,
     mimeType: "image/png",
-    downloadUrl: "https://cdn.example.com/photo.png",
+    downloadUrl: PNG_1X1_DATA_URI,
     createdDate: new Date().toISOString(),
     width: 400,
     height: 300,
-    thumbnailUrl: "https://cdn.example.com/photo-thumb.png",
+    thumbnailUrl: PNG_1X1_DATA_URI,
     ...overrides,
   };
 }
