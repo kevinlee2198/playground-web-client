@@ -656,8 +656,6 @@ export interface ParticipantActionResult {
 export interface GameFilterParams {
   startAfter?: string;
   startBefore?: string;
-  endAfter?: string;
-  endBefore?: string;
   sportType?: SportType;
   userId?: number;
   gameStatus?: GameStatus;

@@ -21,6 +21,13 @@ export enum GameStatus {
   FINALIZED = "FINALIZED",
 }
 
+export function isGameStatus(value: unknown): value is GameStatus {
+  return (
+    typeof value === "string" &&
+    Object.values(GameStatus).includes(value as GameStatus)
+  );
+}
+
 export enum ParticipationType {
   TEAM = "TEAM",
   INDIVIDUAL = "INDIVIDUAL",
@@ -184,7 +191,6 @@ export function getMaxParticipants(sportFormat: SportFormat): number {
 
 export enum GameSortField {
   START_DATE = "START_DATE",
-  END_DATE = "END_DATE",
   GAME_STATUS = "GAME_STATUS",
   DISTANCE = "DISTANCE",
 }

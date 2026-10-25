@@ -498,8 +498,6 @@ export async function loadMoreGames(
 
     if (filters.startAfter) filterInput.startAfter = filters.startAfter;
     if (filters.startBefore) filterInput.startBefore = filters.startBefore;
-    if (filters.endAfter) filterInput.endAfter = filters.endAfter;
-    if (filters.endBefore) filterInput.endBefore = filters.endBefore;
     if (filters.sportType)
       filterInput.sportType = new EnumType(filters.sportType);
     if (filters.userId) filterInput.userId = filters.userId;

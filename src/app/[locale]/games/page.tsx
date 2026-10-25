@@ -18,6 +18,7 @@ import { auth } from "@/lib/auth";
 import {
   GameSortField,
   GameStatus,
+  isGameStatus,
   SortDirection,
   SportType,
 } from "@/lib/constants";
@@ -98,14 +99,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         ? queryParams.gameStatus
         : undefined;
 
-    const isValidDiscoverGameStatus = (
-      status: string | undefined,
-    ): status is GameStatus =>
-      status !== undefined && status in GameStatus;
-
-    const validDiscoverGameStatus = isValidDiscoverGameStatus(
-      discoverGameStatusParam,
-    )
+    const validDiscoverGameStatus = isGameStatus(discoverGameStatusParam)
       ? discoverGameStatusParam
       : undefined;
 
@@ -278,16 +272,6 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
       ? queryParams.gameStatus
       : undefined;
 
-  const isValidGameStatus = (
-    status: string | undefined,
-  ): status is GameStatus => {
-    return (
-      status === GameStatus.SCHEDULED ||
-      status === GameStatus.IN_PROGRESS ||
-      status === GameStatus.COMPLETE
-    );
-  };
-
   const filters: GameFilterParams = {
     startAfter:
       typeof queryParams.startAfter === "string"
@@ -298,7 +282,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         ? queryParams.startBefore
         : undefined,
     sportType: validSportType,
-    gameStatus: isValidGameStatus(gameStatusParam)
+    gameStatus: isGameStatus(gameStatusParam)
       ? gameStatusParam
       : undefined,
     myGames: queryParams.myGames === "true" ? true : undefined,
