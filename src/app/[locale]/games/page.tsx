@@ -84,6 +84,11 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     ? sportTypeParam
     : undefined;
 
+  // Parse gameStatus (shared across both tabs)
+  const validGameStatus = isGameStatus(queryParams.gameStatus)
+    ? queryParams.gameStatus
+    : undefined;
+
   // -------------------------------------------------------------------------
   // Discover tab
   // -------------------------------------------------------------------------
@@ -93,19 +98,8 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     const distanceMiles = parseRadiusParam(queryParams.radius);
     const hasNearLocation = !!parsedLocation;
 
-    // Parse gameStatus for discover tab
-    const discoverGameStatusParam =
-      typeof queryParams.gameStatus === "string"
-        ? queryParams.gameStatus
-        : undefined;
-
-    const validDiscoverGameStatus = isGameStatus(discoverGameStatusParam)
-      ? discoverGameStatusParam
-      : undefined;
-
     // Date lookback: 30 days for completed games, 7 days otherwise
-    const lookbackDays =
-      validDiscoverGameStatus === GameStatus.COMPLETE ? 30 : 7;
+    const lookbackDays = validGameStatus === GameStatus.COMPLETE ? 30 : 7;
     const discoverStartAfterDate = new Date();
     discoverStartAfterDate.setDate(
       discoverStartAfterDate.getDate() - lookbackDays,
@@ -118,7 +112,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
     const discoverFilters: GameFilterParams = {
       startAfter: discoverStartAfterDate.toISOString(),
       sportType: validSportType,
-      gameStatus: validDiscoverGameStatus,
+      gameStatus: validGameStatus,
       nearLocation: parsedLocation
         ? {
             latitude: parsedLocation.latitude,
@@ -267,11 +261,6 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
   // -------------------------------------------------------------------------
 
   // Parse filters from URL
-  const gameStatusParam =
-    typeof queryParams.gameStatus === "string"
-      ? queryParams.gameStatus
-      : undefined;
-
   const filters: GameFilterParams = {
     startAfter:
       typeof queryParams.startAfter === "string"
@@ -282,9 +271,7 @@ export default async function GamesPage({ params, searchParams }: PageProps) {
         ? queryParams.startBefore
         : undefined,
     sportType: validSportType,
-    gameStatus: isGameStatus(gameStatusParam)
-      ? gameStatusParam
-      : undefined,
+    gameStatus: validGameStatus,
     myGames: queryParams.myGames === "true" ? true : undefined,
     invitedToMe: queryParams.invitedToMe === "true" ? true : undefined,
   };

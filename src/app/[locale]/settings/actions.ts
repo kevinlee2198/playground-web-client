@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { authMutate, authQuery } from "@/lib/graphql-request";
 import { SportType } from "@/lib/constants";
+import { authMutate, authQuery } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 import { headers } from "next/headers";

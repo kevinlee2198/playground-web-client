@@ -147,12 +147,8 @@ async function PublicHomePage({
     : undefined;
 
   // Parse gameStatus from URL
-  const gameStatusParam =
-    typeof queryParams.gameStatus === "string"
-      ? queryParams.gameStatus
-      : undefined;
-  const validGameStatus = isGameStatus(gameStatusParam)
-    ? gameStatusParam
+  const validGameStatus = isGameStatus(queryParams.gameStatus)
+    ? queryParams.gameStatus
     : undefined;
 
   // Date lookback: 30 days for completed games, 7 days otherwise
