@@ -33,6 +33,8 @@ import {
   updatePreferences,
 } from "@/app/[locale]/settings/actions";
 import { MutationErrorType } from "@/lib/graphql-result";
+import { validateOperation } from "../../helpers/schema-contract";
+import { EnumType } from "json-to-graphql-query";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -225,6 +227,27 @@ describe("updatePreferences", () => {
 
     expect(result.success).toBe(true);
     expect(result.preferences).toEqual(mockPreferences);
+  });
+
+  it("sends a mutation that validates against the schema", async () => {
+    mockUpdatePreferencesSuccess();
+
+    await updatePreferences({ showStatistics: true });
+
+    expect(
+      validateOperation("mutation", mockAuthMutate.mock.calls[0][0]),
+    ).toEqual([]);
+  });
+
+  it("accepts VOLLEYBALL in preferredSports", async () => {
+    mockUpdatePreferencesSuccess();
+
+    const result = await updatePreferences({ preferredSports: ["VOLLEYBALL"] });
+
+    expect(result.success).toBe(true);
+    const sport = (getLastMutateInput().preferredSports as unknown[])[0];
+    expect(sport).toBeInstanceOf(EnumType);
+    expect((sport as EnumType).value).toBe("VOLLEYBALL");
   });
 
   it("returns GraphQL error on mutation errors", async () => {

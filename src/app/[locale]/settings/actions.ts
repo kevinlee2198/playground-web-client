@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { errorFragment } from "@/lib/graphql-fragments";
 import { authMutate, authQuery } from "@/lib/graphql-request";
+import { SportType } from "@/lib/constants";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 import { headers } from "next/headers";
@@ -17,9 +17,7 @@ const updatePreferencesSchema = z.object({
   showOnlineStatus: z.boolean().optional(),
   showGameHistory: z.boolean().optional(),
   showStatistics: z.boolean().optional(),
-  preferredSports: z
-    .array(z.enum(["BASEBALL", "BASKETBALL", "FOOTBALL", "TENNIS", "PICKLEBALL"]))
-    .optional(),
+  preferredSports: z.array(z.enum(SportType)).optional(),
 });
 
 const preferencesSelection = {
@@ -122,13 +120,10 @@ export async function updatePreferences(
       updateUserPreferences: {
         __args: { input: gqlInput },
         __typename: true,
-        __on: [
-          {
-            __typeName: "UpdateUserPreferencesResponse",
-            preferences: preferencesSelection,
-          },
-          errorFragment,
-        ],
+        __on: {
+          __typeName: "UpdateUserPreferencesResponse",
+          preferences: preferencesSelection,
+        },
       },
     });
 
