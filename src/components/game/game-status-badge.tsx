@@ -8,6 +8,8 @@ const gameStatusI18nKey: Record<GameStatus, string> = {
   IN_PROGRESS: "inProgress",
   COMPLETE: "complete",
   FINALIZED: "finalized",
+  CANCELLED: "cancelled",
+  FORFEITED: "forfeited",
 };
 
 interface GameStatusBadgeProps {

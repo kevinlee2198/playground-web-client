@@ -138,7 +138,10 @@ export function GameStats({
     return null;
   }
 
-  if (game.gameStatus === GameStatus.SCHEDULED) {
+  if (
+    game.gameStatus === GameStatus.SCHEDULED ||
+    game.gameStatus === GameStatus.CANCELLED
+  ) {
     return null;
   }
 
