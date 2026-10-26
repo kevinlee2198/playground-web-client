@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest"
+    "test": "vitest",
+    "schema:sync": "BK=../playground-backend; git -C $BK ls-files src/main/resources/graphql | LC_ALL=C sort | while read f; do cat \"$BK/$f\"; done > schema.graphqls && npx -y prettier@3.5.3 --parser graphql --write schema.graphqls"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

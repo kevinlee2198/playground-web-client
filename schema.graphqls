@@ -1253,6 +1253,8 @@ enum GameStatus {
   IN_PROGRESS
   COMPLETE
   FINALIZED
+  CANCELLED
+  FORFEITED
 }
 
 """
@@ -1550,9 +1552,7 @@ type Game implements Node & HasLocation {
   """
   viewerFollowingUsers: ViewerFollowingUsers!
   """
-  The current viewer's management role in this game, if any. Null if the viewer
-  has no management role (or is unauthenticated). Independent from being a
-  participant.
+  Viewer's per-game management role (OWNER/EDITOR). Null when none or anonymous. Display/legacy gating; new gating uses Game.viewerCan.
   """
   viewerGameRole: GameRole
   """
@@ -1940,6 +1940,23 @@ input AddUsersToTeamInstanceInput {
 }
 
 type AddUsersToTeamInstanceResponse {
+  teamInstance: TeamInstance!
+}
+
+# ============================================================================
+# Add Guest to Team Instance
+# ============================================================================
+
+"""
+Add a named guest (someone without an account) to an existing team instance.
+Guests do not count toward the team-size cap.
+"""
+input AddGuestToTeamInstanceInput {
+  teamInstanceId: ID!
+  displayName: String!
+}
+
+type AddGuestToTeamInstanceResponse {
   teamInstance: TeamInstance!
 }
 
@@ -2387,6 +2404,9 @@ union AddUsersToTeamInstanceResult =
   | AddUsersToTeamInstanceResponse
   | TeamInstanceNotFoundError
   | UserNotFoundError
+union AddGuestToTeamInstanceResult =
+  | AddGuestToTeamInstanceResponse
+  | TeamInstanceNotFoundError
 union RemoveUserFromTeamInstanceResult =
   | RemoveUserFromTeamInstanceResponse
   | TeamInstanceNotFoundError
@@ -2693,6 +2713,4425 @@ union CancelGameInvitationResult =
   | CancelGameInvitationResponse
   | InvitationNotFoundError
   | InvalidInvitationStatusError
+# ============================================================================
+# Casual-group contributions to the core-owned `Game` type. Resolvers live in
+# `league/casual/controller/GameContextGroupContributor.java`; each field is
+# filtered per row by a live member `read` check, so all three are null for
+# non-members.
+# ============================================================================
+
+extend type Game {
+  """
+  The casual Group this Game was materialized for. Null for non-group Games and for non-members.
+  """
+  group: Group
+  """
+  The GameSeries this Game was materialized from. Resolves for ENDED series too.
+  """
+  sourceSeries: GameSeries
+  """
+  The series occurrence this Game was materialized from (its frozen who's-coming context).
+  """
+  sourceOccurrence: GameSeriesOccurrence
+}
+# ============================================================================
+# GameSeries — a Group's recurring game schedule (weekly RRULE subset). Each
+# occurrence can be materialized into a real `Game` by any group member.
+# Member-only: series are reachable only through `Group.gameSeries`,
+# `Game.sourceSeries` and occurrence fields, never through a top-level query.
+# ============================================================================
+
+"""
+Lifecycle of a GameSeries. `ENDED` is terminal: no further updates or
+materializations. Archiving a Group ends all of its series.
+"""
+enum GameSeriesStatus {
+  ACTIVE
+  ENDED
+}
+
+"""
+A recurring casual game. Only sports with `gameDefaults` support can back a
+series — SOFTBALL and SWIM series are impossible (see
+`GameDefaultsRequiredError.supportedSports`).
+"""
+type GameSeries implements Node {
+  id: ID!
+  name: String
+  """
+  Weekly RRULE subset: `FREQ=WEEKLY` only, `INTERVAL` 1 or 2, optional
+  `BYDAY`, and at most one of `UNTIL` (UTC form, within 5 years) / `COUNT`
+  (≤ 260). `INTERVAL=2` week parity anchors on `dtstart`.
+  """
+  rrule: String!
+  """
+  First occurrence. Its wall-clock time in the group's timezone is kept for
+  every occurrence, across DST transitions.
+  """
+  dtstart: DateTime!
+  durationMinutes: Int!
+  locationName: String
+  locationCoordinates: Coordinates
+  sportType: SportType!
+  """
+  Sport-format defaults snapshotted onto every materialized Game.
+  """
+  gameDefaults: GameMetadata!
+  """
+  Occurrence dates (group timezone) that will not be played.
+  """
+  skipDates: [Date!]!
+  maxParticipants: Int
+  status: GameSeriesStatus!
+  """
+  Non-null because series are only ever resolved for members of their group
+  (`Game.sourceSeries` / `Game.group` return null for non-members).
+  """
+  group: Group!
+  """
+  Occurrences within `[from, to]` (group-timezone dates, inclusive), truncated
+  to the first 100 occurrences in ascending date order. `from` must not be
+  after `to`.
+  """
+  upcomingOccurrences(from: Date!, to: Date!): [GameSeriesOccurrence!]!
+}
+
+"""
+One computed occurrence of a series. Virtual — no ID; identified by
+`series` + `localOccurrenceDate`.
+"""
+type GameSeriesOccurrence {
+  series: GameSeries!
+  """
+  The occurrence's date in the group's timezone.
+  """
+  localOccurrenceDate: Date!
+  startInstant: DateTime!
+  isSkipped: Boolean!
+  """
+  The Game materialized for this occurrence, or null if not yet materialized.
+  """
+  materializedGame: Game
+}
+
+type GameSeriesEdge implements Edge {
+  cursor: String!
+  node: GameSeries!
+}
+
+type GameSeriesConnection implements Connection {
+  edges: [GameSeriesEdge!]!
+  pageInfo: PageInfo!
+}
+
+extend type Group {
+  """
+  Game series in this group, newest first. Optional `status` filter.
+  """
+  gameSeries(
+    status: GameSeriesStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GameSeriesConnection!
+  """
+  Games materialized in this group. Optional `status` filter.
+  """
+  games(
+    status: GameStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+    sort: GameSort = SCHEDULED_AT_ASC
+  ): GameConnection!
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateGameSeriesInput {
+  groupId: ID!
+  name: String
+  rrule: String!
+  dtstart: DateTime!
+  durationMinutes: Int!
+  locationName: String
+  locationCoordinates: CoordinatesInput
+  sportType: SportType!
+  """
+  Required; the chosen branch must match `sportType` and specify a format.
+  """
+  gameDefaults: GameMetadataInput!
+  maxParticipants: Int
+}
+
+"""
+Partial update — omitted fields are unchanged. `sportType` is immutable.
+"""
+input UpdateGameSeriesInput {
+  seriesId: ID!
+  expectedVersion: Long
+  name: String
+  rrule: String
+  dtstart: DateTime
+  durationMinutes: Int
+  locationName: String
+  locationCoordinates: CoordinatesInput
+  gameDefaults: GameMetadataInput
+  maxParticipants: Int
+}
+
+input GameSeriesSkipDateInput {
+  seriesId: ID!
+  """
+  Occurrence date in the group's timezone.
+  """
+  date: Date!
+}
+
+input CreateGameFromSeriesOccurrenceInput {
+  seriesId: ID!
+  """
+  Occurrence date in the group's timezone.
+  """
+  occurrenceDate: Date!
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateGameSeriesResponse {
+  series: GameSeries!
+}
+
+type UpdateGameSeriesResponse {
+  series: GameSeries!
+}
+
+type EndGameSeriesResponse {
+  series: GameSeries!
+}
+
+type AddGameSeriesSkipDateResponse {
+  series: GameSeries!
+}
+
+type RemoveGameSeriesSkipDateResponse {
+  series: GameSeries!
+}
+
+type CreateGameFromSeriesOccurrenceResponse {
+  game: Game!
+  """
+  False when the occurrence was already materialized and `game` is the existing one.
+  """
+  created: Boolean!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+"""
+The series does not exist, or the caller is not a member of its group.
+"""
+type GameSeriesNotFoundError implements Error {
+  message: String!
+  seriesId: ID!
+}
+
+type RRuleInvalidError implements Error {
+  message: String!
+  rrule: String!
+  reason: String!
+}
+
+type GameSeriesEndedError implements Error {
+  message: String!
+  seriesId: ID!
+}
+
+"""
+The group is archived; its series accept no further writes.
+"""
+type GroupArchivedError implements Error {
+  message: String!
+  groupId: ID!
+}
+
+type OccurrenceSkippedError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+}
+
+"""
+The date is not an occurrence of the series' rule (including past COUNT/UNTIL).
+"""
+type InvalidOccurrenceDateError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+}
+
+"""
+Occurrences can be materialized from 7 days ago to 7 days ahead, computed in
+the group's timezone. `earliest`/`latest` give the current window.
+"""
+type OccurrenceOutsideMaterializationWindowError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+  earliest: Date!
+  latest: Date!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateGameSeriesResult =
+  | CreateGameSeriesResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+  | GroupArchivedError
+  | RRuleInvalidError
+  | GameDefaultsRequiredError
+  | GameDefaultsSportMismatchError
+
+union UpdateGameSeriesResult =
+  | UpdateGameSeriesResponse
+  | GameSeriesNotFoundError
+  | InsufficientGroupRoleError
+  | GroupArchivedError
+  | GameSeriesEndedError
+  | RRuleInvalidError
+  | GameDefaultsSportMismatchError
+  | StaleWriteError
+
+union EndGameSeriesResult =
+  | EndGameSeriesResponse
+  | GameSeriesNotFoundError
+  | InsufficientGroupRoleError
+
+union AddGameSeriesSkipDateResult =
+  | AddGameSeriesSkipDateResponse
+  | GameSeriesNotFoundError
+  | InsufficientGroupRoleError
+  | GroupArchivedError
+  | OccurrenceAlreadyMaterializedError
+
+union RemoveGameSeriesSkipDateResult =
+  | RemoveGameSeriesSkipDateResponse
+  | GameSeriesNotFoundError
+  | InsufficientGroupRoleError
+  | GroupArchivedError
+
+union CreateGameFromSeriesOccurrenceResult =
+  | CreateGameFromSeriesOccurrenceResponse
+  | GameSeriesNotFoundError
+  | GameSeriesEndedError
+  | OccurrenceOutsideMaterializationWindowError
+  | OccurrenceSkippedError
+  | InvalidOccurrenceDateError
+
+# ============================================================================
+# Mutations
+# ============================================================================
+
+extend type Mutation {
+  """
+  Create a weekly series in a group (group admin only).
+  """
+  createGameSeries(input: CreateGameSeriesInput!): CreateGameSeriesResult!
+  """
+  Update a series (group admin only). Optimistic concurrency via `expectedVersion`.
+  Raising `maxParticipants` promotes waitlisted parties on upcoming occurrences;
+  lowering it never demotes anyone — the lower cap applies as members drop out.
+  """
+  updateGameSeries(input: UpdateGameSeriesInput!): UpdateGameSeriesResult!
+  """
+  End a series (group admin only). Idempotent.
+  """
+  endGameSeries(seriesId: ID!): EndGameSeriesResult!
+  """
+  Mark an occurrence date as not played (group admin only). Idempotent. Its
+  RSVPs are set aside (not promoted) and come back if the date is restored. A
+  materialized occurrence cannot be skipped — cancel its Game instead.
+  """
+  addGameSeriesSkipDate(
+    input: GameSeriesSkipDateInput!
+  ): AddGameSeriesSkipDateResult!
+  """
+  Restore a skipped occurrence date (group admin only). Idempotent. Its RSVPs
+  return with their prior answers and queue positions, the waitlist is drained
+  up to the cap, and standing RSVPs are applied to it.
+  """
+  removeGameSeriesSkipDate(
+    input: GameSeriesSkipDateInput!
+  ): RemoveGameSeriesSkipDateResult!
+  """
+  Turn one occurrence into a PRIVATE group Game (any group member). Idempotent:
+  a repeat call returns the existing game with `created: false`. Singles
+  formats promote YES RSVPs (and their guests) to participants; team formats
+  start participant-less and teams are formed on game day.
+  """
+  createGameFromSeriesOccurrence(
+    input: CreateGameFromSeriesOccurrenceInput!
+  ): CreateGameFromSeriesOccurrenceResult!
+}
+# ============================================================================
+# Group — casual-track aggregate (Group → GameSeries → Game). Each Group owns
+# its own `CasualGroupChatRoom` (notification module), a roster of
+# `GroupMembership` rows, and a `GroupPlayer` pool. Unlike League there is no
+# parent Organization and no PUBLIC visibility — all Groups are UNLISTED and
+# readable by members only.
+# ============================================================================
+
+"""
+Role within a Group membership row.
+
+- `ADMIN`: can manage the Group — invite/remove members, manage game series,
+  archive the group, edit settings.
+- `MEMBER`: standard participant — can view, RSVP, chat.
+"""
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+"""
+Discovery visibility for a Group. Single-valued: Groups are never
+discoverable and resolve only for active members (enforced by a live Cerbos
+`read` check). Non-members and anonymous callers get null from
+`group(idOrSlug)`.
+"""
+enum GroupVisibility {
+  UNLISTED
+}
+
+"""
+Lifecycle of a Group.
+
+- `ACTIVE`: normal read/write state.
+- `ARCHIVED`: terminal write-freeze. Archiving cascades every ACTIVE
+  `GameSeries` in the group to `ENDED`.
+"""
+enum GroupStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+"""
+Filter on `Group.members` by active vs historical state.
+"""
+enum GroupMembershipStatus {
+  ACTIVE
+  DEPARTED
+}
+
+"""
+A casual pickup group. Tracks its own membership, player pool, recurring
+game series, and a dedicated chat room. Member-only: every field of this
+type is reachable only through `group(idOrSlug)` / `myGroups`, which resolve
+exclusively for active members.
+"""
+type Group implements Node {
+  id: ID!
+  """
+  Globally unique across all Groups. Immutable post-create.
+  """
+  slug: String!
+  name: String!
+  """
+  Sport played. Optional — casual groups may be multi-sport.
+  """
+  sportType: SportType
+  """
+  Free-form sport subtype (e.g., `FIVE_ON_FIVE`).
+  """
+  sportSubtype: String
+  description: String
+  visibility: GroupVisibility!
+  status: GroupStatus!
+  """
+  IANA timezone id (e.g., `America/New_York`). Drives series materialization.
+  """
+  timezone: String!
+  """
+  Logo resource. Null when no logo is set.
+  """
+  logoResourceId: ID
+  createdBy: User!
+  """
+  Dedicated chat room for group-wide discussion. Created atomically with
+  the Group; role sync: Group ADMIN → ChatRoom ADMIN, MEMBER → MEMBER.
+  """
+  chatRoom: ChatRoom!
+  """
+  Group memberships. Filter by `role` and `status` (departed vs active).
+  Cursor pagination.
+  """
+  members(
+    role: GroupRole
+    status: GroupMembershipStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GroupMembershipConnection!
+  """
+  GroupPlayer roster (placeholder + real-user). Filter by `status`.
+  """
+  players(
+    status: PlayerStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GroupPlayerConnection!
+  """
+  Whether the viewer holds an active ADMIN membership on this Group.
+  """
+  viewerIsAdmin: Boolean!
+  """
+  The viewer's active membership on this Group, or null if none.
+  """
+  viewerMembership: GroupMembership
+}
+
+"""
+Membership row on a `Group`. Role sync to the Group's chat room is
+event-driven (see requirements §3.11).
+"""
+type GroupMembership implements Node {
+  id: ID!
+  group: Group!
+  user: User!
+  role: GroupRole!
+  """
+  User who invited this member. Null for Group-creator memberships (self-seeded).
+  """
+  invitedBy: User
+  """
+  When the member accepted. Null until accept fires.
+  """
+  acceptedAt: DateTime
+  """
+  When the member left/was removed. Null for active memberships.
+  """
+  departedAt: DateTime
+  """
+  Why the member departed. Null for active memberships.
+  """
+  departureReason: DepartureReason
+}
+
+"""
+Group-scoped roster entry. Either backed by a real user (`user` non-null)
+or a pure placeholder (`user` null, `displayName` held in the row itself).
+Real-user players are NOT auto-created on invitation accept — Groups create
+placeholders explicitly.
+"""
+type GroupPlayer implements Node {
+  id: ID!
+  group: Group!
+  """
+  Non-null for real-user players; null for placeholders.
+  """
+  user: User
+  displayName: String!
+  status: PlayerStatus!
+}
+
+type GroupEdge implements Edge {
+  cursor: String!
+  node: Group!
+}
+
+type GroupConnection implements Connection {
+  edges: [GroupEdge!]!
+  pageInfo: PageInfo!
+}
+
+type GroupMembershipEdge implements Edge {
+  cursor: String!
+  node: GroupMembership!
+}
+
+type GroupMembershipConnection implements Connection {
+  edges: [GroupMembershipEdge!]!
+  pageInfo: PageInfo!
+}
+
+type GroupPlayerEdge implements Edge {
+  cursor: String!
+  node: GroupPlayer!
+}
+
+type GroupPlayerConnection implements Connection {
+  edges: [GroupPlayerEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateGroupInput {
+  name: String!
+  sportType: SportType
+  sportSubtype: String
+  description: String
+  visibility: GroupVisibility = UNLISTED
+  """
+  IANA timezone id. Required — drives game-series materialization.
+  """
+  timezone: String!
+  logoResourceId: ID
+}
+
+input UpdateGroupInput {
+  groupId: ID!
+  name: String
+  description: String
+  timezone: String
+  logoResourceId: ID
+  expectedVersion: Long
+}
+
+"""
+Target user for a group membership mutation.
+"""
+input GroupMemberTargetInput {
+  groupId: ID!
+  userId: ID!
+}
+
+input AddGroupMemberInput {
+  groupId: ID!
+  recipient: InvitationRecipientInput!
+  role: GroupRole = MEMBER
+}
+
+input CreateGroupPlaceholderPlayerInput {
+  groupId: ID!
+  displayName: String!
+}
+
+input UpdateGroupPlaceholderPlayerInput {
+  playerId: ID!
+  displayName: String
+}
+
+input RemoveGroupPlayerInput {
+  playerId: ID!
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateGroupResponse {
+  group: Group!
+}
+
+type UpdateGroupResponse {
+  group: Group!
+}
+
+type ArchiveGroupResponse {
+  group: Group!
+}
+
+type AddGroupMemberResponse {
+  """
+  Populated for direct-add (userId recipient) flow — the created or existing
+  membership row. Null for email-path adds (those return an `Invitation` via
+  the result union instead).
+  """
+  membership: GroupMembership
+}
+
+type PromoteToGroupAdminResponse {
+  membership: GroupMembership!
+}
+
+type DemoteFromGroupAdminResponse {
+  membership: GroupMembership!
+}
+
+type RemoveGroupMemberResponse {
+  membership: GroupMembership!
+}
+
+type LeaveGroupResponse {
+  membership: GroupMembership!
+}
+
+type CreateGroupPlaceholderPlayerResponse {
+  player: GroupPlayer!
+}
+
+type UpdateGroupPlaceholderPlayerResponse {
+  player: GroupPlayer!
+}
+
+type DeleteGroupPlaceholderPlayerResponse implements DeleteResponse {
+  id: ID!
+}
+
+type RemoveGroupPlayerResponse {
+  player: GroupPlayer!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+type GroupNotFoundError implements Error {
+  message: String!
+  groupId: ID
+}
+
+type InsufficientGroupRoleError implements Error {
+  message: String!
+  groupId: ID!
+}
+
+type GroupPlayerNotFoundError implements Error {
+  message: String!
+  playerId: ID
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateGroupResult =
+  | CreateGroupResponse
+  | SlugUnavailableError
+  | InvalidTimezoneError
+
+union UpdateGroupResult =
+  | UpdateGroupResponse
+  | GroupNotFoundError
+  | InvalidTimezoneError
+  | InsufficientGroupRoleError
+  | StaleWriteError
+
+union ArchiveGroupResult =
+  | ArchiveGroupResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+
+union AddGroupMemberResult =
+  | AddGroupMemberResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+  | SendInvitationsResponse
+
+union PromoteToGroupAdminResult =
+  | PromoteToGroupAdminResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+
+union DemoteFromGroupAdminResult =
+  | DemoteFromGroupAdminResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+  | LastAdminError
+
+union RemoveGroupMemberResult =
+  | RemoveGroupMemberResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+  | LastAdminError
+
+union LeaveGroupResult =
+  | LeaveGroupResponse
+  | GroupNotFoundError
+  | LastAdminError
+
+union CreateGroupPlaceholderPlayerResult =
+  | CreateGroupPlaceholderPlayerResponse
+  | GroupNotFoundError
+  | InsufficientGroupRoleError
+
+union UpdateGroupPlaceholderPlayerResult =
+  | UpdateGroupPlaceholderPlayerResponse
+  | GroupPlayerNotFoundError
+  | InsufficientGroupRoleError
+
+union DeleteGroupPlaceholderPlayerResult =
+  | DeleteGroupPlaceholderPlayerResponse
+  | GroupPlayerNotFoundError
+  | InsufficientGroupRoleError
+
+union RemoveGroupPlayerResult =
+  | RemoveGroupPlayerResponse
+  | GroupPlayerNotFoundError
+  | InsufficientGroupRoleError
+
+# ============================================================================
+# Query / Mutation extensions
+# ============================================================================
+
+extend type Query {
+  """
+  Resolve a single Group by numeric id or globally-unique slug. Member-only:
+  returns null for unknown ids/slugs AND for callers without an active
+  membership (live Cerbos `read` check — no existence leak).
+  """
+  group(idOrSlug: ID!): Group
+  """
+  Groups where the viewer has an active `GroupMembership`. Optional `role`
+  filter restricts to ADMIN or MEMBER rows. Requires authentication.
+  """
+  myGroups(
+    role: GroupRole
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): GroupConnection!
+}
+
+extend type Mutation {
+  """
+  Create a Group. Atomic: Group row + `CasualGroupChatRoom` + creator's
+  `GroupMembership(ADMIN)` + creator's `ChatRoomMember(ADMIN)` all committed
+  together, or rolled back together. Emits `GroupCreatedEvent` and
+  `GroupMembershipChangedEvent`.
+  """
+  createGroup(input: CreateGroupInput!): CreateGroupResult!
+  updateGroup(input: UpdateGroupInput!): UpdateGroupResult!
+  """
+  Soft-archive a Group. Terminal write-freeze — status becomes `ARCHIVED`
+  and every ACTIVE `GameSeries` in the group is cascaded to `ENDED`.
+  """
+  archiveGroup(groupId: ID!): ArchiveGroupResult!
+  """
+  Add a member (group admin only). Direct-add creates the membership row
+  immediately; email path delegates to `sendInvitations` and returns
+  `SendInvitationsResponse`.
+  """
+  addGroupMember(input: AddGroupMemberInput!): AddGroupMemberResult!
+  promoteToGroupAdmin(
+    input: GroupMemberTargetInput!
+  ): PromoteToGroupAdminResult!
+  """
+  Auth-first: a non-admin caller is denied before the sole-admin check.
+  """
+  demoteFromGroupAdmin(
+    input: GroupMemberTargetInput!
+  ): DemoteFromGroupAdminResult!
+  removeGroupMember(input: GroupMemberTargetInput!): RemoveGroupMemberResult!
+  """
+  Self-initiated leave. `LastAdminError` when the caller is the sole remaining admin.
+  """
+  leaveGroup(groupId: ID!): LeaveGroupResult!
+  createGroupPlaceholderPlayer(
+    input: CreateGroupPlaceholderPlayerInput!
+  ): CreateGroupPlaceholderPlayerResult!
+  updateGroupPlaceholderPlayer(
+    input: UpdateGroupPlaceholderPlayerInput!
+  ): UpdateGroupPlaceholderPlayerResult!
+  """
+  Hard-delete a placeholder `GroupPlayer`. Real-user players use
+  `removeGroupPlayer` (which flips status to REMOVED).
+  """
+  deleteGroupPlaceholderPlayer(
+    playerId: ID!
+  ): DeleteGroupPlaceholderPlayerResult!
+  """
+  Flip a `GroupPlayer` status to REMOVED. Idempotent.
+  """
+  removeGroupPlayer(input: RemoveGroupPlayerInput!): RemoveGroupPlayerResult!
+}
+# ============================================================================
+# RSVPs for GameSeries occurrences (PR 10). Every mutation acts on the
+# caller's own row and is member-only: a non-member sees the series as not
+# found. Resolvers live in `league/casual/controller/OccurrenceRsvpController`
+# and `StandingRsvpController`.
+# ============================================================================
+
+"""
+The state of an RSVP. `WAITLIST` is an outcome — a YES that did not fit under
+the series' `maxParticipants` — never something a member asks for.
+"""
+enum RsvpStatus {
+  YES
+  NO
+  MAYBE
+  WAITLIST
+}
+
+"""
+A member's answer: what `upsertOccurrenceRsvp` and standing RSVPs accept.
+"""
+enum RsvpAnswer {
+  YES
+  NO
+  MAYBE
+}
+
+"""
+How a row came to exist. `STANDING_DERIVED` rows are created from a standing
+RSVP; the first explicit write on one flips it to `EXPLICIT` and the standing
+no longer touches it.
+"""
+enum RsvpSource {
+  STANDING_DERIVED
+  EXPLICIT
+}
+
+"""
+One member's answer for one occurrence. A member plus their `guestName` is a
+party; a guest counts as a slot toward `maxParticipants` and the party is in
+or waitlisted together. Rows freeze when the occurrence is materialized (only
+`withdrawFromOccurrence` changes them after that) and are visible to every
+group member.
+"""
+type OccurrenceRsvp implements Node {
+  id: ID!
+  series: GameSeries!
+  """
+  The occurrence's date in the group's timezone.
+  """
+  localOccurrenceDate: Date!
+  user: User!
+  status: RsvpStatus!
+  source: RsvpSource!
+  """
+  The member's "+1". Set only with a YES answer; replaced on every upsert.
+  """
+  guestName: String
+  """
+  When the row entered the waitlist — the queue is ordered by this (then id).
+  Null unless `status` is WAITLIST.
+  """
+  waitlistedAt: DateTime
+  createdAt: DateTime!
+}
+
+"""
+A member's default answer for a series, applied to the next two weeks of
+occurrences as `STANDING_DERIVED` rows. Explicit answers always win.
+"""
+type StandingRsvp implements Node {
+  id: ID!
+  series: GameSeries!
+  user: User!
+  defaultStatus: RsvpAnswer!
+  """
+  First occurrence date the standing applies to; null means immediately.
+  """
+  startsFromDate: Date
+}
+
+extend type GameSeriesOccurrence {
+  """
+  Every live RSVP on this occurrence — answered members first (by when their
+  current answer was given), then the waitlist in queue order. After
+  materialization this is the frozen who's-coming list. Filter by `status`
+  client-side; the list is bounded by the group's size.
+  """
+  rsvps: [OccurrenceRsvp!]!
+  """
+  The viewer's RSVP on this occurrence, or null (also null for anonymous viewers).
+  """
+  myRsvp: OccurrenceRsvp
+}
+
+extend type GameSeries {
+  """
+  The viewer's standing RSVP on this series, or null.
+  """
+  myStandingRsvp: StandingRsvp
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input UpsertOccurrenceRsvpInput {
+  seriesId: ID!
+  """
+  Occurrence date in the group's timezone.
+  """
+  occurrenceDate: Date!
+  answer: RsvpAnswer!
+  """
+  Optional "+1" name (1-100 characters), only with `answer: YES`. Replaces the
+  stored guest: a YES without it drops the guest.
+  """
+  guestName: String
+}
+
+input OccurrenceRsvpTargetInput {
+  seriesId: ID!
+  """
+  Occurrence date in the group's timezone.
+  """
+  occurrenceDate: Date!
+}
+
+input UpsertStandingRsvpInput {
+  seriesId: ID!
+  defaultStatus: RsvpAnswer!
+  """
+  First occurrence date the standing applies to; omit for immediately.
+  """
+  startsFromDate: Date
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type UpsertOccurrenceRsvpResponse {
+  rsvp: OccurrenceRsvp!
+  """
+  True when the answer was YES and the row is (still) on the waitlist.
+  """
+  wasWaitlisted: Boolean!
+}
+
+type RemoveOccurrenceRsvpResponse {
+  """
+  Null: the caller is now a non-responder for this occurrence. Non-null: a
+  standing RSVP covers the date, so the row was reset to that default instead.
+  """
+  rsvp: OccurrenceRsvp
+}
+
+type WithdrawFromOccurrenceResponse {
+  """
+  The caller's row, now NO.
+  """
+  rsvp: OccurrenceRsvp!
+  """
+  The first member promoted off the waitlist by this withdrawal, if any.
+  """
+  promotedUser: User
+}
+
+type UpsertStandingRsvpResponse {
+  standingRsvp: StandingRsvp!
+}
+
+type RemoveStandingRsvpResponse {
+  """
+  False when the caller had no standing RSVP on the series.
+  """
+  removed: Boolean!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+"""
+The occurrence already has a Game: RSVPs are frozen. Dropouts use
+`withdrawFromOccurrence`; admins cancel the Game instead of skipping the date.
+"""
+type OccurrenceAlreadyMaterializedError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+}
+
+"""
+RSVP writes close once the occurrence (or its Game) has started.
+"""
+type OccurrenceAlreadyStartedError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+  startInstant: DateTime!
+}
+
+"""
+Withdrawal is for materialized occurrences; use `upsertOccurrenceRsvp` before that.
+"""
+type OccurrenceNotMaterializedError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+}
+
+"""
+The caller has no YES or WAITLIST RSVP on the occurrence to withdraw.
+"""
+type OccurrenceRsvpNotFoundError implements Error {
+  message: String!
+  seriesId: ID!
+  occurrenceDate: Date!
+}
+
+"""
+The materialized Game is no longer SCHEDULED, so its roster is settled.
+"""
+type GameNotScheduledError implements Error {
+  message: String!
+  gameId: ID!
+  status: GameStatus!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union UpsertOccurrenceRsvpResult =
+  | UpsertOccurrenceRsvpResponse
+  | GameSeriesNotFoundError
+  | GameSeriesEndedError
+  | OccurrenceSkippedError
+  | InvalidOccurrenceDateError
+  | OccurrenceAlreadyStartedError
+  | OccurrenceAlreadyMaterializedError
+
+union RemoveOccurrenceRsvpResult =
+  | RemoveOccurrenceRsvpResponse
+  | GameSeriesNotFoundError
+  | GameSeriesEndedError
+  | OccurrenceSkippedError
+  | InvalidOccurrenceDateError
+  | OccurrenceAlreadyStartedError
+  | OccurrenceAlreadyMaterializedError
+
+union WithdrawFromOccurrenceResult =
+  | WithdrawFromOccurrenceResponse
+  | GameSeriesNotFoundError
+  | OccurrenceNotMaterializedError
+  | GameNotScheduledError
+  | OccurrenceAlreadyStartedError
+  | OccurrenceRsvpNotFoundError
+
+union UpsertStandingRsvpResult =
+  | UpsertStandingRsvpResponse
+  | GameSeriesNotFoundError
+  | GameSeriesEndedError
+
+union RemoveStandingRsvpResult =
+  | RemoveStandingRsvpResponse
+  | GameSeriesNotFoundError
+
+# ============================================================================
+# Mutations
+# ============================================================================
+
+extend type Mutation {
+  """
+  Answer for one occurrence (group members). A YES that does not fit under
+  `maxParticipants` is waitlisted; leaving YES drains the waitlist. A NO is an
+  answer: the pre-game reminder goes to YES answers and non-responders.
+  """
+  upsertOccurrenceRsvp(
+    input: UpsertOccurrenceRsvpInput!
+  ): UpsertOccurrenceRsvpResult!
+  """
+  Clear the caller's answer. Without a standing RSVP the caller becomes a
+  non-responder; with one covering the date the row resets to that default.
+  """
+  removeOccurrenceRsvp(
+    input: OccurrenceRsvpTargetInput!
+  ): RemoveOccurrenceRsvpResult!
+  """
+  Drop out of a materialized occurrence while its Game is still SCHEDULED and
+  has not started. The caller's YES/WAITLIST becomes NO, the waitlist is
+  drained, and on singles games the roster follows (the caller's party leaves,
+  promoted parties join); on team games the caller leaves their team.
+  """
+  withdrawFromOccurrence(
+    input: OccurrenceRsvpTargetInput!
+  ): WithdrawFromOccurrenceResult!
+  """
+  Set the caller's default answer for a series; applied to the next two weeks immediately.
+  """
+  upsertStandingRsvp(input: UpsertStandingRsvpInput!): UpsertStandingRsvpResult!
+  """
+  Remove the caller's standing RSVP. On an active series the caller's future
+  derived answers go with it (promoting the waitlist); explicit answers stay.
+  """
+  removeStandingRsvp(seriesId: ID!): RemoveStandingRsvpResult!
+}
+# ============================================================================
+# Shared invitation + invite-link surface for both League and Group
+# aggregates. Owner discrimination via OwnerType (see league-common.graphqls).
+# An invitation targets a specific recipient (user id OR email). An invite
+# link is a shareable URL with optional max-uses / expiry.
+#
+# Accepting an invitation or redeeming a link for a LEAGUE aggregate
+# atomically creates LeagueMembership + LeaguePlayer. For a GROUP aggregate
+# it creates GroupMembership only (placeholders are opt-in). Chat-room
+# membership is synced via events in the notification module.
+# ============================================================================
+
+# ============================================================================
+# Enums
+# ============================================================================
+
+"""
+Lifecycle status of an `Invitation`.
+
+- `SENT`: active, awaiting response. Only `SENT` invitations can transition.
+- `ACCEPTED`: invitee accepted; membership (and `LeaguePlayer` for LEAGUE
+  owners) was created in the same transaction.
+- `DECLINED`: invitee declined. Terminal. Firing `declineInvitation` on a
+  direct-add invite sends notification #3 to the inviter; no notification
+  is fired for link-based or email-only invites.
+- `REVOKED`: an Admin revoked the invitation before it was answered.
+  Terminal. A new send to the same recipient auto-revokes the prior `SENT`
+  invitation and starts fresh.
+- `EXPIRED`: Quartz `InvitationExpirySweepJob` flipped a `SENT` invitation
+  past its `expiresAt`. Terminal.
+"""
+enum InvitationStatus {
+  SENT
+  ACCEPTED
+  DECLINED
+  REVOKED
+  EXPIRED
+}
+
+# ============================================================================
+# Core types
+# ============================================================================
+
+"""
+An outstanding or historical invitation to join a League or Group.
+
+Exactly one of `email` or `invitee` is set at creation time (CHECK
+constraint). Once accepted, `acceptedBy` identifies the user who performed
+the accept — this may differ from `invitee` when an email invitation is
+accepted by a user whose account email matches but whose user id was
+unknown at send time.
+
+Viewer permissions:
+- Aggregate Admins of `ownerId` can read all fields.
+- The `invitee` (if set) can read their own invitation.
+- Token-gated reads (see `resolveInvite` query) return an `InvitePreview`
+  rather than this full type.
+"""
+type Invitation implements Node {
+  id: ID!
+  """
+  Which aggregate kind this invitation targets (`LEAGUE` or `GROUP`).
+  """
+  ownerType: OwnerType!
+  """
+  ID of the owning `League` or `Group` (resolve against `ownerType`).
+  """
+  ownerId: ID!
+  """
+  Invited email address. Null when the invitation is direct-add against a
+  known user (in which case `invitee` is populated).
+  """
+  email: String
+  """
+  Invited user. Null when the invitation is email-only (no matching user at
+  send time). Exactly one of `email` or `invitee` is non-null.
+  """
+  invitee: User
+  """
+  User who sent the invitation.
+  """
+  invitedBy: User!
+  """
+  Role the invitee will receive on accept.
+  """
+  role: MembershipRole!
+  """
+  Current lifecycle status.
+  """
+  status: InvitationStatus!
+  """
+  The user who accepted this invitation. Usually equal to `invitee`; may
+  differ for email invites accepted by a matched-by-email user. Null until
+  `status = ACCEPTED`.
+  """
+  acceptedBy: User
+  """
+  When the invitation expires. Server clamps max expiry per the module policy.
+  """
+  expiresAt: DateTime!
+  """
+  When the invitation was initially sent.
+  """
+  sentAt: DateTime!
+  """
+  When the most recent lifecycle event fired (resend, accept, revoke,
+  decline, expire). Drives list ordering when sorting by activity.
+  """
+  lastEventAt: DateTime!
+}
+
+type InvitationEdge implements Edge {
+  cursor: String!
+  node: Invitation!
+}
+
+"""
+Connection of `Invitation` rows. Cursor-based pagination; no `totalCount`
+— clients that need counters should page to exhaustion.
+"""
+type InvitationConnection implements Connection {
+  edges: [InvitationEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Token-resolved preview of an `Invitation` or `InviteLink`, returned by the
+public `resolveInvite(token)` query. Exposes only the fields a
+not-yet-authenticated recipient needs to make an accept/decline decision —
+no full membership rosters, no Admin-only fields.
+
+Member count coarsening: exact for PUBLIC Leagues (viewable anyway);
+rounded down to the nearest 5 (min 5) for UNLISTED Leagues and all
+Groups to avoid leaking precise headcounts.
+"""
+type InvitePreview {
+  """
+  Display name of the owning `League` or `Group`.
+  """
+  ownerName: String!
+  """
+  Which aggregate kind is being joined.
+  """
+  ownerType: OwnerType!
+  """
+  Sport of the owning aggregate. Null when the aggregate itself has no
+  required sport (e.g., a multi-sport Group where series set their own
+  sport).
+  """
+  sport: SportType
+  """
+  Current member count. Exact for PUBLIC Leagues; coarsened (floor to 5,
+  minimum 5) for UNLISTED Leagues and all Groups.
+  """
+  memberCount: Int!
+  """
+  The user who sent the invitation. Null for untargeted invite links.
+  """
+  invitedByUser: User
+  """
+  Up to 3 Admins of the owning aggregate (by join date ASC) for social
+  proof in the preview UI.
+  """
+  displayAdmins: [User!]!
+  """
+  Status used to render the preview:
+  - For `Invitation`: the underlying `InvitationStatus`.
+  - For `InviteLink`: synthesized — `SENT` when active, `EXPIRED` when
+    past `expiresAt` or `usesRemaining = 0`, `REVOKED` when revoked.
+  """
+  status: InvitationStatus!
+  """
+  When the underlying token expires. Null for links without an expiry.
+  """
+  expiresAt: DateTime
+  """
+  Remaining redemptions on an invite link. Null for `Invitation` tokens
+  (which are one-shot) and for links without a max-uses cap.
+  """
+  usesRemaining: Int
+}
+
+"""
+Shareable link that grants the `role` in the owning aggregate to any user
+who redeems its token. Use `createInviteLink` to mint, `redeemInviteLink`
+to consume. Atomic `usesRemaining` decrement guards against concurrent
+redeems exceeding the cap.
+
+Existing-member redeem is a no-op (returns success). Re-visiting the same
+link as a user who has already redeemed is a no-op.
+"""
+type InviteLink implements Node {
+  id: ID!
+  """
+  Which aggregate kind this link targets.
+  """
+  ownerType: OwnerType!
+  """
+  ID of the owning `League` or `Group`.
+  """
+  ownerId: ID!
+  """
+  User who created the link.
+  """
+  createdBy: User!
+  """
+  Last 6 characters of the token, prefixed with an ellipsis (e.g. `…abc123`).
+  Safe to display to Admins in the UI; the full token is never returned
+  outside the redeem flow.
+  """
+  tokenPreview: String!
+  """
+  Role granted on redeem. Always `MEMBER` in v1 — links cannot mint Admins.
+  """
+  role: MembershipRole!
+  """
+  Total redemption cap at creation time. Null for unlimited links.
+  Immutable post-create.
+  """
+  maxUses: Int
+  """
+  Remaining redemptions. Null when `maxUses` is null (unlimited).
+  Decremented atomically on each successful redeem.
+  """
+  usesRemaining: Int
+  """
+  Expiry instant. Null for links that do not expire.
+  """
+  expiresAt: DateTime
+  """
+  When the link was revoked. Null until `revokeInviteLink` is called.
+  """
+  revokedAt: DateTime
+  """
+  Admin who revoked the link, if revoked.
+  """
+  revokedBy: User
+  createdDate: DateTime!
+}
+
+type InviteLinkEdge implements Edge {
+  cursor: String!
+  node: InviteLink!
+}
+
+"""
+Connection of `InviteLink` rows. Cursor-based pagination; no `totalCount`.
+"""
+type InviteLinkConnection implements Connection {
+  edges: [InviteLinkEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+"""
+Identifies the recipient of an `Invitation`. Exactly one field must be set
+(enforced by `@oneOf`). User-id path is used for direct-add against known
+users; email path covers outreach to non-users (the account may or may not
+exist at send time).
+"""
+input InvitationRecipientInput @oneOf {
+  """
+  Database id of an existing `PlaygroundUser`.
+  """
+  userId: ID
+  """
+  Email address. Server validates RFC 5322 shape and lowercases. If the
+  email matches an existing user's account email on accept, the match
+  is recorded in `Invitation.acceptedBy`.
+  """
+  email: String
+}
+
+"""
+Identifies the owning aggregate of an `Invitation` or `InviteLink`.
+Exactly one field must be set.
+"""
+input OwnerRefInput @oneOf {
+  leagueId: ID
+  groupId: ID
+}
+
+"""
+Batch invitation send. Server-side caps:
+- `recipients` length ≤ 200 per call (requirements §3.16); over-cap
+  requests return `InvitationBatchCapExceededError`.
+- Per-caller rate limit (Bucket4j) on `(ownerId, invitedByUserId)`;
+  exceeding returns `RateLimitError` with `retryAfterSeconds`.
+
+Deduplication: duplicate recipients (same email or userId) within the same
+call are collapsed server-side; the returned `skippedDuplicates` list
+echoes the dropped values so the client can reconcile.
+
+If a `SENT` invitation already exists for the same owner + recipient, it
+is auto-revoked and replaced by the new row (preserves dedupe semantics
+without violating uniqueness).
+"""
+input SendInvitationsInput {
+  """
+  Which aggregate (League or Group) to invite into.
+  """
+  owner: OwnerRefInput!
+  """
+  Recipients to invite. Max 200 per call.
+  """
+  recipients: [InvitationRecipientInput!]!
+  """
+  Role the invitees will receive on accept. Defaults to `MEMBER`.
+  """
+  role: MembershipRole = MEMBER
+}
+
+"""
+Create a new `InviteLink` on the given owner. The plaintext token is
+returned exactly once in the response; only `tokenPreview` is retrievable
+afterwards.
+"""
+input CreateInviteLinkInput {
+  owner: OwnerRefInput!
+  """
+  Total redemption cap. Null = unlimited. Must be > 0 when set.
+  Bounded by server-side per-aggregate policy.
+  """
+  maxUses: Int
+  """
+  Expiry instant. Null = never expires. Must be in the future when set.
+  """
+  expiresAt: DateTime
+}
+
+"""
+Accept an invitation. Exactly one identifier must be supplied:
+- `invitationId`: used by in-app direct-add recipients (already
+  authenticated, clicked an in-app notification).
+- `token`: used by email / deep-link recipients clicking a mailer link.
+  The token path bypasses Cerbos resource checks (policy token-gate), but
+  still requires the caller to be authenticated and match the invited
+  email (if the invitation was email-based).
+"""
+input AcceptInvitationInput @oneOf {
+  invitationId: ID
+  token: String
+}
+
+"""
+Redeem an `InviteLink`. Token is always required (links have no stable id
+surface for non-Admin callers — only the token).
+"""
+input RedeemInviteLinkInput {
+  token: String!
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+"""
+Successful batch send. `invitations` contains every row that was actually
+persisted (deduped + auto-revoked priors are replaced, not duplicated).
+`skippedDuplicates` lists the duplicate keys within the call that were
+collapsed.
+"""
+type SendInvitationsResponse {
+  invitations: [Invitation!]!
+  """
+  Recipient keys that were collapsed as duplicates of another recipient in
+  the same call. Emails are lowercased; user ids are stringified.
+  """
+  skippedDuplicates: [String!]!
+}
+
+type ResendInvitationResponse {
+  invitation: Invitation!
+}
+
+type RevokeInvitationResponse {
+  invitation: Invitation!
+}
+
+type AcceptInvitationResponse {
+  invitation: Invitation!
+}
+
+type DeclineInvitationResponse {
+  invitation: Invitation!
+}
+
+"""
+Response for `createInviteLink`. The plaintext `token` is returned exactly
+once and cannot be retrieved afterwards; Admins viewing the link later
+will only see `InviteLink.tokenPreview`.
+"""
+type CreateInviteLinkResponse {
+  inviteLink: InviteLink!
+  """
+  Plaintext token. Show once and never again.
+  """
+  token: String!
+}
+
+type RevokeInviteLinkResponse {
+  inviteLink: InviteLink!
+}
+
+"""
+Response for `redeemInviteLink`. `alreadyMember` is true when the redeemer
+was already a member of the owning aggregate (the redemption is a no-op
+but still succeeds; `usesRemaining` is NOT decremented in this case).
+"""
+type RedeemInviteLinkResponse {
+  inviteLink: InviteLink!
+  """
+  True when the redeemer was already a member — redemption was a no-op.
+  """
+  alreadyMember: Boolean!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+"""
+A Bucket4j rate limit was hit on a mutation (send / resend / dispute /
+report-issue / etc.). Caller should back off for at least
+`retryAfterSeconds` before retrying.
+
+This type is shared across every rate-limited mutation in the leagues
+module. Subsequent schema files (`league/schedule.graphqls`,
+`league/game-result.graphqls`) reference this type by name rather than
+redefining it.
+"""
+type RateLimitError implements Error {
+  message: String!
+  """
+  Seconds the caller must wait before the bucket will accept another
+  request. Derived from `Bucket4j.estimateAbilityToConsume(...)
+  .getNanosToWaitForRefill()` with `Math.ceil(nanos / 1e9)`, so the value
+  is always >= 1 when returned.
+  """
+  retryAfterSeconds: Int!
+}
+
+"""
+The owning `League` or `Group` referenced by an invitation operation does
+not exist, is archived, or is not visible to the caller. Used in PR 4
+before aggregate-specific `LeagueNotFoundError` / `GroupNotFoundError` are
+introduced; subsequent schemas may narrow this to the aggregate-specific
+variant.
+"""
+type InvitationOwnerNotFoundError implements Error {
+  message: String!
+  ownerType: OwnerType!
+  ownerId: ID!
+}
+
+"""
+The invitation is past its `expiresAt` and was swept to `EXPIRED`. The
+invitee may request a fresh send from the aggregate Admin.
+"""
+type InvitationExpiredError implements Error {
+  message: String!
+  invitationId: ID!
+}
+
+"""
+The invitation has already been answered (`ACCEPTED` / `DECLINED` /
+`REVOKED` / `EXPIRED`) and cannot accept a new response. Returned by
+`acceptInvitation`, `declineInvitation`, and `revokeInvitation` when the
+row is not in `SENT` state.
+"""
+type InvitationAlreadyRespondedError implements Error {
+  message: String!
+  invitationId: ID!
+  currentStatus: InvitationStatus!
+}
+
+"""
+The batch exceeded the 200-recipient cap for `sendInvitations`.
+"""
+type InvitationBatchCapExceededError implements Error {
+  message: String!
+  """
+  Number of recipients supplied by the caller.
+  """
+  submittedCount: Int!
+  """
+  Server-enforced maximum (currently 200).
+  """
+  maxCount: Int!
+}
+
+type InviteLinkNotFoundError implements Error {
+  message: String!
+}
+
+"""
+The link's `usesRemaining` reached 0. Terminal — Admins must mint a new
+link.
+"""
+type InviteLinkExhaustedError implements Error {
+  message: String!
+  linkId: ID!
+}
+
+"""
+The link was revoked by an Admin before this redemption attempt.
+"""
+type InviteLinkRevokedError implements Error {
+  message: String!
+  linkId: ID!
+}
+
+"""
+The link is past its `expiresAt`. Terminal.
+"""
+type InviteLinkExpiredError implements Error {
+  message: String!
+  linkId: ID!
+}
+
+# ============================================================================
+# Result unions (one per mutation)
+# ============================================================================
+
+union SendInvitationsResult =
+  | SendInvitationsResponse
+  | InvitationOwnerNotFoundError
+  | InvitationBatchCapExceededError
+  | RateLimitError
+
+union ResendInvitationResult =
+  | ResendInvitationResponse
+  | InvitationNotFoundError
+  | InvitationAlreadyRespondedError
+  | InvitationExpiredError
+  | RateLimitError
+
+union RevokeInvitationResult =
+  | RevokeInvitationResponse
+  | InvitationNotFoundError
+  | InvitationAlreadyRespondedError
+
+union AcceptInvitationResult =
+  | AcceptInvitationResponse
+  | InvitationNotFoundError
+  | InvitationAlreadyRespondedError
+  | InvitationExpiredError
+
+union DeclineInvitationResult =
+  | DeclineInvitationResponse
+  | InvitationNotFoundError
+  | InvitationAlreadyRespondedError
+  | InvitationExpiredError
+
+union CreateInviteLinkResult =
+  | CreateInviteLinkResponse
+  | InvitationOwnerNotFoundError
+
+union RevokeInviteLinkResult =
+  | RevokeInviteLinkResponse
+  | InviteLinkNotFoundError
+
+union RedeemInviteLinkResult =
+  | RedeemInviteLinkResponse
+  | InviteLinkNotFoundError
+  | InviteLinkExhaustedError
+  | InviteLinkRevokedError
+  | InviteLinkExpiredError
+
+# ============================================================================
+# Query / Mutation extensions
+# ============================================================================
+
+extend type Query {
+  """
+  Resolve an invitation or invite-link token to a minimal preview suitable
+  for rendering an accept/decline landing page. Token-gated: the caller
+  does not need to be authenticated, but anonymous callers cannot act on
+  the preview (they must sign in to call `acceptInvitation` /
+  `redeemInviteLink`). Returns null when the token is unknown, revoked,
+  expired, or the owning aggregate is archived.
+  """
+  resolveInvite(token: String!): InvitePreview
+}
+
+extend type Mutation {
+  """
+  Send one or more invitations to join a League or Group. Batch cap 200
+  per call. Rate-limited per `(ownerId, invitedByUserId)`. Duplicates
+  within the batch are collapsed and echoed in `skippedDuplicates`; a
+  prior `SENT` invitation for the same owner + recipient is auto-revoked
+  before the new row is written.
+  """
+  sendInvitations(input: SendInvitationsInput!): SendInvitationsResult!
+
+  """
+  Re-send an existing `SENT` invitation, extending `expiresAt` to the
+  server's default window and refreshing `lastEventAt`. No-op on
+  terminal invitations. Rate-limited.
+  """
+  resendInvitation(invitationId: ID!): ResendInvitationResult!
+
+  """
+  Revoke a still-pending invitation. Only Admins of the owning aggregate
+  (or the inviter) can call this. Terminal for the invitation row.
+  """
+  revokeInvitation(invitationId: ID!): RevokeInvitationResult!
+
+  """
+  Accept an invitation. See `AcceptInvitationInput` for the token vs.
+  invitation-id path distinction. On success, atomically:
+  - sets `status = ACCEPTED` + `acceptedBy`
+  - creates `LeagueMembership` / `GroupMembership` with the invited role
+  - for LEAGUE owners, creates or re-activates the `LeaguePlayer`
+  - emits `LeagueMembershipChangedEvent` / `GroupMembershipChangedEvent`
+    which drives chat-room sync in the notification module
+  - fires notification #2 `INVITATION_ACCEPTED` to the inviter
+  """
+  acceptInvitation(input: AcceptInvitationInput!): AcceptInvitationResult!
+
+  """
+  Decline an invitation. For direct-add invitations, fires notification #3
+  `INVITATION_DECLINED` to the inviter; for email-only or link-derived
+  invitations, no notification is sent (declining an email outreach is
+  silent).
+  """
+  declineInvitation(invitationId: ID!): DeclineInvitationResult!
+
+  """
+  Mint a new shareable `InviteLink`. The plaintext token is returned
+  exactly once on the response — Admins viewing the link afterwards will
+  only see `InviteLink.tokenPreview`. In v1, links can only grant
+  `MEMBER` role (Admin role is reserved for direct-add invitations).
+  """
+  createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkResult!
+
+  """
+  Revoke an invite link. Idempotent — revoking an already-revoked link
+  returns success with the existing `revokedAt`.
+  """
+  revokeInviteLink(linkId: ID!): RevokeInviteLinkResult!
+
+  """
+  Redeem an invite-link token. Requires an authenticated caller. Atomic
+  decrement on `usesRemaining` (skipped when the caller is already a
+  member of the owning aggregate — returns `alreadyMember = true` with no
+  decrement). On successful first-time redeem, performs the same
+  membership + chat-sync + notification side-effects as
+  `acceptInvitation`.
+  """
+  redeemInviteLink(input: RedeemInviteLinkInput!): RedeemInviteLinkResult!
+}
+# ============================================================================
+# Shared types for the leagues module. Imported implicitly by every league
+# schema file (league/*, group/*, invite/*). These types are league-scoped:
+# they only apply to League and Group membership, not to game-level
+# invitations or other unrelated domains.
+#
+# Custom scalars used by this module (e.g. Date for LocalDate-typed
+# boundaries such as joinedDate or skipDates) are declared in the root
+# schema.graphqls and registered in configuration/graphql/. This file does
+# not redeclare them.
+# ============================================================================
+
+"""
+Membership role within a League or Group.
+
+- `ADMIN`: can manage the aggregate — invite/remove members, schedule games,
+  archive the aggregate, edit settings.
+- `MEMBER`: standard participant — can view, RSVP, chat, be rostered.
+
+Org-level admin rights are expressed separately (Org Admins implicitly hold
+League Admin on every League under the Org; enforced via Cerbos derived
+roles, not via this enum).
+"""
+enum MembershipRole {
+  ADMIN
+  MEMBER
+}
+
+"""
+Why a member's `departedAt` was set. Present only on departed membership
+rows; null on active memberships.
+
+- `LEFT`: the member voluntarily left the aggregate.
+- `REMOVED`: an Admin removed the member from the aggregate.
+"""
+enum DepartureReason {
+  LEFT
+  REMOVED
+}
+
+"""
+Discriminator for the owning aggregate of an `Invitation` or `InviteLink`.
+
+- `LEAGUE`: the invite grants membership in a `League`. On accept, a
+  `LeaguePlayer` row is auto-created in addition to the `LeagueMembership`.
+- `GROUP`: the invite grants membership in a `Group`. On accept, only
+  `GroupMembership` is created — Groups do not auto-create `GroupPlayer`
+  rows (placeholders are opt-in).
+
+Each `Invitation` / `InviteLink` row carries this discriminator plus a
+polymorphic `ownerId`. App-layer referential integrity.
+"""
+enum OwnerType {
+  LEAGUE
+  GROUP
+}
+
+# ============================================================================
+# Shared errors for the leagues module. Referenced by league/organization,
+# league/league, league/season schemas (and later by group/* in a future PR).
+# ============================================================================
+
+"""
+A slug conflicts with an existing row in the same scope (global for
+Organization, per-organization for League, global for Group).
+"""
+type SlugUnavailableError implements Error {
+  message: String!
+  slug: String!
+}
+
+"""
+Optimistic-concurrency write lost to a concurrent update. The caller should
+re-fetch the target entity and retry with the latest `version` in
+`expectedVersion`.
+"""
+type StaleWriteError implements Error {
+  message: String!
+  entityName: String!
+  entityId: ID!
+}
+
+"""
+The supplied IANA timezone id is not recognized by the JVM
+(`ZoneId.of(tz)` throws). Use a standard id like `America/New_York`.
+"""
+type InvalidTimezoneError implements Error {
+  message: String!
+  timezone: String
+}
+
+"""
+Either the create mutation did not provide gameDefaults for a sport that
+requires them, or `sportType` has no game-defaults support at all (so no
+league or series can be created for it). Shared by `createLeague` and
+`createGameSeries`. `supportedSports` lists the sports that can carry
+defaults, so clients can render an "enter rules for sport X" form without
+hardcoding the list.
+"""
+type GameDefaultsRequiredError implements Error {
+  message: String!
+  sportType: SportType!
+  supportedSports: [SportType!]!
+}
+
+"""
+The gameDefaults branch chosen does not match the target's `sportType`. Clients
+should re-render the input with the matching sport branch selected. Shared by
+`createLeague` and `createGameSeries`.
+"""
+type GameDefaultsSportMismatchError implements Error {
+  message: String!
+  expectedSport: SportType!
+  providedSport: SportType!
+}
+
+"""
+A LeaguePlayer placeholder cannot be hard-deleted because one or more
+`LeagueTeamRoster` rows still reference it. Remove the player from all
+teams first, then retry.
+"""
+type PlaceholderHasReferencesError implements Error {
+  message: String!
+  playerId: ID!
+  referenceCount: Int!
+}
+
+"""
+A player was passed to a roster / copy operation whose `leagueId` does
+not match the target league. Players are league-scoped and cannot move
+between leagues.
+"""
+type CrossLeaguePlayerError implements Error {
+  message: String!
+  playerId: ID
+  leagueId: ID!
+}
+
+"""
+The captain user id does not correspond to an active real-user roster
+entry on the target team. Captains must be members of the team's active
+roster.
+"""
+type CaptainNotRosteredError implements Error {
+  message: String!
+  teamId: ID!
+  userId: ID!
+}
+
+"""
+The target `LeagueTeam` does not exist (or is not readable under the
+caller's visibility).
+"""
+type LeagueTeamNotFoundError implements Error {
+  message: String!
+  teamId: ID!
+}
+
+"""
+The target `LeaguePlayer` does not exist (or is not readable).
+"""
+type LeaguePlayerNotFoundError implements Error {
+  message: String!
+  playerId: ID!
+}
+
+"""
+The target `LeagueTeam` is archived (`archivedAt` is set) and cannot accept
+roster writes. Archived teams exist to preserve historical
+`TeamInstance.sourceTeamId` references on already-played games; they are
+read-only from the roster perspective. Hard-delete the team if it truly has
+no game references (the service decides archive-vs-hard-delete transparently
+in `deleteLeagueTeam`).
+"""
+type ArchivedLeagueTeamError implements Error {
+  message: String!
+  teamId: ID!
+}
+
+"""
+Sort options for league/group game connections.
+
+- `SCHEDULED_AT_ASC`: earliest start time first. Default for forward-looking
+  views (upcoming games, current-season schedules).
+- `SCHEDULED_AT_DESC`: latest start time first. For history / past-games
+  views.
+- `CREATED_AT_DESC`: most-recently-scheduled first. For admin activity
+  feeds where order-of-entry matters more than kickoff time.
+
+Secondary ordering (for tie-breaking on identical timestamps) is by `id`
+in the same direction as the primary field.
+"""
+enum GameSort {
+  SCHEDULED_AT_ASC
+  SCHEDULED_AT_DESC
+  CREATED_AT_DESC
+}
+# ============================================================================
+# League contributions to the core-owned `Game` type. `Game.league` and
+# `Game.season` are resolved by
+# `league/competition/controller/GameContextLeagueContributor.java`;
+# `Game.viewerLeagueRole` by `GameResultSchemaContributor`.
+#
+# `Game.group` / `Game.sourceSeries` / `Game.sourceOccurrence` are
+# contributed by the casual track in `group/game-context.graphqls`.
+# `Game.result`, `Game.viewerCanReportResult`, and
+# `Game.viewerCanConfirmResult` are defined in `league/game-result.graphqls`
+# and also resolved by `GameResultSchemaContributor`. `Game.viewerGameRole`
+# (core, `game.graphqls`) is the separate per-game management role.
+# ============================================================================
+
+"""
+The viewer's league-derived relationship to a Game. Precedence:
+ADMIN > CAPTAIN > PARTICIPANT.
+"""
+enum LeagueGameRole {
+  ADMIN
+  CAPTAIN
+  PARTICIPANT
+}
+
+extend type Game {
+  """
+  The League this Game belongs to. Null for Group-owned or unassigned
+  Games.
+  """
+  league: League
+  """
+  The Season this Game is scheduled under. Always null when `league` is
+  null; may be null for Games scheduled in a League without a Season.
+  """
+  season: Season
+  """
+  Viewer's league-derived relationship to this game. Display only; never gate on it.
+  Null when Game.league is null for this viewer, when anonymous, or when the viewer holds no league role.
+  """
+  viewerLeagueRole: LeagueGameRole
+}
+# ============================================================================
+# League game defaults — sport-format config set at league-create time and
+# snapshotted onto every Game scheduled in the league. Reuses the existing
+# `GameMetadata` union (output) and `GameMetadataInput @oneOf` (input) from
+# game.graphqls rather than introducing parallel league-specific types.
+# Backed by `League.gameDefaults` (JSONB) and applied by
+# `LeagueScheduleService.createScheduledGame`.
+# ============================================================================
+
+extend type League {
+  """
+  Sport-format defaults applied to every Game scheduled in this league.
+  Snapshotted onto each scheduled Game's per-sport metadata row at schedule time —
+  changing this field later does not affect already-scheduled Games.
+  """
+  gameDefaults: GameMetadata
+}
+
+extend input CreateLeagueInput {
+  """
+  Sport-format defaults applied to every Game scheduled in this league. Required
+  for every league; the set branch must match the chosen `sportType`.
+  """
+  gameDefaults: GameMetadataInput
+}
+# ============================================================================
+# Game issue reports (requirements §4.12). A report is not persisted: it is
+# delivered as notification #15 GAME_ISSUE_REPORTED to the owning league or
+# group admins plus the game's owner and editors. Backed by
+# `GameIssueReportService` + `GameIssueController`.
+# ============================================================================
+
+"""
+What a game issue report is about.
+"""
+enum GameIssueConcernType {
+  INCORRECT_SCORE
+  INCORRECT_SCHEDULE
+  INCORRECT_ROSTER
+  CONDUCT
+  OTHER
+}
+
+input ReportGameIssueInput {
+  gameId: ID!
+  concernType: GameIssueConcernType!
+  """
+  Optional free-text detail, at most 1000 characters.
+  """
+  note: String
+}
+
+type ReportGameIssueResponse {
+  gameId: ID!
+}
+
+union ReportGameIssueResult =
+  | ReportGameIssueResponse
+  | GameNotFoundError
+  | RateLimitError
+
+extend type Mutation {
+  """
+  Report a problem with a game the viewer can read. Rate-limited to 3 reports
+  per 24h per viewer. A game the viewer cannot read returns GameNotFoundError.
+  """
+  reportGameIssue(input: ReportGameIssueInput!): ReportGameIssueResult!
+}
+# ============================================================================
+# Two-step report → confirm flow for league game results, plus dispute and
+# the Game-extension fields the league module contributes (`result`,
+# `viewerCanReportResult`, `viewerCanConfirmResult`). Backed by
+# `GameResultService` + `GameResultSchemaContributor`. Forfeit lands via
+# `forfeitGame` in `league/schedule.graphqls`.
+# ============================================================================
+
+type GameResult implements Node {
+  id: ID!
+  reportedBy: User
+  reportedAt: DateTime!
+  confirmedBy: User
+  confirmedAt: DateTime
+  """
+  When non-null, the team awarded the win via admin forfeit. Score-based
+  winners are derived at standings time and not stored on this row — only
+  forfeits carry an explicit winner.
+  """
+  forfeitWinnerTeamInstance: TeamInstance
+}
+
+extend type Game {
+  """
+  Reported / confirmed result for this Game, or null when no result has been
+  recorded yet. A row exists only after `reportGameResult` (or `forfeitGame`).
+  Disputes hard-delete the row, returning to null.
+  """
+  result: GameResult
+  """
+  Whether the viewer may invoke `reportGameResult` for this Game. Computed
+  from Cerbos against `game_result:report` — true for league members,
+  league admins, and team captains.
+  """
+  viewerCanReportResult: Boolean!
+  """
+  Whether the viewer may invoke `confirmGameResult` for this Game. Computed
+  from Cerbos against `game_result:confirm` — true for opposing-team
+  captains and league admins. Self-confirm is blocked at service time.
+  """
+  viewerCanConfirmResult: Boolean!
+  """
+  Whether the Game's sport permits a draw outcome (equal scores). Static per
+  sport. None of the currently implemented sports allow draws.
+  """
+  sportAllowsDraws: Boolean!
+  """
+  Coarse state of the Game's result derived from `gameStatus`, the optional
+  `GameResult` row, and sport-specific score presence. See `GameOutcome` for
+  the state machine. Never persisted.
+  """
+  outcome: GameOutcome!
+}
+
+"""
+Coarse state of a Game's result, used by clients to drive UI states such as
+"needs score entered", "awaiting opponent confirmation", or "final". Once a
+GameResult row exists, that row is the source of truth — post-confirm score
+edits do not roll the state back.
+"""
+enum GameOutcome {
+  """
+  No GameResult row and no derivable winner from currently-entered scores.
+  """
+  NOT_REPORTED
+  """
+  Sport-specific scores have been entered such that a winner can be derived
+  (i.e. unequal scores), but no GameResult row has been recorded yet. Drives
+  a "Report" affordance in the UI.
+  """
+  SCORE_ENTERED
+  """
+  GameResult row exists with confirmedAt = null.
+  """
+  REPORTED_AWAITING_CONFIRM
+  """
+  GameResult is confirmed; winner derivable from the row at confirm time.
+  """
+  CONFIRMED_WIN
+  """
+  Game.gameStatus = FORFEITED — winner carried by GameResult.forfeitWinnerTeamInstanceId.
+  """
+  FORFEITED
+  """
+  Game.gameStatus = CANCELLED — terminal; the game cannot be reported, confirmed, or won.
+  """
+  CANCELLED
+}
+
+extend type Mutation {
+  """
+  Records a reported result for the Game. The implied winner is derived
+  from sport-specific score fields via `GameOutcomeService`; when no winner
+  can be determined the call returns `ScoreNotEnteredError`. Re-report
+  overwrites an unconfirmed result; once confirmed,
+  `GameResultAlreadyConfirmedError` is returned.
+  """
+  reportGameResult(input: ReportGameResultInput!): ReportGameResultResult!
+
+  """
+  Atomic alternative to `reportGameResult` for clients that already have
+  the final score at report time. Validates the per-sport `scores` payload
+  against the game's sport and `TeamInstance` membership, writes the
+  aggregate score field on each team's metadata, then performs the same
+  report flow as `reportGameResult` (Cerbos check, winner derivation,
+  re-report-vs-confirmed guard, event publication). The two-step flow
+  (`update*TeamMetadata` then `reportGameResult`) remains available for
+  clients that enter scores incrementally.
+  """
+  reportGameResultWithScore(
+    input: ReportGameResultWithScoreInput!
+  ): ReportGameResultWithScoreResult!
+
+  """
+  Confirms a previously reported result. Captains may not confirm their own
+  report (`SelfConfirmBlockedError`); league admins bypass that rule.
+  """
+  confirmGameResult(input: ConfirmGameResultInput!): ConfirmGameResultResult!
+
+  """
+  Hard-deletes the GameResult row, returning the Game to "no result" so a
+  fresh report can land. Rate-limited 1 / 24h per (gameId, viewerUserId).
+  """
+  disputeGameResult(input: DisputeGameResultInput!): DisputeGameResultResult!
+}
+
+input ReportGameResultInput {
+  gameId: ID!
+}
+
+input ReportGameResultWithScoreInput {
+  gameId: ID!
+  scores: SportScoreInput!
+}
+
+"""
+Sport-specific score payload for `reportGameResultWithScore`. Exactly one
+field must be set, matching the game's sport (enforced by `@oneOf`). Each
+branch carries a list of two team-score entries — one per `TeamInstance`
+on the game.
+"""
+input SportScoreInput @oneOf {
+  basketball: TeamScoresInput
+  football: TeamScoresInput
+  baseball: TeamScoresInput
+  tennis: TeamScoresInput
+  volleyball: TeamScoresInput
+  pickleball: TeamScoresInput
+}
+
+"""
+Two team-score entries — one per `TeamInstance` on the game. The numeric
+value is interpreted per-sport: basketball / football / baseball use raw
+points, tennis / volleyball use sets won, pickleball uses games won.
+"""
+input TeamScoresInput {
+  teamScores: [TeamScoreEntryInput!]!
+}
+
+input TeamScoreEntryInput {
+  teamInstanceId: ID!
+  """
+  Sport-dependent value: basketball / football / baseball points,
+  tennis / volleyball setsWon, pickleball gamesWon. Must be >= 0.
+  """
+  value: Int!
+}
+
+input ConfirmGameResultInput {
+  gameId: ID!
+}
+
+input DisputeGameResultInput {
+  gameId: ID!
+  note: String
+}
+
+type ReportGameResultResponse {
+  result: GameResult!
+}
+
+type ConfirmGameResultResponse {
+  result: GameResult!
+}
+
+type DisputeGameResultResponse {
+  gameId: ID!
+}
+
+"""
+The Game has no entered score, so no winner can be derived. Enter sport-
+specific score values via the relevant `update*TeamMetadata` mutation
+before reporting.
+"""
+type ScoreNotEnteredError implements Error {
+  message: String!
+  gameId: ID!
+}
+
+"""
+The Game has no recorded result yet — `reportGameResult` must run first.
+"""
+type GameResultNotReportedError implements Error {
+  message: String!
+  gameId: ID!
+}
+
+"""
+The Game's result has already been confirmed. To re-report, dispute first.
+"""
+type GameResultAlreadyConfirmedError implements Error {
+  message: String!
+  gameId: ID!
+}
+
+"""
+The viewer reported the result and is not a league admin, so they cannot
+confirm it. The opposing team's captain (or any league admin) must confirm.
+"""
+type SelfConfirmBlockedError implements Error {
+  message: String!
+  gameId: ID!
+  userId: ID!
+}
+
+"""
+Discriminator for `ScoreValidationError` and `TeamScoreError`. Lets clients
+switch on a stable code instead of parsing messages.
+"""
+enum ScoreErrorCode {
+  """
+  `SportScoreInput` branch chosen does not match the game's sport.
+  """
+  SPORT_MISMATCH
+  """
+  The score input did not provide exactly two team-score entries.
+  """
+  WRONG_TEAM_COUNT
+  """
+  Both team-score entries reference the same `teamInstanceId`.
+  """
+  DUPLICATE_TEAM
+  """
+  A `teamInstanceId` in the input does not belong to the target game.
+  """
+  TEAM_NOT_ON_GAME
+  """
+  A score value was negative.
+  """
+  NEGATIVE_SCORE
+}
+
+"""
+Top-level validation failure for `reportGameResultWithScore` — issues that
+are not tied to a specific `teamInstanceId` (sport mismatch, wrong team
+count). Per-team issues use `TeamScoreError`.
+"""
+type ScoreValidationError implements Error {
+  message: String!
+  code: ScoreErrorCode!
+  gameId: ID!
+}
+
+"""
+Per-team validation failure for `reportGameResultWithScore`. Carries the
+offending `teamInstanceId` so clients can highlight the specific input row.
+"""
+type TeamScoreError implements Error {
+  message: String!
+  code: ScoreErrorCode!
+  gameId: ID!
+  teamInstanceId: ID!
+}
+
+"""
+The game's status (e.g. CANCELLED) does not allow result actions. Clients should not
+surface report/confirm affordances for a game in this state.
+"""
+type GameNotReportableError implements Error {
+  message: String!
+  gameId: ID!
+  gameStatus: GameStatus!
+}
+
+union ReportGameResultResult =
+  | ReportGameResultResponse
+  | GameNotFoundError
+  | ScoreNotEnteredError
+  | GameResultAlreadyConfirmedError
+  | GameNotReportableError
+  | InsufficientLeagueRoleError
+
+union ReportGameResultWithScoreResult =
+  | ReportGameResultResponse
+  | GameNotFoundError
+  | ScoreValidationError
+  | TeamScoreError
+  | ScoreNotEnteredError
+  | GameResultAlreadyConfirmedError
+  | GameNotReportableError
+  | InsufficientLeagueRoleError
+
+union ConfirmGameResultResult =
+  | ConfirmGameResultResponse
+  | GameNotFoundError
+  | GameResultNotReportedError
+  | GameResultAlreadyConfirmedError
+  | SelfConfirmBlockedError
+  | GameNotReportableError
+  | InsufficientLeagueRoleError
+
+union DisputeGameResultResult =
+  | DisputeGameResultResponse
+  | GameNotFoundError
+  | GameResultNotReportedError
+  | InsufficientLeagueRoleError
+  | RateLimitError
+# ============================================================================
+# LeaguePlayer — league-scoped roster entry. Either backed by a real user
+# (`user` non-null) or a pure placeholder (`user` null, `displayName` held
+# in the row itself). Placeholders are permanent — no merge/claim path.
+# Real-user players are auto-created when a LEAGUE Invitation or InviteLink
+# is accepted (see `Invitation.accept` in the shared invite schema).
+# ============================================================================
+
+"""
+Lifecycle status of a `LeaguePlayer`.
+"""
+enum PlayerStatus {
+  ACTIVE
+  REMOVED
+}
+
+type LeaguePlayer implements Node {
+  id: ID!
+  league: League!
+  """
+  Non-null for real-user players; null for placeholders.
+  """
+  user: User
+  displayName: String!
+  status: PlayerStatus!
+}
+
+type LeaguePlayerEdge implements Edge {
+  cursor: String!
+  node: LeaguePlayer!
+}
+
+type LeaguePlayerConnection implements Connection {
+  edges: [LeaguePlayerEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# Query extensions
+# ============================================================================
+
+extend type League {
+  """
+  Active LeaguePlayer roster (placeholder + real-user) for this League.
+  """
+  players(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeaguePlayerConnection!
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateLeaguePlaceholderPlayerInput {
+  leagueId: ID!
+  displayName: String!
+}
+
+input UpdateLeaguePlaceholderPlayerInput {
+  playerId: ID!
+  displayName: String
+}
+
+input AddLeaguePlayerToTeamInput {
+  teamId: ID!
+  playerId: ID!
+}
+
+input RemoveLeaguePlayerFromTeamInput {
+  teamId: ID!
+  playerId: ID!
+}
+
+input SwapLeagueTeamPlayerInput {
+  teamId: ID!
+  fromPlayerId: ID!
+  toPlayerId: ID!
+}
+
+input RemoveLeaguePlayerInput {
+  playerId: ID!
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateLeaguePlaceholderPlayerResponse {
+  player: LeaguePlayer!
+}
+
+type UpdateLeaguePlaceholderPlayerResponse {
+  player: LeaguePlayer!
+}
+
+type DeleteLeaguePlaceholderPlayerResponse implements DeleteResponse {
+  id: ID!
+}
+
+type AddLeaguePlayerToTeamResponse {
+  rosterEntry: LeagueTeamRoster!
+}
+
+type RemoveLeaguePlayerFromTeamResponse {
+  rosterEntry: LeagueTeamRoster!
+}
+
+"""
+Both roster rows produced by a swap: the now-removed entry and the new active entry.
+"""
+type SwapLeagueTeamPlayerResponse {
+  removedEntry: LeagueTeamRoster!
+  addedEntry: LeagueTeamRoster!
+}
+
+type RemoveLeaguePlayerResponse {
+  player: LeaguePlayer!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateLeaguePlaceholderPlayerResult =
+  | CreateLeaguePlaceholderPlayerResponse
+  | LeagueNotFoundError
+  | InsufficientLeagueRoleError
+
+union UpdateLeaguePlaceholderPlayerResult =
+  | UpdateLeaguePlaceholderPlayerResponse
+  | LeaguePlayerNotFoundError
+  | InsufficientLeagueRoleError
+
+union DeleteLeaguePlaceholderPlayerResult =
+  | DeleteLeaguePlaceholderPlayerResponse
+  | LeaguePlayerNotFoundError
+  | InsufficientLeagueRoleError
+  | PlaceholderHasReferencesError
+
+union AddLeaguePlayerToTeamResult =
+  | AddLeaguePlayerToTeamResponse
+  | LeagueTeamNotFoundError
+  | LeaguePlayerNotFoundError
+  | InsufficientLeagueRoleError
+  | CrossLeaguePlayerError
+  | ArchivedLeagueTeamError
+
+union RemoveLeaguePlayerFromTeamResult =
+  | RemoveLeaguePlayerFromTeamResponse
+  | LeagueTeamNotFoundError
+  | InsufficientLeagueRoleError
+  | ArchivedLeagueTeamError
+
+union SwapLeagueTeamPlayerResult =
+  | SwapLeagueTeamPlayerResponse
+  | LeagueTeamNotFoundError
+  | LeaguePlayerNotFoundError
+  | InsufficientLeagueRoleError
+  | CrossLeaguePlayerError
+  | ArchivedLeagueTeamError
+
+union RemoveLeaguePlayerResult =
+  | RemoveLeaguePlayerResponse
+  | LeaguePlayerNotFoundError
+  | InsufficientLeagueRoleError
+
+# ============================================================================
+# Mutation extensions
+# ============================================================================
+
+extend type Mutation {
+  createLeaguePlaceholderPlayer(
+    input: CreateLeaguePlaceholderPlayerInput!
+  ): CreateLeaguePlaceholderPlayerResult!
+  updateLeaguePlaceholderPlayer(
+    input: UpdateLeaguePlaceholderPlayerInput!
+  ): UpdateLeaguePlaceholderPlayerResult!
+  """
+  Hard-delete a placeholder `LeaguePlayer`. Fails with
+  `PlaceholderHasReferencesError` when any `LeagueTeamRoster` references it.
+  Real-user players use `removeLeaguePlayer` (which flips status to REMOVED
+  and cascades roster removal).
+  """
+  deleteLeaguePlaceholderPlayer(
+    playerId: ID!
+  ): DeleteLeaguePlaceholderPlayerResult!
+  addLeaguePlayerToTeam(
+    input: AddLeaguePlayerToTeamInput!
+  ): AddLeaguePlayerToTeamResult!
+  removeLeaguePlayerFromTeam(
+    input: RemoveLeaguePlayerFromTeamInput!
+  ): RemoveLeaguePlayerFromTeamResult!
+  """
+  Atomic soft-remove + insert. Rejects `fromPlayerId == toPlayerId`.
+  """
+  swapLeagueTeamPlayer(
+    input: SwapLeagueTeamPlayerInput!
+  ): SwapLeagueTeamPlayerResult!
+  """
+  Flip a real-user `LeaguePlayer` status to REMOVED and cascade soft-remove
+  of any active `LeagueTeamRoster` entries for the player.
+  """
+  removeLeaguePlayer(input: RemoveLeaguePlayerInput!): RemoveLeaguePlayerResult!
+}
+# ============================================================================
+# LeagueTeam — season-scoped roster container. Teams do not persist across
+# seasons; `copyTeamsFromPreviousSeason` seeds new teams from a prior
+# season's rosters. `captainUserId` is a display field — no special Cerbos
+# role is granted by being a captain.
+# ============================================================================
+
+"""
+A team within a single Season. Teams are archived (soft-deleted) when they
+are referenced by a Game via `TeamInstance.sourceTeamId`; otherwise they
+can be hard-deleted.
+"""
+type LeagueTeam implements Node {
+  id: ID!
+  season: Season!
+  name: String!
+  color: String
+  """
+  The team's declared captain. Must correspond to a non-removed
+  `LeagueTeamRoster` entry whose backing `LeaguePlayer` is a real user.
+  Null when unset.
+  """
+  captain: User
+  """
+  Active + departed roster entries. Filter client-side via `removedAt`.
+  """
+  roster(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueTeamRosterConnection!
+  """
+  Set when the team was soft-archived (had Game references at delete time).
+  Null on live teams.
+  """
+  archivedAt: DateTime
+}
+
+type LeagueTeamEdge implements Edge {
+  cursor: String!
+  node: LeagueTeam!
+}
+
+type LeagueTeamConnection implements Connection {
+  edges: [LeagueTeamEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Join-row between a `LeagueTeam` and a `LeaguePlayer`.
+"""
+type LeagueTeamRoster implements Node {
+  id: ID!
+  team: LeagueTeam!
+  player: LeaguePlayer!
+  addedAt: DateTime!
+  """
+  Set when the player was removed from the team; null while active.
+  """
+  removedAt: DateTime
+}
+
+type LeagueTeamRosterEdge implements Edge {
+  cursor: String!
+  node: LeagueTeamRoster!
+}
+
+type LeagueTeamRosterConnection implements Connection {
+  edges: [LeagueTeamRosterEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# Query extensions
+# ============================================================================
+
+extend type Season {
+  """
+  Active (non-archived) teams in this Season.
+  """
+  teams(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueTeamConnection!
+}
+
+extend type League {
+  """
+  Active teams across the League filtered to one Season. `seasonId` is
+  required — team names collide across seasons so an unscoped `League.teams`
+  query is not useful.
+  """
+  teams(
+    seasonId: ID!
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueTeamConnection!
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateLeagueTeamInput {
+  seasonId: ID!
+  name: String!
+  color: String
+}
+
+input UpdateLeagueTeamInput {
+  teamId: ID!
+  name: String
+  color: String
+  expectedVersion: Long
+}
+
+"""
+Set or clear the captain. Pass `captainUserId: null` to unset. The user
+must have a non-removed roster entry on the team.
+"""
+input SetLeagueTeamCaptainInput {
+  teamId: ID!
+  captainUserId: ID
+}
+
+input CopyTeamsFromPreviousSeasonInput {
+  sourceSeasonId: ID!
+  targetSeasonId: ID!
+  """
+  When null/empty, copy every non-archived team from the source season.
+  """
+  teamIds: [ID!]
+  carryCaptains: Boolean! = true
+  """
+  When true, do not persist — return a `PlannedCopyResponse` preview of
+  what the apply would produce. When false, actually create the teams.
+  """
+  dryRun: Boolean! = false
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateLeagueTeamResponse {
+  team: LeagueTeam!
+}
+
+type UpdateLeagueTeamResponse {
+  team: LeagueTeam!
+}
+
+type SetLeagueTeamCaptainResponse {
+  team: LeagueTeam!
+}
+
+"""
+Team was hard-deleted (had no `TeamInstance.sourceTeamId` references).
+"""
+type HardDeletedLeagueTeamResponse implements DeleteResponse {
+  id: ID!
+}
+
+"""
+Team had Game references and was soft-archived (`archivedAt` set).
+"""
+type ArchivedLeagueTeamResponse {
+  team: LeagueTeam!
+}
+
+"""
+One preview row per source team that `copyTeamsFromPreviousSeason` would create.
+"""
+type PlannedTeamCopy {
+  sourceTeamId: ID!
+  name: String!
+  color: String
+  """
+  Non-null only when `carryCaptains=true` and the source team had a captain.
+  """
+  captainUserId: ID
+  rosterPlayerIds: [ID!]!
+}
+
+"""
+Dry-run result — no rows written.
+"""
+type PlannedCopyResponse {
+  previews: [PlannedTeamCopy!]!
+}
+
+"""
+Apply result — the newly-created teams in the target season.
+"""
+type AppliedCopyResponse {
+  createdTeams: [LeagueTeam!]!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateLeagueTeamResult =
+  | CreateLeagueTeamResponse
+  | SeasonNotFoundError
+  | InsufficientLeagueRoleError
+
+union UpdateLeagueTeamResult =
+  | UpdateLeagueTeamResponse
+  | LeagueTeamNotFoundError
+  | InsufficientLeagueRoleError
+  | StaleWriteError
+
+union SetLeagueTeamCaptainResult =
+  | SetLeagueTeamCaptainResponse
+  | LeagueTeamNotFoundError
+  | InsufficientLeagueRoleError
+  | CaptainNotRosteredError
+
+union DeleteLeagueTeamResult =
+  | HardDeletedLeagueTeamResponse
+  | ArchivedLeagueTeamResponse
+  | LeagueTeamNotFoundError
+  | InsufficientLeagueRoleError
+
+union CopyTeamsFromPreviousSeasonResult =
+  | PlannedCopyResponse
+  | AppliedCopyResponse
+  | SeasonNotFoundError
+  | InsufficientLeagueRoleError
+  | CrossLeaguePlayerError
+
+# ============================================================================
+# Mutation extensions
+# ============================================================================
+
+extend type Mutation {
+  createLeagueTeam(input: CreateLeagueTeamInput!): CreateLeagueTeamResult!
+  updateLeagueTeam(input: UpdateLeagueTeamInput!): UpdateLeagueTeamResult!
+  setLeagueTeamCaptain(
+    input: SetLeagueTeamCaptainInput!
+  ): SetLeagueTeamCaptainResult!
+  """
+  Hard-deletes the team when no Game references it via
+  `TeamInstance.sourceTeamId`; otherwise sets `archivedAt` (soft archive).
+  The returned union branch signals which path was taken.
+  """
+  deleteLeagueTeam(teamId: ID!): DeleteLeagueTeamResult!
+  """
+  Seeds teams in `targetSeasonId` from `sourceSeasonId`. Both seasons must
+  belong to the same League (else `CrossLeaguePlayerError`). With
+  `dryRun=true`, returns a planned preview and writes nothing.
+  """
+  copyTeamsFromPreviousSeason(
+    input: CopyTeamsFromPreviousSeasonInput!
+  ): CopyTeamsFromPreviousSeasonResult!
+}
+# ============================================================================
+# League — organized competition aggregate (Organization → League → Season →
+# Team → Game). Each League owns its own `LeagueChatRoom` (notification
+# module), a roster of `LeagueMembership` rows, and a `LeaguePlayer` pool.
+# ============================================================================
+
+"""
+Role within a League membership row.
+
+- `ADMIN`: can manage the League — invite/remove members, schedule games,
+  archive the league, edit settings, create and manage Seasons.
+- `MEMBER`: standard participant — can view, RSVP, chat, be rostered.
+
+Org Admins implicitly hold League Admin rights on every League under the
+Organization. That implicit grant is enforced by Cerbos derived roles
+and is not stored on the `LeagueMembership` row.
+"""
+enum LeagueRole {
+  ADMIN
+  MEMBER
+}
+
+"""
+Discovery visibility for a League.
+
+- `PUBLIC`: discoverable via the `leagues` query and resolvable by slug to
+  any caller, including anonymous ones. Standings and schedules are
+  readable without authentication.
+- `UNLISTED`: not returned by discovery queries. Resolvable only to members
+  and Org admins; anonymous callers and non-members get null from
+  `league(idOrSlug)`.
+"""
+enum LeagueVisibility {
+  PUBLIC
+  UNLISTED
+}
+
+"""
+Lifecycle of a League.
+
+- `ACTIVE`: normal read/write state.
+- `ARCHIVED`: terminal write-freeze. The chat room remains readable but
+  accepts no new messages; schedule mutations are blocked; the league is
+  filtered from `myLeagues`/discovery unless the caller explicitly requests
+  archived rows.
+"""
+enum LeagueStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+"""
+A competition aggregate owned by an `Organization`. Tracks its own
+membership, player pool, seasons, teams, scheduled games, and a dedicated
+chat room.
+"""
+type League implements Node {
+  id: ID!
+  organization: Organization!
+  """
+  Unique within `organization.id`. Immutable post-create.
+  """
+  slug: String!
+  name: String!
+  """
+  Sport played. Immutable post-create.
+  """
+  sportType: SportType!
+  """
+  Free-form sport subtype (e.g., `FIVE_ON_FIVE`). Immutable post-create.
+  """
+  sportSubtype: String
+  description: String
+  visibility: LeagueVisibility!
+  status: LeagueStatus!
+  """
+  IANA timezone id (e.g., `America/New_York`). Used for season end-of-day auto-transitions.
+  """
+  timezone: String!
+  """
+  Logo resource. Null when no logo is set.
+  """
+  logoResourceId: ID
+  createdBy: User!
+  """
+  Dedicated chat room for league-wide discussion. Created atomically with
+  the League; role sync: League ADMIN → ChatRoom ADMIN, MEMBER → MEMBER.
+  """
+  chatRoom: ChatRoom!
+  """
+  Seasons in this League, newest first. Filter by `status` (defaults to
+  all). Cursor pagination.
+  """
+  seasons(
+    status: SeasonStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): SeasonConnection!
+  """
+  The most recent `ACTIVE` Season, if any. Convenience accessor for
+  schedule and standings UIs.
+  """
+  currentSeason: Season
+  """
+  Active league memberships. Filter by `role` and `status` (departed vs
+  active). Cursor pagination.
+  """
+  members(
+    role: LeagueRole
+    status: LeagueMembershipStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueMembershipConnection!
+  """
+  Viewer holds the league_admin role: an active ADMIN membership, or admin of the owning
+  Organization. viewerMembership may be null while viewerIsAdmin is true. Superseded by
+  League.viewerCan once I2 phase 2 ships.
+  """
+  viewerIsAdmin: Boolean!
+  """
+  The viewer's active membership on this League, or null if none. Returns
+  null for anonymous callers.
+  """
+  viewerMembership: LeagueMembership
+}
+
+"""
+Membership row on a `League`. Role sync to the League's chat room is
+event-driven (see requirements §3.3).
+"""
+type LeagueMembership implements Node {
+  id: ID!
+  league: League!
+  user: User!
+  role: LeagueRole!
+  """
+  User who invited this member. Null for League-creator memberships (self-seeded).
+  """
+  invitedBy: User
+  """
+  When the member accepted. Null until accept fires.
+  """
+  acceptedAt: DateTime
+  """
+  When the member left/was removed. Null for active memberships.
+  """
+  departedAt: DateTime
+  """
+  Why the member departed. Null for active memberships.
+  """
+  departureReason: DepartureReason
+}
+
+"""
+Filter on `League.members` by active vs historical state.
+"""
+enum LeagueMembershipStatus {
+  ACTIVE
+  DEPARTED
+}
+
+type LeagueEdge implements Edge {
+  cursor: String!
+  node: League!
+}
+
+type LeagueConnection implements Connection {
+  edges: [LeagueEdge!]!
+  pageInfo: PageInfo!
+}
+
+type LeagueMembershipEdge implements Edge {
+  cursor: String!
+  node: LeagueMembership!
+}
+
+type LeagueMembershipConnection implements Connection {
+  edges: [LeagueMembershipEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Filter for the `leagues` discovery query.
+"""
+input LeagueFilterInput {
+  """
+  Case-insensitive substring match on `League.name`.
+  """
+  nameContains: String
+  sportType: SportType
+  organizationId: ID
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateLeagueInput {
+  organizationId: ID!
+  name: String!
+  sportType: SportType!
+  sportSubtype: String
+  description: String
+  visibility: LeagueVisibility = PUBLIC
+  """
+  IANA timezone id. Required — drives season end-of-day transitions.
+  """
+  timezone: String!
+  logoResourceId: ID
+}
+
+input UpdateLeagueInput {
+  leagueId: ID!
+  name: String
+  description: String
+  visibility: LeagueVisibility
+  timezone: String
+  logoResourceId: ID
+  expectedVersion: Long
+}
+
+"""
+Target user for a league membership mutation.
+"""
+input LeagueMemberTargetInput {
+  leagueId: ID!
+  userId: ID!
+}
+
+input AddLeagueMemberInput {
+  leagueId: ID!
+  recipient: InvitationRecipientInput!
+  role: LeagueRole = MEMBER
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateLeagueResponse {
+  league: League!
+}
+
+type UpdateLeagueResponse {
+  league: League!
+}
+
+type ArchiveLeagueResponse {
+  league: League!
+}
+
+type AddLeagueMemberResponse {
+  """
+  Populated for direct-add (userId recipient) flow — the created or
+  reactivated membership row. Null for email-path adds (those return an
+  `Invitation` via the result union instead).
+  """
+  membership: LeagueMembership
+}
+
+type PromoteToLeagueAdminResponse {
+  membership: LeagueMembership!
+}
+
+type DemoteFromLeagueAdminResponse {
+  membership: LeagueMembership!
+}
+
+type RemoveLeagueMemberResponse {
+  membership: LeagueMembership!
+}
+
+type LeaveLeagueResponse {
+  membership: LeagueMembership!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+type LeagueNotFoundError implements Error {
+  message: String!
+  leagueId: ID
+}
+
+type LeagueArchivedError implements Error {
+  message: String!
+  leagueId: ID!
+}
+
+type InsufficientLeagueRoleError implements Error {
+  message: String!
+  leagueId: ID!
+}
+
+"""
+Attempted to change an immutable League field (`sportType`, `sportSubtype`,
+`slug`). Returned from `updateLeague` if client violates the immutability
+contract (the mutation input doesn't expose these fields, so this is
+defense-in-depth).
+"""
+type SportTypeImmutableError implements Error {
+  message: String!
+  leagueId: ID!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateLeagueResult =
+  | CreateLeagueResponse
+  | OrganizationNotFoundError
+  | OrganizationArchivedError
+  | SlugUnavailableError
+  | InvalidTimezoneError
+  | InsufficientOrganizationRoleError
+  | GameDefaultsRequiredError
+  | GameDefaultsSportMismatchError
+
+union UpdateLeagueResult =
+  | UpdateLeagueResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | InvalidTimezoneError
+  | InsufficientLeagueRoleError
+  | StaleWriteError
+
+union ArchiveLeagueResult =
+  | ArchiveLeagueResponse
+  | LeagueNotFoundError
+  | InsufficientLeagueRoleError
+
+union AddLeagueMemberResult =
+  | AddLeagueMemberResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | InsufficientLeagueRoleError
+  | SendInvitationsResponse
+
+union PromoteToLeagueAdminResult =
+  | PromoteToLeagueAdminResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | InsufficientLeagueRoleError
+
+union DemoteFromLeagueAdminResult =
+  | DemoteFromLeagueAdminResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | InsufficientLeagueRoleError
+  | LastAdminError
+
+union RemoveLeagueMemberResult =
+  | RemoveLeagueMemberResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | InsufficientLeagueRoleError
+  | LastAdminError
+
+union LeaveLeagueResult =
+  | LeaveLeagueResponse
+  | LeagueNotFoundError
+  | LastAdminError
+
+# ============================================================================
+# Query / Mutation extensions
+# ============================================================================
+
+extend type Query {
+  """
+  Resolve a single League. Accepts either a numeric id or the form
+  `{orgSlug}/{leagueSlug}`. Returns null for unknown ids/slugs and for
+  UNLISTED Leagues when the caller is unauthenticated or not a member.
+  Readable without authentication for PUBLIC Leagues.
+  """
+  league(idOrSlug: ID!): League
+  """
+  Paginated discovery query for PUBLIC Leagues. Archived Leagues are
+  filtered out. Readable without authentication.
+  """
+  leagues(
+    filter: LeagueFilterInput
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueConnection!
+  """
+  Leagues where the viewer has an active `LeagueMembership`. Optional
+  `role` filter restricts to ADMIN or MEMBER rows. Requires authentication.
+  """
+  myLeagues(
+    role: LeagueRole
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueConnection!
+}
+
+extend type Mutation {
+  """
+  Create a League. Atomic: League row + `LeagueChatRoom` + creator's
+  `LeagueMembership(ADMIN)` + creator's `ChatRoomMember(ADMIN)` all
+  committed together, or rolled back together. Emits `LeagueCreatedEvent`
+  and `LeagueMembershipChangedEvent`.
+  """
+  createLeague(input: CreateLeagueInput!): CreateLeagueResult!
+  updateLeague(input: UpdateLeagueInput!): UpdateLeagueResult!
+  """
+  Soft-archive a League. Terminal write-freeze — status becomes `ARCHIVED`.
+  """
+  archiveLeague(leagueId: ID!): ArchiveLeagueResult!
+  """
+  Add a member. Direct-add creates the membership row immediately; email
+  path delegates to `sendInvitations` and returns `SendInvitationsResponse`.
+  """
+  addLeagueMember(input: AddLeagueMemberInput!): AddLeagueMemberResult!
+  promoteToLeagueAdmin(
+    input: LeagueMemberTargetInput!
+  ): PromoteToLeagueAdminResult!
+  demoteFromLeagueAdmin(
+    input: LeagueMemberTargetInput!
+  ): DemoteFromLeagueAdminResult!
+  removeLeagueMember(input: LeagueMemberTargetInput!): RemoveLeagueMemberResult!
+  leaveLeague(leagueId: ID!): LeaveLeagueResult!
+}
+# ============================================================================
+# League / group notification types (requirements §8). Each implements the
+# `Notification` interface from user.graphqls and is returned by the existing
+# `notifications` connection and `notificationEvents` subscription. Links are
+# resolved by `LeagueNotificationController`.
+#
+# Nullability: a link is nullable when its target can be hard-deleted or
+# filtered out by the viewer's read permission after the notification was
+# written (Game, League, Group, Season, Invitation, InviteLink, GameSeries).
+# League, Group, Season and GameSeries links are live nodes that open the whole
+# aggregate, so they follow the read policy and are null for former members;
+# `leagueName` / `groupName` always resolve so the notification still says what
+# it is about. A null in a non-null link would blank the viewer's whole
+# notifications page.
+# ============================================================================
+
+"""
+#1 — You were invited to a league or group.
+"""
+type InvitationReceivedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The invitation. Null if it no longer exists.
+  """
+  invitation: Invitation
+  """
+  Who sent the invitation.
+  """
+  inviter: User!
+}
+
+"""
+#2 — Someone accepted an invitation you sent.
+"""
+type InvitationAcceptedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The invitation. Null if it no longer exists.
+  """
+  invitation: Invitation
+  acceptedBy: User!
+}
+
+"""
+#3 — Someone declined an invitation you sent.
+"""
+type InvitationDeclinedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The invitation. Null if it no longer exists.
+  """
+  invitation: Invitation
+  declinedBy: User!
+}
+
+"""
+#4 — Someone joined through an invite link you created.
+"""
+type InviteLinkRedeemedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The invite link. Null if it no longer exists.
+  """
+  inviteLink: InviteLink
+  redeemedBy: User!
+}
+
+"""
+#5 — You were added to a league.
+"""
+type LeagueMemberAddedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The league. Null once you can no longer read it (e.g. you were removed).
+  """
+  league: League
+  leagueName: String!
+  """
+  Who added you — the inviter or admin. Null for a system-driven change.
+  """
+  addedBy: User
+}
+
+"""
+#5 — You were added to a group.
+"""
+type GroupMemberAddedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The group. Null once you can no longer read it (e.g. you were removed).
+  """
+  group: Group
+  groupName: String!
+  """
+  Who added you — the inviter or admin. Null for a system-driven change.
+  """
+  addedBy: User
+}
+
+"""
+#6 — You were removed from a league.
+"""
+type LeagueMemberRemovedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The league. Null unless you can still read it (a PUBLIC league, or you admin its org).
+  """
+  league: League
+  leagueName: String!
+  """
+  The admin who removed you. Null for a system-driven change.
+  """
+  removedBy: User
+}
+
+"""
+#6 — You were removed from a group.
+"""
+type GroupMemberRemovedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The group. Null unless you rejoined — groups are member-only.
+  """
+  group: Group
+  groupName: String!
+  """
+  The admin who removed you. Null for a system-driven change.
+  """
+  removedBy: User
+}
+
+"""
+#7 — A season in one of your leagues changed status.
+"""
+type SeasonStatusChangedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The season. Null if it has since been deleted or you can no longer read its league.
+  """
+  season: Season
+  previousStatus: SeasonStatus!
+  newStatus: SeasonStatus!
+}
+
+"""
+#8 — A league game you play in was scheduled.
+"""
+type GameScheduledNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+}
+
+"""
+#9 — A league game you play in was rescheduled.
+"""
+type GameRescheduledNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game, carrying its new start time. Null if deleted or no longer visible to you.
+  """
+  game: Game
+  """
+  The start time before the change.
+  """
+  previousStartDate: DateTime!
+}
+
+"""
+#10 — A league game you play in was cancelled.
+"""
+type GameCancelledNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+}
+
+"""
+#11 — A league game you play in, or captain for, was forfeited.
+"""
+type GameForfeitedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+}
+
+"""
+#12 — A game in one of your group's series starts within a day.
+"""
+type GameSeriesOccurrenceUpcomingNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The series. Null when you are not (or no longer) a member of its group.
+  """
+  series: GameSeries
+  occurrenceDate: Date!
+  """
+  The occurrence as it is now: current start time, whether it was skipped, the
+  materialized game and your RSVP. Null when the date is no longer an occurrence
+  of the series' rule and was never materialized, or when you are not a member
+  of the group.
+  """
+  occurrence: GameSeriesOccurrence
+  """
+  The game, when the occurrence was already materialized at send time — the way
+  a player who isn't a group member reaches it. Null otherwise, or if the game
+  is deleted or not visible to you.
+  """
+  game: Game
+}
+
+"""
+#13 (group) — A series occurrence you said YES or MAYBE to, or haven't answered,
+starts within two hours. Once the occurrence is materialized, only attendees are
+reminded.
+"""
+type GameSeriesOccurrenceReminderNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The series. Null when you are not (or no longer) a member of its group.
+  """
+  series: GameSeries
+  occurrenceDate: Date!
+  """
+  The occurrence as it is now. Null when the date is no longer an occurrence of
+  the series' rule and was never materialized, or when you are not a member of
+  the group.
+  """
+  occurrence: GameSeriesOccurrence
+  """
+  The game, when the occurrence was already materialized at send time — the way
+  a player who isn't a group member reaches it. Null otherwise, or if the game
+  is deleted or not visible to you.
+  """
+  game: Game
+}
+
+"""
+#13 (league) — A league game you play in starts within two hours.
+"""
+type GameReminderNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+}
+
+"""
+#14 — You were promoted from the waitlist to YES for a series occurrence.
+"""
+type RsvpWaitlistPromotedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The series. Null when you are no longer a member of its group.
+  """
+  series: GameSeries
+  occurrenceDate: Date!
+  """
+  The materialized game, when the promotion happened after materialization.
+  Null before materialization, or if the game is deleted or not visible to you.
+  """
+  game: Game
+}
+
+"""
+#15 — Someone reported an issue with a game you administer or manage.
+"""
+type GameIssueReportedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+  reporter: User!
+  concernType: GameIssueConcernType!
+  note: String
+}
+
+"""
+#16 — A result was reported for a league game you captain.
+"""
+type GameResultReportedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+  reporter: User!
+}
+
+"""
+#17 — The result of a league game you play in or administer was confirmed.
+"""
+type GameResultConfirmedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+  confirmedBy: User!
+}
+# ============================================================================
+# Organization — top-level container for Leagues. Org admins implicitly hold
+# League admin on every League under the Org (Cerbos derived role
+# `org_derived_admin`).
+#
+# Organization membership for non-admins does not exist — regular participation
+# flows through League membership only (requirements §3.2).
+# ============================================================================
+
+"""
+A container that owns one or more `League` aggregates. Created by any
+authenticated user; the creator auto-becomes the sole `OrganizationAdmin`.
+
+Visibility: Organizations are globally readable. Discovery queries filter
+out archived organizations. Archived orgs remain resolvable by id/slug for
+historical deep-links.
+"""
+type Organization implements Node {
+  id: ID!
+  """
+  Globally unique, URL-safe slug. Immutable post-create.
+  """
+  slug: String!
+  name: String!
+  description: String
+  """
+  Logo resource. Null when no logo is set.
+  """
+  logoResourceId: ID
+  """
+  Soft-archive timestamp. Null when the Organization is active. Archived
+  orgs are filtered from discovery queries; their Leagues continue to
+  enforce their own archive state independently.
+  """
+  archivedAt: DateTime
+  """
+  Creator of the Organization (the initial admin).
+  """
+  createdBy: User!
+  """
+  Leagues owned by this Organization.
+  """
+  leagues(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): LeagueConnection!
+  """
+  Active admin roster.
+  """
+  admins(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): OrganizationAdminConnection!
+  """
+  Whether the viewer holds admin rights on this Organization.
+  """
+  viewerIsAdmin: Boolean!
+}
+
+"""
+An admin membership on an `Organization`. Only admins are tracked — there is
+no `OrganizationMember` type (non-admin participation flows through
+`LeagueMembership`).
+"""
+type OrganizationAdmin implements Node {
+  id: ID!
+  organizationId: ID!
+  user: User!
+  """
+  User who added this admin. Null for the first admin (the Organization
+  creator self-seeded).
+  """
+  invitedBy: User
+  """
+  When the admin accepted the role. Equal to the direct-add creation
+  timestamp, or the `Invitation.acceptedAt` for email-path adds.
+  """
+  acceptedAt: DateTime
+}
+
+type OrganizationEdge implements Edge {
+  cursor: String!
+  node: Organization!
+}
+
+type OrganizationConnection implements Connection {
+  edges: [OrganizationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type OrganizationAdminEdge implements Edge {
+  cursor: String!
+  node: OrganizationAdmin!
+}
+
+type OrganizationAdminConnection implements Connection {
+  edges: [OrganizationAdminEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Filter for the `organizations` discovery query.
+"""
+input OrganizationFilterInput {
+  """
+  Case-insensitive substring match on `Organization.name`.
+  """
+  nameContains: String
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateOrganizationInput {
+  name: String!
+  description: String
+  logoResourceId: ID
+}
+
+input UpdateOrganizationInput {
+  organizationId: ID!
+  name: String
+  description: String
+  logoResourceId: ID
+  """
+  Optimistic concurrency token.
+  """
+  expectedVersion: Long
+}
+
+"""
+Identifies the target user of an Organization admin add. Exactly one field
+must be set. Email path delegates to `sendInvitations` — no admin row is
+created until the invitation is accepted.
+"""
+input AddOrganizationAdminRecipientInput @oneOf {
+  userId: ID
+  email: String
+}
+
+input AddOrganizationAdminInput {
+  organizationId: ID!
+  recipient: AddOrganizationAdminRecipientInput!
+}
+
+input RemoveOrganizationAdminInput {
+  organizationId: ID!
+  userId: ID!
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateOrganizationResponse {
+  organization: Organization!
+}
+
+type UpdateOrganizationResponse {
+  organization: Organization!
+}
+
+type ArchiveOrganizationResponse {
+  organization: Organization!
+}
+
+type AddOrganizationAdminResponse {
+  admin: OrganizationAdmin!
+}
+
+type RemoveOrganizationAdminResponse {
+  admin: OrganizationAdmin!
+}
+
+type LeaveOrganizationResponse {
+  admin: OrganizationAdmin!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+type OrganizationNotFoundError implements Error {
+  message: String!
+  organizationId: ID
+}
+
+"""
+The Organization is archived and cannot accept the requested mutation.
+"""
+type OrganizationArchivedError implements Error {
+  message: String!
+  organizationId: ID!
+}
+
+"""
+Attempting to remove or leave the sole remaining admin.
+"""
+type LastAdminError implements Error {
+  message: String!
+  organizationId: ID
+  leagueId: ID
+  groupId: ID
+}
+
+"""
+The caller does not hold the role required for this Organization mutation.
+"""
+type InsufficientOrganizationRoleError implements Error {
+  message: String!
+  organizationId: ID!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateOrganizationResult =
+  | CreateOrganizationResponse
+  | SlugUnavailableError
+
+union UpdateOrganizationResult =
+  | UpdateOrganizationResponse
+  | OrganizationNotFoundError
+  | OrganizationArchivedError
+  | InsufficientOrganizationRoleError
+  | StaleWriteError
+
+union ArchiveOrganizationResult =
+  | ArchiveOrganizationResponse
+  | OrganizationNotFoundError
+  | InsufficientOrganizationRoleError
+
+union AddOrganizationAdminResult =
+  | AddOrganizationAdminResponse
+  | OrganizationNotFoundError
+  | InsufficientOrganizationRoleError
+  | SendInvitationsResponse
+
+union RemoveOrganizationAdminResult =
+  | RemoveOrganizationAdminResponse
+  | OrganizationNotFoundError
+  | InsufficientOrganizationRoleError
+  | LastAdminError
+
+union LeaveOrganizationResult =
+  | LeaveOrganizationResponse
+  | OrganizationNotFoundError
+  | LastAdminError
+
+# ============================================================================
+# Query / Mutation extensions
+# ============================================================================
+
+extend type Query {
+  """
+  Resolve a single Organization by numeric id or by slug. Returns null for
+  unknown or archived orgs. Readable without authentication — anonymous
+  callers get the same PUBLIC projection as signed-in non-members.
+  """
+  organization(idOrSlug: ID!): Organization
+  """
+  Paginated discovery query for Organizations. Archived orgs are filtered
+  out. Readable without authentication.
+  """
+  organizations(
+    filter: OrganizationFilterInput
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): OrganizationConnection!
+  """
+  Organizations where the current user holds an active `OrganizationAdmin`
+  row. Requires authentication.
+  """
+  myOrganizations(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): OrganizationConnection!
+}
+
+extend type Mutation {
+  createOrganization(input: CreateOrganizationInput!): CreateOrganizationResult!
+  updateOrganization(input: UpdateOrganizationInput!): UpdateOrganizationResult!
+  """
+  Soft-archive an Organization. Sets `archivedAt = now`. Leagues under this
+  Organization are not implicitly archived — they continue to enforce their
+  own lifecycle.
+  """
+  archiveOrganization(organizationId: ID!): ArchiveOrganizationResult!
+  """
+  Add a new admin. Direct-add (userId) creates the admin row immediately;
+  email path delegates to the shared `sendInvitations` pipeline and returns
+  `SendInvitationsResponse` instead of `AddOrganizationAdminResponse`.
+  """
+  addOrganizationAdmin(
+    input: AddOrganizationAdminInput!
+  ): AddOrganizationAdminResult!
+  removeOrganizationAdmin(
+    input: RemoveOrganizationAdminInput!
+  ): RemoveOrganizationAdminResult!
+  """
+  Self-initiated leave. `LastAdminError` when the caller is the sole remaining admin.
+  """
+  leaveOrganization(organizationId: ID!): LeaveOrganizationResult!
+}
+# ============================================================================
+# League scheduling — admin-driven Game lifecycle inside a League/Season.
+# Backed by `LeagueScheduleService`. The mutations here stamp `Game.leagueId`
+# (and optionally `seasonId`) on the core `Game` row, plus copy the source
+# `LeagueTeam` name + color + active roster onto the two `TeamInstance` rows
+# they create.
+# ============================================================================
+
+extend type Mutation {
+  """
+  Schedules a new Game between two LeagueTeams. The teams must belong to the
+  same League and (when `seasonId` is supplied) the same Season. Roster is
+  snapshotted from each team's currently-active LeagueTeamRoster (real users
+  only — placeholders are excluded). The caller must be a league admin.
+  """
+  createScheduledGame(
+    input: CreateScheduledGameInput!
+  ): CreateScheduledGameResult!
+
+  """
+  Schedules up to 50 Games in a single call. Each row runs in its own
+  transaction (`REQUIRES_NEW`) so a per-row failure surfaces in that row's
+  `result` (as one of the same error variants the single-row mutation
+  returns) without aborting siblings. Empty input or > 50 rows returns
+  `BatchCapExceededError`. Caller must be a league admin for every league
+  referenced.
+  """
+  createScheduledGames(
+    input: CreateScheduledGamesBatchInput!
+  ): CreateScheduledGamesBatchResult!
+
+  """
+  Moves a SCHEDULED Game to a new start instant. Other states reject — once
+  a game starts, scheduling is no longer the right verb. League admins only.
+  """
+  rescheduleGame(input: RescheduleGameInput!): RescheduleGameResult!
+
+  """
+  Cancels a SCHEDULED Game (transitions to CANCELLED via the FSM). Only
+  SCHEDULED games may be cancelled; the FSM rejects other source states.
+  League admins only.
+  """
+  cancelGame(input: CancelGameInput!): CancelGameResult!
+
+  """
+  Admin-forced forfeit. Sets `gameStatus = FORFEITED` and atomically writes a
+  GameResult with the admin as both reporter and confirmer (bypassing the
+  participant report → confirm flow). The `winnerTeamInstanceId` must belong
+  to the game; the losing side is the other TeamInstance. Already-forfeited
+  or cancelled games cannot be forfeited again. League admins only.
+  """
+  forfeitGame(input: ForfeitGameInput!): ForfeitGameResult!
+
+  """
+  Re-copies the current LeagueTeam name + color + active roster onto a Game's
+  TeamInstance. Use when a team renames mid-season so freshly-rendered Games
+  reflect the change without rewriting historical Games. League admins only.
+  """
+  refreshTeamInstanceFromTeam(
+    input: RefreshTeamInstanceInput!
+  ): RefreshTeamInstanceResult!
+}
+
+input CreateScheduledGameInput {
+  leagueId: ID!
+  seasonId: ID
+  homeTeamId: ID!
+  awayTeamId: ID!
+  startDate: DateTime!
+  description: String
+  location: LocationInput
+  visibility: GameVisibility
+}
+
+"""
+Batch wrapper for `createScheduledGames`. Cap: 50 rows per call (server-
+enforced). Empty input is rejected with `BatchCapExceededError` so clients
+get a typed signal instead of a silent no-op.
+"""
+input CreateScheduledGamesBatchInput {
+  games: [CreateScheduledGameInput!]!
+}
+
+input RescheduleGameInput {
+  gameId: ID!
+  newStartDate: DateTime!
+}
+
+input CancelGameInput {
+  gameId: ID!
+}
+
+input ForfeitGameInput {
+  gameId: ID!
+  winnerTeamInstanceId: ID!
+}
+
+input RefreshTeamInstanceInput {
+  teamInstanceId: ID!
+}
+
+type CreateScheduledGameResponse {
+  game: Game!
+}
+
+type RescheduleGameResponse {
+  game: Game!
+}
+
+type CancelGameResponse {
+  game: Game!
+}
+
+type ForfeitGameResponse {
+  game: Game!
+}
+
+type RefreshTeamInstanceResponse {
+  teamInstance: TeamInstance!
+}
+
+"""
+Successful invocation of `createScheduledGames`. Per-row outcomes live in
+`results`, one entry per input row in the same order. A row's `result` is
+the same union the single-row `createScheduledGame` mutation returns.
+"""
+type CreateScheduledGamesBatchResponse {
+  results: [CreateScheduledGameRowResult!]!
+}
+
+"""
+One row's outcome inside `createScheduledGames`. `rowIndex` is the 0-based
+position in the input batch — clients use it to correlate failures with
+the originating input row.
+"""
+type CreateScheduledGameRowResult {
+  rowIndex: Int!
+  result: CreateScheduledGameResult!
+}
+
+"""
+A batch mutation was invoked with zero rows or with more rows than the
+server-side per-call cap allows.
+"""
+type BatchCapExceededError implements Error {
+  message: String!
+  """
+  Number of rows the caller submitted.
+  """
+  submittedCount: Int!
+  """
+  Server-enforced maximum (currently 50 for `createScheduledGames`).
+  """
+  maxCount: Int!
+}
+
+"""
+Input to a league schedule mutation is structurally well-formed but
+semantically inconsistent (e.g. home and away team are the same, season does
+not belong to the supplied league, a team is not part of the season, or a
+TeamInstance does not belong to the supplied game). Carries a human-readable
+`message` only; clients should surface it directly rather than parse it.
+"""
+type InvalidScheduleInputError implements Error {
+  message: String!
+}
+
+union CreateScheduledGameResult =
+  | CreateScheduledGameResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | SeasonNotFoundError
+  | LeagueTeamNotFoundError
+  | ArchivedLeagueTeamError
+  | InsufficientLeagueRoleError
+  | InvalidScheduleInputError
+
+union CreateScheduledGamesBatchResult =
+  | CreateScheduledGamesBatchResponse
+  | BatchCapExceededError
+
+union RescheduleGameResult =
+  | RescheduleGameResponse
+  | GameNotFoundError
+  | InvalidGameStatusTransitionError
+  | InvalidScheduleInputError
+  | InsufficientLeagueRoleError
+
+union CancelGameResult =
+  | CancelGameResponse
+  | GameNotFoundError
+  | InvalidGameStatusTransitionError
+  | InvalidScheduleInputError
+  | InsufficientLeagueRoleError
+
+union ForfeitGameResult =
+  | ForfeitGameResponse
+  | GameNotFoundError
+  | TeamInstanceNotFoundError
+  | InvalidGameStatusTransitionError
+  | InvalidScheduleInputError
+  | InsufficientLeagueRoleError
+
+union RefreshTeamInstanceResult =
+  | RefreshTeamInstanceResponse
+  | TeamInstanceNotFoundError
+  | LeagueTeamNotFoundError
+  | InvalidScheduleInputError
+  | InsufficientLeagueRoleError
+# ============================================================================
+# Season — league-scoped time period. Seasons own the Games played within
+# them. A League can have multiple Seasons; date overlap is allowed.
+# ============================================================================
+
+"""
+Lifecycle status for a `Season`.
+
+Status is a label: it drives `League.currentSeason` and status filters but
+does not lock the Season — games keep being scheduled, played and confirmed
+in a `COMPLETED` Season, and late-confirmed results still count in standings.
+
+- `ACTIVE`: the Season is in progress.
+- `COMPLETED`: set by an admin call to `setSeasonStatus`, or automatically
+  within an hour after end-of-day on `endDate` in the league's timezone.
+  An admin can reopen it with `setSeasonStatus(ACTIVE)` while `endDate` is
+  unset or not yet passed; otherwise extend `endDate` first.
+"""
+enum SeasonStatus {
+  ACTIVE
+  COMPLETED
+}
+
+"""
+A time period within a League. Season date boundaries are informational —
+Games are not constrained to a Season's `startDate`/`endDate` window.
+"""
+type Season implements Node {
+  id: ID!
+  league: League!
+  name: String!
+  status: SeasonStatus!
+  """
+  Optional start date. Informational — not enforced.
+  """
+  startDate: Date
+  """
+  Optional end date. When set, status flips from `ACTIVE` to `COMPLETED`
+  within an hour after end-of-day on this date in the owning League's
+  timezone.
+  """
+  endDate: Date
+  """
+  Games scheduled under this Season. Filter by `status` and `sort`.
+  Readable without authentication for Games in PUBLIC Leagues; returns
+  empty for UNLISTED Leagues when the caller is not a member.
+  """
+  games(
+    status: GameStatus
+    first: Int
+    after: String
+    last: Int
+    before: String
+    sort: GameSort = SCHEDULED_AT_ASC
+  ): GameConnection!
+  """
+  Standings for the season. One row per LeagueTeam that has played at
+  least one standings-counting game (confirmed result or forfeit).
+  Sorted by `winPct` descending, then `team.id` ascending. Bounded by the
+  number of LeagueTeams in the season — no pagination. Clients that need
+  alphabetical tie-break can sort by `team.name` client-side.
+  """
+  standings: [StandingRow!]!
+}
+
+"""
+One row of `Season.standings`. Aggregated from confirmed `GameResult` rows
+plus any forfeited games. `winPct = wins / gamesPlayed` when
+`gamesPlayed > 0`, else `0.0`.
+"""
+type StandingRow {
+  team: LeagueTeam!
+  wins: Int!
+  losses: Int!
+  draws: Int!
+  gamesPlayed: Int!
+  winPct: Float!
+}
+
+type SeasonEdge implements Edge {
+  cursor: String!
+  node: Season!
+}
+
+type SeasonConnection implements Connection {
+  edges: [SeasonEdge!]!
+  pageInfo: PageInfo!
+}
+
+# ============================================================================
+# Input types
+# ============================================================================
+
+input CreateSeasonInput {
+  leagueId: ID!
+  name: String!
+  startDate: Date
+  endDate: Date
+}
+
+input UpdateSeasonInput {
+  seasonId: ID!
+  name: String
+  startDate: Date
+  endDate: Date
+  expectedVersion: Long
+}
+
+input SetSeasonStatusInput {
+  seasonId: ID!
+  status: SeasonStatus!
+}
+
+# ============================================================================
+# Response types
+# ============================================================================
+
+type CreateSeasonResponse {
+  season: Season!
+}
+
+type UpdateSeasonResponse {
+  season: Season!
+}
+
+type SetSeasonStatusResponse {
+  season: Season!
+}
+
+type DeleteSeasonResponse implements DeleteResponse {
+  id: ID!
+}
+
+# ============================================================================
+# Error types
+# ============================================================================
+
+type SeasonNotFoundError implements Error {
+  message: String!
+  seasonId: ID
+}
+
+"""
+The Season cannot accept the requested mutation in its current status.
+"""
+type SeasonNotMutableError implements Error {
+  message: String!
+  seasonId: ID!
+  currentStatus: SeasonStatus!
+}
+
+"""
+`setSeasonStatus(ACTIVE)` on a Season whose `endDate` has passed in the
+league's timezone. It would be completed again within the hour — extend
+`endDate` with `updateSeason` first.
+"""
+type SeasonEndDatePassedError implements Error {
+  message: String!
+  seasonId: ID!
+  endDate: Date!
+}
+
+"""
+The Season has Games referencing it via `Game.seasonId`. `deleteSeason`
+refuses to soft-delete a Season with live references; admins must move or
+delete the Games first.
+"""
+type SeasonHasReferencedGamesError implements Error {
+  message: String!
+  seasonId: ID!
+  referencedGameCount: Int!
+}
+
+# ============================================================================
+# Result unions
+# ============================================================================
+
+union CreateSeasonResult =
+  | CreateSeasonResponse
+  | LeagueNotFoundError
+  | LeagueArchivedError
+  | InsufficientLeagueRoleError
+  | InvalidDateRangeError
+
+union UpdateSeasonResult =
+  | UpdateSeasonResponse
+  | SeasonNotFoundError
+  | SeasonNotMutableError
+  | InsufficientLeagueRoleError
+  | InvalidDateRangeError
+  | StaleWriteError
+
+union SetSeasonStatusResult =
+  | SetSeasonStatusResponse
+  | SeasonNotFoundError
+  | InsufficientLeagueRoleError
+  | SeasonEndDatePassedError
+
+union DeleteSeasonResult =
+  | DeleteSeasonResponse
+  | SeasonNotFoundError
+  | SeasonHasReferencedGamesError
+  | InsufficientLeagueRoleError
+
+# ============================================================================
+# Mutation extensions
+# ============================================================================
+
+extend type Mutation {
+  createSeason(input: CreateSeasonInput!): CreateSeasonResult!
+  updateSeason(input: UpdateSeasonInput!): UpdateSeasonResult!
+  setSeasonStatus(input: SetSeasonStatusInput!): SetSeasonStatusResult!
+  """
+  Hard delete a Season. Fails with `SeasonHasReferencedGamesError` when any
+  Game references this Season via `Game.seasonId`. (That check becomes
+  active once PR 7 wires `Game.seasonId` from the schedule service; until
+  then `deleteSeason` succeeds unconditionally on authorized calls.)
+  """
+  deleteSeason(seasonId: ID!): DeleteSeasonResult!
+}
 # ============================================================================
 # Resource / File Management (v2)
 #
@@ -3267,6 +7706,12 @@ type Mutation {
   addUsersToTeamInstance(
     input: AddUsersToTeamInstanceInput!
   ): AddUsersToTeamInstanceResult!
+  """
+  Add a named guest (no account) to an existing team instance. Game managers only.
+  """
+  addGuestToTeamInstance(
+    input: AddGuestToTeamInstanceInput!
+  ): AddGuestToTeamInstanceResult!
   """
   Remove a user from a team instance.
   """
@@ -4881,6 +9326,28 @@ union SaveVolleyballStatsBulkResult =
   | SaveVolleyballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+type RotateIcalTokenResponse {
+  icalToken: String!
+}
+
+union RotateIcalTokenResult = RotateIcalTokenResponse
+
+extend type CurrentUser {
+  """
+  Secret for your private calendar feed URLs (`/ical/...?token=`). Created on first read. Anyone with it
+  can read the feeds you can read — rotate it if it leaks. PUBLIC league feeds need no token: never put
+  it in a link you share.
+  """
+  icalToken: String!
+}
+
+extend type Mutation {
+  """
+  Replaces your calendar token. Calendar subscriptions using the old one go empty on their next refresh;
+  re-subscribe with the new token.
+  """
+  rotateIcalToken: RotateIcalTokenResult!
+}
 enum MeasurementUnit {
   METRIC
   IMPERIAL
