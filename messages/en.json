@@ -233,13 +233,17 @@
       "complete": "Complete",
       "final": "Final",
       "finalized": "Finalized",
+      "cancelled": "Cancelled",
+      "forfeited": "Forfeited",
       "upcoming": "Upcoming",
       "live": "Live",
       "ariaLabel": {
         "live": "Game in progress",
         "upcoming": "Game not yet started",
         "final": "Game finished, final score",
-        "finalized": "Game results finalized"
+        "finalized": "Game results finalized",
+        "cancelled": "Game cancelled",
+        "forfeited": "Game forfeited"
       }
     },
     "role": {
@@ -628,6 +632,8 @@
       "upcoming": "Upcoming",
       "live": "Live",
       "completed": "Completed",
+      "cancelled": "Cancelled",
+      "forfeited": "Forfeited",
       "noGamesNearWithSport": "No {sport} games near {location}",
       "noGamesNearYouWithSport": "No {sport} games near you",
       "noGamesEverywhereWithSport": "No {sport} games found",

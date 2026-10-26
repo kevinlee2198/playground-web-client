@@ -14,7 +14,7 @@ import {
 import { TypographyH1, TypographyP } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
-import { GameSortField, GameStatus, SortDirection, SportType } from "@/lib/constants";
+import { GameSortField, GameStatus, isGameStatus, SortDirection, SportType } from "@/lib/constants";
 import {
   gameMetadataFragment,
   participantNodeFragment,
@@ -147,16 +147,8 @@ async function PublicHomePage({
     : undefined;
 
   // Parse gameStatus from URL
-  const gameStatusParam =
-    typeof queryParams.gameStatus === "string"
-      ? queryParams.gameStatus
-      : undefined;
-  const isValidGameStatus = (
-    status: string | undefined,
-  ): status is GameStatus =>
-    status !== undefined && status in GameStatus;
-  const validGameStatus = isValidGameStatus(gameStatusParam)
-    ? gameStatusParam
+  const validGameStatus = isGameStatus(queryParams.gameStatus)
+    ? queryParams.gameStatus
     : undefined;
 
   // Date lookback: 30 days for completed games, 7 days otherwise

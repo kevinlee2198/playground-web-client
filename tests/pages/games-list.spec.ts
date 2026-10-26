@@ -1,5 +1,9 @@
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
-import { mockEmptyGamesResponse } from "../fixtures/mock-data/games";
+import {
+  mockEmptyGamesResponse,
+  mockGame,
+  mockGamesListResponse,
+} from "../fixtures/mock-data/games";
 
 test.describe("Games List Page", () => {
   test("[CRITICAL] unauthenticated: redirects to /", async ({
@@ -44,6 +48,19 @@ test.describe("Games List Page", () => {
     msw.use(withMeGuard(mockEmptyGamesResponse));
     await authenticatedPage.goto("/en/games");
     await expect(authenticatedPage.getByText(/no.*game/i)).toBeVisible();
+  });
+
+  test("authenticated: cancelled game card shows Cancelled status", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGamesListResponse([mockGame({ gameStatus: "CANCELLED" })]),
+      ),
+    );
+    await authenticatedPage.goto("/en/games");
+    await expect(authenticatedPage.getByLabel("Game cancelled")).toBeVisible();
   });
 
   test("authenticated: sort dropdown is visible", async ({

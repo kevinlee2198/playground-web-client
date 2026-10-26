@@ -37,6 +37,8 @@ const GAME_STATUS_LABEL_KEY: Record<GameStatus, string> = {
   [GameStatus.IN_PROGRESS]: "live",
   [GameStatus.COMPLETE]: "completed",
   [GameStatus.FINALIZED]: "completed",
+  [GameStatus.CANCELLED]: "cancelled",
+  [GameStatus.FORFEITED]: "forfeited",
 };
 
 interface DiscoverFeedProps {

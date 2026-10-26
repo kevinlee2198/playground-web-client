@@ -13,7 +13,7 @@ export function mockGame(overrides?: Record<string, unknown>) {
     },
     gameStatus: "SCHEDULED",
     description: "A test game",
-    viewerGameRole: "ORGANIZER",
+    viewerGameRole: "OWNER",
     visibility: "PUBLIC",
     statEntryMode: "OPEN",
     viewerInvitation: null,

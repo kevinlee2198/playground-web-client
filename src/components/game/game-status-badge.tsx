@@ -8,6 +8,8 @@ const gameStatusI18nKey: Record<GameStatus, string> = {
   IN_PROGRESS: "inProgress",
   COMPLETE: "complete",
   FINALIZED: "finalized",
+  CANCELLED: "cancelled",
+  FORFEITED: "forfeited",
 };
 
 interface GameStatusBadgeProps {
@@ -20,8 +22,6 @@ export function GameStatusBadge({ status }: GameStatusBadgeProps) {
   const text = t(gameStatusI18nKey[status]);
 
   return (
-    <Badge variant={variant as "default" | "secondary" | "outline"}>
-      {text}
-    </Badge>
+    <Badge variant={variant}>{text}</Badge>
   );
 }

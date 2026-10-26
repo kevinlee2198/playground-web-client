@@ -19,6 +19,15 @@ export enum GameStatus {
   IN_PROGRESS = "IN_PROGRESS",
   COMPLETE = "COMPLETE",
   FINALIZED = "FINALIZED",
+  CANCELLED = "CANCELLED",
+  FORFEITED = "FORFEITED",
+}
+
+export function isGameStatus(value: unknown): value is GameStatus {
+  return (
+    typeof value === "string" &&
+    Object.values(GameStatus).includes(value as GameStatus)
+  );
 }
 
 export enum ParticipationType {
@@ -184,7 +193,6 @@ export function getMaxParticipants(sportFormat: SportFormat): number {
 
 export enum GameSortField {
   START_DATE = "START_DATE",
-  END_DATE = "END_DATE",
   GAME_STATUS = "GAME_STATUS",
   DISTANCE = "DISTANCE",
 }
@@ -240,7 +248,12 @@ export const GameStatusBadgeVariant = {
   IN_PROGRESS: "default",
   COMPLETE: "outline",
   FINALIZED: "outline",
-} as const;
+  CANCELLED: "destructive",
+  FORFEITED: "outline",
+} as const satisfies Record<
+  GameStatus,
+  "default" | "secondary" | "outline" | "destructive"
+>;
 
 /**
  * i18n key mapping for game status display labels
@@ -250,6 +263,8 @@ export const GameStatusLabelKey: Record<GameStatus, string> = {
   [GameStatus.SCHEDULED]: "game.status.upcoming",
   [GameStatus.COMPLETE]: "game.status.final",
   [GameStatus.FINALIZED]: "game.status.finalized",
+  [GameStatus.CANCELLED]: "game.status.cancelled",
+  [GameStatus.FORFEITED]: "game.status.forfeited",
 };
 
 /**
@@ -260,6 +275,8 @@ export const GameStatusAriaLabelKey: Record<GameStatus, string> = {
   [GameStatus.SCHEDULED]: "game.status.ariaLabel.upcoming",
   [GameStatus.COMPLETE]: "game.status.ariaLabel.final",
   [GameStatus.FINALIZED]: "game.status.ariaLabel.finalized",
+  [GameStatus.CANCELLED]: "game.status.ariaLabel.cancelled",
+  [GameStatus.FORFEITED]: "game.status.ariaLabel.forfeited",
 };
 
 /**

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { validateOperation } from "../../helpers/schema-contract";
 import { MutationErrorType } from "@/lib/graphql-result";
 import { SportType, SportFormat, GameSortField, SortDirection, GameStatus } from "@/lib/constants";
 
@@ -544,6 +545,19 @@ describe("loadMoreGames", () => {
     return (mock.mock.calls[0][0] as Record<string, unknown>).games as Record<string, unknown>;
   }
 
+  it.each(Object.values(GameSortField))("loadMoreGames sort %s validates against the schema", async (field) => {
+    mockQuerySuccess({ games: emptyConnection });
+
+    await loadMoreGames(
+      { sportType: SportType.BASKETBALL, startAfter: "2026-01-01T00:00:00Z" },
+      { field, direction: SortDirection.ASC },
+      "",
+    );
+
+    const arg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
+    expect(validateOperation("query", arg)).toEqual([]);
+  });
+
   it("returns games connection on success", async () => {
     const mockGames = {
       edges: [{ cursor: "c1", node: { id: 1 } }],
@@ -598,7 +612,7 @@ describe("loadMoreGames", () => {
   it("passes sort field and direction as EnumType objects", async () => {
     mockQuerySuccess({ games: emptyConnection });
 
-    await loadMoreGames({}, { field: GameSortField.END_DATE, direction: SortDirection.ASC }, "");
+    await loadMoreGames({}, { field: GameSortField.START_DATE, direction: SortDirection.ASC }, "");
 
     const callArg = mockAuthQuery.mock.calls[0][0] as Record<string, unknown>;
     const sortArgs = (callArg.games as { __args: { sort: unknown[] } }).__args.sort;

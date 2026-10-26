@@ -122,7 +122,7 @@ test.describe("Game Media Gallery", () => {
       withMeGuard(() =>
         mockGameDetailResponse({
           gameStatus: "IN_PROGRESS",
-          viewerGameRole: "ORGANIZER",
+          viewerGameRole: "OWNER",
         }),
       ),
     );
@@ -165,7 +165,7 @@ test.describe("Add Link Dialog", () => {
       withMeGuard(() =>
         mockGameDetailResponse({
           gameStatus: "IN_PROGRESS",
-          viewerGameRole: "ORGANIZER",
+          viewerGameRole: "OWNER",
         }),
       ),
     );
@@ -185,7 +185,7 @@ test.describe("Add Link Dialog", () => {
         game: () =>
           mockGameDetailResponse({
             gameStatus: "IN_PROGRESS",
-            viewerGameRole: "ORGANIZER",
+            viewerGameRole: "OWNER",
           }),
         resolveUrl: () => mockResolveUrlResponse(),
       }),
@@ -210,7 +210,7 @@ test.describe("Add Link Dialog", () => {
         game: () =>
           mockGameDetailResponse({
             gameStatus: "IN_PROGRESS",
-            viewerGameRole: "ORGANIZER",
+            viewerGameRole: "OWNER",
           }),
         resolveUrl: () => mockResolveUrlResponse(),
         addGameMediaLink: () =>
@@ -240,7 +240,7 @@ test.describe("Add Link Dialog", () => {
         game: () =>
           mockGameDetailResponse({
             gameStatus: "IN_PROGRESS",
-            viewerGameRole: "ORGANIZER",
+            viewerGameRole: "OWNER",
           }),
         resolveUrl: () => mockDuplicateMediaError(),
       }),
