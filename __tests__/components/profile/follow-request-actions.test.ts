@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MutationErrorType } from "@/lib/graphql-result";
+import { mutationErrorShape } from "../../helpers/mutation-error";
 
 const { mockAuthMutate } = vi.hoisted(() => ({
   mockAuthMutate: vi.fn(),
@@ -135,11 +136,7 @@ describe.each(actions)(
 
         const result = await fn("req-1");
 
-        expect(result).toEqual({
-          success: false,
-          errorType: type,
-          message,
-        });
+        expect(result).toEqual(mutationErrorShape(type, message));
       },
     );
 

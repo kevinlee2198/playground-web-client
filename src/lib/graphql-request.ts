@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { auth } from "./auth";
 import { env } from "./env";
 import { GRAPHQL_PATH } from "./graphql-config";
+import { ErrorClassification } from "./graphql-error-classification";
 
 function buildRequestObject(
   data: BodyInit,
@@ -119,14 +120,6 @@ interface GraphQLError {
   locations: { line: number; column: number }[];
   path: (string | number)[];
   extensions: GraphQLErrorExtensions;
-}
-
-enum ErrorClassification {
-  BAD_REQUEST = "BAD_REQUEST",
-  FORBIDDEN = "FORBIDDEN",
-  INTERNAL_ERROR = "INTERNAL_ERROR",
-  NOT_FOUND = "NOT_FOUND",
-  UNAUTHORIZED = "UNAUTHORIZED",
 }
 
 interface GraphQLErrorExtensions {

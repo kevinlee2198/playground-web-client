@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
+import { setServerFieldError } from "@/lib/form-server-errors";
 
 interface NotificationsSettingsFormProps {
   notificationsEnabled: boolean;
@@ -31,6 +32,7 @@ export function NotificationsSettingsForm({
   ];
 
   const form = useForm({
+    canSubmitWhenInvalid: true,
     defaultValues: {
       notificationsEnabled,
       emailDigestFrequency,
@@ -49,6 +51,7 @@ export function NotificationsSettingsForm({
         if (result.success) {
           toast.add({ title: t("saveSuccess"), type: "success" });
         } else {
+          setServerFieldError(form, result.field, t("invalidField"));
           toast.add({ title: t("saveError"), type: "error" });
         }
       });
@@ -102,7 +105,8 @@ export function NotificationsSettingsForm({
 
       <Separator />
 
-      <form.Field name="emailDigestFrequency">
+      {/* Empty validators let form-core clear the server error on change/blur and on resubmit (with canSubmitWhenInvalid); do not remove. */}
+      <form.Field name="emailDigestFrequency" validators={{}}>
         {(field) => (
           <FormSelectField
             field={field}

@@ -24,6 +24,7 @@ import {
   updateParticipantScores,
 } from "@/app/[locale]/game/participant-actions";
 import { revalidatePath } from "next/cache";
+import { mutationErrorShape } from "../../helpers/mutation-error";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -115,11 +116,7 @@ describe("addTeamParticipant", () => {
 
     const result = await addTeamParticipant({ gameId: 99, name: "Team X" });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "GameNotFoundError",
-      message: "Game not found",
-    });
+    expect(result).toEqual(mutationErrorShape("GameNotFoundError", "Game not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -176,11 +173,7 @@ describe("addIndividualParticipant", () => {
 
     const result = await addIndividualParticipant({ gameId: 1, userId: 10 });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserAlreadyParticipatingError",
-      message: "User is already participating",
-    });
+    expect(result).toEqual(mutationErrorShape("UserAlreadyParticipatingError", "User is already participating"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -287,11 +280,7 @@ describe("updateTeamParticipant", () => {
 
     const result = await updateTeamParticipant({ teamInstanceId: 99 });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "TeamInstanceNotFoundError",
-      message: "Team instance not found",
-    });
+    expect(result).toEqual(mutationErrorShape("TeamInstanceNotFoundError", "Team instance not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -360,11 +349,7 @@ describe("joinTeam", () => {
 
     const result = await joinTeam({ teamInstanceId: 42, userId: 10 });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserAlreadyOnTeamError",
-      message: "User is already on this team",
-    });
+    expect(result).toEqual(mutationErrorShape("UserAlreadyOnTeamError", "User is already on this team"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -429,11 +414,7 @@ describe("leaveTeam", () => {
 
     const result = await leaveTeam({ teamInstanceId: 42, userId: 10 });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserNotOnTeamError",
-      message: "User is not on this team",
-    });
+    expect(result).toEqual(mutationErrorShape("UserNotOnTeamError", "User is not on this team"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -493,11 +474,7 @@ describe("removeTeamParticipant", () => {
 
     const result = await removeTeamParticipant({ teamInstanceId: 99 });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "TeamInstanceNotFoundError",
-      message: "Team instance not found",
-    });
+    expect(result).toEqual(mutationErrorShape("TeamInstanceNotFoundError", "Team instance not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -557,11 +534,7 @@ describe("removeIndividualParticipant", () => {
 
     const result = await removeIndividualParticipant({ id: 99 });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ParticipantNotFoundError",
-      message: "Participant not found",
-    });
+    expect(result).toEqual(mutationErrorShape("ParticipantNotFoundError", "Participant not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -672,11 +645,7 @@ describe("updateParticipantScores", () => {
       { id: 1, isTeam: true, metadata: { basketball: { score: 5 } } },
     ]);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "InvalidMetadataError",
-      message: "Invalid metadata",
-    });
+    expect(result).toEqual(mutationErrorShape("InvalidMetadataError", "Invalid metadata"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 

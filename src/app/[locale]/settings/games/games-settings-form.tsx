@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "@/components/ui/toast";
+import { setServerFieldError } from "@/lib/form-server-errors";
 
 const sportTypes = Object.values(SportType);
 
@@ -36,6 +37,7 @@ export function GamesSettingsForm({
   ];
 
   const form = useForm({
+    canSubmitWhenInvalid: true,
     defaultValues: {
       measurementUnit,
       preferredSports,
@@ -61,6 +63,7 @@ export function GamesSettingsForm({
         if (result.success) {
           toast.add({ title: t("saveSuccess"), type: "success" });
         } else {
+          setServerFieldError(form, result.field, t("invalidField"));
           toast.add({ title: t("saveError"), type: "error" });
         }
       });
@@ -75,7 +78,8 @@ export function GamesSettingsForm({
       }}
       className="space-y-6"
     >
-      <form.Field name="measurementUnit">
+      {/* Empty validators let form-core clear the server error on change/blur and on resubmit (with canSubmitWhenInvalid); do not remove. */}
+      <form.Field name="measurementUnit" validators={{}}>
         {(field) => (
           <FormSelectField
             field={field}

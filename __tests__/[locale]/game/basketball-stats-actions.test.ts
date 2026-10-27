@@ -16,6 +16,7 @@ vi.mock("next/cache", () => ({
 
 import { saveBasketballStats, saveBasketballStatsBulk } from "@/app/[locale]/game/basketball-stats-actions";
 import { revalidatePath } from "next/cache";
+import { mutationErrorShape } from "../../helpers/mutation-error";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -207,11 +208,7 @@ describe("saveBasketballStats", () => {
     const input: SaveBasketballStatsInput = { userId: 10, gameId: 1 };
     const result = await saveBasketballStats(input);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "BasketballStatsNotFoundError",
-      message: "Stats not found",
-    });
+    expect(result).toEqual(mutationErrorShape("BasketballStatsNotFoundError", "Stats not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
