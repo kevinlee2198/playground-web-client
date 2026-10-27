@@ -1093,7 +1093,8 @@
     "autoSaves": "Auto-saves",
     "saveChanges": "Save changes",
     "saveSuccess": "Settings saved",
-    "saveError": "Failed to save settings"
+    "saveError": "Failed to save settings",
+    "invalidField": "This value couldn't be saved. Check it and try again."
   },
   "about": {
     "title": "About",

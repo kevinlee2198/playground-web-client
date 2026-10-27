@@ -34,7 +34,7 @@ import {
 } from "@/app/[locale]/settings/actions";
 import { MutationErrorType } from "@/lib/graphql-result";
 import { validateOperation } from "../../helpers/schema-contract";
-import { EnumType } from "json-to-graphql-query";
+import { EnumType, jsonToGraphQLQuery } from "json-to-graphql-query";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -261,6 +261,56 @@ describe("updatePreferences", () => {
     expect(result.success).toBe(false);
     expect(result.errorType).toBe(MutationErrorType.GRAPHQL_ERROR);
     expect(result.message).toBe("Permission denied");
+  });
+
+  it("selects Error and InvalidInputError on the preferences result", async () => {
+    mockUpdatePreferencesSuccess();
+
+    await updatePreferences({ showStatistics: true });
+
+    const captured = mockAuthMutate.mock.calls[0][0];
+    expect(validateOperation("mutation", captured)).toEqual([]);
+    const text = jsonToGraphQLQuery({ mutation: captured });
+    expect(text).toContain("... on Error { message }");
+    expect(text).toContain("... on InvalidInputError { field code }");
+    expect(text).not.toContain("AuthorizationError");
+  });
+
+  it("returns field and code from InvalidInputError", async () => {
+    mockMutateSuccess({
+      updateUserPreferences: {
+        __typename: "InvalidInputError",
+        message: "m",
+        field: "measurementUnit",
+        code: "NULL_NOT_ALLOWED",
+      },
+    });
+
+    const result = await updatePreferences({ notificationsEnabled: true });
+
+    expect(result).toMatchObject({
+      success: false,
+      errorType: "InvalidInputError",
+      field: "measurementUnit",
+      code: "NULL_NOT_ALLOWED",
+    });
+  });
+
+  it("marks top-level FORBIDDEN as an authorization error", async () => {
+    mockAuthMutate.mockResolvedValueOnce({
+      data: {},
+      errors: [
+        { message: "Forbidden", extensions: { classification: "FORBIDDEN" } },
+      ],
+    });
+
+    const result = await updatePreferences({ notificationsEnabled: true });
+
+    expect(result).toMatchObject({
+      success: false,
+      errorType: MutationErrorType.GRAPHQL_ERROR,
+      isAuthorizationError: true,
+    });
   });
 
   it("surfaces error type from non-matching typename", async () => {

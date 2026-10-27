@@ -3,7 +3,15 @@
 import { auth } from "@/lib/auth";
 import { SportType } from "@/lib/constants";
 import { authMutate, authQuery } from "@/lib/graphql-request";
-import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
+import {
+  errorFragment,
+  invalidInputErrorFragment,
+} from "@/lib/graphql-fragments";
+import {
+  extractMutationResult,
+  MutationErrorType,
+  mutationErrorFromGraphQLErrors,
+} from "@/lib/graphql-result";
 import { EnumType } from "json-to-graphql-query";
 import { headers } from "next/headers";
 import { cache } from "react";
@@ -86,6 +94,9 @@ interface UpdatePreferencesResult {
   preferences?: UserPreferences;
   errorType?: string;
   message?: string;
+  field?: string | null;
+  code?: string | null;
+  isAuthorizationError?: boolean;
 }
 
 export async function updatePreferences(
@@ -120,19 +131,19 @@ export async function updatePreferences(
       updateUserPreferences: {
         __args: { input: gqlInput },
         __typename: true,
-        __on: {
-          __typeName: "UpdateUserPreferencesResponse",
-          preferences: preferencesSelection,
-        },
+        __on: [
+          {
+            __typeName: "UpdateUserPreferencesResponse",
+            preferences: preferencesSelection,
+          },
+          errorFragment,
+          invalidInputErrorFragment,
+        ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return {
-        success: false,
-        errorType: MutationErrorType.GRAPHQL_ERROR,
-        message: response.errors[0].message,
-      };
+      return mutationErrorFromGraphQLErrors(response.errors);
     }
 
     const data = response.data?.updateUserPreferences;

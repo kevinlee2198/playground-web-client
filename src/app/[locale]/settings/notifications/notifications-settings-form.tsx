@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
+import { setServerFieldError } from "@/lib/form-server-errors";
 
 interface NotificationsSettingsFormProps {
   notificationsEnabled: boolean;
@@ -49,6 +50,7 @@ export function NotificationsSettingsForm({
         if (result.success) {
           toast.add({ title: t("saveSuccess"), type: "success" });
         } else {
+          setServerFieldError(form, result.field, t("invalidField"));
           toast.add({ title: t("saveError"), type: "error" });
         }
       });
@@ -102,7 +104,7 @@ export function NotificationsSettingsForm({
 
       <Separator />
 
-      <form.Field name="emailDigestFrequency">
+      <form.Field name="emailDigestFrequency" validators={{}}>
         {(field) => (
           <FormSelectField
             field={field}

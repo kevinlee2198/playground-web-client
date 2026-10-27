@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
+import { setServerFieldError } from "@/lib/form-server-errors";
 
 interface PrivacySettingsFormProps {
   profileVisibility: string;
@@ -59,6 +60,7 @@ export function PrivacySettingsForm({
         if (result.success) {
           toast.add({ title: t("saveSuccess"), type: "success" });
         } else {
+          setServerFieldError(form, result.field, t("invalidField"));
           toast.add({ title: t("saveError"), type: "error" });
         }
       });
@@ -111,7 +113,7 @@ export function PrivacySettingsForm({
         <TypographyH3>
           {t("privacy.profileVisibilityDescription")}
         </TypographyH3>
-        <form.Field name="profileVisibility">
+        <form.Field name="profileVisibility" validators={{}}>
           {(field) => (
             <FormSelectField
               field={field}
