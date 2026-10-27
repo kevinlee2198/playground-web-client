@@ -104,6 +104,7 @@ export function NotificationsSettingsForm({
 
       <Separator />
 
+      {/* Empty validators enable form-core onServer error clearing on change/submit; do not remove. */}
       <form.Field name="emailDigestFrequency" validators={{}}>
         {(field) => (
           <FormSelectField

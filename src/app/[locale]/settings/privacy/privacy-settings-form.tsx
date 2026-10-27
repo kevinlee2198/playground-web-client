@@ -113,6 +113,7 @@ export function PrivacySettingsForm({
         <TypographyH3>
           {t("privacy.profileVisibilityDescription")}
         </TypographyH3>
+        {/* Empty validators enable form-core onServer error clearing on change/submit; do not remove. */}
         <form.Field name="profileVisibility" validators={{}}>
           {(field) => (
             <FormSelectField

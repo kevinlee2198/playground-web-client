@@ -77,6 +77,7 @@ export function GamesSettingsForm({
       }}
       className="space-y-6"
     >
+      {/* Empty validators enable form-core onServer error clearing on change/submit; do not remove. */}
       <form.Field name="measurementUnit" validators={{}}>
         {(field) => (
           <FormSelectField
