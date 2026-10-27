@@ -46,6 +46,26 @@ describe("GamesSettingsForm server errors", () => {
     );
   });
 
+  it("calls updatePreferences again when Save is pressed without editing", async () => {
+    mockUpdatePreferences.mockResolvedValue({
+      success: false,
+      errorType: "InvalidInputError",
+      message: "m",
+      field: "measurementUnit",
+      code: "NULL_NOT_ALLOWED",
+    });
+    const { container } = render(
+      <GamesSettingsForm measurementUnit="METRIC" preferredSports={[]} />,
+    );
+    fireEvent.click(screen.getAllByRole("button", { pressed: false })[0]);
+    fireEvent.submit(container.querySelector("form")!);
+    await screen.findByText("t:invalidField");
+
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(mockUpdatePreferences).toHaveBeenCalledTimes(2));
+  });
+
   it("falls back to toast only when field is null", async () => {
     mockUpdatePreferences.mockResolvedValue({
       success: false,

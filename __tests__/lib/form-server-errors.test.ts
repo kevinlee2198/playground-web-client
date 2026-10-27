@@ -38,6 +38,16 @@ describe("setServerFieldError", () => {
     expect(typed.getFieldMeta("bogus" as never)).toBeUndefined();
   });
 
+  it("ignores a known field mounted without validators", () => {
+    const { form, typed } = setup();
+    const bare = new FieldApi({ form: typed, name: "preferredSports" });
+    bare.mount();
+
+    expect(setServerFieldError(form, "preferredSports", "x")).toBe(false);
+
+    expect(typed.getFieldMeta("preferredSports")?.errorMap.onServer).toBeUndefined();
+  });
+
   it("is cleared when the field value changes", () => {
     const { form, field, typed } = setup();
     setServerFieldError(form, "measurementUnit", "x");

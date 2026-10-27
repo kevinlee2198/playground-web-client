@@ -32,6 +32,7 @@ export function NotificationsSettingsForm({
   ];
 
   const form = useForm({
+    canSubmitWhenInvalid: true,
     defaultValues: {
       notificationsEnabled,
       emailDigestFrequency,
@@ -104,7 +105,7 @@ export function NotificationsSettingsForm({
 
       <Separator />
 
-      {/* Empty validators enable form-core onServer error clearing on change/submit; do not remove. */}
+      {/* Empty validators let form-core clear the server error on change/blur and on resubmit (with canSubmitWhenInvalid); do not remove. */}
       <form.Field name="emailDigestFrequency" validators={{}}>
         {(field) => (
           <FormSelectField

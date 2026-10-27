@@ -40,6 +40,7 @@ export function PrivacySettingsForm({
   ];
 
   const form = useForm({
+    canSubmitWhenInvalid: true,
     defaultValues: {
       profileVisibility,
       showOnlineStatus,
@@ -113,7 +114,7 @@ export function PrivacySettingsForm({
         <TypographyH3>
           {t("privacy.profileVisibilityDescription")}
         </TypographyH3>
-        {/* Empty validators enable form-core onServer error clearing on change/submit; do not remove. */}
+        {/* Empty validators let form-core clear the server error on change/blur and on resubmit (with canSubmitWhenInvalid); do not remove. */}
         <form.Field name="profileVisibility" validators={{}}>
           {(field) => (
             <FormSelectField

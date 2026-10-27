@@ -37,6 +37,7 @@ export function GamesSettingsForm({
   ];
 
   const form = useForm({
+    canSubmitWhenInvalid: true,
     defaultValues: {
       measurementUnit,
       preferredSports,
@@ -77,7 +78,7 @@ export function GamesSettingsForm({
       }}
       className="space-y-6"
     >
-      {/* Empty validators enable form-core onServer error clearing on change/submit; do not remove. */}
+      {/* Empty validators let form-core clear the server error on change/blur and on resubmit (with canSubmitWhenInvalid); do not remove. */}
       <form.Field name="measurementUnit" validators={{}}>
         {(field) => (
           <FormSelectField
