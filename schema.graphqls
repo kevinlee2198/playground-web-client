@@ -412,29 +412,34 @@ union AddChatRoomMemberResult =
   | AddChatRoomMemberResponse
   | ChatRoomNotFoundError
   | DirectMessageNotAllowedError
+  | ManagedChatRoomError
   | MutualFollowRequiredError
 union RemoveChatRoomMemberResult =
   | RemoveChatRoomMemberResponse
   | ChatRoomNotFoundError
   | UserNotFoundError
   | DirectMessageNotAllowedError
+  | ManagedChatRoomError
   | CannotRemoveOwnerError
   | InsufficientRoleError
 union RenameChatRoomResult =
   | RenameChatRoomResponse
   | ChatRoomNotFoundError
   | DirectMessageNotAllowedError
+  | ManagedChatRoomError
 union UpdateChatRoomMemberRoleResult =
   | UpdateChatRoomMemberRoleResponse
   | ChatRoomNotFoundError
   | UserNotFoundError
   | DirectMessageNotAllowedError
+  | ManagedChatRoomError
   | InvalidRoleTransitionError
 union LeaveChatRoomResult =
   | LeaveChatRoomResponse
   | ChatRoomNotFoundError
   | UserNotFoundError
   | DirectMessageNotAllowedError
+  | ManagedChatRoomError
   | OwnerCannotLeaveError
 union SendChatMessageResult =
   | SendChatMessageResponse
@@ -450,10 +455,52 @@ union DeleteChatMessageResult =
 """
 Common interface for all domain errors returned as part of result unions.
 Clients can use `... on Error { message }` as a catch-all.
-Infrastructure errors (UNAUTHORIZED, FORBIDDEN) remain in the GraphQL errors array.
+
+Conventions:
+- Unauthenticated callers always fail with a top-level UNAUTHORIZED error.
+- Legacy core mutations keep a top-level FORBIDDEN error when the caller lacks permission.
+- League, group, invite and organization mutations, and new core mutations, return a typed
+  `AuthorizationError` instead.
+- Authorize before revealing: a caller who may not see a resource is told it does not exist or is
+  denied, never which of the two.
+- `InvalidInputError` reports server-only field rules (for example clearing a non-nullable field).
+  Shape-only validation stays a top-level BAD_REQUEST.
 """
 interface Error {
   message: String!
+}
+
+"""
+The caller is authenticated but not permitted to perform this action.
+"""
+interface AuthorizationError implements Error {
+  message: String!
+}
+
+"""
+An input field broke a rule only the server can check.
+"""
+type InvalidInputError implements Error {
+  message: String!
+  """
+  Input field path, null when the rule spans fields.
+  """
+  field: String
+  """
+  Stable machine code, e.g. NULL_NOT_ALLOWED.
+  """
+  code: String!
+}
+
+"""
+Rate limit exceeded. Retry after retryAfterSeconds.
+"""
+type RateLimitedError implements Error {
+  message: String!
+  """
+  Seconds until the caller can try again.
+  """
+  retryAfterSeconds: Int!
 }
 
 # ============================================================================
@@ -530,6 +577,10 @@ type DirectMessageNotAllowedError implements Error {
   message: String!
 }
 
+type ManagedChatRoomError implements Error {
+  message: String!
+}
+
 type UserBlockedError implements Error {
   message: String!
 }
@@ -542,7 +593,7 @@ type CannotRemoveOwnerError implements Error {
   message: String!
 }
 
-type InsufficientRoleError implements Error {
+type InsufficientRoleError implements Error & AuthorizationError {
   message: String!
 }
 
@@ -1197,17 +1248,6 @@ enum UrlResolutionErrorCode {
   UNSUPPORTED_FORMAT
 }
 
-"""
-Rate limit exceeded for link submissions.
-"""
-type RateLimitedError implements Error {
-  message: String!
-  """
-  Seconds until the user can submit again.
-  """
-  retryAfterSeconds: Int!
-}
-
 type GameMediaNotFoundError implements Error {
   message: String!
 }
@@ -1782,7 +1822,7 @@ Fields not specified will not be updated.
 input UpdateTeamInstanceInput {
   id: ID!
   """
-  If null will not be updated
+  Omit to leave the name unchanged. An explicit null is rejected with a BAD_REQUEST error.
   """
   name: String
   description: String
@@ -2250,6 +2290,9 @@ input CreateVolleyballGameInput {
 input UpdateGameInput {
   id: ID!
   description: String
+  """
+  Omit to leave the start date unchanged. An explicit null is rejected with a BAD_REQUEST error.
+  """
   startDate: DateTime
   location: LocationInput
   """
@@ -3170,8 +3213,10 @@ type Group implements Node {
   """
   Dedicated chat room for group-wide discussion. Created atomically with
   the Group; role sync: Group ADMIN → ChatRoom ADMIN, MEMBER → MEMBER.
+  Null when the viewer is not a member of the room (anonymous viewers and
+  non-member org admins included).
   """
-  chatRoom: ChatRoom!
+  chatRoom: ChatRoom
   """
   Group memberships. Filter by `role` and `status` (departed vs active).
   Cursor pagination.
@@ -3210,7 +3255,10 @@ event-driven (see requirements §3.11).
 """
 type GroupMembership implements Node {
   id: ID!
-  group: Group!
+  """
+  Null when the viewer can no longer read the group (e.g. after leaving it).
+  """
+  group: Group
   user: User!
   role: GroupRole!
   """
@@ -3398,7 +3446,7 @@ type GroupNotFoundError implements Error {
   groupId: ID
 }
 
-type InsufficientGroupRoleError implements Error {
+type InsufficientGroupRoleError implements Error & AuthorizationError {
   message: String!
   groupId: ID!
 }
@@ -4199,9 +4247,9 @@ Accept an invitation. Exactly one identifier must be supplied:
 - `invitationId`: used by in-app direct-add recipients (already
   authenticated, clicked an in-app notification).
 - `token`: used by email / deep-link recipients clicking a mailer link.
-  The token path bypasses Cerbos resource checks (policy token-gate), but
-  still requires the caller to be authenticated and match the invited
-  email (if the invitation was email-based).
+  The caller must be the invited account, or hold a verified email equal
+  to the invitation's email (case-insensitive); anyone else gets
+  `InvitationRecipientMismatchError`.
 """
 input AcceptInvitationInput @oneOf {
   invitationId: ID
@@ -4341,6 +4389,13 @@ type InvitationAlreadyRespondedError implements Error {
 }
 
 """
+This invitation was sent to a different account. Fixed copy; never echoes the invited email or account.
+"""
+type InvitationRecipientMismatchError implements Error & AuthorizationError {
+  message: String!
+}
+
+"""
 The batch exceeded the 200-recipient cap for `sendInvitations`.
 """
 type InvitationBatchCapExceededError implements Error {
@@ -4391,12 +4446,16 @@ type InviteLinkExpiredError implements Error {
 union SendInvitationsResult =
   | SendInvitationsResponse
   | InvitationOwnerNotFoundError
+  | InsufficientLeagueRoleError
+  | InsufficientGroupRoleError
   | InvitationBatchCapExceededError
   | RateLimitError
 
 union ResendInvitationResult =
   | ResendInvitationResponse
   | InvitationNotFoundError
+  | InsufficientLeagueRoleError
+  | InsufficientGroupRoleError
   | InvitationAlreadyRespondedError
   | InvitationExpiredError
   | RateLimitError
@@ -4404,6 +4463,8 @@ union ResendInvitationResult =
 union RevokeInvitationResult =
   | RevokeInvitationResponse
   | InvitationNotFoundError
+  | InsufficientLeagueRoleError
+  | InsufficientGroupRoleError
   | InvitationAlreadyRespondedError
 
 union AcceptInvitationResult =
@@ -4411,20 +4472,31 @@ union AcceptInvitationResult =
   | InvitationNotFoundError
   | InvitationAlreadyRespondedError
   | InvitationExpiredError
+  | InvitationRecipientMismatchError
 
 union DeclineInvitationResult =
   | DeclineInvitationResponse
   | InvitationNotFoundError
   | InvitationAlreadyRespondedError
   | InvitationExpiredError
+  | InvitationRecipientMismatchError
 
 union CreateInviteLinkResult =
   | CreateInviteLinkResponse
   | InvitationOwnerNotFoundError
+  | InvalidInputError
+  | RateLimitError
+  | InsufficientLeagueRoleError
+  | InsufficientGroupRoleError
 
+# The role-error members are currently unreachable: invite_link read and revoke share the same
+# derived roles, so a caller who can read a link can always revoke it. They exist for the
+# AuthorizationError convention.
 union RevokeInviteLinkResult =
   | RevokeInviteLinkResponse
   | InviteLinkNotFoundError
+  | InsufficientLeagueRoleError
+  | InsufficientGroupRoleError
 
 union RedeemInviteLinkResult =
   | RedeemInviteLinkResponse
@@ -4456,25 +4528,44 @@ extend type Mutation {
   within the batch are collapsed and echoed in `skippedDuplicates`; a
   prior `SENT` invitation for the same owner + recipient is auto-revoked
   before the new row is written.
+
+  A caller who cannot read the owner (or an owner that does not exist)
+  gets `InvitationOwnerNotFoundError`; a caller who can read it but is not
+  its Admin gets `InsufficientLeagueRoleError` / `InsufficientGroupRoleError`.
   """
   sendInvitations(input: SendInvitationsInput!): SendInvitationsResult!
 
   """
   Re-send an existing `SENT` invitation, extending `expiresAt` to the
-  server's default window and refreshing `lastEventAt`. No-op on
-  terminal invitations. Rate-limited.
+  server's default window and refreshing `lastEventAt`. Rate-limited.
+
+  Checks run in order: a caller who cannot read the invitation or its
+  owner gets `InvitationNotFoundError`; a non-Admin of the owner gets
+  `InsufficientLeagueRoleError` / `InsufficientGroupRoleError`; only then
+  does a terminal or expired invitation yield
+  `InvitationAlreadyRespondedError` / `InvitationExpiredError`.
   """
   resendInvitation(invitationId: ID!): ResendInvitationResult!
 
   """
   Revoke a still-pending invitation. Only Admins of the owning aggregate
-  (or the inviter) can call this. Terminal for the invitation row.
+  can call this. Terminal for the invitation row.
+
+  Checks run in order: a caller who cannot read the invitation or its
+  owner gets `InvitationNotFoundError`; a non-Admin of the owner gets
+  `InsufficientLeagueRoleError` / `InsufficientGroupRoleError`; only then
+  does a non-`SENT` invitation yield `InvitationAlreadyRespondedError`.
   """
   revokeInvitation(invitationId: ID!): RevokeInvitationResult!
 
   """
   Accept an invitation. See `AcceptInvitationInput` for the token vs.
-  invitation-id path distinction. On success, atomically:
+  invitation-id path distinction. An unknown token, or an invitation id
+  the caller cannot read, gets `InvitationNotFoundError`; a caller who is
+  not the recipient gets `InvitationRecipientMismatchError` whatever the
+  invitation's status, so only the recipient learns that it is expired
+  (`InvitationExpiredError`) or already answered
+  (`InvitationAlreadyRespondedError`). On success, atomically:
   - sets `status = ACCEPTED` + `acceptedBy`
   - creates `LeagueMembership` / `GroupMembership` with the invited role
   - for LEAGUE owners, creates or re-activates the `LeaguePlayer`
@@ -4489,6 +4580,11 @@ extend type Mutation {
   `INVITATION_DECLINED` to the inviter; for email-only or link-derived
   invitations, no notification is sent (declining an email outreach is
   silent).
+
+  Only the invitee can decline. A caller who cannot read the invitation
+  gets `InvitationNotFoundError`; one who can read it but is not the
+  invitee (an Admin of the owner) gets `InvitationRecipientMismatchError`.
+  Expiry and already-answered errors are returned only to the invitee.
   """
   declineInvitation(invitationId: ID!): DeclineInvitationResult!
 
@@ -4846,9 +4942,7 @@ type GameResult implements Node {
 
 extend type Game {
   """
-  Reported / confirmed result for this Game, or null when no result has been
-  recorded yet. A row exists only after `reportGameResult` (or `forfeitGame`).
-  Disputes hard-delete the row, returning to null.
+  Reported or confirmed result, or null when none is recorded or the viewer cannot read the league (C4).
   """
   result: GameResult
   """
@@ -5371,7 +5465,7 @@ type LeagueTeam implements Node {
   """
   captain: User
   """
-  Active + departed roster entries. Filter client-side via `removedAt`.
+  Active roster entries. League admins (league_membership:list_departed) also see removed entries, identified by removedAt.
   """
   roster(
     first: Int
@@ -5405,7 +5499,7 @@ type LeagueTeamRoster implements Node {
   player: LeaguePlayer!
   addedAt: DateTime!
   """
-  Set when the player was removed from the team; null while active.
+  Set when the player was removed from the team. Removed entries are returned only to league admins, so this is always null for other viewers.
   """
   removedAt: DateTime
 }
@@ -5696,8 +5790,10 @@ type League implements Node {
   """
   Dedicated chat room for league-wide discussion. Created atomically with
   the League; role sync: League ADMIN → ChatRoom ADMIN, MEMBER → MEMBER.
+  Null when the viewer is not a member of the room (anonymous viewers and
+  non-member org admins included).
   """
-  chatRoom: ChatRoom!
+  chatRoom: ChatRoom
   """
   Seasons in this League, newest first. Filter by `status` (defaults to
   all). Cursor pagination.
@@ -5715,8 +5811,11 @@ type League implements Node {
   """
   currentSeason: Season
   """
-  Active league memberships. Filter by `role` and `status` (departed vs
-  active). Cursor pagination.
+  League memberships. Filter by `role` and `status` (departed vs active,
+  default active). Cursor pagination. Visible to league members and admins
+  (including admins of the owning Organization); empty for everyone else,
+  anonymous viewers included. `status: DEPARTED` is league-admin only and
+  is empty for other viewers.
   """
   members(
     role: LeagueRole
@@ -5745,11 +5844,15 @@ event-driven (see requirements §3.3).
 """
 type LeagueMembership implements Node {
   id: ID!
-  league: League!
+  """
+  Null when the viewer can no longer read the league (e.g. after leaving an UNLISTED league).
+  """
+  league: League
   user: User!
   role: LeagueRole!
   """
-  User who invited this member. Null for League-creator memberships (self-seeded).
+  User who invited this member (the creator themself on the self-seeded
+  League-creator membership). Null unless the viewer is a league admin.
   """
   invitedBy: User
   """
@@ -5757,11 +5860,13 @@ type LeagueMembership implements Node {
   """
   acceptedAt: DateTime
   """
-  When the member left/was removed. Null for active memberships.
+  When the member left/was removed. Null for active memberships, and null
+  unless the viewer is a league admin.
   """
   departedAt: DateTime
   """
-  Why the member departed. Null for active memberships.
+  Why the member departed. Null for active memberships, and null unless the
+  viewer is a league admin.
   """
   departureReason: DepartureReason
 }
@@ -5771,6 +5876,9 @@ Filter on `League.members` by active vs historical state.
 """
 enum LeagueMembershipStatus {
   ACTIVE
+  """
+  Departed (left or removed) memberships. League-admin only; empty for other viewers.
+  """
   DEPARTED
 }
 
@@ -5903,7 +6011,7 @@ type LeagueArchivedError implements Error {
   leagueId: ID!
 }
 
-type InsufficientLeagueRoleError implements Error {
+type InsufficientLeagueRoleError implements Error & AuthorizationError {
   message: String!
   leagueId: ID!
 }
@@ -6602,7 +6710,7 @@ type LastAdminError implements Error {
 """
 The caller does not hold the role required for this Organization mutation.
 """
-type InsufficientOrganizationRoleError implements Error {
+type InsufficientOrganizationRoleError implements Error & AuthorizationError {
   message: String!
   organizationId: ID!
 }
@@ -9330,7 +9438,7 @@ type RotateIcalTokenResponse {
   icalToken: String!
 }
 
-union RotateIcalTokenResult = RotateIcalTokenResponse
+union RotateIcalTokenResult = RotateIcalTokenResponse | RateLimitedError
 
 extend type CurrentUser {
   """
@@ -9391,7 +9499,9 @@ type UpdateUserPreferencesResponse {
   preferences: UserPreferences!
 }
 
-union UpdateUserPreferencesResult = UpdateUserPreferencesResponse
+union UpdateUserPreferencesResult =
+  | UpdateUserPreferencesResponse
+  | InvalidInputError
 
 extend type CurrentUser {
   preferences: UserPreferences!
@@ -9764,7 +9874,7 @@ type UpdateUserResponse {
   user: CurrentUser!
 }
 
-union UpdateUserResult = UpdateUserResponse
+union UpdateUserResult = UpdateUserResponse | InvalidInputError
 
 # ============================================================================
 # Follow Result Unions
