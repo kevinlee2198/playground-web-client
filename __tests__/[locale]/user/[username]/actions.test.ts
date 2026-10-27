@@ -26,6 +26,7 @@ import {
   loadFollowing,
   updateUser,
 } from "@/app/[locale]/user/[username]/actions";
+import { mutationErrorShape } from "../../../helpers/mutation-error";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -198,11 +199,7 @@ describe("unfollowUser", () => {
 
     const result = await unfollowUser(2);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "NotFollowingError",
-      message: "You are not following this user",
-    });
+    expect(result).toEqual(mutationErrorShape("NotFollowingError", "You are not following this user"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -263,11 +260,7 @@ describe("removeFollower", () => {
 
     const result = await removeFollower(3);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "NotFollowerError",
-      message: "User is not a follower",
-    });
+    expect(result).toEqual(mutationErrorShape("NotFollowerError", "User is not a follower"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -330,11 +323,7 @@ describe("blockUser", () => {
 
     const result = await blockUser(2);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "CannotBlockSelfError",
-      message: "Cannot block yourself",
-    });
+    expect(result).toEqual(mutationErrorShape("CannotBlockSelfError", "Cannot block yourself"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -399,11 +388,7 @@ describe("unblockUser", () => {
 
     const result = await unblockUser(2);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserNotBlockedError",
-      message: "User is not blocked",
-    });
+    expect(result).toEqual(mutationErrorShape("UserNotBlockedError", "User is not blocked"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 

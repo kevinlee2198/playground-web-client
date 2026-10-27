@@ -22,6 +22,7 @@ import {
   confirmGameMediaUpload,
   deleteResource,
 } from "@/app/[locale]/upload/actions";
+import { mutationErrorShape } from "../../helpers/mutation-error";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -337,11 +338,7 @@ describe("confirmUpload", () => {
 
     const result = await confirmUpload("res-bad");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ResourceNotFoundError",
-      message: "Upload resource missing",
-    });
+    expect(result).toEqual(mutationErrorShape("ResourceNotFoundError", "Upload resource missing"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -417,11 +414,7 @@ describe("confirmGameMediaUpload", () => {
 
     const result = await confirmGameMediaUpload("res-bad");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ResourceNotFoundError",
-      message: "Upload resource missing",
-    });
+    expect(result).toEqual(mutationErrorShape("ResourceNotFoundError", "Upload resource missing"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -430,11 +423,7 @@ describe("confirmGameMediaUpload", () => {
 
     const result = await confirmGameMediaUpload("res-bad");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "GameNotFoundError",
-      message: "Game not found",
-    });
+    expect(result).toEqual(mutationErrorShape("GameNotFoundError", "Game not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 

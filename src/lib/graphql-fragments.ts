@@ -557,3 +557,22 @@ export const forwardPageInfoFragment = {
  * Use as: __on: [{ __typeName: "SuccessResponse", ...fields }, errorFragment]
  */
 export const errorFragment = { __typeName: "Error", message: true };
+
+/**
+ * Selects which AuthorizationError implementer was returned.
+ * Spread ONLY into unions that contain an AuthorizationError implementer.
+ */
+export const authorizationErrorFragment = {
+  __typeName: "AuthorizationError",
+  authorizationErrorType: { __aliasFor: "__typename" },
+};
+
+/**
+ * Selects the offending field and machine-readable code of an InvalidInputError.
+ * Spread ONLY into unions that contain InvalidInputError.
+ */
+export const invalidInputErrorFragment = {
+  __typeName: "InvalidInputError",
+  field: true,
+  code: true,
+};

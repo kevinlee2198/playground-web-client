@@ -28,6 +28,7 @@ import {
   leaveChat,
   removeMember,
 } from "@/app/[locale]/chat/actions";
+import { mutationErrorShape } from "../../helpers/mutation-error";
 
 // ---------------------------------------------------------------------------
 // Helpers – mutations
@@ -424,11 +425,7 @@ describe("createDirectMessage", () => {
 
     const result = await createDirectMessage(1);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserNotFoundError",
-      message: "User not found",
-    });
+    expect(result).toEqual(mutationErrorShape("UserNotFoundError", "User not found"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -519,11 +516,7 @@ describe("createGroupChat", () => {
 
     const result = await createGroupChat("My Group", [1]);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ChatRoomCreationError",
-      message: "Cannot create chat",
-    });
+    expect(result).toEqual(mutationErrorShape("ChatRoomCreationError", "Cannot create chat"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -642,11 +635,7 @@ describe("sendMessage", () => {
 
     const result = await sendMessage("room1", "Hello");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ChatRoomNotFoundError",
-      message: "Chat room does not exist",
-    });
+    expect(result).toEqual(mutationErrorShape("ChatRoomNotFoundError", "Chat room does not exist"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -762,11 +751,7 @@ describe("sendMediaMessage", () => {
 
     const result = await sendMediaMessage("room1", "resource1");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ResourceNotFoundError",
-      message: "Resource not found",
-    });
+    expect(result).toEqual(mutationErrorShape("ResourceNotFoundError", "Resource not found"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -851,11 +836,7 @@ describe("updateMessage", () => {
 
     const result = await updateMessage("msg1", "Updated");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "MessageNotFoundError",
-      message: "Message does not exist",
-    });
+    expect(result).toEqual(mutationErrorShape("MessageNotFoundError", "Message does not exist"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -904,11 +885,7 @@ describe("deleteMessage", () => {
 
     const result = await deleteMessage("msg1");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "MessageNotFoundError",
-      message: "Message not found",
-    });
+    expect(result).toEqual(mutationErrorShape("MessageNotFoundError", "Message not found"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -966,11 +943,7 @@ describe("addMember", () => {
 
     const result = await addMember("room1", 1);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserAlreadyMemberError",
-      message: "User is already a member",
-    });
+    expect(result).toEqual(mutationErrorShape("UserAlreadyMemberError", "User is already a member"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -1036,11 +1009,7 @@ describe("updateMemberRole", () => {
 
     const result = await updateMemberRole("room1", 1, "ADMIN");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "MemberNotFoundError",
-      message: "Member not found",
-    });
+    expect(result).toEqual(mutationErrorShape("MemberNotFoundError", "Member not found"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -1089,11 +1058,7 @@ describe("leaveChat", () => {
 
     const result = await leaveChat("room1");
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "ChatRoomNotFoundError",
-      message: "Chat room not found",
-    });
+    expect(result).toEqual(mutationErrorShape("ChatRoomNotFoundError", "Chat room not found"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -1145,11 +1110,7 @@ describe("removeMember", () => {
 
     const result = await removeMember("room1", 1);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "MemberNotFoundError",
-      message: "Member not found",
-    });
+    expect(result).toEqual(mutationErrorShape("MemberNotFoundError", "Member not found"));
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {

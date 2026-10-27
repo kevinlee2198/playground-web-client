@@ -45,6 +45,7 @@ import {
   transferGameOwnership,
   loadGameMedia,
 } from "@/app/[locale]/game/actions";
+import { mutationErrorShape } from "../../helpers/mutation-error";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -198,11 +199,7 @@ describe("createGame", () => {
       metadata: { format: SportFormat.FIVE_ON_FIVE },
     });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "GameAlreadyExistsError",
-      message: "Game already exists",
-    });
+    expect(result).toEqual(mutationErrorShape("GameAlreadyExistsError", "Game already exists"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -292,11 +289,7 @@ describe("updateGame", () => {
 
     const result = await updateGame({ id: 1, startDate: "2025-01-01" });
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "GameNotFoundError",
-      message: "Game not found",
-    });
+    expect(result).toEqual(mutationErrorShape("GameNotFoundError", "Game not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -348,11 +341,7 @@ describe("deleteGame", () => {
 
     const result = await deleteGame(99);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "GameNotFoundError",
-      message: "Game not found",
-    });
+    expect(result).toEqual(mutationErrorShape("GameNotFoundError", "Game not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -430,11 +419,7 @@ describe("startGame", () => {
 
     const result = await startGame(11);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "InvalidGameStatusError",
-      message: "Cannot start a completed game",
-    });
+    expect(result).toEqual(mutationErrorShape("InvalidGameStatusError", "Cannot start a completed game"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -500,11 +485,7 @@ describe("endGame", () => {
 
     const result = await endGame(20);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "InvalidGameStatusError",
-      message: "Cannot end a scheduled game",
-    });
+    expect(result).toEqual(mutationErrorShape("InvalidGameStatusError", "Cannot end a scheduled game"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -836,11 +817,7 @@ describe("addGameEditor", () => {
 
     const result = await addGameEditor(1, 10);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserAlreadyEditorError",
-      message: "User is already an editor",
-    });
+    expect(result).toEqual(mutationErrorShape("UserAlreadyEditorError", "User is already an editor"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -892,11 +869,7 @@ describe("removeGameEditor", () => {
 
     const result = await removeGameEditor(1, 10);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "GameMemberNotFoundError",
-      message: "Editor not found",
-    });
+    expect(result).toEqual(mutationErrorShape("GameMemberNotFoundError", "Editor not found"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -956,11 +929,7 @@ describe("transferGameOwnership", () => {
 
     const result = await transferGameOwnership(1, 20);
 
-    expect(result).toEqual({
-      success: false,
-      errorType: "UserNotGameMemberError",
-      message: "User is not a member",
-    });
+    expect(result).toEqual(mutationErrorShape("UserNotGameMemberError", "User is not a member"));
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
