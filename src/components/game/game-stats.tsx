@@ -49,6 +49,7 @@ interface GameStatsProps {
   baseballPitchingStats?: { node: BaseballPitchingStatsNode }[];
   baseballFieldingStats?: { node: BaseballFieldingStatsNode }[];
   volleyballStats?: { node: VolleyballStatsNode }[];
+  currentUserId: number | null;
 }
 
 interface TeamStatsGroup<T extends StatsNode> {
@@ -124,6 +125,7 @@ export function GameStats({
   baseballPitchingStats,
   baseballFieldingStats,
   volleyballStats,
+  currentUserId,
 }: GameStatsProps) {
   const t = useTranslations();
 
@@ -145,9 +147,9 @@ export function GameStats({
     return null;
   }
 
-  // Expand by default when the viewer is an owner/editor and the game is complete
+  // Expand by default when the viewer can enter stats for anyone and the game is complete
   const defaultOpen =
-    game.viewerGameRole != null && game.gameStatus === GameStatus.COMPLETE;
+    game.viewerCan.enterStats && game.gameStatus === GameStatus.COMPLETE;
 
   const fallbackGroupName = t("game.stats.title");
   const fallbackTeamName = t("leagues.team.unnamed");
@@ -171,7 +173,9 @@ export function GameStats({
                   stats={group.stats}
                   gameStatus={game.gameStatus}
                   availableUsers={group.users}
-                  viewerGameRole={game.viewerGameRole}
+                  canEnterStats={game.viewerCan.enterStats}
+                  canEnterOwnStats={game.viewerCan.enterOwnStats}
+                  currentUserId={currentUserId}
                 />
               </CollapsibleStats>
             ))}
@@ -193,7 +197,9 @@ export function GameStats({
                   stats={group.stats}
                   gameStatus={game.gameStatus}
                   availableUsers={group.users}
-                  viewerGameRole={game.viewerGameRole}
+                  canEnterStats={game.viewerCan.enterStats}
+                  canEnterOwnStats={game.viewerCan.enterOwnStats}
+                  currentUserId={currentUserId}
                 />
               </CollapsibleStats>
             ))}
@@ -215,7 +221,9 @@ export function GameStats({
                   stats={group.stats}
                   gameStatus={game.gameStatus}
                   availableUsers={group.users}
-                  viewerGameRole={game.viewerGameRole}
+                  canEnterStats={game.viewerCan.enterStats}
+                  canEnterOwnStats={game.viewerCan.enterOwnStats}
+                  currentUserId={currentUserId}
                 />
               </CollapsibleStats>
             ))}
@@ -244,7 +252,9 @@ export function GameStats({
                   stats={group.stats}
                   gameStatus={game.gameStatus}
                   availableUsers={group.users}
-                  viewerGameRole={game.viewerGameRole}
+                  canEnterStats={game.viewerCan.enterStats}
+                  canEnterOwnStats={game.viewerCan.enterOwnStats}
+                  currentUserId={currentUserId}
                 />
               </CollapsibleStats>
             ))}
@@ -266,7 +276,9 @@ export function GameStats({
                   stats={group.stats}
                   gameStatus={game.gameStatus}
                   availableUsers={group.users}
-                  viewerGameRole={game.viewerGameRole}
+                  canEnterStats={game.viewerCan.enterStats}
+                  canEnterOwnStats={game.viewerCan.enterOwnStats}
+                  currentUserId={currentUserId}
                 />
               </CollapsibleStats>
             ))}
@@ -288,7 +300,9 @@ export function GameStats({
                   stats={group.stats}
                   gameStatus={game.gameStatus}
                   availableUsers={group.users}
-                  viewerGameRole={game.viewerGameRole}
+                  canEnterStats={game.viewerCan.enterStats}
+                  canEnterOwnStats={game.viewerCan.enterOwnStats}
+                  currentUserId={currentUserId}
                 />
               </CollapsibleStats>
             ))}
@@ -304,7 +318,9 @@ export function GameStats({
       teamName: group.teamName,
       gameStatus: game.gameStatus,
       availableUsers: group.users,
-      viewerGameRole: game.viewerGameRole,
+      canEnterStats: game.viewerCan.enterStats,
+      canEnterOwnStats: game.viewerCan.enterOwnStats,
+      currentUserId,
     };
 
     if (game.sportType === SportType.PICKLEBALL) {

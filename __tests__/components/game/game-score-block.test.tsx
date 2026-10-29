@@ -148,7 +148,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     },
     gameStatus: GameStatus.IN_PROGRESS,
     viewerGameRole: GameRole.OWNER,
-    viewerCan: gameViewerCan(),
+    viewerCan: gameViewerCan({ update: true }),
     visibility: GameVisibility.PUBLIC,
     viewerInvitation: null,
     statEntryMode: StatEntryMode.OPEN,
@@ -261,41 +261,41 @@ describe("GameScoreBlock", () => {
     expect(screen.queryByTestId("game-score")).not.toBeInTheDocument();
   });
 
-  it("shows edit pencil button when canEdit is true (viewerGameRole set + IN_PROGRESS)", () => {
+  it("shows the edit-score button from viewerCan.update", () => {
     render(
       <GameScoreBlock
         game={makeGame({
-          viewerGameRole: GameRole.OWNER,
+          viewerGameRole: null,
+          viewerCan: gameViewerCan({ update: true }),
           gameStatus: GameStatus.IN_PROGRESS,
         })}
         statusPill={<span>Live</span>}
       />,
     );
 
-    const editButton = screen.getByRole("button", { name: "Edit Score" });
-    expect(editButton).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit Score" })).toBeInTheDocument();
   });
 
-  it("shows edit pencil button when canEdit is true (viewerGameRole set + COMPLETE)", () => {
+  it("shows the edit-score button on a COMPLETE game", () => {
     render(
       <GameScoreBlock
         game={makeGame({
-          viewerGameRole: GameRole.EDITOR,
+          viewerCan: gameViewerCan({ update: true }),
           gameStatus: GameStatus.COMPLETE,
         })}
         statusPill={<span>Final</span>}
       />,
     );
 
-    const editButton = screen.getByRole("button", { name: "Edit Score" });
-    expect(editButton).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit Score" })).toBeInTheDocument();
   });
 
-  it("does NOT show edit button when viewerGameRole is null", () => {
+  it("hides it when update is false", () => {
     render(
       <GameScoreBlock
         game={makeGame({
-          viewerGameRole: null,
+          viewerGameRole: GameRole.OWNER,
+          viewerCan: gameViewerCan({ update: false }),
           gameStatus: GameStatus.IN_PROGRESS,
         })}
         statusPill={<span>Live</span>}

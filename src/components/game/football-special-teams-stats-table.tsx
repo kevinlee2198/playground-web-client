@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GameStatus, type GameRole } from "@/lib/constants";
+import { GameStatus } from "@/lib/constants";
 import type { UserRef } from "@/lib/types/game";
 import type { FootballSpecialTeamsStatsNode } from "@/lib/types/stats/football";
 import { cn } from "@/lib/utils";
@@ -54,7 +54,9 @@ interface FootballSpecialTeamsStatsTableProps {
   stats: { node: FootballSpecialTeamsStatsNode }[];
   gameStatus: GameStatus;
   availableUsers?: UserRef[];
-  viewerGameRole: GameRole | null;
+  canEnterStats: boolean;
+  canEnterOwnStats: boolean;
+  currentUserId: number | null;
 }
 
 function computeMaxStats(
@@ -82,7 +84,9 @@ export function FootballSpecialTeamsStatsTable({
   stats,
   gameStatus,
   availableUsers = [],
-  viewerGameRole,
+  canEnterStats,
+  canEnterOwnStats,
+  currentUserId,
 }: FootballSpecialTeamsStatsTableProps) {
   const t = useTranslations("game.stats.football.specialTeams");
   const statsT = useTranslations("game.stats");
@@ -95,9 +99,9 @@ export function FootballSpecialTeamsStatsTable({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
-  const canEdit =
-    viewerGameRole != null &&
-    (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
+  const editableStatus =
+    gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
+  const canEdit = editableStatus && (canEnterStats || canEnterOwnStats);
 
   const existingUserIds = useMemo(
     () => new Set(stats.map((edge) => edge.node.user.id)),
@@ -105,8 +109,12 @@ export function FootballSpecialTeamsStatsTable({
   );
 
   const usersWithoutStats = useMemo(
-    () => availableUsers.filter((p) => !existingUserIds.has(p.id)),
-    [availableUsers, existingUserIds],
+    () =>
+      availableUsers.filter(
+        (p) =>
+          !existingUserIds.has(p.id) && (canEnterStats || p.id === currentUserId),
+      ),
+    [availableUsers, existingUserIds, canEnterStats, currentUserId],
   );
 
   function handleAddStats() {
@@ -295,21 +303,22 @@ export function FootballSpecialTeamsStatsTable({
                 row,
               }: {
                 row: { original: FootballSpecialTeamsStatsNode };
-              }) => (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditingStats(row.original)}
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit</span>
-                </Button>
-              ),
+              }) =>
+                canEnterStats || row.original.user.id === currentUserId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingStats(row.original)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                ) : null,
             },
           ]
         : []),
     ];
-  }, [t, statsT, format, canEdit, maxStats, data.length]);
+  }, [t, statsT, format, canEdit, canEnterStats, currentUserId, maxStats, data.length]);
 
   const table = useReactTable({
     data,

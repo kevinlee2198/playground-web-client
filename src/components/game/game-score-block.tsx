@@ -31,7 +31,7 @@ export function GameScoreBlock({ game, statusPill }: GameScoreBlockProps) {
   const participants = game.participants.edges.map((e) => e.node);
   const isLive = game.gameStatus === GameStatus.IN_PROGRESS;
   const canEdit =
-    game.viewerGameRole != null &&
+    game.viewerCan.update &&
     (game.gameStatus === GameStatus.IN_PROGRESS ||
       game.gameStatus === GameStatus.COMPLETE);
 

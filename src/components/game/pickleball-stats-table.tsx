@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GameStatus, type GameRole } from "@/lib/constants";
+import { GameStatus } from "@/lib/constants";
 import type { UserRef } from "@/lib/types/game";
 import type { PickleballStatsNode } from "@/lib/types/stats/pickleball";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,9 @@ interface PickleballStatsTableProps {
   stats: { node: PickleballStatsNode }[];
   gameStatus: GameStatus;
   availableUsers?: UserRef[];
-  viewerGameRole: GameRole | null;
+  canEnterStats: boolean;
+  canEnterOwnStats: boolean;
+  currentUserId: number | null;
 }
 
 function computeMaxStats(
@@ -83,7 +85,9 @@ export function PickleballStatsTable({
   stats,
   gameStatus,
   availableUsers = [],
-  viewerGameRole,
+  canEnterStats,
+  canEnterOwnStats,
+  currentUserId,
 }: PickleballStatsTableProps) {
   const t = useTranslations("game.stats.pickleball");
   const statsT = useTranslations("game.stats");
@@ -95,9 +99,9 @@ export function PickleballStatsTable({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
-  const canEdit =
-    viewerGameRole != null &&
-    (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
+  const editableStatus =
+    gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
+  const canEdit = editableStatus && (canEnterStats || canEnterOwnStats);
 
   const existingUserIds = useMemo(
     () => new Set(stats.map((edge) => edge.node.user.id)),
@@ -105,8 +109,12 @@ export function PickleballStatsTable({
   );
 
   const usersWithoutStats = useMemo(
-    () => availableUsers.filter((p) => !existingUserIds.has(p.id)),
-    [availableUsers, existingUserIds],
+    () =>
+      availableUsers.filter(
+        (p) =>
+          !existingUserIds.has(p.id) && (canEnterStats || p.id === currentUserId),
+      ),
+    [availableUsers, existingUserIds, canEnterStats, currentUserId],
   );
 
   function handleAddStats() {
@@ -227,21 +235,22 @@ export function PickleballStatsTable({
                 row,
               }: {
                 row: { original: PickleballStatsNode };
-              }) => (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditingStats(row.original)}
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit</span>
-                </Button>
-              ),
+              }) =>
+                canEnterStats || row.original.user.id === currentUserId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingStats(row.original)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                ) : null,
             },
           ]
         : []),
     ];
-  }, [t, statsT, canEdit, maxStats, data.length]);
+  }, [t, statsT, canEdit, canEnterStats, currentUserId, maxStats, data.length]);
 
   const table = useReactTable({
     data,
