@@ -10,8 +10,6 @@ import {
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographyH4 } from "@/components/ui/typography";
 import {
-  GameInvitationStatus,
-  GameVisibility,
   getSportMaxParticipants,
   getSportParticipationType,
   getFormatFromMetadata,
@@ -59,19 +57,15 @@ export function GameParticipants({
       {/* Section header */}
       <div className="flex items-center justify-between mb-4">
         <TypographyH4>{t("game.participants.title")}</TypographyH4>
-        {isTeamBased &&
-          !atParticipantLimit &&
-          (game.viewerGameRole != null ||
-            game.visibility === GameVisibility.PUBLIC ||
-            game.viewerInvitation?.status === GameInvitationStatus.ACCEPTED) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAddTeamDialog(true)}
-            >
-              {t("game.participants.addTeam")}
-            </Button>
-          )}
+        {isTeamBased && !atParticipantLimit && game.viewerCan.addParticipants && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAddTeamDialog(true)}
+          >
+            {t("game.participants.addTeam")}
+          </Button>
+        )}
       </div>
 
       {/* Content */}
@@ -102,10 +96,9 @@ export function GameParticipants({
                   gameStatus={game.gameStatus}
                   currentUserId={currentUserId}
                   isUserOnAnyTeam={isUserOnAnyTeam}
-                  viewerGameRole={game.viewerGameRole}
-                  visibility={game.visibility}
+                  canJoin={game.viewerCan.join}
+                  canManageParticipants={game.viewerCan.addParticipants}
                   participantIndex={index}
-                  viewerInvitation={game.viewerInvitation}
                 />
               );
             }
@@ -120,9 +113,8 @@ export function GameParticipants({
           gameId={game.id}
           currentUserId={currentUserId}
           atParticipantLimit={atParticipantLimit}
-          viewerGameRole={game.viewerGameRole}
-          visibility={game.visibility}
-          viewerInvitation={game.viewerInvitation}
+          canJoin={game.viewerCan.join}
+          canManageParticipants={game.viewerCan.addParticipants}
         />
       )}
 

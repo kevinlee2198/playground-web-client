@@ -9,13 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographySmall } from "@/components/ui/typography";
 import { Link } from "@/i18n/navigation";
-import { GameInvitationStatus, GameRole, GameVisibility } from "@/lib/constants";
 import type {
   GameParticipantDetail,
   IndividualParticipantNode,
   UserRef,
 } from "@/lib/types/game";
-import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
 import { UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,9 +25,8 @@ interface IndividualParticipantListProps {
   gameId: number;
   currentUserId: number;
   atParticipantLimit: boolean;
-  viewerGameRole: GameRole | null;
-  visibility: GameVisibility;
-  viewerInvitation: ViewerGameInvitation | null;
+  canJoin: boolean;
+  canManageParticipants: boolean;
 }
 
 export function IndividualParticipantList({
@@ -37,9 +34,8 @@ export function IndividualParticipantList({
   gameId,
   currentUserId,
   atParticipantLimit,
-  viewerGameRole,
-  visibility,
-  viewerInvitation,
+  canJoin,
+  canManageParticipants,
 }: IndividualParticipantListProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
@@ -57,12 +53,8 @@ export function IndividualParticipantList({
     (p) => p.participant.id === currentUserId,
   );
 
-  const canJoin =
-    !atParticipantLimit &&
-    !currentUserParticipant &&
-    (viewerGameRole != null ||
-      visibility === GameVisibility.PUBLIC ||
-      viewerInvitation?.status === GameInvitationStatus.ACCEPTED);
+  const showJoinButton =
+    !atParticipantLimit && !currentUserParticipant && canJoin;
 
   function handleJoinGame(): void {
     startTransition(async () => {
@@ -107,7 +99,7 @@ export function IndividualParticipantList({
             {t("game.participants.leaveGame")}
           </Button>
         ) : (
-          canJoin && (
+          showJoinButton && (
             <Button
               variant="default"
               size="sm"
@@ -162,7 +154,7 @@ export function IndividualParticipantList({
                   </Link>
                 </TypographySmall>
 
-                {viewerGameRole != null && (
+                {canManageParticipants && (
                   <Button
                     variant="ghost"
                     size="icon"
