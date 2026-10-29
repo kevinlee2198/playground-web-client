@@ -278,6 +278,25 @@ describe("GameDetailActions", () => {
     expect(screen.getByRole("menuitem", { name: /Manage Editors/i })).toBeInTheDocument();
   });
 
+  it("renders no separator when Delete is the only menu item", () => {
+    render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ delete: true }) })} />,
+    );
+    openMenu();
+    expect(screen.getByRole("menuitem", { name: /Delete/i })).toBeInTheDocument();
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
+  it("renders a separator before Delete when another item is allowed", () => {
+    render(
+      <GameDetailActions
+        game={makeGame({ viewerCan: gameViewerCan({ update: true, delete: true }) })}
+      />,
+    );
+    openMenu();
+    expect(screen.getByRole("separator")).toBeInTheDocument();
+  });
+
   it("all action buttons have min-h-11 class for 44px touch targets", () => {
     render(
       <GameDetailActions
