@@ -74,7 +74,6 @@ export function TeamCard({
 
   const showJoinButton = !isUserOnTeam && !isUserOnAnyTeam && canJoin;
   const showLeaveButton = isUserOnTeam;
-  const isEditor = canManageParticipants;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
   const teamName = deriveTeamName(team, t("leagues.team.unnamed"));
@@ -169,7 +168,7 @@ export function TeamCard({
                 {t("game.participants.joinTeam")}
               </Button>
             )}
-            {isEditor && (
+            {canManageParticipants && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
@@ -207,7 +206,7 @@ export function TeamCard({
                   key={user.id}
                   user={user}
                   isCurrentUser={user.id === currentUserId}
-                  isEditor={isEditor}
+                  isEditor={canManageParticipants}
                   isPending={isPending}
                   onRemove={() => setUserToRemove(user)}
                 />

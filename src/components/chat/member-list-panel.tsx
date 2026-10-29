@@ -168,9 +168,7 @@ export function MemberListPanel({
         setMemberToRemove(null);
       } else {
         toast.add({
-          title: result.errorType === "ManagedChatRoomError"
-            ? tChat("errors.managedRoom")
-            : result.message || tChat("errors.removeMember"),
+          title: managedRoomErrorTitle(result, "removeMember"),
           type: "error",
         });
       }
@@ -182,10 +180,13 @@ export function MemberListPanel({
     }
   };
 
-  const roleErrorTitle = (result: { errorType?: string; message?: string }) =>
+  const managedRoomErrorTitle = (
+    result: { errorType?: string; message?: string },
+    fallbackKey: "removeMember" | "updateRole" | "leaveChat",
+  ) =>
     result.errorType === "ManagedChatRoomError"
       ? tChat("errors.managedRoom")
-      : result.message || tChat("errors.updateRole");
+      : result.message || tChat(`errors.${fallbackKey}`);
 
   const handleRoleChange = (userId: number, name: string, newRole: ChatRoomRole, successKey: "promoteSuccess" | "demoteSuccess") => {
     startTransition(async () => {
@@ -201,7 +202,7 @@ export function MemberListPanel({
         toast.add({ title: t(successKey, { name }), type: "success" });
         onRoomRefresh();
       } else {
-        toast.add({ title: roleErrorTitle(result), type: "error" });
+        toast.add({ title: managedRoomErrorTitle(result, "updateRole"), type: "error" });
       }
     });
   };
@@ -227,7 +228,7 @@ export function MemberListPanel({
         setTransferTarget(null);
         onRoomRefresh();
       } else {
-        toast.add({ title: roleErrorTitle(result), type: "error" });
+        toast.add({ title: managedRoomErrorTitle(result, "updateRole"), type: "error" });
       }
     });
   };
@@ -245,9 +246,7 @@ export function MemberListPanel({
 
       const errorMessage = result.errorType === "OwnerCannotLeaveError"
         ? t("cannotLeaveAsOwner")
-        : result.errorType === "ManagedChatRoomError"
-          ? tChat("errors.managedRoom")
-          : result.message || tChat("errors.leaveChat");
+        : managedRoomErrorTitle(result, "leaveChat");
       toast.add({ title: errorMessage, type: "error" });
     });
   };

@@ -6,19 +6,19 @@ import {
 } from "@/components/game/live/game-live-reducer";
 import { GameStatus, GameVisibility, SportFormat, SportType, StatEntryMode } from "@/lib/constants";
 import type { GameDetail, GameParticipantDetail, TeamInstanceDetail } from "@/lib/types/game";
-import { isKnownGameEventType } from "@/lib/types/game-event";
-import type {
-  BasketballStatsSavedEvent,
-  GameEventGame,
-  GameParticipantAddedEvent,
-  GameParticipantRemovedEvent,
-  GameScoreUpdatedEvent,
-  GameStartedEvent,
-  GameCancelledEvent,
-  GameResultChangedEvent,
+import {
+  isKnownGameEventType,
+  type BasketballStatsSavedEvent,
+  type GameCancelledEvent,
+  type GameEventGame,
+  type GameParticipantAddedEvent,
+  type GameParticipantRemovedEvent,
+  type GameResultChangedEvent,
+  type GameScoreUpdatedEvent,
+  type GameStartedEvent,
 } from "@/lib/types/game-event";
-import { gameViewerCan } from "../../../helpers/game-viewer-can";
 import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
+import { gameViewerCan } from "../../../helpers/game-viewer-can";
 
 const emptyPageInfo = {
   hasPreviousPage: false,

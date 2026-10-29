@@ -91,16 +91,20 @@ function mockQueryNetworkError() {
 // ---------------------------------------------------------------------------
 
 describe("loadChatRooms", () => {
+  beforeEach(() => vi.clearAllMocks());
+
   it("chatRooms list query does not select viewerCan", async () => {
-    mockQuerySuccess({ chatRooms: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } });
+    mockQuerySuccess({
+      chatRooms: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } },
+    });
 
     await loadChatRooms(10);
 
-    const rendered = jsonToGraphQLQuery({ query: mockAuthQuery.mock.calls[0][0] });
+    const rendered = jsonToGraphQLQuery({
+      query: mockAuthQuery.mock.calls[0][0],
+    });
     expect(rendered).not.toContain("viewerCan");
   });
-
-  beforeEach(() => vi.clearAllMocks());
 
   const emptyConnection = {
     edges: [],

@@ -447,7 +447,9 @@ test.describe("Chat Page", () => {
         hasText: "You can no longer send messages to this person",
       }),
     ).toBeVisible();
-    await expect(authenticatedPage.getByPlaceholder("Type a message...")).toHaveCount(0);
+    await expect(
+      authenticatedPage.getByPlaceholder("Type a message..."),
+    ).toHaveCount(0);
   });
 
   test("owner sees Leave after transferring ownership", async ({

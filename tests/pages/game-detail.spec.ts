@@ -58,7 +58,7 @@ test.describe("Game Detail Page", () => {
   }) => {
     await authenticatedPage.goto("/en/game/game-1");
     await expect(
-      authenticatedPage.getByText(/participant/i).first(),
+      authenticatedPage.getByRole("heading", { name: "Participants" }),
     ).toBeVisible();
   });
 
@@ -291,7 +291,7 @@ test.describe("Game Detail Page", () => {
     );
     await authenticatedPage.goto("/en/game/game-1");
     await expect(
-      authenticatedPage.getByText(/participant/i).first(),
+      authenticatedPage.getByRole("heading", { name: "Participants" }),
     ).toBeVisible();
     await expect(
       authenticatedPage.getByRole("button", { name: /add team/i }),

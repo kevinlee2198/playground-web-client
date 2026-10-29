@@ -1,9 +1,7 @@
 import type { GameViewerCan } from "@/lib/types/game";
 
 /** A viewerCan object with every capability false, plus overrides. */
-export function gameViewerCan(
-  overrides: Partial<GameViewerCan> = {},
-): GameViewerCan {
+export function gameViewerCan(overrides: Partial<GameViewerCan> = {}): GameViewerCan {
   return {
     update: false,
     delete: false,

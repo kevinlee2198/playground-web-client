@@ -50,7 +50,7 @@ vi.mock("@/lib/graphql-ws-client", () => ({
 
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { getGraphQLWsClient } from "@/lib/graphql-ws-client";
-import { validateDocument } from "./../helpers/schema-contract";
+import { validateDocument } from "../helpers/schema-contract";
 
 describe("useGameSubscription", () => {
   beforeEach(() => {
