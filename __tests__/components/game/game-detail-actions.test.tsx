@@ -14,6 +14,9 @@ vi.mock("next-intl", () => ({
       "game.actions.delete": "Delete",
       "game.actions.moreOptions": "More options",
       "game.manageEditors": "Manage Editors",
+      "game.actions.finalizeResults": "Finalize Results",
+      "game.actions.unfinalizeResults": "Unfinalize Results",
+      "game.invitations.inviteUsers": "Invite Users",
       "game.success.started": "Game started",
       "game.success.ended": "Game ended",
       "game.errors.startError": "Failed to start",
@@ -107,151 +110,211 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
 
 // ---- Tests ----
 
+function openMenu() {
+  fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+}
+
 describe("GameDetailActions", () => {
-  it("renders nothing when viewerGameRole is null", () => {
+  it("renders nothing when every flag is false", () => {
+    const { container } = render(<GameDetailActions game={makeGame()} />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders nothing when every flag is false even for an OWNER role", () => {
     const { container } = render(
-      <GameDetailActions game={makeGame({ viewerGameRole: null })} />,
+      <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
     );
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders Start button for SCHEDULED games", () => {
+  it("renders actions for a viewer with no GameRole when viewerCan.start is true", () => {
     render(
       <GameDetailActions
-        game={makeGame({ gameStatus: GameStatus.SCHEDULED })}
+        game={makeGame({
+          viewerGameRole: null,
+          viewerCan: gameViewerCan({ start: true, update: true }),
+        })}
       />,
     );
-    expect(
-      screen.getByRole("button", { name: /Start Game/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /End Game/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start Game/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /More options/i })).toBeInTheDocument();
   });
 
-  it("renders End button for IN_PROGRESS games", () => {
+  it("hides the overflow trigger when no menu item is allowed", () => {
+    render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ start: true }) })} />,
+    );
+    expect(screen.getByRole("button", { name: /Start Game/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /More options/i })).not.toBeInTheDocument();
+  });
+
+  it("renders End button only from viewerCan.end", () => {
     render(
       <GameDetailActions
-        game={makeGame({ gameStatus: GameStatus.IN_PROGRESS })}
+        game={makeGame({
+          gameStatus: GameStatus.IN_PROGRESS,
+          viewerCan: gameViewerCan({ end: true }),
+        })}
       />,
     );
-    expect(
-      screen.getByRole("button", { name: /End Game/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Start Game/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /End Game/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Start Game/i })).not.toBeInTheDocument();
   });
 
-  it("renders no Start or End button for COMPLETE games", () => {
+  it("swaps Start for End when flags change", () => {
+    const { rerender } = render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ start: true }) })} />,
+    );
+    expect(screen.getByRole("button", { name: /Start Game/i })).toBeInTheDocument();
+    rerender(
+      <GameDetailActions
+        game={makeGame({
+          gameStatus: GameStatus.IN_PROGRESS,
+          viewerCan: gameViewerCan({ end: true }),
+        })}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Start Game/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /End Game/i })).toBeInTheDocument();
+  });
+
+  it("shows Edit only from viewerCan.update", () => {
+    render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ update: true }) })} />,
+    );
+    openMenu();
+    expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Delete/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Manage Editors/i })).not.toBeInTheDocument();
+  });
+
+  it("shows Invite only from viewerCan.invite", () => {
+    const { rerender } = render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ update: true }) })} />,
+    );
+    openMenu();
+    expect(screen.queryByRole("menuitem", { name: /Invite Users/i })).not.toBeInTheDocument();
+    rerender(
+      <GameDetailActions
+        game={makeGame({ viewerCan: gameViewerCan({ update: true, invite: true }) })}
+      />,
+    );
+    expect(screen.getByRole("menuitem", { name: /Invite Users/i })).toBeInTheDocument();
+  });
+
+  it("shows Finalize only when finalizeResults", () => {
+    const { rerender } = render(
+      <GameDetailActions
+        game={makeGame({
+          gameStatus: GameStatus.COMPLETE,
+          viewerCan: gameViewerCan({ update: true }),
+        })}
+      />,
+    );
+    openMenu();
+    expect(screen.queryByRole("menuitem", { name: /Finalize Results/i })).not.toBeInTheDocument();
+    rerender(
+      <GameDetailActions
+        game={makeGame({
+          gameStatus: GameStatus.COMPLETE,
+          viewerCan: gameViewerCan({ finalizeResults: true }),
+        })}
+      />,
+    );
+    expect(screen.getByRole("menuitem", { name: /^Finalize Results/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Unfinalize/i })).not.toBeInTheDocument();
+  });
+
+  it("shows Unfinalize only when unfinalizeResults", () => {
+    const { rerender } = render(
+      <GameDetailActions
+        game={makeGame({
+          gameStatus: GameStatus.FINALIZED,
+          viewerCan: gameViewerCan({ update: true }),
+        })}
+      />,
+    );
+    openMenu();
+    expect(screen.queryByRole("menuitem", { name: /Unfinalize/i })).not.toBeInTheDocument();
+    rerender(
+      <GameDetailActions
+        game={makeGame({
+          gameStatus: GameStatus.FINALIZED,
+          viewerCan: gameViewerCan({ unfinalizeResults: true }),
+        })}
+      />,
+    );
+    expect(screen.getByRole("menuitem", { name: /Unfinalize Results/i })).toBeInTheDocument();
+  });
+
+  it("shows Manage Editors and Delete only from their flags", () => {
+    const { rerender } = render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ manageEditors: true }) })} />,
+    );
+    openMenu();
+    expect(screen.getByRole("menuitem", { name: /Manage Editors/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Delete/i })).not.toBeInTheDocument();
+    rerender(
+      <GameDetailActions
+        game={makeGame({ viewerCan: gameViewerCan({ manageEditors: true, delete: true }) })}
+      />,
+    );
+    expect(screen.getByRole("menuitem", { name: /Delete/i })).toBeInTheDocument();
+  });
+
+  it("shows only server-granted controls on a cancelled game", () => {
     render(
       <GameDetailActions
-        game={makeGame({ gameStatus: GameStatus.COMPLETE })}
+        game={makeGame({
+          gameStatus: GameStatus.CANCELLED,
+          viewerGameRole: GameRole.OWNER,
+          viewerCan: gameViewerCan({ manageEditors: true }),
+        })}
       />,
     );
-    expect(
-      screen.queryByRole("button", { name: /Start Game/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /End Game/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders Edit button for OWNER role", () => {
-    render(
-      <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
-    expect(
-      screen.getByRole("menuitem", { name: "Edit" }),
-    ).toBeInTheDocument();
-  });
-
-  it("renders Edit button for EDITOR role", () => {
-    render(
-      <GameDetailActions
-        game={makeGame({ viewerGameRole: GameRole.EDITOR })}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
-    expect(
-      screen.getByRole("menuitem", { name: "Edit" }),
-    ).toBeInTheDocument();
-  });
-
-  it("renders Manage Editors and Delete buttons for OWNER role", () => {
-    render(
-      <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
-    expect(
-      screen.getByRole("menuitem", { name: /Manage Editors/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: /Delete/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("does NOT render Manage Editors or Delete buttons for EDITOR role", () => {
-    render(
-      <GameDetailActions
-        game={makeGame({ viewerGameRole: GameRole.EDITOR })}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
-    expect(
-      screen.queryByRole("menuitem", { name: /Manage Editors/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("menuitem", { name: /Delete/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Start Game/i })).not.toBeInTheDocument();
+    openMenu();
+    expect(screen.getAllByRole("menuitem")).toHaveLength(1);
+    expect(screen.getByRole("menuitem", { name: /Manage Editors/i })).toBeInTheDocument();
   });
 
   it("all action buttons have min-h-11 class for 44px touch targets", () => {
     render(
       <GameDetailActions
-        game={makeGame({
-          viewerGameRole: GameRole.OWNER,
-          gameStatus: GameStatus.SCHEDULED,
-        })}
+        game={makeGame({ viewerCan: gameViewerCan({ start: true, update: true }) })}
       />,
     );
-
-    const buttons = screen.getAllByRole("button");
-    for (const button of buttons) {
+    for (const button of screen.getAllByRole("button")) {
       expect(button).toHaveClass("min-h-11");
     }
   });
 
-  it("opens delete dialog when Delete button is clicked", () => {
+  it("opens delete dialog when Delete is clicked", () => {
     render(
-      <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ delete: true }) })} />,
     );
-
     expect(screen.queryByTestId("delete-dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+    openMenu();
     fireEvent.click(screen.getByRole("menuitem", { name: /Delete/i }));
     expect(screen.getByTestId("delete-dialog")).toBeInTheDocument();
   });
 
-  it("opens editors dialog when Manage Editors button is clicked", () => {
+  it("opens editors dialog when Manage Editors is clicked", () => {
     render(
-      <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ manageEditors: true }) })} />,
     );
-
     expect(screen.queryByTestId("editors-dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+    openMenu();
     fireEvent.click(screen.getByRole("menuitem", { name: /Manage Editors/i }));
     expect(screen.getByTestId("editors-dialog")).toBeInTheDocument();
   });
 
-  it("opens update dialog with form when Edit button is clicked", () => {
+  it("opens update dialog with form when Edit is clicked", () => {
     render(
-      <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ update: true }) })} />,
     );
-
     expect(screen.queryByTestId("update-form")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /More options/i }));
+    openMenu();
     fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(screen.getByTestId("update-form")).toBeInTheDocument();
   });
@@ -261,11 +324,8 @@ describe("GameDetailActions", () => {
     const { toast } = await import("@/components/ui/toast");
 
     render(
-      <GameDetailActions
-        game={makeGame({ gameStatus: GameStatus.SCHEDULED })}
-      />,
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ start: true }) })} />,
     );
-
     fireEvent.click(screen.getByRole("button", { name: /Start Game/i }));
 
     await waitFor(() => {
@@ -280,10 +340,12 @@ describe("GameDetailActions", () => {
 
     render(
       <GameDetailActions
-        game={makeGame({ gameStatus: GameStatus.IN_PROGRESS })}
+        game={makeGame({
+          gameStatus: GameStatus.IN_PROGRESS,
+          viewerCan: gameViewerCan({ end: true }),
+        })}
       />,
     );
-
     fireEvent.click(screen.getByRole("button", { name: /End Game/i }));
 
     await waitFor(() => {
