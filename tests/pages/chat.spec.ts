@@ -1,7 +1,10 @@
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
+import { buildConnection } from "../fixtures/mock-data/connection";
+import { mockMeResponse } from "../fixtures/mock-data/me";
 import {
+  CHAT_CURRENT_USER,
   CHAT_OTHER_USER,
   mockChatConversationHandler,
   mockChatRoomDetail,
@@ -360,5 +363,174 @@ test.describe("Chat Page", () => {
       (el) => el.scrollHeight - el.scrollTop,
     );
     expect(Math.abs(after - before)).toBeLessThanOrEqual(100);
+  });
+
+  const groupMembers = (viewerRole: string, otherRole: string) => ({
+    edges: [
+      {
+        cursor: "member-1",
+        node: {
+          id: "member-1",
+          user: CHAT_CURRENT_USER,
+          role: viewerRole,
+          joinedDate: new Date().toISOString(),
+        },
+      },
+      {
+        cursor: "member-2",
+        node: {
+          id: "member-2",
+          user: CHAT_OTHER_USER,
+          role: otherRole,
+          joinedDate: new Date().toISOString(),
+        },
+      },
+    ],
+    pageInfo: { hasNextPage: false, endCursor: null },
+  });
+
+  test("group room with no membership flags hides Leave and Add", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    const room = mockChatRoomDetail({
+      __typename: "GroupChatRoom",
+      id: "room-managed",
+      name: "Managed Group",
+      members: groupMembers("MEMBER", "OWNER"),
+    });
+    const roomListEntry = mockChatRoomListNode({
+      __typename: "GroupChatRoom",
+      id: "room-managed",
+      name: "Managed Group",
+    });
+
+    msw.use(mockChatConversationHandler({ roomListEntry, room }));
+
+    await authenticatedPage.goto("/en/chat?room=room-managed");
+    await authenticatedPage.getByRole("button", { name: "Members" }).click();
+
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "Members" }),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Leave Chat" }),
+    ).toHaveCount(0);
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Add Member" }),
+    ).toHaveCount(0);
+  });
+
+  test("DM with sendMessage false shows the disabled banner", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    const room = mockChatRoomDetail({
+      id: "room-dm-disabled",
+      viewerCan: {
+        sendMessage: false,
+        addMember: false,
+        removeMember: false,
+        rename: false,
+        leave: false,
+        updateMemberRole: false,
+      },
+    });
+    const roomListEntry = mockChatRoomListNode({ id: "room-dm-disabled" });
+
+    msw.use(mockChatConversationHandler({ roomListEntry, room }));
+
+    await authenticatedPage.goto("/en/chat?room=room-dm-disabled");
+
+    await expect(
+      authenticatedPage.getByRole("status").filter({
+        hasText: "You can no longer send messages to this person",
+      }),
+    ).toBeVisible();
+    await expect(authenticatedPage.getByPlaceholder("Type a message...")).toHaveCount(0);
+  });
+
+  test("owner sees Leave after transferring ownership", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    // loadChatRoom and loadMessages both select the top-level `chatRoom`
+    // field, so the pre/post-transfer flags are switched by a per-test flag
+    // that flips when the role mutation arrives.
+    let transferred = false;
+    const roomListEntry = mockChatRoomListNode({
+      __typename: "GroupChatRoom",
+      id: "room-transfer",
+      name: "Transfer Group",
+    });
+    const groupRoom = () =>
+      mockChatRoomDetail({
+        __typename: "GroupChatRoom",
+        id: "room-transfer",
+        name: "Transfer Group",
+        viewerCan: {
+          sendMessage: true,
+          addMember: false,
+          removeMember: false,
+          rename: false,
+          leave: transferred,
+          updateMemberRole: !transferred,
+        },
+        members: transferred
+          ? groupMembers("MEMBER", "OWNER")
+          : groupMembers("OWNER", "ADMIN"),
+      });
+
+    msw.use(
+      http.post("*/graphql", async ({ request }) => {
+        const { query } = (await request.json()) as { query: string };
+        if (/\bme\s*\{/.test(query)) {
+          return HttpResponse.json(mockMeResponse());
+        }
+        if (query.includes("updateChatRoomMemberRole")) {
+          transferred = true;
+          return HttpResponse.json({
+            data: {
+              updateChatRoomMemberRole: {
+                __typename: "UpdateChatRoomMemberRoleResponse",
+                member: { id: "member-2", role: "OWNER" },
+              },
+            },
+          });
+        }
+        if (/\bchatRooms\b/.test(query)) {
+          return HttpResponse.json({
+            data: { chatRooms: buildConnection([roomListEntry]) },
+          });
+        }
+        if (/\bchatRoom\b/.test(query)) {
+          return HttpResponse.json({ data: { chatRoom: groupRoom() } });
+        }
+        return HttpResponse.json({ data: {} });
+      }),
+    );
+
+    await authenticatedPage.goto("/en/chat?room=room-transfer");
+    await authenticatedPage.getByRole("button", { name: "Members" }).click();
+
+    // The owner cannot leave before transferring.
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Leave Chat" }),
+    ).toHaveCount(0);
+
+    await authenticatedPage
+      .getByRole("button", { name: "Transfer Ownership" })
+      .click();
+    await authenticatedPage
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Transfer Ownership" })
+      .click();
+
+    await expect(
+      authenticatedPage.getByText("Ownership transferred successfully"),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Leave Chat" }),
+    ).toBeVisible();
   });
 });
