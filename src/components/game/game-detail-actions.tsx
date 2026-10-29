@@ -46,7 +46,7 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
     viewerCan.finalizeResults ||
     viewerCan.manageEditors;
   const hasMenuItem = hasItemsBeforeDelete || viewerCan.delete;
-  if (!viewerCan.start && !viewerCan.end && !hasMenuItem) return null;
+  const hasControls = viewerCan.start || viewerCan.end || hasMenuItem;
 
   function handleGameAction(
     action: (id: number) => Promise<{ success: boolean; message?: string }>,
@@ -89,92 +89,94 @@ export function GameDetailActions({ game }: GameDetailActionsProps) {
 
   return (
     <>
-      <div className="mt-4 flex items-center gap-2">
-        {/* Primary CTA: Start/End Game */}
-        {viewerCan.start && (
-          <Button
-            onClick={handleStart}
-            disabled={isPending}
-            className="flex-1 md:flex-none w-full min-h-11 md:w-auto"
-          >
-            <Play className="mr-2 h-4 w-4" />
-            {isPending ? t("game.actions.starting") : t("game.actions.start")}
-          </Button>
-        )}
-        {viewerCan.end && (
-          <Button
-            onClick={handleEnd}
-            disabled={isPending}
-            className="flex-1 md:flex-none w-full min-h-11 md:w-auto"
-          >
-            <Square className="mr-2 h-4 w-4" />
-            {isPending ? t("game.actions.ending") : t("game.actions.end")}
-          </Button>
-        )}
-
-        {/* Overflow menu */}
-        {hasMenuItem && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="icon"
-                  disabled={isPending}
-                  aria-label={t("game.actions.moreOptions")}
-                  className="ml-auto min-h-11 min-w-11"
-                />
-              }
+      {hasControls && (
+        <div className="mt-4 flex items-center gap-2">
+          {/* Primary CTA: Start/End Game */}
+          {viewerCan.start && (
+            <Button
+              onClick={handleStart}
+              disabled={isPending}
+              className="flex-1 md:flex-none w-full min-h-11 md:w-auto"
             >
-              <MoreHorizontal className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {viewerCan.update && (
-                <DropdownMenuItem onClick={() => setShowUpdateDialog(true)}>
-                  <Pencil className="h-4 w-4" />
-                  {t("game.actions.edit")}
-                </DropdownMenuItem>
-              )}
-              {viewerCan.invite && (
-                <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
-                  <UserPlus className="h-4 w-4" />
-                  {t("game.invitations.inviteUsers")}
-                </DropdownMenuItem>
-              )}
-              {viewerCan.unfinalizeResults && (
-                <DropdownMenuItem onClick={handleUnfinalize} disabled={isPending}>
-                  <LockOpen className="h-4 w-4" />
-                  {isPending ? t("game.actions.unfinalizing") : t("game.actions.unfinalizeResults")}
-                </DropdownMenuItem>
-              )}
-              {viewerCan.finalizeResults && (
-                <DropdownMenuItem onClick={handleFinalize} disabled={isPending}>
-                  <Lock className="h-4 w-4" />
-                  {isPending ? t("game.actions.finalizing") : t("game.actions.finalizeResults")}
-                </DropdownMenuItem>
-              )}
-              {viewerCan.manageEditors && (
-                <DropdownMenuItem onClick={() => setShowEditorsDialog(true)}>
-                  <Users className="h-4 w-4" />
-                  {t("game.manageEditors")}
-                </DropdownMenuItem>
-              )}
-              {viewerCan.delete && (
-                <>
-                  {hasItemsBeforeDelete && <DropdownMenuSeparator />}
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {t("game.actions.delete")}
+              <Play className="mr-2 h-4 w-4" />
+              {isPending ? t("game.actions.starting") : t("game.actions.start")}
+            </Button>
+          )}
+          {viewerCan.end && (
+            <Button
+              onClick={handleEnd}
+              disabled={isPending}
+              className="flex-1 md:flex-none w-full min-h-11 md:w-auto"
+            >
+              <Square className="mr-2 h-4 w-4" />
+              {isPending ? t("game.actions.ending") : t("game.actions.end")}
+            </Button>
+          )}
+
+          {/* Overflow menu */}
+          {hasMenuItem && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={isPending}
+                    aria-label={t("game.actions.moreOptions")}
+                    className="ml-auto min-h-11 min-w-11"
+                  />
+                }
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {viewerCan.update && (
+                  <DropdownMenuItem onClick={() => setShowUpdateDialog(true)}>
+                    <Pencil className="h-4 w-4" />
+                    {t("game.actions.edit")}
                   </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
+                )}
+                {viewerCan.invite && (
+                  <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
+                    <UserPlus className="h-4 w-4" />
+                    {t("game.invitations.inviteUsers")}
+                  </DropdownMenuItem>
+                )}
+                {viewerCan.unfinalizeResults && (
+                  <DropdownMenuItem onClick={handleUnfinalize} disabled={isPending}>
+                    <LockOpen className="h-4 w-4" />
+                    {isPending ? t("game.actions.unfinalizing") : t("game.actions.unfinalizeResults")}
+                  </DropdownMenuItem>
+                )}
+                {viewerCan.finalizeResults && (
+                  <DropdownMenuItem onClick={handleFinalize} disabled={isPending}>
+                    <Lock className="h-4 w-4" />
+                    {isPending ? t("game.actions.finalizing") : t("game.actions.finalizeResults")}
+                  </DropdownMenuItem>
+                )}
+                {viewerCan.manageEditors && (
+                  <DropdownMenuItem onClick={() => setShowEditorsDialog(true)}>
+                    <Users className="h-4 w-4" />
+                    {t("game.manageEditors")}
+                  </DropdownMenuItem>
+                )}
+                {viewerCan.delete && (
+                  <>
+                    {hasItemsBeforeDelete && <DropdownMenuSeparator />}
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {t("game.actions.delete")}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      )}
 
       {/* Dialogs */}
       <DeleteGameDialog

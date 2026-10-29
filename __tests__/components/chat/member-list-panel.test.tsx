@@ -102,6 +102,11 @@ describe("MemberListPanel viewerCan gating", () => {
     expect(screen.queryByText("transferOwnership")).toBeNull();
   });
 
+  it("hides remove buttons when removeMember is false even for the owner", () => {
+    renderPanel({ ...allTrue, removeMember: false }, "OWNER");
+    expect(screen.queryByText("remove")).toBeNull();
+  });
+
   it("refreshes the room after transferring ownership", async () => {
     mockUpdateMemberRole.mockResolvedValueOnce({ success: true });
     const onRoomRefresh = renderPanel(allTrue, "OWNER");

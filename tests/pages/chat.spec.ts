@@ -452,6 +452,43 @@ test.describe("Chat Page", () => {
     ).toHaveCount(0);
   });
 
+  test("group room with sendMessage false shows the disabled message", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    const room = mockChatRoomDetail({
+      __typename: "GroupChatRoom",
+      id: "room-group-disabled",
+      name: "Muted Group",
+      viewerCan: {
+        sendMessage: false,
+        addMember: false,
+        removeMember: false,
+        rename: false,
+        leave: true,
+        updateMemberRole: false,
+      },
+    });
+    const roomListEntry = mockChatRoomListNode({
+      __typename: "GroupChatRoom",
+      id: "room-group-disabled",
+      name: "Muted Group",
+    });
+
+    msw.use(mockChatConversationHandler({ roomListEntry, room }));
+
+    await authenticatedPage.goto("/en/chat?room=room-group-disabled");
+
+    await expect(
+      authenticatedPage.getByRole("status").filter({
+        hasText: "You can't send messages in this conversation.",
+      }),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByPlaceholder("Type a message..."),
+    ).toHaveCount(0);
+  });
+
   test("owner sees Leave after transferring ownership", async ({
     authenticatedPage,
     msw,

@@ -120,6 +120,18 @@ describe("GameDetailActions", () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it("keeps an open dialog mounted when the flags flip to all false", () => {
+    const { rerender } = render(
+      <GameDetailActions game={makeGame({ viewerCan: gameViewerCan({ update: true }) })} />,
+    );
+    openMenu();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(screen.getByTestId("update-form")).toBeInTheDocument();
+    rerender(<GameDetailActions game={makeGame({ viewerCan: gameViewerCan() })} />);
+    expect(screen.getByTestId("update-form")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /More options/i })).not.toBeInTheDocument();
+  });
+
   it("renders nothing when every flag is false even for an OWNER role", () => {
     const { container } = render(
       <GameDetailActions game={makeGame({ viewerGameRole: GameRole.OWNER })} />,
