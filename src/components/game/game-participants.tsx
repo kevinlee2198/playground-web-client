@@ -57,15 +57,17 @@ export function GameParticipants({
       {/* Section header */}
       <div className="flex items-center justify-between mb-4">
         <TypographyH4>{t("game.participants.title")}</TypographyH4>
-        {isTeamBased && !atParticipantLimit && game.viewerCan.addParticipants && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAddTeamDialog(true)}
-          >
-            {t("game.participants.addTeam")}
-          </Button>
-        )}
+        {isTeamBased &&
+          !atParticipantLimit &&
+          game.viewerCan.addParticipants && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddTeamDialog(true)}
+            >
+              {t("game.participants.addTeam")}
+            </Button>
+          )}
       </div>
 
       {/* Content */}

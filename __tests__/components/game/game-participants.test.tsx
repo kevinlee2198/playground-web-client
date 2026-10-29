@@ -34,6 +34,9 @@ function renderParticipants(viewerCan: Partial<GameViewerCan>) {
     sportType: "BASEBALL",
     metadata: { __typename: "BaseballGameMetadata" },
     gameStatus: "SCHEDULED",
+    visibility: "PUBLIC",
+    viewerGameRole: null,
+    viewerInvitation: null,
     participants: { edges: [] },
     viewerCan: gameViewerCan(viewerCan),
   } as unknown as GameDetail;

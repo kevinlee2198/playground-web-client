@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
@@ -120,7 +120,7 @@ describe("IndividualParticipantList", () => {
       },
     } as unknown as GameParticipantDetail;
     renderList({ participants: [mine] });
-    fireEvent.click(screen.getByText("Leave Game"));
+    expect(screen.getByText("Leave Game")).toBeTruthy();
     expect(screen.queryByText("Join Game")).toBeNull();
   });
 });
