@@ -121,11 +121,22 @@ export type ChatRoomListNode =
   | DirectMessageChatRoomListNode
   | GroupChatRoomListNode;
 
+/** Server-computed capabilities of the viewer in a chat room */
+export interface ChatRoomViewerCan {
+  sendMessage: boolean;
+  addMember: boolean;
+  removeMember: boolean;
+  rename: boolean;
+  leave: boolean;
+  updateMemberRole: boolean;
+}
+
 /** Base fields for chat room detail */
 interface ChatRoomDetailBase {
   id: string;
   createdDate: string;
   lastModifiedDate: string | null;
+  viewerCan: ChatRoomViewerCan;
   members: {
     edges: { cursor: string; node: ChatRoomMemberNode }[];
     pageInfo: import("@/lib/graphql-connection").PageInfo;
@@ -135,8 +146,6 @@ interface ChatRoomDetailBase {
 /** A direct message chat room detail */
 export interface DirectMessageChatRoomDetailNode extends ChatRoomDetailBase {
   __typename: "DirectMessageChatRoom";
-  /** Whether the viewer can send messages (mutual follow check for DMs) */
-  canMessage: boolean;
 }
 
 /** A group chat room detail */

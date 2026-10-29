@@ -14,7 +14,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { GameRole, type GameVisibility } from "@/lib/constants";
+import type { GameVisibility } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { GameMediaNode } from "@/lib/types/game-media";
@@ -38,7 +38,7 @@ interface GameMediaGalleryProps {
   pageInfo: PageInfo;
   canContribute: boolean;
   currentUserId: number | null;
-  viewerGameRole: GameRole | null;
+  canModerateMedia: boolean;
   gameVisibility: GameVisibility;
   onFileInputReady?: (click: () => void) => void;
   onMediaAdded: (node: GameMediaNode) => void;
@@ -60,7 +60,7 @@ export function GameMediaGallery({
   pageInfo,
   canContribute,
   currentUserId,
-  viewerGameRole,
+  canModerateMedia,
   gameVisibility,
   onFileInputReady,
   onMediaAdded,
@@ -251,10 +251,10 @@ export function GameMediaGallery({
   }
 
   function canDeleteMedia(mediaNode: GameMediaNode): boolean {
-    if (viewerGameRole === GameRole.OWNER || viewerGameRole === GameRole.EDITOR) {
-      return true;
-    }
-    return currentUserId != null && mediaNode.addedBy.id === currentUserId;
+    return (
+      canModerateMedia ||
+      (currentUserId != null && mediaNode.addedBy.id === currentUserId)
+    );
   }
 
   const isEmpty = media.length === 0 && uploadingFiles.size === 0;

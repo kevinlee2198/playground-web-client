@@ -119,6 +119,14 @@ export async function loadChatRoom(
         __typename: true,
         id: true,
         createdDate: true,
+        viewerCan: {
+          sendMessage: true,
+          addMember: true,
+          removeMember: true,
+          rename: true,
+          leave: true,
+          updateMemberRole: true,
+        },
         __on: chatRoomInlineFragments,
         members: {
           __args: { first: 50 },

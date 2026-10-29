@@ -1,5 +1,37 @@
 import { buildConnection, emptyConnection } from "./connection";
 
+const GAME_VIEWER_CAN_FLAGS = [
+  "update",
+  "delete",
+  "start",
+  "end",
+  "cancel",
+  "finalizeResults",
+  "unfinalizeResults",
+  "manageEditors",
+  "invite",
+  "enterStats",
+  "enterOwnStats",
+  "join",
+  "addParticipants",
+  "addMedia",
+  "moderateMedia",
+  "reportResult",
+  "confirmResult",
+  "disputeResult",
+  "voidResult",
+  "reschedule",
+  "forfeit",
+] as const;
+
+/** All 21 GameViewerCan flags false, plus overrides. */
+export function mockGameViewerCan(overrides?: Record<string, boolean>) {
+  return {
+    ...Object.fromEntries(GAME_VIEWER_CAN_FLAGS.map((flag) => [flag, false])),
+    ...overrides,
+  };
+}
+
 export function mockGame(overrides?: Record<string, unknown>) {
   return {
     id: "game-1",
@@ -17,6 +49,19 @@ export function mockGame(overrides?: Record<string, unknown>) {
     visibility: "PUBLIC",
     statEntryMode: "OPEN",
     viewerInvitation: null,
+    // Owner on a SCHEDULED game. addMedia is false because the backend only
+    // grants it while IN_PROGRESS or COMPLETE.
+    viewerCan: mockGameViewerCan({
+      update: true,
+      delete: true,
+      start: true,
+      cancel: true,
+      manageEditors: true,
+      invite: true,
+      enterStats: true,
+      addParticipants: true,
+      moderateMedia: true,
+    }),
     location: {
       name: "Test Court",
       address: { city: "Test City", state: "TS", country: "US" },

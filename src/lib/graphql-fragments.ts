@@ -223,10 +223,6 @@ export const chatMessageNodeSelection = {
  */
 export const chatRoomInlineFragments = [
   {
-    __typeName: "DirectMessageChatRoom",
-    canMessage: true,
-  },
-  {
     __typeName: "GroupChatRoom",
     name: true,
   },
@@ -575,4 +571,32 @@ export const invalidInputErrorFragment = {
   __typeName: "InvalidInputError",
   field: true,
   code: true,
+};
+
+/**
+ * The viewer's capabilities on a game (core + league flags).
+ * Use as: viewerCan: gameViewerCanFragment
+ */
+export const gameViewerCanFragment = {
+  update: true,
+  delete: true,
+  start: true,
+  end: true,
+  cancel: true,
+  finalizeResults: true,
+  unfinalizeResults: true,
+  manageEditors: true,
+  invite: true,
+  enterStats: true,
+  enterOwnStats: true,
+  join: true,
+  addParticipants: true,
+  addMedia: true,
+  moderateMedia: true,
+  reportResult: true,
+  confirmResult: true,
+  disputeResult: true,
+  voidResult: true,
+  reschedule: true,
+  forfeit: true,
 };

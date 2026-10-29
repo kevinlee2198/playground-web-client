@@ -273,6 +273,31 @@ export interface GameNode {
   };
 }
 
+/** Server-computed capabilities of the viewer on a game */
+export interface GameViewerCan {
+  update: boolean;
+  delete: boolean;
+  start: boolean;
+  end: boolean;
+  cancel: boolean;
+  finalizeResults: boolean;
+  unfinalizeResults: boolean;
+  manageEditors: boolean;
+  invite: boolean;
+  enterStats: boolean;
+  enterOwnStats: boolean;
+  join: boolean;
+  addParticipants: boolean;
+  addMedia: boolean;
+  moderateMedia: boolean;
+  reportResult: boolean;
+  confirmResult: boolean;
+  disputeResult: boolean;
+  voidResult: boolean;
+  reschedule: boolean;
+  forfeit: boolean;
+}
+
 /**
  * Full game detail with participants connection
  */
@@ -285,6 +310,7 @@ export interface GameDetail {
   metadata: GameMetadata;
   gameStatus: GameStatus;
   viewerGameRole: GameRole | null;
+  viewerCan: GameViewerCan;
   visibility: GameVisibility;
   statEntryMode: StatEntryMode;
   viewerInvitation: ViewerGameInvitation | null;

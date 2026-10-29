@@ -10,8 +10,6 @@ import {
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty";
 import { TypographyH4 } from "@/components/ui/typography";
 import {
-  GameInvitationStatus,
-  GameVisibility,
   getSportMaxParticipants,
   getSportParticipationType,
   getFormatFromMetadata,
@@ -61,9 +59,7 @@ export function GameParticipants({
         <TypographyH4>{t("game.participants.title")}</TypographyH4>
         {isTeamBased &&
           !atParticipantLimit &&
-          (game.viewerGameRole != null ||
-            game.visibility === GameVisibility.PUBLIC ||
-            game.viewerInvitation?.status === GameInvitationStatus.ACCEPTED) && (
+          game.viewerCan.addParticipants && (
             <Button
               variant="outline"
               size="sm"
@@ -102,10 +98,9 @@ export function GameParticipants({
                   gameStatus={game.gameStatus}
                   currentUserId={currentUserId}
                   isUserOnAnyTeam={isUserOnAnyTeam}
-                  viewerGameRole={game.viewerGameRole}
-                  visibility={game.visibility}
+                  canJoin={game.viewerCan.join}
+                  canManageParticipants={game.viewerCan.addParticipants}
                   participantIndex={index}
-                  viewerInvitation={game.viewerInvitation}
                 />
               );
             }
@@ -120,9 +115,8 @@ export function GameParticipants({
           gameId={game.id}
           currentUserId={currentUserId}
           atParticipantLimit={atParticipantLimit}
-          viewerGameRole={game.viewerGameRole}
-          visibility={game.visibility}
-          viewerInvitation={game.viewerInvitation}
+          canJoin={game.viewerCan.join}
+          canManageParticipants={game.viewerCan.addParticipants}
         />
       )}
 

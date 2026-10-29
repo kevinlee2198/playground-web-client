@@ -101,7 +101,6 @@ export function mockChatRoomListNode(overrides?: Record<string, unknown>) {
     __typename: "DirectMessageChatRoom",
     id: "room-1",
     createdDate: new Date().toISOString(),
-    canMessage: true,
     members: {
       edges: [{ node: { user: CHAT_CURRENT_USER } }, { node: { user: CHAT_OTHER_USER } }],
     },
@@ -134,7 +133,14 @@ export function mockChatRoomDetail(overrides?: Record<string, unknown>) {
     __typename: "DirectMessageChatRoom",
     id: "room-1",
     createdDate: new Date().toISOString(),
-    canMessage: true,
+    viewerCan: {
+      sendMessage: true,
+      addMember: false,
+      removeMember: false,
+      rename: false,
+      leave: false,
+      updateMemberRole: false,
+    },
     members: {
       edges: [
         {

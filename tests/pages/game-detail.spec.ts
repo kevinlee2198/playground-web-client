@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import {
   mockGameDetailResponse,
   mockGameNotFoundResponse,
+  mockGameViewerCan,
   mockParticipant,
 } from "../fixtures/mock-data/games";
 import { buildConnection } from "../fixtures/mock-data/connection";
@@ -57,7 +58,7 @@ test.describe("Game Detail Page", () => {
   }) => {
     await authenticatedPage.goto("/en/game/game-1");
     await expect(
-      authenticatedPage.getByText(/participant/i).first(),
+      authenticatedPage.getByRole("heading", { name: "Participants" }),
     ).toBeVisible();
   });
 
@@ -85,6 +86,7 @@ test.describe("Game Detail Page", () => {
         mockGameDetailResponse({
           gameStatus: "FINALIZED",
           viewerGameRole: "OWNER",
+          viewerCan: mockGameViewerCan({ unfinalizeResults: true }),
           participants: buildConnection([
             mockParticipant({ id: "p1", name: "Team A" }),
             mockParticipant({ id: "p2", name: "Team B" }),
@@ -107,6 +109,7 @@ test.describe("Game Detail Page", () => {
         mockGameDetailResponse({
           gameStatus: "COMPLETE",
           viewerGameRole: "OWNER",
+          viewerCan: mockGameViewerCan({ update: true, finalizeResults: true }),
         }),
       ),
     );
@@ -126,6 +129,7 @@ test.describe("Game Detail Page", () => {
         mockGameDetailResponse({
           gameStatus: "FINALIZED",
           viewerGameRole: "OWNER",
+          viewerCan: mockGameViewerCan({ update: true, unfinalizeResults: true }),
         }),
       ),
     );
@@ -164,6 +168,7 @@ test.describe("Game Detail Page", () => {
         mockGameDetailResponse({
           gameStatus: "COMPLETE",
           viewerGameRole: "EDITOR",
+          viewerCan: mockGameViewerCan({ update: true, finalizeResults: true }),
         }),
       ),
     );
@@ -201,5 +206,95 @@ test.describe("Game Detail Page", () => {
     await expect(
       authenticatedPage.getByRole("radio", { name: /manager only/i }),
     ).toBeVisible();
+  });
+
+  test("authenticated: admin without a GameRole sees Start", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          viewerGameRole: null,
+          viewerCan: mockGameViewerCan({ start: true, update: true }),
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Start Game" }),
+    ).toBeVisible();
+  });
+
+  test("authenticated: owner role without flags sees no actions", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          viewerGameRole: "OWNER",
+          viewerCan: mockGameViewerCan(),
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await expect(
+      authenticatedPage.getByLabel(/basketball/i).first(),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: /more options/i }),
+    ).toHaveCount(0);
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Start Game" }),
+    ).toHaveCount(0);
+  });
+
+  test("unauthenticated: public game shows no management controls", async ({
+    unauthenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      http.post("*/graphql", () =>
+        HttpResponse.json(
+          mockGameDetailResponse({
+            viewerGameRole: null,
+            viewerCan: mockGameViewerCan(),
+          }),
+        ),
+      ),
+    );
+    await unauthenticatedPage.goto("/en/game/game-1");
+    await expect(
+      unauthenticatedPage.getByLabel(/basketball/i).first(),
+    ).toBeVisible();
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: /more options/i }),
+    ).toHaveCount(0);
+    await expect(
+      unauthenticatedPage.getByRole("button", { name: "Start Game" }),
+    ).toHaveCount(0);
+  });
+
+  test("authenticated: PUBLIC team game non-manager sees no Add Team", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    msw.use(
+      withMeGuard(() =>
+        mockGameDetailResponse({
+          visibility: "PUBLIC",
+          viewerGameRole: null,
+          viewerCan: mockGameViewerCan({ join: true, addParticipants: false }),
+        }),
+      ),
+    );
+    await authenticatedPage.goto("/en/game/game-1");
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "Participants" }),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: /add team/i }),
+    ).toHaveCount(0);
   });
 });

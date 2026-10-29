@@ -26,9 +26,8 @@ import {
 import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import { deriveTeamName } from "@/components/game/score/participant-utils";
 import { Link } from "@/i18n/navigation";
-import { GameInvitationStatus, GameRole, GameStatus, GameVisibility } from "@/lib/constants";
+import { GameStatus } from "@/lib/constants";
 import type { TeamInstanceDetail, UserRef } from "@/lib/types/game";
-import type { ViewerGameInvitation } from "@/lib/types/game-invitation";
 import { cn } from "@/lib/utils";
 import { ChevronRight, MoreHorizontal, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -48,10 +47,9 @@ interface TeamCardProps {
   gameStatus: GameStatus;
   currentUserId: number;
   isUserOnAnyTeam: boolean;
-  viewerGameRole: GameRole | null;
-  visibility: GameVisibility;
+  canJoin: boolean;
+  canManageParticipants: boolean;
   participantIndex: number;
-  viewerInvitation: ViewerGameInvitation | null;
 }
 
 export function TeamCard({
@@ -59,10 +57,9 @@ export function TeamCard({
   gameStatus,
   currentUserId,
   isUserOnAnyTeam,
-  viewerGameRole,
-  visibility,
+  canJoin,
+  canManageParticipants,
   participantIndex,
-  viewerInvitation,
 }: TeamCardProps) {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
@@ -75,14 +72,8 @@ export function TeamCard({
   const gameHasStarted =
     gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
-  const canJoinOrLeave =
-    viewerGameRole != null ||
-    visibility === GameVisibility.PUBLIC ||
-    viewerInvitation?.status === GameInvitationStatus.ACCEPTED;
-  const showJoinButton =
-    !isUserOnTeam && !isUserOnAnyTeam && canJoinOrLeave;
+  const showJoinButton = !isUserOnTeam && !isUserOnAnyTeam && canJoin;
   const showLeaveButton = isUserOnTeam;
-  const isEditor = viewerGameRole != null;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
   const teamName = deriveTeamName(team, t("leagues.team.unnamed"));
@@ -177,7 +168,7 @@ export function TeamCard({
                 {t("game.participants.joinTeam")}
               </Button>
             )}
-            {isEditor && (
+            {canManageParticipants && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
@@ -215,7 +206,7 @@ export function TeamCard({
                   key={user.id}
                   user={user}
                   isCurrentUser={user.id === currentUserId}
-                  isEditor={isEditor}
+                  isEditor={canManageParticipants}
                   isPending={isPending}
                   onRemove={() => setUserToRemove(user)}
                 />

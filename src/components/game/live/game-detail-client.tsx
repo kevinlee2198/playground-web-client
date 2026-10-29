@@ -10,7 +10,6 @@ import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { isKnownGameEventType } from "@/lib/types/game-event";
 import type { GameDetail } from "@/lib/types/game";
 import {
-  GameStatus,
   getSportParticipationType,
   getFormatFromMetadata,
   ParticipationType,
@@ -117,6 +116,8 @@ export function GameDetailClient({
         message = t("game.live.gameStarted");
       } else if (state.game.gameStatus === "COMPLETE") {
         message = t("game.live.gameEnded");
+      } else if (state.game.gameStatus === "CANCELLED") {
+        message = t("game.live.gameCancelled");
       }
     } else if (
       prev.game.participants.edges.length !==
@@ -177,10 +178,7 @@ export function GameDetailClient({
       return false;
     });
 
-  const canContribute =
-    (isParticipant || state.game.viewerGameRole != null) &&
-    (state.game.gameStatus === GameStatus.IN_PROGRESS ||
-      state.game.gameStatus === GameStatus.COMPLETE);
+  const canContribute = state.game.viewerCan.addMedia;
 
   const sportFormat = getFormatFromMetadata(state.game.metadata);
   const isTeamBased =
@@ -224,7 +222,7 @@ export function GameDetailClient({
           initialPageInfo={game.media.pageInfo}
           canContribute={canContribute}
           currentUserId={currentUserId}
-          viewerGameRole={state.game.viewerGameRole}
+          canModerateMedia={state.game.viewerCan.moderateMedia}
           gameVisibility={state.game.visibility}
         />
       </section>
@@ -242,6 +240,7 @@ export function GameDetailClient({
           baseballPitchingStats={initialBaseballPitchingStats}
           baseballFieldingStats={initialBaseballFieldingStats}
           volleyballStats={initialVolleyballStats}
+          currentUserId={currentUserId}
         />
       </section>
 

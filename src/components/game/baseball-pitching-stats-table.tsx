@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GameStatus, type GameRole } from "@/lib/constants";
+import { GameStatus } from "@/lib/constants";
 import type { UserRef } from "@/lib/types/game";
 import type { BaseballPitchingStatsNode } from "@/lib/types/stats/baseball";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,9 @@ interface BaseballPitchingStatsTableProps {
   stats: { node: BaseballPitchingStatsNode }[];
   gameStatus: GameStatus;
   availableUsers?: UserRef[];
-  viewerGameRole: GameRole | null;
+  canEnterStats: boolean;
+  canEnterOwnStats: boolean;
+  currentUserId: number | null;
 }
 
 /**
@@ -84,7 +86,9 @@ export function BaseballPitchingStatsTable({
   stats,
   gameStatus,
   availableUsers = [],
-  viewerGameRole,
+  canEnterStats,
+  canEnterOwnStats,
+  currentUserId,
 }: BaseballPitchingStatsTableProps) {
   const t = useTranslations("game.stats.baseball.pitching");
   const statsT = useTranslations("game.stats");
@@ -97,9 +101,9 @@ export function BaseballPitchingStatsTable({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
-  const canEdit =
-    viewerGameRole != null &&
-    (gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE);
+  const editableStatus =
+    gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
+  const canEdit = editableStatus && (canEnterStats || canEnterOwnStats);
 
   const existingUserIds = useMemo(
     () => new Set(stats.map((edge) => edge.node.user.id)),
@@ -107,8 +111,12 @@ export function BaseballPitchingStatsTable({
   );
 
   const usersWithoutStats = useMemo(
-    () => availableUsers.filter((p) => !existingUserIds.has(p.id)),
-    [availableUsers, existingUserIds],
+    () =>
+      availableUsers.filter(
+        (p) =>
+          !existingUserIds.has(p.id) && (canEnterStats || p.id === currentUserId),
+      ),
+    [availableUsers, existingUserIds, canEnterStats, currentUserId],
   );
 
   function handleAddStats() {
@@ -261,21 +269,22 @@ export function BaseballPitchingStatsTable({
                 row,
               }: {
                 row: { original: BaseballPitchingStatsNode };
-              }) => (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditingStats(row.original)}
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit</span>
-                </Button>
-              ),
+              }) =>
+                canEnterStats || row.original.user.id === currentUserId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingStats(row.original)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                ) : null,
             },
           ]
         : []),
     ];
-  }, [t, format, canEdit, maxStats, data.length]);
+  }, [t, format, canEdit, canEnterStats, currentUserId, maxStats, data.length]);
 
   const table = useReactTable({
     data,

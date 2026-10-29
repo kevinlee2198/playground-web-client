@@ -3,6 +3,7 @@
 import { getAccessToken } from "@/components/auth/actions";
 import {
   gameMetadataFragment,
+  gameViewerCanFragment,
   participantDetailNodeFragment,
   participantMetadataFragment,
   userRefFragment,
@@ -50,6 +51,7 @@ export function useGameSubscription({
               id: true,
               gameStatus: true,
               viewerGameRole: true,
+              viewerCan: gameViewerCanFragment,
               visibility: true,
               metadata: gameMetadataFragment,
               participants: {
@@ -64,6 +66,8 @@ export function useGameSubscription({
               { __typeName: "GameEndedEvent" },
               { __typeName: "GameResultsFinalizedEvent" },
               { __typeName: "GameResultsUnfinalizedEvent" },
+              { __typeName: "GameCancelledEvent", occurredAt: true },
+              { __typeName: "GameResultChangedEvent", occurredAt: true },
               {
                 __typeName: "GameScoreUpdatedEvent",
                 participant: participantDetailNodeFragment,

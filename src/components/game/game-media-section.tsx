@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TypographyH3 } from "@/components/ui/typography";
-import type { GameRole, GameVisibility } from "@/lib/constants";
+import type { GameVisibility } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import type { GameMediaNode, LivestreamMediaNode } from "@/lib/types/game-media";
 import { Link as LinkIcon, Upload } from "lucide-react";
@@ -19,7 +19,7 @@ interface GameMediaSectionProps {
   initialPageInfo: PageInfo;
   canContribute: boolean;
   currentUserId: number | null;
-  viewerGameRole: GameRole | null;
+  canModerateMedia: boolean;
   gameVisibility: GameVisibility;
 }
 
@@ -29,7 +29,7 @@ export function GameMediaSection({
   initialPageInfo,
   canContribute,
   currentUserId,
-  viewerGameRole,
+  canModerateMedia,
   gameVisibility,
 }: GameMediaSectionProps) {
   const t = useTranslations("game.media");
@@ -128,7 +128,7 @@ export function GameMediaSection({
         pageInfo={pageInfo}
         canContribute={canContribute}
         currentUserId={currentUserId}
-        viewerGameRole={viewerGameRole}
+        canModerateMedia={canModerateMedia}
         gameVisibility={gameVisibility}
         onFileInputReady={handleFileInputReady}
         onMediaAdded={handleMediaAdded}

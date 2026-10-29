@@ -50,6 +50,7 @@ vi.mock("@/lib/graphql-ws-client", () => ({
 
 import { useGameSubscription } from "@/hooks/use-game-subscription";
 import { getGraphQLWsClient } from "@/lib/graphql-ws-client";
+import { validateDocument } from "../helpers/schema-contract";
 
 describe("useGameSubscription", () => {
   beforeEach(() => {
@@ -109,6 +110,21 @@ describe("useGameSubscription", () => {
     const payload = mockSubscribe.mock.calls[0]?.[0] as { query: string };
     expect(typeof payload.query).toBe("string");
     expect(payload.query).toContain("42");
+  });
+
+  it("subscribes with the full viewerCan selection and the new event arms", () => {
+    renderHook(() =>
+      useGameSubscription({ gameId: 1, enabled: true, onEvent: vi.fn() }),
+    );
+    const payload = mockSubscribe.mock.calls[0]?.[0] as { query: string };
+    expect(validateDocument(payload.query)).toEqual([]);
+    expect(payload.query).toContain("... on GameCancelledEvent { occurredAt }");
+    expect(payload.query).toContain(
+      "... on GameResultChangedEvent { occurredAt }",
+    );
+    for (const flag of ["enterOwnStats", "unfinalizeResults", "forfeit", "moderateMedia"]) {
+      expect(payload.query).toContain(flag);
+    }
   });
 
   it("calls onEvent when a valid event is received after throttle delay", () => {

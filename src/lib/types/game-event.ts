@@ -3,6 +3,7 @@ import type { Edge } from "@/lib/graphql-connection";
 import type {
   GameMetadata,
   GameParticipantDetail,
+  GameViewerCan,
   TeamInstanceDetail,
 } from "@/lib/types/game";
 import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
@@ -12,6 +13,7 @@ export interface GameEventGame {
   id: number;
   gameStatus: GameStatus;
   viewerGameRole: GameRole | null;
+  viewerCan: GameViewerCan;
   visibility: GameVisibility;
   participants: {
     edges: Edge<GameParticipantDetail>[];
@@ -43,6 +45,16 @@ export interface GameResultsFinalizedEvent extends GameEventBase {
 /** The game results have been un-finalized */
 export interface GameResultsUnfinalizedEvent extends GameEventBase {
   __typename: "GameResultsUnfinalizedEvent";
+}
+
+/** The game has been cancelled */
+export interface GameCancelledEvent extends GameEventBase {
+  __typename: "GameCancelledEvent";
+}
+
+/** A league result was reported, re-reported or disputed */
+export interface GameResultChangedEvent extends GameEventBase {
+  __typename: "GameResultChangedEvent";
 }
 
 /** A participant's score has been updated */
@@ -81,6 +93,8 @@ export type KnownGameEvent =
   | GameEndedEvent
   | GameResultsFinalizedEvent
   | GameResultsUnfinalizedEvent
+  | GameCancelledEvent
+  | GameResultChangedEvent
   | GameScoreUpdatedEvent
   | GameParticipantAddedEvent
   | GameParticipantRemovedEvent
@@ -104,6 +118,8 @@ export function isKnownGameEventType(e: GameEvent): e is KnownGameEvent {
     e.__typename === "GameEndedEvent" ||
     e.__typename === "GameResultsFinalizedEvent" ||
     e.__typename === "GameResultsUnfinalizedEvent" ||
+    e.__typename === "GameCancelledEvent" ||
+    e.__typename === "GameResultChangedEvent" ||
     e.__typename === "GameScoreUpdatedEvent" ||
     e.__typename === "GameParticipantAddedEvent" ||
     e.__typename === "GameParticipantRemovedEvent" ||

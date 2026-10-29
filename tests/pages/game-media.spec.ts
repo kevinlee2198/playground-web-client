@@ -2,6 +2,7 @@ import { http, HttpResponse, passthrough } from "msw";
 import { test, expect, withMeGuard } from "../fixtures/test-fixtures";
 import {
   mockGameDetailResponse,
+  mockGameViewerCan,
 } from "../fixtures/mock-data/games";
 import { mockMeResponse } from "../fixtures/mock-data/me";
 import { buildConnection } from "../fixtures/mock-data/connection";
@@ -15,10 +16,23 @@ import {
   mockDuplicateMediaError,
 } from "../fixtures/mock-data/game-media";
 
+// Owner of an IN_PROGRESS game: the backend grants addMedia only in this
+// status (and COMPLETE), so every upload scenario sets it explicitly.
+const inProgressOwnerCan = () =>
+  mockGameViewerCan({
+    update: true,
+    end: true,
+    enterStats: true,
+    addParticipants: true,
+    addMedia: true,
+    moderateMedia: true,
+  });
+
 function gameWithMedia(...mediaItems: Record<string, unknown>[]) {
   return () =>
     mockGameDetailResponse({
       gameStatus: "IN_PROGRESS",
+      viewerCan: inProgressOwnerCan(),
       media: buildConnection(mediaItems),
     });
 }
@@ -123,6 +137,7 @@ test.describe("Game Media Gallery", () => {
         mockGameDetailResponse({
           gameStatus: "IN_PROGRESS",
           viewerGameRole: "OWNER",
+          viewerCan: inProgressOwnerCan(),
         }),
       ),
     );
@@ -166,6 +181,7 @@ test.describe("Add Link Dialog", () => {
         mockGameDetailResponse({
           gameStatus: "IN_PROGRESS",
           viewerGameRole: "OWNER",
+          viewerCan: inProgressOwnerCan(),
         }),
       ),
     );
@@ -186,6 +202,7 @@ test.describe("Add Link Dialog", () => {
           mockGameDetailResponse({
             gameStatus: "IN_PROGRESS",
             viewerGameRole: "OWNER",
+            viewerCan: inProgressOwnerCan(),
           }),
         resolveUrl: () => mockResolveUrlResponse(),
       }),
@@ -211,6 +228,7 @@ test.describe("Add Link Dialog", () => {
           mockGameDetailResponse({
             gameStatus: "IN_PROGRESS",
             viewerGameRole: "OWNER",
+            viewerCan: inProgressOwnerCan(),
           }),
         resolveUrl: () => mockResolveUrlResponse(),
         addGameMediaLink: () =>
@@ -241,6 +259,7 @@ test.describe("Add Link Dialog", () => {
           mockGameDetailResponse({
             gameStatus: "IN_PROGRESS",
             viewerGameRole: "OWNER",
+            viewerCan: inProgressOwnerCan(),
           }),
         resolveUrl: () => mockDuplicateMediaError(),
       }),

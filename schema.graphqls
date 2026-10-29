@@ -142,10 +142,41 @@ type ChatRoomMemberConnection implements Connection {
   pageInfo: PageInfo!
 }
 
+type ChatRoomViewerCan {
+  """
+  Viewer is a member. DMs also require the mutual follow.
+  """
+  sendMessage: Boolean!
+  """
+  chat_room add-member check. Always false for league- and group-managed rooms (N6).
+  """
+  addMember: Boolean!
+  """
+  chat_room remove-member check. Always false for managed rooms (N6).
+  """
+  removeMember: Boolean!
+  """
+  chat_room rename check. Always false for managed rooms (N6).
+  """
+  rename: Boolean!
+  """
+  Member of a non-DM room. Always false for managed rooms (N6).
+  """
+  leave: Boolean!
+  """
+  Change a member's role or transfer ownership. Always false for managed rooms (N6).
+  """
+  updateMemberRole: Boolean!
+}
+
 interface ChatRoom implements Node {
   id: ID!
   createdDate: DateTime!
   lastModifiedDate: DateTime!
+  """
+  What the authenticated viewer may do in this room.
+  """
+  viewerCan: ChatRoomViewerCan!
   """
   Members of the room
   """
@@ -172,11 +203,12 @@ type DirectMessageChatRoom implements ChatRoom & Node {
   id: ID!
   createdDate: DateTime!
   lastModifiedDate: DateTime!
+  viewerCan: ChatRoomViewerCan!
   """
   Whether the authenticated viewer can send messages in this DM.
   False when the mutual follow relationship is broken.
   """
-  canMessage: Boolean!
+  canMessage: Boolean! @deprecated(reason: "Use viewerCan.sendMessage")
   members(
     first: Int
     after: String
@@ -200,6 +232,7 @@ type GroupChatRoom implements ChatRoom & Node {
   name: String!
   createdDate: DateTime!
   lastModifiedDate: DateTime!
+  viewerCan: ChatRoomViewerCan!
   members(
     first: Int
     after: String
@@ -595,6 +628,11 @@ type CannotRemoveOwnerError implements Error {
 
 type InsufficientRoleError implements Error & AuthorizationError {
   message: String!
+}
+
+type InsufficientGameRoleError implements Error & AuthorizationError {
+  message: String!
+  gameId: ID!
 }
 
 type InvalidRoleTransitionError implements Error {
@@ -1630,6 +1668,79 @@ type ViewerFollowingUsers {
   nodes: [User!]!
 }
 
+"""
+What the viewer may do to a game right now. Every flag is false for an anonymous viewer. A true flag means the matching mutation will not be refused on permission or game-status grounds.
+"""
+type GameViewerCan {
+  """
+  game:update AND gameStatus not CANCELLED/FORFEITED.
+  """
+  update: Boolean!
+  """
+  game:delete AND gameStatus not CANCELLED/FORFEITED.
+  """
+  delete: Boolean!
+  """
+  game:start AND gameStatus = SCHEDULED.
+  """
+  start: Boolean!
+  """
+  game:end AND gameStatus = IN_PROGRESS.
+  """
+  end: Boolean!
+  """
+  game:cancel AND gameStatus = SCHEDULED.
+  """
+  cancel: Boolean!
+  """
+  game:update AND gameStatus = COMPLETE.
+  """
+  finalizeResults: Boolean!
+  """
+  game:update AND gameStatus = FINALIZED. On a league game with a confirmed result, unfinalizing reopens confirmation.
+  """
+  unfinalizeResults: Boolean!
+  """
+  game:add_editor (owner only).
+  """
+  manageEditors: Boolean!
+  """
+  game:send_invitation AND the game accepts invitations (not COMPLETE, FINALIZED, CANCELLED or FORFEITED).
+  """
+  invite: Boolean!
+  """
+  May enter or edit stats for ANY player (per-sport *_stats:create without a target: owner, editor, group admin or league admin in any state, or a participant in OPEN mode while not FINALIZED). False on CANCELLED/FORFEITED.
+  """
+  enterStats: Boolean!
+  """
+  May enter or edit the viewer's OWN stats row (per-sport *_stats:create targeting the viewer, viewer is a participant: SELF_REPORT or OPEN mode while not FINALIZED). False on CANCELLED/FORFEITED. A row for user U is editable iff enterStats || (enterOwnStats && U is the viewer).
+  """
+  enterOwnStats: Boolean!
+  """
+  individual_participant:create / team_instance:add_user for the viewer themself; not FINALIZED, CANCELLED or FORFEITED; false when already a participant, and on team games false unless some team still has room.
+  """
+  join: Boolean!
+  """
+  team_instance:create for others (owner, editor, group/league admin) AND gameStatus not CANCELLED/FORFEITED.
+  """
+  addParticipants: Boolean!
+  """
+  game_media:create AND gameStatus is IN_PROGRESS or COMPLETE.
+  """
+  addMedia: Boolean!
+  """
+  game_media delete for any item (owner/editor). Per-item delete is still moderateMedia || addedBy == viewer.
+  """
+  moderateMedia: Boolean!
+}
+
+extend type Game {
+  """
+  What the viewer may do to this game. Gate UI on these flags instead of re-deriving permissions.
+  """
+  viewerCan: GameViewerCan!
+}
+
 type GameEdge implements Edge {
   cursor: String!
   node: Game!
@@ -2386,6 +2497,18 @@ type UnfinalizeGameResultsResponse {
   game: Game!
 }
 
+input CancelGameInput {
+  gameId: ID!
+  """
+  Optional, at most 1000 characters.
+  """
+  reason: String
+}
+
+type CancelGameResponse {
+  game: Game!
+}
+
 # ============================================================================
 # Result Unions
 # ============================================================================
@@ -2413,6 +2536,11 @@ union UnfinalizeGameResultsResult =
   | UnfinalizeGameResultsResponse
   | GameNotFoundError
   | InvalidGameStatusTransitionError
+union CancelGameResult =
+  | CancelGameResponse
+  | GameNotFoundError
+  | InvalidGameStatusTransitionError
+  | InsufficientGameRoleError
 union AddGameParticipantResult =
   | AddGameParticipantResponse
   | GameNotFoundError
@@ -2546,6 +2674,22 @@ type GameResultsFinalizedEvent implements GameEvent {
 }
 
 type GameResultsUnfinalizedEvent implements GameEvent {
+  game: Game!
+  occurredAt: DateTime!
+}
+
+"""
+A league result was reported, re-reported, disputed or forfeited. Re-read Game.gameStatus, Game.result, Game.outcome and Game.viewerCan from `game` (a forfeit also moves gameStatus to FORFEITED).
+"""
+type GameResultChangedEvent implements GameEvent {
+  game: Game!
+  occurredAt: DateTime!
+}
+
+"""
+The game was cancelled.
+"""
+type GameCancelledEvent implements GameEvent {
   game: Game!
   occurredAt: DateTime!
 }
@@ -4817,10 +4961,10 @@ enum GameSort {
 #
 # `Game.group` / `Game.sourceSeries` / `Game.sourceOccurrence` are
 # contributed by the casual track in `group/game-context.graphqls`.
-# `Game.result`, `Game.viewerCanReportResult`, and
-# `Game.viewerCanConfirmResult` are defined in `league/game-result.graphqls`
-# and also resolved by `GameResultSchemaContributor`. `Game.viewerGameRole`
-# (core, `game.graphqls`) is the separate per-game management role.
+# `Game.result` and the league flags of `Game.viewerCan` (`extend type
+# GameViewerCan`) are defined in `league/game-result.graphqls` and also
+# resolved by `GameResultSchemaContributor`. `Game.viewerGameRole` (core,
+# `game.graphqls`) is the separate per-game management role.
 # ============================================================================
 
 """
@@ -4920,10 +5064,10 @@ extend type Mutation {
 }
 # ============================================================================
 # Two-step report → confirm flow for league game results, plus dispute and
-# the Game-extension fields the league module contributes (`result`,
-# `viewerCanReportResult`, `viewerCanConfirmResult`). Backed by
-# `GameResultService` + `GameResultSchemaContributor`. Forfeit lands via
-# `forfeitGame` in `league/schedule.graphqls`.
+# the Game-extension fields the league module contributes (`result`, ...).
+# Viewer capabilities live on `Game.viewerCan` (`GameViewerCan`, extended
+# below). Backed by `GameResultService` + `GameResultSchemaContributor`.
+# Forfeit lands via `forfeitGame` in `league/schedule.graphqls`.
 # ============================================================================
 
 type GameResult implements Node {
@@ -4933,30 +5077,17 @@ type GameResult implements Node {
   confirmedBy: User
   confirmedAt: DateTime
   """
-  When non-null, the team awarded the win via admin forfeit. Score-based
-  winners are derived at standings time and not stored on this row — only
-  forfeits carry an explicit winner.
+  The winning team: the forfeit winner for forfeits, otherwise derived from current team scores.
+  Null when the current scores are tied (a manager edited a FINALIZED game to a tie); such games are excluded from standings.
   """
-  forfeitWinnerTeamInstance: TeamInstance
+  winnerTeamInstance: TeamInstance
 }
 
 extend type Game {
   """
-  Reported or confirmed result, or null when none is recorded or the viewer cannot read the league (C4).
+  Reported or confirmed result, or null when none is recorded or the viewer cannot read the league (C4). Disputes and voids clear it.
   """
   result: GameResult
-  """
-  Whether the viewer may invoke `reportGameResult` for this Game. Computed
-  from Cerbos against `game_result:report` — true for league members,
-  league admins, and team captains.
-  """
-  viewerCanReportResult: Boolean!
-  """
-  Whether the viewer may invoke `confirmGameResult` for this Game. Computed
-  from Cerbos against `game_result:confirm` — true for opposing-team
-  captains and league admins. Self-confirm is blocked at service time.
-  """
-  viewerCanConfirmResult: Boolean!
   """
   Whether the Game's sport permits a draw outcome (equal scores). Static per
   sport. None of the currently implemented sports allow draws.
@@ -4970,11 +5101,41 @@ extend type Game {
   outcome: GameOutcome!
 }
 
+# League module's contribution to the core-owned GameViewerCan. All false when Game.league is null for the viewer.
+extend type GameViewerCan {
+  """
+  game_result:report AND no result row AND status reportable.
+  """
+  reportResult: Boolean!
+  """
+  game_result:confirm AND a reported, unconfirmed row (plus confirm()'s existing service checks).
+  """
+  confirmResult: Boolean!
+  """
+  game_result:dispute AND a reported, unconfirmed row.
+  """
+  disputeResult: Boolean!
+  """
+  game_result:void AND a confirmed, non-forfeit row.
+  """
+  voidResult: Boolean!
+  """
+  league schedule reschedule AND gameStatus = SCHEDULED.
+  """
+  reschedule: Boolean!
+  """
+  league forfeit AND status reportable AND no confirmed row.
+  """
+  forfeit: Boolean!
+}
+
 """
 Coarse state of a Game's result, used by clients to drive UI states such as
-"needs score entered", "awaiting opponent confirmation", or "final". Once a
-GameResult row exists, that row is the source of truth — post-confirm score
-edits do not roll the state back.
+"needs score entered", "awaiting opponent confirmation", or "final".
+CONFIRMED means the result row is confirmed and the game is FINALIZED. Managers
+may still edit scores; the winner is always derived from current scores
+(GameResult.winnerTeamInstance). Unfinalizing returns the outcome to
+REPORTED_AWAITING_CONFIRM.
 """
 enum GameOutcome {
   """
@@ -4992,11 +5153,11 @@ enum GameOutcome {
   """
   REPORTED_AWAITING_CONFIRM
   """
-  GameResult is confirmed; winner derivable from the row at confirm time.
+  Result confirmed; Game.gameStatus is FINALIZED. GameResult.winnerTeamInstance may be null if a manager has since edited the scores to a tie.
   """
-  CONFIRMED_WIN
+  CONFIRMED
   """
-  Game.gameStatus = FORFEITED — winner carried by GameResult.forfeitWinnerTeamInstanceId.
+  Game.gameStatus = FORFEITED — the winner is GameResult.winnerTeamInstance.
   """
   FORFEITED
   """
@@ -5031,15 +5192,21 @@ extend type Mutation {
 
   """
   Confirms a previously reported result. Captains may not confirm their own
-  report (`SelfConfirmBlockedError`); league admins bypass that rule.
+  report (`SelfConfirmBlockedError`); league admins bypass that rule. The
+  winner is derived from the current scores, so tied scores return
+  `ScoreNotEnteredError`. Moves the game to FINALIZED.
   """
   confirmGameResult(input: ConfirmGameResultInput!): ConfirmGameResultResult!
 
   """
-  Hard-deletes the GameResult row, returning the Game to "no result" so a
-  fresh report can land. Rate-limited 1 / 24h per (gameId, viewerUserId).
+  Reject an UNCONFIRMED report. Captains of either team or league admins. Clears the report so it can be re-reported; notifies the reporter and admins with the note (≤ 1000 characters).
   """
   disputeGameResult(input: DisputeGameResultInput!): DisputeGameResultResult!
+
+  """
+  League admin only. Voids a CONFIRMED, non-forfeit result: audit row, clears the result, moves the game FINALIZED → COMPLETE (scores become editable again), notifies both captains.
+  """
+  voidGameResult(input: VoidGameResultInput!): VoidGameResultResult!
 }
 
 input ReportGameResultInput {
@@ -5090,7 +5257,18 @@ input ConfirmGameResultInput {
 
 input DisputeGameResultInput {
   gameId: ID!
+  """
+  Optional. At most 1000 characters.
+  """
   note: String
+}
+
+input VoidGameResultInput {
+  gameId: ID!
+  """
+  Required, 1-1000 characters. Shown to both captains.
+  """
+  reason: String!
 }
 
 type ReportGameResultResponse {
@@ -5099,10 +5277,17 @@ type ReportGameResultResponse {
 
 type ConfirmGameResultResponse {
   result: GameResult!
+  """
+  The game, now FINALIZED, so callers can refresh status, outcome and viewerCan in one round trip.
+  """
+  game: Game!
 }
 
 type DisputeGameResultResponse {
-  gameId: ID!
+  """
+  The game, with its result cleared, so callers can refresh status, outcome and viewerCan in one round trip.
+  """
+  game: Game!
 }
 
 """
@@ -5123,8 +5308,23 @@ type GameResultNotReportedError implements Error {
   gameId: ID!
 }
 
+type VoidGameResultResponse {
+  """
+  The game, back in COMPLETE with its result cleared, so callers can refresh status, outcome and viewerCan in one round trip.
+  """
+  game: Game!
+}
+
 """
-The Game's result has already been confirmed. To re-report, dispute first.
+The Game's result has not been confirmed, so there is nothing to void. Dispute an unconfirmed report instead.
+"""
+type GameResultNotConfirmedError implements Error {
+  message: String!
+  gameId: ID!
+}
+
+"""
+The Game's result has already been confirmed, so it can no longer be reported over or disputed.
 """
 type GameResultAlreadyConfirmedError implements Error {
   message: String!
@@ -5224,6 +5424,7 @@ union ConfirmGameResultResult =
   | GameResultNotReportedError
   | GameResultAlreadyConfirmedError
   | SelfConfirmBlockedError
+  | ScoreNotEnteredError
   | GameNotReportableError
   | InsufficientLeagueRoleError
 
@@ -5231,8 +5432,18 @@ union DisputeGameResultResult =
   | DisputeGameResultResponse
   | GameNotFoundError
   | GameResultNotReportedError
+  | GameResultAlreadyConfirmedError
+  | GameNotReportableError
   | InsufficientLeagueRoleError
   | RateLimitError
+
+union VoidGameResultResult =
+  | VoidGameResultResponse
+  | GameNotFoundError
+  | GameResultNotReportedError
+  | GameResultNotConfirmedError
+  | GameNotReportableError
+  | InsufficientLeagueRoleError
 # ============================================================================
 # LeaguePlayer — league-scoped roster entry. Either backed by a real user
 # (`user` non-null) or a pure placeholder (`user` null, `displayName` held
@@ -6497,6 +6708,39 @@ type GameResultConfirmedNotification implements Notification & Node {
   game: Game
   confirmedBy: User!
 }
+
+"""
+A captain or league admin rejected a result you reported, or one in a league you administer.
+"""
+type GameResultDisputedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+  disputedBy: User!
+  """
+  The disputer's note (at most 1000 characters). Null when none was given, or when you and the disputer have blocked each other in either direction.
+  """
+  note: String
+}
+
+"""
+A league admin voided a confirmed result for a game your team played.
+"""
+type GameResultVoidedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The game. Null if deleted or no longer visible to you.
+  """
+  game: Game
+  voidedBy: User!
+  reason: String!
+}
 # ============================================================================
 # Organization — top-level container for Leagues. Org admins implicitly hold
 # League admin on every League under the Org (Cerbos derived role
@@ -6849,13 +7093,6 @@ extend type Mutation {
   rescheduleGame(input: RescheduleGameInput!): RescheduleGameResult!
 
   """
-  Cancels a SCHEDULED Game (transitions to CANCELLED via the FSM). Only
-  SCHEDULED games may be cancelled; the FSM rejects other source states.
-  League admins only.
-  """
-  cancelGame(input: CancelGameInput!): CancelGameResult!
-
-  """
   Admin-forced forfeit. Sets `gameStatus = FORFEITED` and atomically writes a
   GameResult with the admin as both reporter and confirmer (bypassing the
   participant report → confirm flow). The `winnerTeamInstanceId` must belong
@@ -6899,10 +7136,6 @@ input RescheduleGameInput {
   newStartDate: DateTime!
 }
 
-input CancelGameInput {
-  gameId: ID!
-}
-
 input ForfeitGameInput {
   gameId: ID!
   winnerTeamInstanceId: ID!
@@ -6917,10 +7150,6 @@ type CreateScheduledGameResponse {
 }
 
 type RescheduleGameResponse {
-  game: Game!
-}
-
-type CancelGameResponse {
   game: Game!
 }
 
@@ -6999,13 +7228,6 @@ union RescheduleGameResult =
   | InvalidScheduleInputError
   | InsufficientLeagueRoleError
 
-union CancelGameResult =
-  | CancelGameResponse
-  | GameNotFoundError
-  | InvalidGameStatusTransitionError
-  | InvalidScheduleInputError
-  | InsufficientLeagueRoleError
-
 union ForfeitGameResult =
   | ForfeitGameResponse
   | GameNotFoundError
@@ -7076,27 +7298,30 @@ type Season implements Node {
     sort: GameSort = SCHEDULED_AT_ASC
   ): GameConnection!
   """
-  Standings for the season. One row per LeagueTeam that has played at
-  least one standings-counting game (confirmed result or forfeit).
-  Sorted by `winPct` descending, then `team.id` ascending. Bounded by the
-  number of LeagueTeams in the season — no pagination. Clients that need
-  alphabetical tie-break can sort by `team.name` client-side.
+  Every non-archived team (0-0 included) plus archived teams with ≥1 counting game.
+  Order: winPct DESC (nulls last), wins DESC, losses ASC, then team.name ASC (case-insensitive), team.id ASC (display only; not a rank key).
+  Winners are derived from current team scores (forfeits use the stored forfeit winner), so manager corrections to a FINALIZED game show up immediately (N1). No head-to-head or point differential in v1.
+  Bounded by the number of LeagueTeams in the season, so not paginated.
   """
   standings: [StandingRow!]!
 }
 
-"""
-One row of `Season.standings`. Aggregated from confirmed `GameResult` rows
-plus any forfeited games. `winPct = wins / gamesPlayed` when
-`gamesPlayed > 0`, else `0.0`.
-"""
 type StandingRow {
+  """
+  Standard competition rank (1,2,2,4). Teams share a rank iff (winPct, wins, losses) are equal.
+  """
+  rank: Int!
   team: LeagueTeam!
   wins: Int!
   losses: Int!
-  draws: Int!
+  """
+  wins + losses.
+  """
   gamesPlayed: Int!
-  winPct: Float!
+  """
+  wins / gamesPlayed. Null when gamesPlayed = 0 (render a dash).
+  """
+  winPct: Float
 }
 
 type SeasonEdge implements Edge {
@@ -7862,6 +8087,10 @@ type Mutation {
   unfinalizeGameResults(
     input: UnfinalizeGameResultsInput!
   ): UnfinalizeGameResultsResult!
+  """
+  Cancel a SCHEDULED game. Owner, editor, group admin (group games) or league admin (league games).
+  """
+  cancelGame(input: CancelGameInput!): CancelGameResult!
   """
   Add a user as an editor to a game. Only the game owner can do this.
   """
