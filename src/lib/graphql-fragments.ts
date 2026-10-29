@@ -223,10 +223,6 @@ export const chatMessageNodeSelection = {
  */
 export const chatRoomInlineFragments = [
   {
-    __typeName: "DirectMessageChatRoom",
-    canMessage: true,
-  },
-  {
     __typeName: "GroupChatRoom",
     name: true,
   },

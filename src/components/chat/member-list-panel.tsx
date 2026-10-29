@@ -31,7 +31,7 @@ import { TypographyMuted, TypographySmall } from "@/components/ui/typography";
 import { useRouter } from "@/i18n/navigation";
 import { ChatRoomRole, ChatRoomRoleBadgeVariant } from "@/lib/constants";
 import type { Edge } from "@/lib/graphql-connection";
-import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType } from "@/lib/types/chat";
+import type { ChatRoomMemberNode, ChatRoomRole as ChatRoomRoleType, ChatRoomViewerCan } from "@/lib/types/chat";
 import { LogOut, UserPlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useFormatter, useTranslations } from "next-intl";
@@ -60,6 +60,8 @@ interface MemberListPanelProps {
   isDirectMessage: boolean;
   onMembersChange: (members: Edge<ChatRoomMemberNode>[]) => void;
   currentUserRole: ChatRoomRoleType | null;
+  viewerCan: ChatRoomViewerCan;
+  onRoomRefresh: () => void;
 }
 
 export function MemberListPanel({
@@ -71,6 +73,8 @@ export function MemberListPanel({
   isDirectMessage,
   onMembersChange,
   currentUserRole,
+  viewerCan,
+  onRoomRefresh,
 }: MemberListPanelProps) {
   const router = useRouter();
   const t = useTranslations("chat.members");
@@ -110,10 +114,15 @@ export function MemberListPanel({
           const hasMutualFollowError = failedAdds.some(
             (r) => r.errorType === "MutualFollowRequiredError",
           );
+          const hasManagedRoomError = failedAdds.some(
+            (r) => r.errorType === "ManagedChatRoomError",
+          );
           toast.add({
             title: hasMutualFollowError
               ? tChat("mutualFollowRequired")
-              : tChat("errors.addMember"),
+              : hasManagedRoomError
+                ? tChat("errors.managedRoom")
+                : tChat("errors.addMember"),
             type: "error",
           });
         } else {
@@ -158,7 +167,12 @@ export function MemberListPanel({
         setRemoveDialogOpen(false);
         setMemberToRemove(null);
       } else {
-        toast.add({ title: result.message || tChat("errors.removeMember"), type: "error" });
+        toast.add({
+          title: result.errorType === "ManagedChatRoomError"
+            ? tChat("errors.managedRoom")
+            : result.message || tChat("errors.removeMember"),
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Error removing member:", error);
@@ -167,6 +181,11 @@ export function MemberListPanel({
       setIsRemoving(false);
     }
   };
+
+  const roleErrorTitle = (result: { errorType?: string; message?: string }) =>
+    result.errorType === "ManagedChatRoomError"
+      ? tChat("errors.managedRoom")
+      : result.message || tChat("errors.updateRole");
 
   const handleRoleChange = (userId: number, name: string, newRole: ChatRoomRole, successKey: "promoteSuccess" | "demoteSuccess") => {
     startTransition(async () => {
@@ -180,8 +199,9 @@ export function MemberListPanel({
           ),
         );
         toast.add({ title: t(successKey, { name }), type: "success" });
+        onRoomRefresh();
       } else {
-        toast.add({ title: result.message || tChat("errors.updateRole"), type: "error" });
+        toast.add({ title: roleErrorTitle(result), type: "error" });
       }
     });
   };
@@ -205,8 +225,9 @@ export function MemberListPanel({
         );
         toast.add({ title: t("transferSuccess"), type: "success" });
         setTransferTarget(null);
+        onRoomRefresh();
       } else {
-        toast.add({ title: result.message || tChat("errors.updateRole"), type: "error" });
+        toast.add({ title: roleErrorTitle(result), type: "error" });
       }
     });
   };
@@ -224,7 +245,9 @@ export function MemberListPanel({
 
       const errorMessage = result.errorType === "OwnerCannotLeaveError"
         ? t("cannotLeaveAsOwner")
-        : result.message || tChat("errors.leaveChat");
+        : result.errorType === "ManagedChatRoomError"
+          ? tChat("errors.managedRoom")
+          : result.message || tChat("errors.leaveChat");
       toast.add({ title: errorMessage, type: "error" });
     });
   };
@@ -235,7 +258,7 @@ export function MemberListPanel({
         <SheetContent side="right">
           <SheetHeader>
             <SheetTitle>{t("title")}</SheetTitle>
-            {!isDirectMessage && currentUserRole !== ChatRoomRole.OWNER && (
+            {!isDirectMessage && viewerCan.leave && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -249,7 +272,7 @@ export function MemberListPanel({
           </SheetHeader>
 
           <div className="mt-4 space-y-4">
-            {!isDirectMessage && (
+            {!isDirectMessage && viewerCan.addMember && (
               <Button
                 onClick={() => setAddDialogOpen(true)}
                 className="w-full"
@@ -303,7 +326,7 @@ export function MemberListPanel({
 
                       {!isDirectMessage && !isCurrentUser && (
                         <div className="flex gap-1">
-                          {currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.MEMBER && (
+                          {viewerCan.updateMemberRole && currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.MEMBER && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -313,7 +336,7 @@ export function MemberListPanel({
                               {t("promoteToAdmin")}
                             </Button>
                           )}
-                          {currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.ADMIN && (
+                          {viewerCan.updateMemberRole && currentUserRole === ChatRoomRole.OWNER && member.role === ChatRoomRole.ADMIN && (
                             <>
                               <Button
                                 variant="ghost"
@@ -333,7 +356,7 @@ export function MemberListPanel({
                               </Button>
                             </>
                           )}
-                          {canRemoveMember(currentUserRole, member.role) && (
+                          {viewerCan.removeMember && canRemoveMember(currentUserRole, member.role) && (
                             <Button
                               variant="ghost"
                               size="sm"

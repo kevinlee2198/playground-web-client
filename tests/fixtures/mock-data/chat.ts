@@ -134,7 +134,14 @@ export function mockChatRoomDetail(overrides?: Record<string, unknown>) {
     __typename: "DirectMessageChatRoom",
     id: "room-1",
     createdDate: new Date().toISOString(),
-    canMessage: true,
+    viewerCan: {
+      sendMessage: true,
+      addMember: true,
+      removeMember: true,
+      rename: true,
+      leave: true,
+      updateMemberRole: true,
+    },
     members: {
       edges: [
         {

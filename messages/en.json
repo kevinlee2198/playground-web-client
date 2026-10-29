@@ -884,6 +884,7 @@
     "noPeopleFound": "No people found",
     "selectedCount": "{count, plural, one {# person} other {# people}} selected",
     "dmDisabled": "You can no longer send messages to this person",
+    "sendDisabled": "You can't send messages in this conversation.",
     "noMutualFollows": "No mutual follows yet",
     "cannotMessage": "You need to follow each other before you can message {name}",
     "mutualFollowRequired": "Mutual follow required to send messages",
@@ -979,6 +980,7 @@
       "roomNotFound": "Conversation not found",
       "updateRole": "Failed to update role",
       "leaveChat": "Failed to leave chat",
+      "managedRoom": "Members of this chat are managed by its league or group.",
       "loadOlder": "Couldn't load older messages. Scroll up to try again.",
       "sendDisabledRecover": "You can no longer message this person. Your unsent message: \"{content}\"",
       "sendDisabledMedia": "You can no longer message this person, so your photo or video wasn't sent."

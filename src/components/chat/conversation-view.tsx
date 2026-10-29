@@ -217,10 +217,7 @@ export function ConversationView({
         setRoom(roomData);
         onRoomLoaded(roomData);
 
-        // For DMs, initialize canMessage from the room's canMessage field
-        if (roomData.__typename === "DirectMessageChatRoom") {
-          setCanMessage(roomData.canMessage);
-        }
+        setCanMessage(roomData.viewerCan.sendMessage);
 
         if (messagesData) {
           setMessages(messagesData.edges);
@@ -291,9 +288,7 @@ export function ConversationView({
       if (roomData) {
         setRoom(roomData);
         onRoomLoaded(roomData); // re-sync chat-layout activeRoom/members
-        if (roomData.__typename === "DirectMessageChatRoom") {
-          setCanMessage(roomData.canMessage);
-        }
+        setCanMessage(roomData.viewerCan.sendMessage);
       }
 
       if (messagesData) {
@@ -577,8 +572,14 @@ export function ConversationView({
         onCancelEdit={() => setEditingMessageId(null)}
       />
 
-      {!canMessage && room.__typename === "DirectMessageChatRoom" ? (
-        <DmDisabledBanner />
+      {!canMessage ? (
+        <DmDisabledBanner
+          message={
+            room.__typename === "DirectMessageChatRoom"
+              ? undefined
+              : t("sendDisabled")
+          }
+        />
       ) : (
         <MessageInput
           onSendText={handleSendText}

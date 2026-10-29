@@ -29,6 +29,8 @@ import {
   removeMember,
 } from "@/app/[locale]/chat/actions";
 import { mutationErrorShape } from "../../helpers/mutation-error";
+import { validateOperation } from "../../helpers/schema-contract";
+import { jsonToGraphQLQuery } from "json-to-graphql-query";
 
 // ---------------------------------------------------------------------------
 // Helpers – mutations
@@ -89,6 +91,15 @@ function mockQueryNetworkError() {
 // ---------------------------------------------------------------------------
 
 describe("loadChatRooms", () => {
+  it("chatRooms list query does not select viewerCan", async () => {
+    mockQuerySuccess({ chatRooms: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } });
+
+    await loadChatRooms(10);
+
+    const rendered = jsonToGraphQLQuery({ query: mockAuthQuery.mock.calls[0][0] });
+    expect(rendered).not.toContain("viewerCan");
+  });
+
   beforeEach(() => vi.clearAllMocks());
 
   const emptyConnection = {
@@ -168,6 +179,18 @@ describe("loadChatRoom", () => {
     const result = await loadChatRoom("room1");
 
     expect(result).toEqual(mockRoom);
+  });
+
+  it("selects viewerCan and validates against the schema", async () => {
+    mockQuerySuccess({ chatRoom: null });
+
+    await loadChatRoom("room1");
+
+    const selection = mockAuthQuery.mock.calls[0][0];
+    expect(validateOperation("query", selection)).toEqual([]);
+    const rendered = jsonToGraphQLQuery({ query: selection });
+    expect(rendered).toContain("viewerCan { sendMessage");
+    expect(rendered).not.toContain("canMessage");
   });
 
   it("returns null on GraphQL errors", async () => {

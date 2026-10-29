@@ -1,6 +1,6 @@
 "use client";
 
-import { loadChatRooms } from "@/app/[locale]/chat/actions";
+import { loadChatRoom, loadChatRooms } from "@/app/[locale]/chat/actions";
 import {
   Empty,
   EmptyDescription,
@@ -244,6 +244,14 @@ export function ChatLayout({
     setActiveRoomMembers(room.members.edges);
   }, []);
 
+  const refreshActiveRoom = useCallback(async () => {
+    const id = selectedRoomIdRef.current;
+    if (!id) return;
+    const room = await loadChatRoom(id);
+    // Drop a late response if the user switched rooms meanwhile
+    if (room && id === selectedRoomIdRef.current) handleRoomLoaded(room);
+  }, [handleRoomLoaded]);
+
   const handleMembersChange = useCallback(
     (members: Edge<ChatRoomMemberNode>[]) => {
       setActiveRoomMembers(members);
@@ -321,6 +329,8 @@ export function ChatLayout({
           currentUserId={currentUser.id}
           isDirectMessage={activeRoom.__typename === "DirectMessageChatRoom"}
           onMembersChange={handleMembersChange}
+          viewerCan={activeRoom.viewerCan}
+          onRoomRefresh={refreshActiveRoom}
           currentUserRole={
             activeRoomMembers.find(
               (edge) => edge.node.user.id === currentUser.id,
