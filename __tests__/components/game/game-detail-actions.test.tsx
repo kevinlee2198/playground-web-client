@@ -60,6 +60,7 @@ import {
   StatEntryMode,
 } from "@/lib/constants";
 import type { GameDetail } from "@/lib/types/game";
+import { gameViewerCan } from "../../helpers/game-viewer-can";
 
 // ---- Test fixtures ----
 
@@ -77,6 +78,7 @@ function makeGame(overrides: Partial<GameDetail> = {}): GameDetail {
     },
     gameStatus: GameStatus.SCHEDULED,
     viewerGameRole: GameRole.OWNER,
+    viewerCan: gameViewerCan(),
     visibility: GameVisibility.PUBLIC,
     statEntryMode: StatEntryMode.OPEN,
     viewerInvitation: null,

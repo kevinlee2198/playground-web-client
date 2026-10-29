@@ -117,6 +117,8 @@ export function GameDetailClient({
         message = t("game.live.gameStarted");
       } else if (state.game.gameStatus === "COMPLETE") {
         message = t("game.live.gameEnded");
+      } else if (state.game.gameStatus === "CANCELLED") {
+        message = t("game.live.gameCancelled");
       }
     } else if (
       prev.game.participants.edges.length !==

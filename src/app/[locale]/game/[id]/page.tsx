@@ -12,6 +12,7 @@ import {
 import {
   gameMediaFragment,
   gameMetadataFragment,
+  gameViewerCanFragment,
   locationFragment,
   normalizeGameMediaEdges,
   participantDetailNodeFragment,
@@ -85,6 +86,7 @@ const gameQueryFields = {
   metadata: gameMetadataFragment,
   gameStatus: true,
   viewerGameRole: true,
+  viewerCan: gameViewerCanFragment,
   visibility: true,
   statEntryMode: true,
   viewerInvitation: viewerInvitationFragment,

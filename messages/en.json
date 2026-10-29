@@ -702,6 +702,7 @@
       "connectionLost": "Connection lost. Reconnecting\u2026",
       "gameStarted": "Game is now live",
       "gameEnded": "Game has ended",
+      "gameCancelled": "This game has been cancelled",
       "resultsFinalized": "Results have been finalized",
       "resultsUnfinalized": "Results have been unfinalized",
       "participantAdded": "{name} joined the game",

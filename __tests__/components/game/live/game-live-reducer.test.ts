@@ -6,6 +6,7 @@ import {
 } from "@/components/game/live/game-live-reducer";
 import { GameStatus, GameVisibility, SportFormat, SportType, StatEntryMode } from "@/lib/constants";
 import type { GameDetail, GameParticipantDetail, TeamInstanceDetail } from "@/lib/types/game";
+import { isKnownGameEventType } from "@/lib/types/game-event";
 import type {
   BasketballStatsSavedEvent,
   GameEventGame,
@@ -13,7 +14,10 @@ import type {
   GameParticipantRemovedEvent,
   GameScoreUpdatedEvent,
   GameStartedEvent,
+  GameCancelledEvent,
+  GameResultChangedEvent,
 } from "@/lib/types/game-event";
+import { gameViewerCan } from "../../../helpers/game-viewer-can";
 import type { BasketballStatsNode } from "@/lib/types/stats/basketball";
 
 const emptyPageInfo = {
@@ -29,6 +33,7 @@ function makeGameEventGame(overrides: Partial<GameEventGame> = {}): GameEventGam
     gameStatus: GameStatus.SCHEDULED,
     viewerGameRole: null,
     visibility: GameVisibility.PUBLIC,
+    viewerCan: gameViewerCan(),
     participants: { edges: [] },
     metadata: {
       __typename: "BasketballGameMetadata",
@@ -54,6 +59,7 @@ function makeGameDetail(overrides: Partial<GameDetail> = {}): GameDetail {
     gameStatus: GameStatus.SCHEDULED,
     viewerGameRole: null,
     visibility: GameVisibility.PUBLIC,
+    viewerCan: gameViewerCan(),
     viewerInvitation: null,
     statEntryMode: StatEntryMode.OPEN,
     location: null,
@@ -350,5 +356,68 @@ describe("gameLiveReducer", () => {
       expect(nextState.basketballStats).toBe(newBasketballStats);
       expect(nextState.isConnected).toBe(true);
     });
+  });
+});
+
+describe("viewerCan live updates", () => {
+  const initial = () =>
+    createInitialState(makeGameDetail({ viewerCan: gameViewerCan({ start: true }) }), []);
+
+  it("replaces viewerCan wholesale from the event", () => {
+    const flags = gameViewerCan({ end: true });
+    const event: GameStartedEvent = {
+      __typename: "GameStartedEvent",
+      occurredAt: "2026-03-16T10:00:00Z",
+      game: makeGameEventGame({ gameStatus: GameStatus.IN_PROGRESS, viewerCan: flags }),
+    };
+    const next = gameLiveReducer(initial(), { type: "GAME_EVENT", event });
+    expect(next.game.viewerCan).toEqual(flags);
+    expect(next.game.viewerCan.start).toBe(false);
+  });
+
+  it("applies GameCancelledEvent status and capabilities", () => {
+    const event: GameCancelledEvent = {
+      __typename: "GameCancelledEvent",
+      occurredAt: "2026-03-16T10:00:00Z",
+      game: makeGameEventGame({ gameStatus: GameStatus.CANCELLED, viewerCan: gameViewerCan() }),
+    };
+    const next = gameLiveReducer(initial(), { type: "GAME_EVENT", event });
+    expect(next.game.gameStatus).toBe(GameStatus.CANCELLED);
+    expect(next.game.viewerCan).toEqual(gameViewerCan());
+  });
+
+  it("applies GameResultChangedEvent capabilities", () => {
+    const base = createInitialState(
+      makeGameDetail({ viewerCan: gameViewerCan({ reportResult: true }) }),
+      [],
+    );
+    const reported: GameResultChangedEvent = {
+      __typename: "GameResultChangedEvent",
+      occurredAt: "2026-03-16T10:00:00Z",
+      game: makeGameEventGame({
+        viewerCan: gameViewerCan({ confirmResult: true, disputeResult: true }),
+      }),
+    };
+    const s1 = gameLiveReducer(base, { type: "GAME_EVENT", event: reported });
+    expect(s1.game.gameStatus).toBe(GameStatus.SCHEDULED);
+    expect(s1.game.viewerCan.confirmResult).toBe(true);
+    expect(s1.game.viewerCan.disputeResult).toBe(true);
+
+    const disputed: GameResultChangedEvent = {
+      ...reported,
+      game: makeGameEventGame({ viewerCan: gameViewerCan({ reportResult: true }) }),
+    };
+    const s2 = gameLiveReducer(s1, { type: "GAME_EVENT", event: disputed });
+    expect(s2.game.viewerCan.confirmResult).toBe(false);
+    expect(s2.game.viewerCan.disputeResult).toBe(false);
+    expect(s2.game.viewerCan.reportResult).toBe(true);
+  });
+
+  it("recognises the new event typenames", () => {
+    for (const t of ["GameCancelledEvent", "GameResultChangedEvent"]) {
+      expect(
+        isKnownGameEventType({ __typename: t, occurredAt: "", game: makeGameEventGame() }),
+      ).toBe(true);
+    }
   });
 });

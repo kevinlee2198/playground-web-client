@@ -37,6 +37,7 @@ export function gameLiveReducer(
         ...state.game,
         gameStatus: event.game.gameStatus,
         viewerGameRole: event.game.viewerGameRole,
+        viewerCan: event.game.viewerCan,
         visibility: event.game.visibility,
         participants: {
           ...state.game.participants,

@@ -3,6 +3,7 @@ import { jsonToGraphQLQuery } from "json-to-graphql-query";
 import {
   authorizationErrorFragment,
   errorFragment,
+  gameViewerCanFragment,
   invalidInputErrorFragment,
 } from "@/lib/graphql-fragments";
 import { validateOperation } from "../helpers/schema-contract";
@@ -30,5 +31,27 @@ describe("error fragments", () => {
         query: { x: { __on: [authorizationErrorFragment] } },
       }),
     ).toContain("... on AuthorizationError { authorizationErrorType: __typename }");
+  });
+});
+
+describe("gameViewerCanFragment", () => {
+  it("selects all 21 capability flags", () => {
+    expect(Object.keys(gameViewerCanFragment).sort()).toEqual(
+      [
+        "update", "delete", "start", "end", "cancel", "finalizeResults",
+        "unfinalizeResults", "manageEditors", "invite", "enterStats",
+        "enterOwnStats", "join", "addParticipants", "addMedia", "moderateMedia",
+        "reportResult", "confirmResult", "disputeResult", "voidResult",
+        "reschedule", "forfeit",
+      ].sort(),
+    );
+  });
+
+  it("validates against the schema", () => {
+    expect(
+      validateOperation("query", {
+        game: { __args: { id: "1" }, viewerCan: gameViewerCanFragment },
+      }),
+    ).toEqual([]);
   });
 });
