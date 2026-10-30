@@ -144,7 +144,7 @@ type ChatRoomMemberConnection implements Connection {
 
 type ChatRoomViewerCan {
   """
-  Viewer is a member. DMs also require the mutual follow.
+  Viewer is a member and the room is not read-only. DMs also require the mutual follow.
   """
   sendMessage: Boolean!
   """
@@ -204,11 +204,6 @@ type DirectMessageChatRoom implements ChatRoom & Node {
   createdDate: DateTime!
   lastModifiedDate: DateTime!
   viewerCan: ChatRoomViewerCan!
-  """
-  Whether the authenticated viewer can send messages in this DM.
-  False when the mutual follow relationship is broken.
-  """
-  canMessage: Boolean! @deprecated(reason: "Use viewerCan.sendMessage")
   members(
     first: Int
     after: String
@@ -478,6 +473,7 @@ union SendChatMessageResult =
   | SendChatMessageResponse
   | ChatRoomNotFoundError
   | MutualFollowRequiredError
+  | ChatRoomReadOnlyError
 union UpdateChatMessageResult =
   | UpdateChatMessageResponse
   | ChatMessageNotFoundError
@@ -598,6 +594,11 @@ type MutualFollowRequiredError implements Error {
 # ============================================================================
 
 type ChatRoomNotFoundError implements Error {
+  message: String!
+  chatRoomId: ID!
+}
+
+type ChatRoomReadOnlyError implements Error {
   message: String!
   chatRoomId: ID!
 }
