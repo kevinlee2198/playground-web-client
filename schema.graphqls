@@ -474,6 +474,7 @@ union SendChatMessageResult =
   | ChatRoomNotFoundError
   | MutualFollowRequiredError
   | ChatRoomReadOnlyError
+  | ResourceNotFoundError
 union UpdateChatMessageResult =
   | UpdateChatMessageResponse
   | ChatMessageNotFoundError
@@ -1233,6 +1234,7 @@ union ConfirmGameMediaUploadResult =
   | ConfirmGameMediaUploadResponse
   | ResourceNotFoundError
   | GameNotFoundError
+  | GameNotInProgressError
 
 # ============================================================================
 # Error Types
@@ -1355,7 +1357,7 @@ enum StatEntryMode {
 }
 
 """
-Different sport types supported by Playground
+Sports supported by Playground. Every value supports league and series gameDefaults.
 """
 enum SportType {
   BASEBALL
@@ -1726,7 +1728,7 @@ type GameViewerCan {
   """
   addParticipants: Boolean!
   """
-  game_media:create AND gameStatus is IN_PROGRESS or COMPLETE.
+  game_media:create AND gameStatus is IN_PROGRESS, COMPLETE or FINALIZED.
   """
   addMedia: Boolean!
   """
@@ -1975,7 +1977,7 @@ type UpdateGameParticipantResponse {
 # ============================================================================
 
 """
-Update multiple team instances.
+Update multiple team instances. 1 to 20 entries; more is rejected with a BAD_REQUEST error.
 """
 input UpdateTeamInstancesInput {
   teamInstances: [UpdateTeamInstanceInput!]!
@@ -2925,8 +2927,9 @@ extend type Game {
 # ============================================================================
 # GameSeries — a Group's recurring game schedule (weekly RRULE subset). Each
 # occurrence can be materialized into a real `Game` by any group member.
-# Member-only: series are reachable only through `Group.gameSeries`,
-# `Game.sourceSeries` and occurrence fields, never through a top-level query.
+# Member-only: series are reachable only through `Group.series(id)`,
+# `Group.gameSeries`, `Game.sourceSeries` and occurrence fields, never through
+# a top-level query.
 # ============================================================================
 
 """
@@ -2939,19 +2942,21 @@ enum GameSeriesStatus {
 }
 
 """
-A recurring casual game. Only sports with `gameDefaults` support can back a
-series — SOFTBALL and SWIM series are impossible (see
-`GameDefaultsRequiredError.supportedSports`).
+A recurring casual game.
 """
 type GameSeries implements Node {
   id: ID!
   name: String
   """
-  Weekly RRULE subset: `FREQ=WEEKLY` only, `INTERVAL` 1 or 2, optional
-  `BYDAY`, and at most one of `UNTIL` (UTC form, within 5 years) / `COUNT`
-  (≤ 260). `INTERVAL=2` week parity anchors on `dtstart`.
+  Output-only RRULE text derived from `recurrence` (`FREQ=WEEKLY;INTERVAL=n`
+  with optional `BYDAY` and at most one of `UNTIL` (UTC) / `COUNT`), for
+  iCalendar consumers. Writes go through `recurrence`.
   """
   rrule: String!
+  """
+  byDay lists the effective days (dtstart's weekday when the rule names none).
+  """
+  recurrence: WeeklyRecurrence!
   """
   First occurrence. Its wall-clock time in the group's timezone is kept for
   every occurrence, across DST transitions.
@@ -2982,6 +2987,38 @@ type GameSeries implements Node {
   after `to`.
   """
   upcomingOccurrences(from: Date!, to: Date!): [GameSeriesOccurrence!]!
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+"""
+A series' weekly rule. At most one of `untilDate` / `count` is set; neither means open-ended.
+"""
+type WeeklyRecurrence {
+  """
+  1 or 2. Week parity for 2 anchors on dtstart.
+  """
+  intervalWeeks: Int!
+  """
+  Never empty; Monday first.
+  """
+  byDay: [DayOfWeek!]!
+  """
+  Last day of the series, a group-timezone local date. Null when open-ended or count-bounded.
+  """
+  untilDate: Date
+  """
+  Total number of occurrences. Null when open-ended or until-bounded.
+  """
+  count: Int
 }
 
 """
@@ -3024,6 +3061,10 @@ extend type Group {
     before: String
   ): GameSeriesConnection!
   """
+  Series of THIS group. Null if unknown or in another group.
+  """
+  series(id: ID!): GameSeries
+  """
   Games materialized in this group. Optional `status` filter.
   """
   games(
@@ -3040,10 +3081,33 @@ extend type Group {
 # Input types
 # ============================================================================
 
+"""
+How a series ends. Omit the whole input for an open-ended series.
+"""
+input RecurrenceEndInput @oneOf {
+  untilDate: Date
+  count: Int
+}
+
+input WeeklyRecurrenceInput {
+  """
+  1 or 2. Week parity for 2 anchors on dtstart.
+  """
+  intervalWeeks: Int! = 1
+  """
+  Empty or omitted = dtstart's weekday.
+  """
+  byDay: [DayOfWeek!]
+  """
+  Omitted = open-ended. untilDate is a group-timezone local date ≤ 5 years out; count ≤ 260.
+  """
+  end: RecurrenceEndInput
+}
+
 input CreateGameSeriesInput {
   groupId: ID!
   name: String
-  rrule: String!
+  recurrence: WeeklyRecurrenceInput!
   dtstart: DateTime!
   durationMinutes: Int!
   locationName: String
@@ -3063,7 +3127,17 @@ input UpdateGameSeriesInput {
   seriesId: ID!
   expectedVersion: Long
   name: String
-  rrule: String
+  """
+  Omitted = unchanged. Supplied = replaces the whole rule: an omitted `byDay`
+  means dtstart's weekday and an omitted `end` means open-ended, not
+  "unchanged". `null` is rejected with
+  `RecurrenceInvalidError(field: INTERVAL_WEEKS, code: "REQUIRED")`.
+  """
+  recurrence: WeeklyRecurrenceInput
+  """
+  When `recurrence` is omitted, the stored end date is re-checked against the
+  new dtstart; violations report `field: DTSTART` (TOO_FAR or BEFORE_DTSTART).
+  """
   dtstart: DateTime
   durationMinutes: Int
   locationName: String
@@ -3132,10 +3206,28 @@ type GameSeriesNotFoundError implements Error {
   seriesId: ID!
 }
 
-type RRuleInvalidError implements Error {
+"""
+The input a `RecurrenceInvalidError` points at: a `WeeklyRecurrenceInput`
+field, or `DTSTART` when only the series' dtstart changed.
+"""
+enum RecurrenceField {
+  INTERVAL_WEEKS
+  "Reserved: byDay is enum-typed, so this field is never emitted today."
+  BY_DAY
+  UNTIL_DATE
+  COUNT
+  DTSTART
+}
+
+"""
+The recurrence breaks a series cap. `code` is one of `REQUIRED`,
+`OUT_OF_RANGE`, `TOO_FAR` (more than 5 years after dtstart's local date) or
+`BEFORE_DTSTART`.
+"""
+type RecurrenceInvalidError implements Error {
   message: String!
-  rrule: String!
-  reason: String!
+  field: RecurrenceField!
+  code: String!
 }
 
 type GameSeriesEndedError implements Error {
@@ -3187,7 +3279,7 @@ union CreateGameSeriesResult =
   | GroupNotFoundError
   | InsufficientGroupRoleError
   | GroupArchivedError
-  | RRuleInvalidError
+  | RecurrenceInvalidError
   | GameDefaultsRequiredError
   | GameDefaultsSportMismatchError
 
@@ -3197,7 +3289,7 @@ union UpdateGameSeriesResult =
   | InsufficientGroupRoleError
   | GroupArchivedError
   | GameSeriesEndedError
-  | RRuleInvalidError
+  | RecurrenceInvalidError
   | GameDefaultsSportMismatchError
   | StaleWriteError
 
@@ -3324,11 +3416,12 @@ enum GroupMembershipStatus {
 
 """
 A casual pickup group. Tracks its own membership, player pool, recurring
-game series, and a dedicated chat room. Member-only: every field of this
-type is reachable only through `group(idOrSlug)` / `myGroups`, which resolve
-exclusively for active members.
+game series, and a dedicated chat room. Member-only: the group read check
+passes only for active members, and every field that returns a Group (or
+an `Owner` that is one) either runs that check, returning null when it
+fails, or hangs off a parent that already passed it.
 """
-type Group implements Node {
+type Group implements Owner & Node {
   id: ID!
   """
   Globally unique across all Groups. Immutable post-create.
@@ -4107,8 +4200,9 @@ accepted by a user whose account email matches but whose user id was
 unknown at send time.
 
 Viewer permissions:
-- Aggregate Admins of `ownerId` can read all fields.
-- The `invitee` (if set) can read their own invitation.
+- Admins of the `owner` aggregate can read all fields.
+- The `invitee` (if set) can read their own invitation; its `owner` stays
+  null until they can read the aggregate (e.g. after accepting).
 - Token-gated reads (see `resolveInvite` query) return an `InvitePreview`
   rather than this full type.
 """
@@ -4119,9 +4213,9 @@ type Invitation implements Node {
   """
   ownerType: OwnerType!
   """
-  ID of the owning `League` or `Group` (resolve against `ownerType`).
+  The League or Group this belongs to. Null when the viewer cannot read the owner.
   """
-  ownerId: ID!
+  owner: Owner
   """
   Invited email address. Null when the invitation is direct-add against a
   known user (in which case `invitee` is populated).
@@ -4180,6 +4274,20 @@ type InvitationConnection implements Connection {
 }
 
 """
+Which kind of token `resolveInvite` resolved.
+"""
+enum InviteTokenKind {
+  """
+  A targeted `Invitation`; acted on by `acceptInvitation`.
+  """
+  INVITATION
+  """
+  A shareable `InviteLink`; acted on by `redeemInviteLink`.
+  """
+  INVITE_LINK
+}
+
+"""
 Token-resolved preview of an `Invitation` or `InviteLink`, returned by the
 public `resolveInvite(token)` query. Exposes only the fields a
 not-yet-authenticated recipient needs to make an accept/decline decision —
@@ -4219,10 +4327,12 @@ type InvitePreview {
   """
   displayAdmins: [User!]!
   """
-  Status used to render the preview:
-  - For `Invitation`: the underlying `InvitationStatus`.
-  - For `InviteLink`: synthesized — `SENT` when active, `EXPIRED` when
-    past `expiresAt` or `usesRemaining = 0`, `REVOKED` when revoked.
+  Which mutation acts on this token: `acceptInvitation` (`INVITATION`) or
+  `redeemInviteLink` (`INVITE_LINK`).
+  """
+  kind: InviteTokenKind!
+  """
+  Always SENT: resolveInvite returns null for every non-actionable token.
   """
   status: InvitationStatus!
   """
@@ -4252,9 +4362,9 @@ type InviteLink implements Node {
   """
   ownerType: OwnerType!
   """
-  ID of the owning `League` or `Group`.
+  The League or Group this belongs to. Null when the viewer cannot read the owner.
   """
-  ownerId: ID!
+  owner: Owner
   """
   User who created the link.
   """
@@ -4323,9 +4433,9 @@ input InvitationRecipientInput @oneOf {
   """
   userId: ID
   """
-  Email address. Server validates RFC 5322 shape and lowercases. If the
-  email matches an existing user's account email on accept, the match
-  is recorded in `Invitation.acceptedBy`.
+  Email address. Rejected until email delivery ships: `sendInvitations`
+  returns `EmailInvitationsUnavailableError` for the whole batch when any
+  recipient sets this field. Invite existing users by `userId` instead.
   """
   email: String
 }
@@ -4343,6 +4453,8 @@ input OwnerRefInput @oneOf {
 Batch invitation send. Server-side caps:
 - `recipients` length ≤ 200 per call (requirements §3.16); over-cap
   requests return `InvitationBatchCapExceededError`.
+- Email recipients are not supported yet: any email recipient rejects the
+  whole batch with `EmailInvitationsUnavailableError` and nothing is sent.
 - Per-caller rate limit (Bucket4j) on `(ownerId, invitedByUserId)`;
   exceeding returns `RateLimitError` with `retryAfterSeconds`.
 
@@ -4541,6 +4653,13 @@ type InvitationRecipientMismatchError implements Error & AuthorizationError {
 }
 
 """
+Email invitations are not available yet. Invite existing users by id or share an invite link.
+"""
+type EmailInvitationsUnavailableError implements Error {
+  message: String!
+}
+
+"""
 The batch exceeded the 200-recipient cap for `sendInvitations`.
 """
 type InvitationBatchCapExceededError implements Error {
@@ -4594,6 +4713,7 @@ union SendInvitationsResult =
   | InsufficientLeagueRoleError
   | InsufficientGroupRoleError
   | InvitationBatchCapExceededError
+  | EmailInvitationsUnavailableError
   | RateLimitError
 
 union ResendInvitationResult =
@@ -4757,6 +4877,68 @@ extend type Mutation {
   """
   redeemInviteLink(input: RedeemInviteLinkInput!): RedeemInviteLinkResult!
 }
+
+# ============================================================================
+# Owner listings (Admin-only)
+# ============================================================================
+
+extend type League {
+  """
+  Admin-only (viewerCan.manageInvitations) (today: `viewerIsAdmin`); empty connection for everyone else.
+  Ordered newest first (id DESC); page with first/after.
+
+  `status: null` lists every status. `SENT` leaves out invitations already
+  past `expiresAt` (they read as `EXPIRED`); `EXPIRED` lists them once the
+  hourly sweep has run.
+  """
+  invitations(
+    status: InvitationStatus = SENT
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): InvitationConnection!
+  """
+  Admin-only (viewerCan.manageInvitations) (today: `viewerIsAdmin`); empty connection for everyone else.
+  Excludes revoked/expired/exhausted links unless includeInactive. Ordered newest first (id DESC); page with first/after.
+  """
+  inviteLinks(
+    includeInactive: Boolean = false
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): InviteLinkConnection!
+}
+
+extend type Group {
+  """
+  Admin-only (viewerCan.manageInvitations) (today: `viewerIsAdmin`); empty connection for everyone else.
+  Ordered newest first (id DESC); page with first/after.
+
+  `status: null` lists every status. `SENT` leaves out invitations already
+  past `expiresAt` (they read as `EXPIRED`); `EXPIRED` lists them once the
+  hourly sweep has run.
+  """
+  invitations(
+    status: InvitationStatus = SENT
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): InvitationConnection!
+  """
+  Admin-only (viewerCan.manageInvitations) (today: `viewerIsAdmin`); empty connection for everyone else.
+  Excludes revoked/expired/exhausted links unless includeInactive. Ordered newest first (id DESC); page with first/after.
+  """
+  inviteLinks(
+    includeInactive: Boolean = false
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): InviteLinkConnection!
+}
 # ============================================================================
 # Shared types for the leagues module. Imported implicitly by every league
 # schema file (league/*, group/*, invite/*). These types are league-scoped:
@@ -4806,12 +4988,21 @@ Discriminator for the owning aggregate of an `Invitation` or `InviteLink`.
   `GroupMembership` is created — Groups do not auto-create `GroupPlayer`
   rows (placeholders are opt-in).
 
-Each `Invitation` / `InviteLink` row carries this discriminator plus a
-polymorphic `ownerId`. App-layer referential integrity.
+Each `Invitation` / `InviteLink` carries this discriminator; the owner
+itself is its read-gated `owner` field.
 """
 enum OwnerType {
   LEAGUE
   GROUP
+}
+
+"""
+A League or Group that owns invitations, invite links and (later) managed chat rooms.
+"""
+interface Owner implements Node {
+  id: ID!
+  name: String!
+  slug: String!
 }
 
 # ============================================================================
@@ -4849,10 +5040,9 @@ type InvalidTimezoneError implements Error {
 }
 
 """
-Either the create mutation did not provide gameDefaults for a sport that
-requires them, or `sportType` has no game-defaults support at all (so no
-league or series can be created for it). Shared by `createLeague` and
-`createGameSeries`. `supportedSports` lists the sports that can carry
+`sportType` has no game-defaults support at all, so no league or series can
+be created for it. Shared by `createLeague` and `createGameSeries`.
+`supportedSports` lists the sports that can carry
 defaults, so clients can render an "enter rules for sport X" form without
 hardcoding the list.
 """
@@ -5018,7 +5208,7 @@ extend input CreateLeagueInput {
   Sport-format defaults applied to every Game scheduled in this league. Required
   for every league; the set branch must match the chosen `sportType`.
   """
-  gameDefaults: GameMetadataInput
+  gameDefaults: GameMetadataInput!
 }
 # ============================================================================
 # Game issue reports (requirements §4.12). A report is not persisted: it is
@@ -5755,6 +5945,10 @@ extend type League {
     last: Int
     before: String
   ): LeagueTeamConnection!
+  """
+  Team in any season of THIS league. Includes archived teams. Null if unknown or in another league.
+  """
+  team(id: ID!): LeagueTeam
 }
 
 # ============================================================================
@@ -5971,7 +6165,7 @@ A competition aggregate owned by an `Organization`. Tracks its own
 membership, player pool, seasons, teams, scheduled games, and a dedicated
 chat room.
 """
-type League implements Node {
+type League implements Owner & Node {
   id: ID!
   organization: Organization!
   """
@@ -7168,7 +7362,7 @@ Successful invocation of `createScheduledGames`. Per-row outcomes live in
 the same union the single-row `createScheduledGame` mutation returns.
 """
 type CreateScheduledGamesBatchResponse {
-  results: [CreateScheduledGameRowResult!]!
+  results: [CreateScheduledGameRowOutcome!]!
 }
 
 """
@@ -7176,7 +7370,7 @@ One row's outcome inside `createScheduledGames`. `rowIndex` is the 0-based
 position in the input batch — clients use it to correlate failures with
 the originating input row.
 """
-type CreateScheduledGameRowResult {
+type CreateScheduledGameRowOutcome {
   rowIndex: Int!
   result: CreateScheduledGameResult!
 }
@@ -7333,6 +7527,13 @@ type SeasonEdge implements Edge {
 type SeasonConnection implements Connection {
   edges: [SeasonEdge!]!
   pageInfo: PageInfo!
+}
+
+extend type League {
+  """
+  Season of THIS league. Null if unknown or in another league.
+  """
+  season(id: ID!): Season
 }
 
 # ============================================================================
@@ -8401,11 +8602,13 @@ type Mutation {
   Transitions resource status from REQUESTED to PERMANENT.
   Not needed for chat media — sendChatMessage confirms chat resources automatically.
   Not needed for game media — use confirmGameMediaUpload instead.
+  Only for userProfilePicture uploads. A resourceId requested for game or chat media returns ResourceNotFoundError.
   """
   confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResult!
   """
   Confirm a game media upload. Creates the GameMedia record.
   Phase 2 of the upload flow for game media specifically.
+  An unreadable or missing game returns GameNotFoundError; lacking game_media:create, or confirming another user's upload, is top-level FORBIDDEN. The game must be IN_PROGRESS, COMPLETE or FINALIZED (GameNotInProgressError). A resourceId not requested for game media returns ResourceNotFoundError.
   """
   confirmGameMediaUpload(
     input: ConfirmGameMediaUploadInput!
