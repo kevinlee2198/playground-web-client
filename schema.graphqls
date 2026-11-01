@@ -5005,6 +5005,47 @@ interface Owner implements Node {
   slug: String!
 }
 
+"""
+A calendar subscription (iCalendar, RFC 5545) for a League's or Group's games, computed
+for the viewer on every request and never stored. When `isPersonal` is true the URL is a
+bearer credential: anyone holding it reads the feed as the viewer until the viewer calls
+`rotateIcalToken`.
+"""
+type CalendarFeed {
+  """
+  Absolute feed URL (`https://` in every deployed environment; `http://` only in local
+  development). Opaque: do not parse it or build feed URLs client-side. For calendar apps,
+  replace the scheme with `webcal://`. When `isPersonal`, never log it and never cache it
+  across viewers.
+  """
+  url: String!
+  """
+  True when `url` carries a credential for the viewer (groups and UNLISTED leagues); show a
+  "do not share" warning. False for PUBLIC leagues, whose URL is the same for everyone.
+  """
+  isPersonal: Boolean!
+}
+
+extend type League {
+  """
+  Calendar subscription for this league's games. PUBLIC: the same tokenless URL for every
+  viewer, members and anonymous viewers included (`isPersonal: false`). UNLISTED: a personal
+  URL (`isPersonal: true`) for viewers who can read the league (members and admins of the
+  owning Organization). Null when the viewer cannot read the league. Changes when
+  `visibility` changes; re-fetch after updating it.
+  """
+  calendarFeed: CalendarFeed
+}
+
+extend type Group {
+  """
+  Personal calendar subscription (`isPersonal: true`) for this group's games and upcoming
+  series occurrences. Null when the viewer has no active membership, anonymous viewers
+  included.
+  """
+  calendarFeed: CalendarFeed
+}
+
 # ============================================================================
 # Shared errors for the leagues module. Referenced by league/organization,
 # league/league, league/season schemas (and later by group/* in a future PR).
@@ -6342,6 +6383,10 @@ input UpdateLeagueInput {
   leagueId: ID!
   name: String
   description: String
+  """
+  Switching to UNLISTED empties existing PUBLIC calendar subscriptions; members must
+  re-subscribe with their personal `calendarFeed` URL.
+  """
   visibility: LeagueVisibility
   timezone: String
   logoResourceId: ID
@@ -9868,24 +9913,20 @@ union SaveVolleyballStatsBulkResult =
   | GameNotFoundError
   | InvalidSportTypeError
 type RotateIcalTokenResponse {
-  icalToken: String!
+  """
+  When the new secret took effect. Personal `calendarFeed` URLs issued before this stop working.
+  """
+  rotatedAt: DateTime!
 }
 
 union RotateIcalTokenResult = RotateIcalTokenResponse | RateLimitedError
 
-extend type CurrentUser {
-  """
-  Secret for your private calendar feed URLs (`/ical/...?token=`). Created on first read. Anyone with it
-  can read the feeds you can read — rotate it if it leaks. PUBLIC league feeds need no token: never put
-  it in a link you share.
-  """
-  icalToken: String!
-}
-
 extend type Mutation {
   """
-  Replaces your calendar token. Calendar subscriptions using the old one go empty on their next refresh;
-  re-subscribe with the new token.
+  Rotates your calendar-feed secret. Every personal `calendarFeed` URL issued to you (groups,
+  UNLISTED leagues) stops working: those subscriptions return an empty calendar on their next
+  refresh. Re-fetch `calendarFeed` for new URLs and re-subscribe. PUBLIC league feeds are
+  tokenless and keep working. Limited to 5 rotations per hour (`RateLimitedError`).
   """
   rotateIcalToken: RotateIcalTokenResult!
 }
