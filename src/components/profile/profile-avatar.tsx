@@ -8,6 +8,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { Resource } from "@/lib/types/resource";
+import { profilePictureFailureReason } from "@/lib/upload-errors";
 import { getAcceptAttribute, validateFile } from "@/lib/upload-validation";
 import { getInitials } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -97,7 +98,13 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
         selectedFile.size,
       );
       if (!requestResult.success) {
-        toast.add({ title: requestResult.message || t("errors.uploadFailed"), type: "error" });
+        const reason = profilePictureFailureReason(requestResult);
+        toast.add({
+          title: reason
+            ? t(`errors.${reason}`, { seconds: requestResult.retryAfterSeconds ?? 60 })
+            : requestResult.message || t("errors.uploadFailed"),
+          type: "error",
+        });
         return;
       }
 

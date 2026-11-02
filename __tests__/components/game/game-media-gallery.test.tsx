@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
@@ -29,6 +29,8 @@ vi.mock("@/components/game/game-media-item", () => ({
   ),
 }));
 
+import { requestGameMediaUpload } from "@/app/[locale]/upload/actions";
+import { toast } from "@/components/ui/toast";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameVisibility } from "@/lib/constants";
 import type { ImageMediaNode } from "@/lib/types/game-media";
@@ -48,7 +50,7 @@ function edge(id: string, addedById: number) {
   return { cursor: id, node };
 }
 
-function renderGallery(canModerateMedia: boolean) {
+function renderGallery(canModerateMedia: boolean, canContribute = false) {
   render(
     <GameMediaGallery
       gameId={1}
@@ -59,7 +61,7 @@ function renderGallery(canModerateMedia: boolean) {
         startCursor: null,
         endCursor: null,
       }}
-      canContribute={false}
+      canContribute={canContribute}
       currentUserId={7}
       canModerateMedia={canModerateMedia}
       gameVisibility={GameVisibility.PUBLIC}
@@ -81,5 +83,52 @@ describe("GameMediaGallery delete rule", () => {
     renderGallery(true);
     expect(screen.getByText("delete-own")).toBeInTheDocument();
     expect(screen.getByText("delete-other")).toBeInTheDocument();
+  });
+});
+
+describe("GameMediaGallery request-time upload errors", () => {
+  const failure = {
+    success: false as const,
+    errorType: "InvalidInputError",
+    message: "raw server wording",
+    code: null,
+    isAuthorizationError: false,
+    retryAfterSeconds: null,
+  };
+
+  function uploadPhoto() {
+    renderGallery(false, true);
+    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
+    fireEvent.change(input, {
+      target: { files: [new File(["x"], "photo.jpg", { type: "image/jpeg" })] },
+    });
+  }
+
+  it("shows the size copy when the server returns FILE_TOO_LARGE", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({ ...failure, code: "FILE_TOO_LARGE" });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.fileTooLarge", type: "error" }),
+    );
+  });
+
+  it("shows the countdown copy when rate limited", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
+      ...failure,
+      errorType: "RateLimitedError",
+      retryAfterSeconds: 30,
+    });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.uploadRateLimited", type: "error" }),
+    );
+  });
+
+  it("falls back to the server message for an unrecognised failure", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce(failure);
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "raw server wording", type: "error" }),
+    );
   });
 });

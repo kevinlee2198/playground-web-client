@@ -151,7 +151,8 @@
         "saveFailed": "Failed to save profile picture",
         "removeFailed": "Failed to remove profile picture",
         "fileTooLarge": "Image must be less than 5 MB",
-        "invalidType": "Please select a JPEG, PNG, or WebP image"
+        "invalidType": "Please select a JPEG, PNG, or WebP image",
+        "uploadRateLimited": "Too many uploads. Try again in {seconds}s."
       }
     },
     "errors": {
@@ -577,6 +578,10 @@
         "deleteFailed": "Failed to delete media",
         "fileTooLarge": "File must be less than {limit}",
         "invalidType": "Please select an image or video file",
+        "uploadRateLimited": "Too many uploads. Try again in {seconds}s.",
+        "notPermitted": "You can't add media to this game.",
+        "targetUnavailable": "Media can't be added to this game right now.",
+        "targetNotFound": "This game is no longer available.",
         "duplicateLink": "This link has already been added to this game.",
         "invalidScheme": "Please use an https:// URL",
         "urlCannotBeAccessed": "This URL cannot be added. Please check the URL and try a different one.",
@@ -961,7 +966,11 @@
       "errors": {
         "uploadFailed": "Failed to upload file",
         "fileTooLarge": "File must be less than {limit}",
-        "invalidType": "Please select an image or video file"
+        "invalidType": "Please select an image or video file",
+        "uploadRateLimited": "Too many uploads. Try again in {seconds}s.",
+        "notPermitted": "You can't send files here.",
+        "targetUnavailable": "This conversation is read-only.",
+        "targetNotFound": "This conversation is no longer available."
       }
     },
     "systemMessage": {

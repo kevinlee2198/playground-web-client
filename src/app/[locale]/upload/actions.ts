@@ -1,6 +1,13 @@
 "use server";
 
-import { errorFragment, gameMediaFragment, normalizeGameMedia, resourceFragment } from "@/lib/graphql-fragments";
+import {
+  authorizationErrorFragment,
+  errorFragment,
+  gameMediaFragment,
+  invalidInputErrorFragment,
+  normalizeGameMedia,
+  resourceFragment,
+} from "@/lib/graphql-fragments";
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { GameMediaNode } from "@/lib/types/game-media";
@@ -9,7 +16,14 @@ import { z } from "zod";
 
 export type RequestUploadResult =
   | { success: true; uploadUrl: string; resourceId: string }
-  | { success: false; errorType: string; message: string };
+  | {
+      success: false;
+      errorType: string;
+      message: string;
+      code: string | null;
+      isAuthorizationError: boolean;
+      retryAfterSeconds: number | null;
+    };
 
 export type ConfirmUploadResult =
   | { success: true; resource: Resource }
@@ -48,17 +62,34 @@ async function requestUpload(
         __on: [
           { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
           errorFragment,
+          invalidInputErrorFragment,
+          authorizationErrorFragment,
+          { __typeName: "RateLimitedError", retryAfterSeconds: true },
         ],
       },
     });
 
     if (response.errors?.length > 0) {
-      return { success: false, errorType: MutationErrorType.GRAPHQL_ERROR, message: response.errors[0].message };
+      return {
+        success: false,
+        errorType: MutationErrorType.GRAPHQL_ERROR,
+        message: response.errors[0].message,
+        code: null,
+        isAuthorizationError: false,
+        retryAfterSeconds: null,
+      };
     }
 
     const result = extractMutationResult(response.data.requestUpload, "RequestUploadResponse");
     if (!result.success) {
-      return { success: false, errorType: result.errorType, message: result.message };
+      return {
+        success: false,
+        errorType: result.errorType,
+        message: result.message,
+        code: result.code,
+        isAuthorizationError: result.isAuthorizationError,
+        retryAfterSeconds: response.data.requestUpload.retryAfterSeconds ?? null,
+      };
     }
 
     return {
@@ -67,7 +98,14 @@ async function requestUpload(
       resourceId: result.data.resourceId,
     };
   } catch {
-    return { success: false, errorType: MutationErrorType.UNEXPECTED_ERROR, message: "Failed to request upload" };
+    return {
+      success: false,
+      errorType: MutationErrorType.UNEXPECTED_ERROR,
+      message: "Failed to request upload",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
+    };
   }
 }
 

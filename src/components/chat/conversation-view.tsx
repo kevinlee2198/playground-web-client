@@ -22,6 +22,8 @@ import type {
 } from "@/lib/types/chat";
 import type { ChatEvent } from "@/lib/types/chat-event";
 import { isUserChatMessage } from "@/lib/types/chat-guards";
+import { uploadFailureReason } from "@/lib/upload-errors";
+import { getMaxSizeLabel } from "@/lib/upload-validation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { hasReconnectGap, reconcileMessages } from "./chat-thread-utils";
@@ -402,7 +404,16 @@ export function ConversationView({
       roomId,
     );
     if (!uploadResult.success) {
-      toast.add({ title: uploadResult.message || t("errors.sendMessage"), type: "error" });
+      const reason = uploadFailureReason(uploadResult);
+      toast.add({
+        title: reason
+          ? t(`media.errors.${reason}`, {
+              limit: getMaxSizeLabel(file.type),
+              seconds: uploadResult.retryAfterSeconds ?? 60,
+            })
+          : uploadResult.message || t("errors.sendMessage"),
+        type: "error",
+      });
       throw new Error("Request upload failed");
     }
 
