@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { profilePictureFailureReason, uploadFailureReason } from "@/lib/upload-errors";
+import messages from "../../messages/en.json";
+import {
+  profilePictureFailureReason,
+  uploadFailureReason,
+  type UploadFailureReason,
+} from "@/lib/upload-errors";
 
 function failure(
   overrides: Partial<{ errorType: string; code: string | null; isAuthorizationError: boolean }> = {},
@@ -46,5 +51,33 @@ describe("profilePictureFailureReason", () => {
     failure(),
   ])("returns null for reasons without profile picture copy: %o", (input) => {
     expect(profilePictureFailureReason(input)).toBeNull();
+  });
+});
+
+describe("copy for every reason", () => {
+  // Record keys force this list to match UploadFailureReason at compile time.
+  const reasons: Record<UploadFailureReason, true> = {
+    invalidType: true,
+    fileTooLarge: true,
+    uploadRateLimited: true,
+    notPermitted: true,
+    targetUnavailable: true,
+    targetNotFound: true,
+  };
+  const profileReasons = ["invalidType", "fileTooLarge", "uploadRateLimited"];
+
+  it.each([
+    ["game.media.errors", messages.game.media.errors],
+    ["chat.media.errors", messages.chat.media.errors],
+  ])("%s has a string for every reason", (_path, errors) => {
+    for (const reason of Object.keys(reasons)) {
+      expect(typeof (errors as Record<string, unknown>)[reason]).toBe("string");
+    }
+  });
+
+  it("profile.picture.errors has a string for each profile reason", () => {
+    for (const reason of profileReasons) {
+      expect(typeof (messages.profile.picture.errors as Record<string, unknown>)[reason]).toBe("string");
+    }
   });
 });

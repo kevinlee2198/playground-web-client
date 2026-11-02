@@ -183,8 +183,12 @@ test.describe("Chat Page", () => {
 
     // The browser's PUT to the upload URL is outside MSW; intercept it here.
     let putCalled = false;
+    let putMethod: string | undefined;
+    let putContentType: string | undefined;
     await authenticatedPage.route("**/test-s3-put", (route) => {
       putCalled = true;
+      putMethod = route.request().method();
+      putContentType = route.request().headers()["content-type"];
       return route.fulfill({ status: 200 });
     });
 
@@ -213,6 +217,8 @@ test.describe("Chat Page", () => {
     await expect(authenticatedPage.getByAltText("photo.png")).toBeVisible();
     await expect(authenticatedPage.getByText("A lovely caption")).toBeVisible();
     expect(putCalled).toBe(true);
+    expect(putMethod).toBe("PUT");
+    expect(putContentType).toBe("image/png");
   });
 
   test("loading older same-day history preserves scroll position (no visual jump)", async ({

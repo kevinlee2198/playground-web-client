@@ -127,13 +127,12 @@ export function GameMediaGallery({
           const reason = uploadFailureReason(requestResult);
           toast.add({
             title: reason
-              ? t(`errors.${reason}`, {
-                  limit: getMaxSizeLabel(file.type),
-                  seconds: requestResult.retryAfterSeconds ?? 60,
-                })
+              ? t(`errors.${reason}`, { limit: getMaxSizeLabel(file.type) })
               : requestResult.message ||
                 t("errors.uploadFailed", { filename: file.name }),
             type: "error",
+            // A multi-file drop refuses every file; one stable id keeps a single toast.
+            ...(reason === "uploadRateLimited" && { id: "upload-rate-limited" }),
           });
           markUploadError(fileId, file);
           return;

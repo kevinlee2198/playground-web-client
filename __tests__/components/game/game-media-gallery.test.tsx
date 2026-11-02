@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockT } = vi.hoisted(() => ({
@@ -101,12 +101,17 @@ describe("GameMediaGallery request-time upload errors", () => {
 
   beforeEach(() => vi.clearAllMocks());
 
-  function uploadPhoto() {
+  function uploadPhotos(names: string[]) {
+    cleanup();
     renderGallery(false, true);
     const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
     fireEvent.change(input, {
-      target: { files: [new File(["x"], "photo.jpg", { type: "image/jpeg" })] },
+      target: { files: names.map((name) => new File(["x"], name, { type: "image/jpeg" })) },
     });
+  }
+
+  function uploadPhoto() {
+    uploadPhotos(["photo.jpg"]);
   }
 
   it("shows the size copy when the server returns FILE_TOO_LARGE", async () => {
@@ -122,7 +127,7 @@ describe("GameMediaGallery request-time upload errors", () => {
     );
   });
 
-  it("shows the countdown copy when rate limited", async () => {
+  it("shows the wait copy when rate limited", async () => {
     vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
       ...failure,
       errorType: "RateLimitedError",
@@ -130,26 +135,27 @@ describe("GameMediaGallery request-time upload errors", () => {
     });
     uploadPhoto();
     await waitFor(() =>
-      expect(toast.add).toHaveBeenCalledWith({ title: "errors.uploadRateLimited", type: "error" }),
-    );
-    expect(mockT).toHaveBeenCalledWith(
-      "errors.uploadRateLimited",
-      expect.objectContaining({ seconds: 30 }),
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "errors.uploadRateLimited" }),
+      ),
     );
   });
 
-  it("defaults the countdown to 60 seconds when retryAfterSeconds is null", async () => {
-    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
-      ...failure,
-      errorType: "RateLimitedError",
-    });
-    uploadPhoto();
-    await waitFor(() =>
-      expect(mockT).toHaveBeenCalledWith(
-        "errors.uploadRateLimited",
-        expect.objectContaining({ seconds: 60 }),
-      ),
-    );
+  it("uses one toast id for every rate-limited file in a drop, and none for other reasons", async () => {
+    vi.mocked(requestGameMediaUpload)
+      .mockResolvedValueOnce({ ...failure, errorType: "RateLimitedError", retryAfterSeconds: 1 })
+      .mockResolvedValueOnce({ ...failure, errorType: "RateLimitedError", retryAfterSeconds: 2 });
+    uploadPhotos(["a.jpg", "b.jpg"]);
+    await waitFor(() => expect(toast.add).toHaveBeenCalledTimes(2));
+    const [first, second] = vi.mocked(toast.add).mock.calls.map(([options]) => options);
+    expect(first.id).toBeTruthy();
+    expect(first.id).toBe(second.id);
+
+    vi.mocked(toast.add).mockClear();
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({ ...failure, code: "FILE_TOO_LARGE" });
+    uploadPhotos(["c.jpg"]);
+    await waitFor(() => expect(toast.add).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(toast.add).mock.calls[0][0]).not.toHaveProperty("id");
   });
 
   it("falls back to the server message for an unrecognised failure", async () => {

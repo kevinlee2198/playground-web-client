@@ -578,7 +578,7 @@
         "deleteFailed": "Failed to delete media",
         "fileTooLarge": "File must be less than {limit}",
         "invalidType": "Please select an image or video file",
-        "uploadRateLimited": "Too many uploads. Try again in {seconds}s.",
+        "uploadRateLimited": "Too many uploads. Wait a minute, then add the remaining files.",
         "notPermitted": "You can't add media to this game.",
         "targetUnavailable": "Media can't be added to this game right now.",
         "targetNotFound": "This game is no longer available.",
