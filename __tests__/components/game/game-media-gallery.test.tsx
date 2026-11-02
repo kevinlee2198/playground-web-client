@@ -1,8 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const { mockT } = vi.hoisted(() => ({
+  mockT: vi.fn((key: string, _values?: Record<string, unknown>) => key),
+}));
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => mockT,
 }));
 vi.mock("@/app/[locale]/game/actions", () => ({ loadGameMedia: vi.fn() }));
 vi.mock("@/app/[locale]/game/media-actions", () => ({ deleteGameMedia: vi.fn() }));
@@ -96,6 +99,8 @@ describe("GameMediaGallery request-time upload errors", () => {
     retryAfterSeconds: null,
   };
 
+  beforeEach(() => vi.clearAllMocks());
+
   function uploadPhoto() {
     renderGallery(false, true);
     const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
@@ -110,6 +115,11 @@ describe("GameMediaGallery request-time upload errors", () => {
     await waitFor(() =>
       expect(toast.add).toHaveBeenCalledWith({ title: "errors.fileTooLarge", type: "error" }),
     );
+    // photo.jpg is an image, so the image limit applies
+    expect(mockT).toHaveBeenCalledWith(
+      "errors.fileTooLarge",
+      expect.objectContaining({ limit: "10 MB" }),
+    );
   });
 
   it("shows the countdown copy when rate limited", async () => {
@@ -121,6 +131,24 @@ describe("GameMediaGallery request-time upload errors", () => {
     uploadPhoto();
     await waitFor(() =>
       expect(toast.add).toHaveBeenCalledWith({ title: "errors.uploadRateLimited", type: "error" }),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "errors.uploadRateLimited",
+      expect.objectContaining({ seconds: 30 }),
+    );
+  });
+
+  it("defaults the countdown to 60 seconds when retryAfterSeconds is null", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
+      ...failure,
+      errorType: "RateLimitedError",
+    });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(mockT).toHaveBeenCalledWith(
+        "errors.uploadRateLimited",
+        expect.objectContaining({ seconds: 60 }),
+      ),
     );
   });
 
