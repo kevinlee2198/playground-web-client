@@ -35,11 +35,9 @@ export type ProfilePictureFailureReason = Extract<
  * `profile.picture.errors` only has copy for these reasons and `t` is not key-typed,
  * so any other reason must fall back to the server message rather than a missing key.
  */
-export function profilePictureFailureReason(failure: {
-  errorType: string;
-  code: string | null;
-  isAuthorizationError: boolean;
-}): ProfilePictureFailureReason | null {
+export function profilePictureFailureReason(
+  failure: Parameters<typeof uploadFailureReason>[0],
+): ProfilePictureFailureReason | null {
   const reason = uploadFailureReason(failure);
   return reason === "invalidType" ||
     reason === "fileTooLarge" ||

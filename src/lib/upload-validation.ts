@@ -73,12 +73,12 @@ export function validateFile(
     return { valid: false, error: "invalidType" };
   }
 
-  const maxSize =
-    context === "profilePicture"
-      ? MAX_PROFILE_PICTURE_SIZE
-      : isVideoMimeType(file.type)
-        ? MAX_VIDEO_SIZE
-        : MAX_IMAGE_SIZE;
+  let maxSize = MAX_IMAGE_SIZE;
+  if (context === "profilePicture") {
+    maxSize = MAX_PROFILE_PICTURE_SIZE;
+  } else if (isVideoMimeType(file.type)) {
+    maxSize = MAX_VIDEO_SIZE;
+  }
   if (file.size > maxSize) {
     return { valid: false, error: "fileTooLarge" };
   }
