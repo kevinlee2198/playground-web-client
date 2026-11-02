@@ -150,8 +150,8 @@
         "uploadFailed": "Failed to upload profile picture",
         "saveFailed": "Failed to save profile picture",
         "removeFailed": "Failed to remove profile picture",
-        "fileTooLarge": "Image must be less than 10 MB",
-        "invalidType": "Please select a JPEG, PNG, WebP, or GIF image"
+        "fileTooLarge": "Image must be less than 5 MB",
+        "invalidType": "Please select a JPEG, PNG, or WebP image"
       }
     },
     "errors": {

@@ -9,6 +9,13 @@ export const IMAGE_MIME_TYPES = [
   "image/gif",
 ] as const;
 
+/** MIME types allowed for profile pictures (no GIF, matching the server policy) */
+export const PROFILE_PICTURE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+
 /** MIME types allowed for video uploads */
 export const VIDEO_MIME_TYPES = [
   "video/mp4",
@@ -25,6 +32,7 @@ export const MEDIA_MIME_TYPES = [
 /** File size limits in bytes */
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+export const MAX_PROFILE_PICTURE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export type ImageMimeType = (typeof IMAGE_MIME_TYPES)[number];
 export type VideoMimeType = (typeof VIDEO_MIME_TYPES)[number];
@@ -38,7 +46,7 @@ export interface FileValidationResult {
 /** Returns the `accept` attribute value for file inputs */
 export function getAcceptAttribute(context: UploadContext): string {
   if (context === "profilePicture") {
-    return IMAGE_MIME_TYPES.join(",");
+    return PROFILE_PICTURE_MIME_TYPES.join(",");
   }
   return MEDIA_MIME_TYPES.join(",");
 }
@@ -57,13 +65,20 @@ export function validateFile(
   context: UploadContext,
 ): FileValidationResult {
   const allowedTypes =
-    context === "profilePicture" ? IMAGE_MIME_TYPES : MEDIA_MIME_TYPES;
+    context === "profilePicture"
+      ? PROFILE_PICTURE_MIME_TYPES
+      : MEDIA_MIME_TYPES;
 
   if (!(allowedTypes as readonly string[]).includes(file.type)) {
     return { valid: false, error: "invalidType" };
   }
 
-  const maxSize = isVideoMimeType(file.type) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+  const maxSize =
+    context === "profilePicture"
+      ? MAX_PROFILE_PICTURE_SIZE
+      : isVideoMimeType(file.type)
+        ? MAX_VIDEO_SIZE
+        : MAX_IMAGE_SIZE;
   if (file.size > maxSize) {
     return { valid: false, error: "fileTooLarge" };
   }
