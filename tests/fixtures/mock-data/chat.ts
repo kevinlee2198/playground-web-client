@@ -181,7 +181,7 @@ export function mockRequestUploadResponse(overrides?: Record<string, unknown>) {
     data: {
       requestUpload: {
         __typename: "RequestUploadResponse",
-        uploadUrl: null, // LOCAL storage dev environments skip the S3 PUT
+        uploadUrl: "/test-s3-put",
         resourceId: "resource-uploaded-1",
         ...overrides,
       },

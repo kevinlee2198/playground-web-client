@@ -181,6 +181,13 @@ test.describe("Chat Page", () => {
 
     msw.use(mockChatConversationHandler({ roomListEntry, room }));
 
+    // The browser's PUT to the upload URL is outside MSW; intercept it here.
+    let putCalled = false;
+    await authenticatedPage.route("**/test-s3-put", (route) => {
+      putCalled = true;
+      return route.fulfill({ status: 200 });
+    });
+
     await authenticatedPage.goto("/en/chat?room=room-media-caption");
 
     await expect(authenticatedPage.getByPlaceholder("Type a message...")).toBeVisible();
@@ -205,6 +212,7 @@ test.describe("Chat Page", () => {
     // assert the rendered message shows both the image and the caption.
     await expect(authenticatedPage.getByAltText("photo.png")).toBeVisible();
     await expect(authenticatedPage.getByText("A lovely caption")).toBeVisible();
+    expect(putCalled).toBe(true);
   });
 
   test("loading older same-day history preserves scroll position (no visual jump)", async ({

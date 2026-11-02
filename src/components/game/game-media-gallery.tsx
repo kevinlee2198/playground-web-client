@@ -122,7 +122,7 @@ export function GameMediaGallery({
           file.size,
           gameId,
         );
-        if (!requestResult.success || !requestResult.resourceId) {
+        if (!requestResult.success) {
           toast.add({
             title:
               requestResult.message ||
@@ -133,13 +133,11 @@ export function GameMediaGallery({
           return;
         }
 
-        if (requestResult.uploadUrl) {
-          const s3Result = await uploadToS3(file, requestResult.uploadUrl);
-          if (!s3Result.success) {
-            toast.add({ title: t("errors.uploadFailed", { filename: file.name }), type: "error" });
-            markUploadError(fileId, file);
-            return;
-          }
+        const s3Result = await uploadToS3(file, requestResult.uploadUrl);
+        if (!s3Result.success) {
+          toast.add({ title: t("errors.uploadFailed", { filename: file.name }), type: "error" });
+          markUploadError(fileId, file);
+          return;
         }
 
         const confirmResult = await confirmGameMediaUpload(requestResult.resourceId);

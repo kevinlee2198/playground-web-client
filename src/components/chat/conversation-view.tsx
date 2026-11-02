@@ -401,18 +401,16 @@ export function ConversationView({
       file.size,
       roomId,
     );
-    if (!uploadResult.success || !uploadResult.resourceId) {
+    if (!uploadResult.success) {
       toast.add({ title: uploadResult.message || t("errors.sendMessage"), type: "error" });
       throw new Error("Request upload failed");
     }
 
-    // 2. Upload to S3 (skip if uploadUrl is null for LOCAL storage dev environments)
-    if (uploadResult.uploadUrl) {
-      const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
-      if (!s3Result.success) {
-        toast.add({ title: t("errors.sendMessage"), type: "error" });
-        throw new Error("S3 upload failed");
-      }
+    // 2. Upload to S3
+    const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
+    if (!s3Result.success) {
+      toast.add({ title: t("errors.sendMessage"), type: "error" });
+      throw new Error("S3 upload failed");
     }
 
     // 3. Send media message + caption + reply target, one message

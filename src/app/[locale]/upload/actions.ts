@@ -7,13 +7,9 @@ import type { GameMediaNode } from "@/lib/types/game-media";
 import type { Resource } from "@/lib/types/resource";
 import { z } from "zod";
 
-interface RequestUploadResult {
-  success: boolean;
-  uploadUrl?: string | null;
-  resourceId?: string;
-  errorType?: string;
-  message?: string;
-}
+export type RequestUploadResult =
+  | { success: true; uploadUrl: string; resourceId: string }
+  | { success: false; errorType: string; message: string };
 
 export type ConfirmUploadResult =
   | { success: true; resource: Resource }

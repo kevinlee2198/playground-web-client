@@ -96,21 +96,19 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
         selectedFile.type,
         selectedFile.size,
       );
-      if (!requestResult.success || !requestResult.resourceId) {
+      if (!requestResult.success) {
         toast.add({ title: requestResult.message || t("errors.uploadFailed"), type: "error" });
         return;
       }
 
-      // 2. Upload to S3 (skip if uploadUrl is null for LOCAL storage dev environments)
-      if (requestResult.uploadUrl) {
-        const s3Result = await uploadToS3(
-          selectedFile,
-          requestResult.uploadUrl,
-        );
-        if (!s3Result.success) {
-          toast.add({ title: t("errors.uploadFailed"), type: "error" });
-          return;
-        }
+      // 2. Upload to S3
+      const s3Result = await uploadToS3(
+        selectedFile,
+        requestResult.uploadUrl,
+      );
+      if (!s3Result.success) {
+        toast.add({ title: t("errors.uploadFailed"), type: "error" });
+        return;
       }
 
       // 3. Confirm upload
