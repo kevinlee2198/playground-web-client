@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Playwright output (the HTML report bundles a minified trace viewer).
+    "playwright-report/**",
+    "test-results/**",
   ]),
   // Accept the leading-underscore convention for intentionally unused
   // parameters (e.g. mock implementations that match a signature but ignore
