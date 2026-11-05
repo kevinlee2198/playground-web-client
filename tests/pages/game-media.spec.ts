@@ -161,6 +161,11 @@ test.describe("Livestream Display", () => {
         ),
       ),
     );
+    // The livestream iframe loads on render, and goto waits for its "load";
+    // stub the embed so the test doesn't depend on reaching YouTube.
+    await authenticatedPage.route("https://www.youtube-nocookie.com/**", (route) =>
+      route.fulfill({ status: 200, contentType: "text/html", body: "" }),
+    );
     await authenticatedPage.goto("/en/game/game-1");
     await expect(
       authenticatedPage.getByText("LIVE").first(),
