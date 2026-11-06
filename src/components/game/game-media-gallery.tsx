@@ -18,6 +18,7 @@ import type { GameVisibility } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { GameMediaNode } from "@/lib/types/game-media";
+import { uploadFailureReason } from "@/lib/upload-errors";
 import {
   getAcceptAttribute,
   getMaxSizeLabel,
@@ -122,24 +123,26 @@ export function GameMediaGallery({
           file.size,
           gameId,
         );
-        if (!requestResult.success || !requestResult.resourceId) {
+        if (!requestResult.success) {
+          const reason = uploadFailureReason(requestResult);
           toast.add({
-            title:
-              requestResult.message ||
-              t("errors.uploadFailed", { filename: file.name }),
+            title: reason
+              ? t(`errors.${reason}`, { limit: getMaxSizeLabel(file.type) })
+              : requestResult.message ||
+                t("errors.uploadFailed", { filename: file.name }),
             type: "error",
+            // A multi-file drop refuses every file; one stable id keeps a single toast.
+            ...(reason === "uploadRateLimited" && { id: "upload-rate-limited" }),
           });
           markUploadError(fileId, file);
           return;
         }
 
-        if (requestResult.uploadUrl) {
-          const s3Result = await uploadToS3(file, requestResult.uploadUrl);
-          if (!s3Result.success) {
-            toast.add({ title: t("errors.uploadFailed", { filename: file.name }), type: "error" });
-            markUploadError(fileId, file);
-            return;
-          }
+        const s3Result = await uploadToS3(file, requestResult.uploadUrl);
+        if (!s3Result.success) {
+          toast.add({ title: t("errors.uploadFailed", { filename: file.name }), type: "error" });
+          markUploadError(fileId, file);
+          return;
         }
 
         const confirmResult = await confirmGameMediaUpload(requestResult.resourceId);

@@ -8,6 +8,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { Resource } from "@/lib/types/resource";
+import { profilePictureFailureReason } from "@/lib/upload-errors";
 import { getAcceptAttribute, validateFile } from "@/lib/upload-validation";
 import { getInitials } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -96,21 +97,25 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
         selectedFile.type,
         selectedFile.size,
       );
-      if (!requestResult.success || !requestResult.resourceId) {
-        toast.add({ title: requestResult.message || t("errors.uploadFailed"), type: "error" });
+      if (!requestResult.success) {
+        const reason = profilePictureFailureReason(requestResult);
+        toast.add({
+          title: reason
+            ? t(`errors.${reason}`, { seconds: requestResult.retryAfterSeconds ?? 60 })
+            : requestResult.message || t("errors.uploadFailed"),
+          type: "error",
+        });
         return;
       }
 
-      // 2. Upload to S3 (skip if uploadUrl is null for LOCAL storage dev environments)
-      if (requestResult.uploadUrl) {
-        const s3Result = await uploadToS3(
-          selectedFile,
-          requestResult.uploadUrl,
-        );
-        if (!s3Result.success) {
-          toast.add({ title: t("errors.uploadFailed"), type: "error" });
-          return;
-        }
+      // 2. Upload to S3
+      const s3Result = await uploadToS3(
+        selectedFile,
+        requestResult.uploadUrl,
+      );
+      if (!s3Result.success) {
+        toast.add({ title: t("errors.uploadFailed"), type: "error" });
+        return;
       }
 
       // 3. Confirm upload

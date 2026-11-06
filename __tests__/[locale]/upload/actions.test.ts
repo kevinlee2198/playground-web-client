@@ -23,6 +23,7 @@ import {
   deleteResource,
 } from "@/app/[locale]/upload/actions";
 import { mutationErrorShape } from "../../helpers/mutation-error";
+import { validateOperation } from "../../helpers/schema-contract";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -91,21 +92,94 @@ describe("requestProfilePictureUpload", () => {
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Unauthorized",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it("returns union error type on mutation error", async () => {
-    mockMutateUnionError("requestUpload", "FileTooLargeError", "File exceeds size limit");
+    mockMutateUnionError("requestUpload", "UploadTargetNotFoundError", "Target not found");
 
     const result = await requestProfilePictureUpload("avatar.png", "image/png", 2048);
 
     expect(result).toEqual({
       success: false,
-      errorType: "FileTooLargeError",
-      message: "File exceeds size limit",
+      errorType: "UploadTargetNotFoundError",
+      message: "Target not found",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("selects field, code and retryAfterSeconds on requestUpload", async () => {
+    mockMutateGraphqlError("ignored");
+
+    await requestProfilePictureUpload("avatar.png", "image/png", 2048);
+
+    const selection = mockAuthMutate.mock.calls[0][0];
+    expect(validateOperation("mutation", selection)).toEqual([]);
+    const rendered = JSON.stringify(selection);
+    expect(rendered).toContain("retryAfterSeconds");
+    expect(rendered).toContain("code");
+  });
+
+  it("returns code for InvalidInputError", async () => {
+    mockMutateSuccess("requestUpload", "InvalidInputError", {
+      message: "Too big",
+      field: "size",
+      code: "FILE_TOO_LARGE",
+    });
+
+    const result = await requestProfilePictureUpload("avatar.png", "image/png", 2048);
+
+    expect(result).toEqual({
+      success: false,
+      errorType: "InvalidInputError",
+      message: "Too big",
+      code: "FILE_TOO_LARGE",
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
+    });
+  });
+
+  it("returns retryAfterSeconds for RateLimitedError", async () => {
+    mockMutateSuccess("requestUpload", "RateLimitedError", {
+      message: "Slow down",
+      retryAfterSeconds: 42,
+    });
+
+    const result = await requestProfilePictureUpload("avatar.png", "image/png", 2048);
+
+    expect(result).toEqual({
+      success: false,
+      errorType: "RateLimitedError",
+      message: "Slow down",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: 42,
+    });
+  });
+
+  it("flags UploadNotPermittedError as an authorization error", async () => {
+    mockMutateSuccess("requestUpload", "UploadNotPermittedError", {
+      message: "No",
+      authorizationErrorType: "UploadNotPermittedError",
+    });
+
+    const result = await requestProfilePictureUpload("avatar.png", "image/png", 2048);
+
+    expect(result).toEqual({
+      success: false,
+      errorType: "UploadNotPermittedError",
+      message: "No",
+      code: null,
+      isAuthorizationError: true,
+      retryAfterSeconds: null,
+    });
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {
@@ -117,6 +191,9 @@ describe("requestProfilePictureUpload", () => {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to request upload",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -173,6 +250,9 @@ describe("requestGameMediaUpload", () => {
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Forbidden",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -186,6 +266,9 @@ describe("requestGameMediaUpload", () => {
       success: false,
       errorType: "UnsupportedFileTypeError",
       message: "File type not allowed",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -199,6 +282,9 @@ describe("requestGameMediaUpload", () => {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to request upload",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -255,6 +341,9 @@ describe("requestChatMediaUpload", () => {
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Not authenticated",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -268,6 +357,9 @@ describe("requestChatMediaUpload", () => {
       success: false,
       errorType: "ChatRoomNotFoundError",
       message: "Chat room does not exist",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -281,6 +373,9 @@ describe("requestChatMediaUpload", () => {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to request upload",
+      code: null,
+      isAuthorizationError: false,
+      retryAfterSeconds: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });

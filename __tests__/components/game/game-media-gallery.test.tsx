@@ -1,8 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const { mockT } = vi.hoisted(() => ({
+  mockT: vi.fn((key: string, _values?: Record<string, unknown>) => key),
+}));
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => mockT,
 }));
 vi.mock("@/app/[locale]/game/actions", () => ({ loadGameMedia: vi.fn() }));
 vi.mock("@/app/[locale]/game/media-actions", () => ({ deleteGameMedia: vi.fn() }));
@@ -29,6 +32,8 @@ vi.mock("@/components/game/game-media-item", () => ({
   ),
 }));
 
+import { requestGameMediaUpload } from "@/app/[locale]/upload/actions";
+import { toast } from "@/components/ui/toast";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameVisibility } from "@/lib/constants";
 import type { ImageMediaNode } from "@/lib/types/game-media";
@@ -48,7 +53,7 @@ function edge(id: string, addedById: number) {
   return { cursor: id, node };
 }
 
-function renderGallery(canModerateMedia: boolean) {
+function renderGallery(canModerateMedia: boolean, canContribute = false) {
   render(
     <GameMediaGallery
       gameId={1}
@@ -59,7 +64,7 @@ function renderGallery(canModerateMedia: boolean) {
         startCursor: null,
         endCursor: null,
       }}
-      canContribute={false}
+      canContribute={canContribute}
       currentUserId={7}
       canModerateMedia={canModerateMedia}
       gameVisibility={GameVisibility.PUBLIC}
@@ -81,5 +86,83 @@ describe("GameMediaGallery delete rule", () => {
     renderGallery(true);
     expect(screen.getByText("delete-own")).toBeInTheDocument();
     expect(screen.getByText("delete-other")).toBeInTheDocument();
+  });
+});
+
+describe("GameMediaGallery request-time upload errors", () => {
+  const failure = {
+    success: false as const,
+    errorType: "InvalidInputError",
+    message: "raw server wording",
+    code: null,
+    isAuthorizationError: false,
+    retryAfterSeconds: null,
+  };
+
+  beforeEach(() => vi.clearAllMocks());
+
+  function uploadPhotos(names: string[]) {
+    cleanup();
+    renderGallery(false, true);
+    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
+    fireEvent.change(input, {
+      target: { files: names.map((name) => new File(["x"], name, { type: "image/jpeg" })) },
+    });
+  }
+
+  function uploadPhoto() {
+    uploadPhotos(["photo.jpg"]);
+  }
+
+  it("shows the size copy when the server returns FILE_TOO_LARGE", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({ ...failure, code: "FILE_TOO_LARGE" });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.fileTooLarge", type: "error" }),
+    );
+    // photo.jpg is an image, so the image limit applies
+    expect(mockT).toHaveBeenCalledWith(
+      "errors.fileTooLarge",
+      expect.objectContaining({ limit: "10 MB" }),
+    );
+  });
+
+  it("shows the wait copy when rate limited", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
+      ...failure,
+      errorType: "RateLimitedError",
+      retryAfterSeconds: 30,
+    });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "errors.uploadRateLimited" }),
+      ),
+    );
+  });
+
+  it("uses one toast id for every rate-limited file in a drop, and none for other reasons", async () => {
+    vi.mocked(requestGameMediaUpload)
+      .mockResolvedValueOnce({ ...failure, errorType: "RateLimitedError", retryAfterSeconds: 1 })
+      .mockResolvedValueOnce({ ...failure, errorType: "RateLimitedError", retryAfterSeconds: 2 });
+    uploadPhotos(["a.jpg", "b.jpg"]);
+    await waitFor(() => expect(toast.add).toHaveBeenCalledTimes(2));
+    const [first, second] = vi.mocked(toast.add).mock.calls.map(([options]) => options);
+    expect(first.id).toBeTruthy();
+    expect(first.id).toBe(second.id);
+
+    vi.mocked(toast.add).mockClear();
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({ ...failure, code: "FILE_TOO_LARGE" });
+    uploadPhotos(["c.jpg"]);
+    await waitFor(() => expect(toast.add).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(toast.add).mock.calls[0][0]).not.toHaveProperty("id");
+  });
+
+  it("falls back to the server message for an unrecognised failure", async () => {
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce(failure);
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "raw server wording", type: "error" }),
+    );
   });
 });

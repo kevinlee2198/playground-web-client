@@ -493,7 +493,7 @@ Conventions:
   `AuthorizationError` instead.
 - Authorize before revealing: a caller who may not see a resource is told it does not exist or is
   denied, never which of the two.
-- `InvalidInputError` reports server-only field rules (for example clearing a non-nullable field).
+- `InvalidInputError` reports server-only input and target-state rules (for example clearing a non-nullable field).
   Shape-only validation stays a top-level BAD_REQUEST.
 """
 interface Error {
@@ -508,12 +508,12 @@ interface AuthorizationError implements Error {
 }
 
 """
-An input field broke a rule only the server can check.
+A rule only the server can check was broken, on an input field or on the mutation's target.
 """
 type InvalidInputError implements Error {
   message: String!
   """
-  Input field path, null when the rule spans fields.
+  Input field path. Null when the rule is about the target or spans fields.
   """
   field: String
   """
@@ -677,7 +677,20 @@ type ResourceNotFoundError implements Error {
   message: String!
 }
 
-type InvalidUploadContextError implements Error {
+"""
+The upload target does not exist or is not visible to the caller. One generic type because the resource
+module cannot build per-domain not-found errors. Echoes only the id the caller supplied.
+"""
+type UploadTargetNotFoundError implements Error {
+  message: String!
+  targetId: ID!
+}
+
+"""
+The caller can see the upload target but may not upload to it. Named for the target rather than a role
+domain because it spans games and chat rooms.
+"""
+type UploadNotPermittedError implements Error & AuthorizationError {
   message: String!
 }
 type FollowRequest implements Node {
@@ -7720,7 +7733,7 @@ extend type Mutation {
 # (User.profilePicture, Game.media, MediaChatMessage.resource)
 # rather than through generic polymorphic queries.
 #
-# Backend-only concerns (ownerType, storageType, resourceStatus) are not
+# Backend-only concerns (purpose, resourceStatus) are not
 # exposed in the public schema.
 # ============================================================================
 
@@ -7735,7 +7748,7 @@ interface Resource implements Node {
   id: ID!
   filename: String!
   """
-  File size in bytes.
+  The file size in bytes as declared at upload request; it is not measured from the stored file.
   """
   size: Long!
   mimeType: String!
@@ -7798,39 +7811,40 @@ type ResourceConnection implements Connection {
 # ============================================================================
 
 """
-Identifies what entity the resource will be attached to.
-Enables per-context server-side validation (e.g., profile pictures must be images).
+Identifies what entity the resource will be attached to. The purpose it implies sets which declared file types and sizes requestUpload accepts; until the stored bytes are verified, the limits apply to the declared values only.
 """
 input UploadContextInput @oneOf {
   """
-  Upload a profile picture for the current user.
+  Upload a profile picture for the current user. JPEG, PNG or WebP, up to 5 MiB.
   """
-  userProfilePicture: UserProfilePictureUploadContext
+  userProfilePicture: UserProfilePictureUploadContextInput
   """
   Upload media (photo/video) to a game.
+  JPEG, PNG, WebP or GIF up to 10 MiB; MP4, MOV or WebM up to 100 MiB.
   """
-  gameMedia: GameMediaUploadContext
+  gameMedia: GameMediaUploadContextInput
   """
   Upload a file/image to a chat room. The resource is linked to the
   chat message when sendChatMessage is called with the resourceId.
   For chat media, sendChatMessage is the confirmation step — do NOT
   call confirmUpload separately.
+  JPEG, PNG, WebP or GIF up to 10 MiB; MP4, MOV or WebM up to 100 MiB.
   """
-  chatMedia: ChatMediaUploadContext
+  chatMedia: ChatMediaUploadContextInput
 }
 
-input UserProfilePictureUploadContext {
+input UserProfilePictureUploadContextInput {
   """
-  If true, this is a placeholder upload (no resize support yet).
+  Unused; present because input objects need one field.
   """
   placeholder: Boolean
 }
 
-input GameMediaUploadContext {
+input GameMediaUploadContextInput {
   gameId: ID!
 }
 
-input ChatMediaUploadContext {
+input ChatMediaUploadContextInput {
   chatRoomId: ID!
 }
 
@@ -7844,9 +7858,8 @@ input RequestUploadInput {
 type RequestUploadResponse {
   """
   Presigned PUT URL. Client uploads file bytes directly to this URL.
-  Null when using LOCAL storage (dev environments only).
   """
-  uploadUrl: String
+  uploadUrl: String!
   """
   Resource ID. Use this to confirm the upload (phase 2) or to
   reference the resource when sending a chat message.
@@ -7888,7 +7901,12 @@ type DeleteResourceResponse implements DeleteResponse {
 # Resource Result Unions
 # ============================================================================
 
-union RequestUploadResult = RequestUploadResponse | InvalidUploadContextError
+union RequestUploadResult =
+  | RequestUploadResponse
+  | InvalidInputError
+  | UploadTargetNotFoundError
+  | UploadNotPermittedError
+  | RateLimitedError
 union ConfirmUploadResult = ConfirmUploadResponse | ResourceNotFoundError
 union DeleteResourceResult = DeleteResourceResponse | ResourceNotFoundError
 scalar DateTime
@@ -8640,6 +8658,12 @@ type Mutation {
   ): CancelGameInvitationResult!
   """
   Request a presigned upload URL. Phase 1 of the upload flow.
+  Checks the target first: UploadTargetNotFoundError when it is missing or not visible, UploadNotPermittedError
+  when the caller may not upload to it, or InvalidInputError with a null field and code
+  TARGET_NOT_ACCEPTING_MEDIA or TARGET_READ_ONLY. Then checks the declared file: InvalidInputError on mimeType
+  (UNSUPPORTED_FILE_TYPE) or size (FILE_TOO_LARGE). mimeType must be the file's canonical type, and the PUT must
+  send that same value as Content-Type.
+  Rate limited (RateLimitedError): bursts of 30, then 30 per minute; bursts of 200, then 200 per hour; refused requests do not count.
   """
   requestUpload(input: RequestUploadInput!): RequestUploadResult!
   """
@@ -8653,13 +8677,13 @@ type Mutation {
   """
   Confirm a game media upload. Creates the GameMedia record.
   Phase 2 of the upload flow for game media specifically.
-  An unreadable or missing game returns GameNotFoundError; lacking game_media:create, or confirming another user's upload, is top-level FORBIDDEN. The game must be IN_PROGRESS, COMPLETE or FINALIZED (GameNotInProgressError). A resourceId not requested for game media returns ResourceNotFoundError.
+  An unreadable or missing game returns GameNotFoundError; lacking game_media:create is top-level FORBIDDEN. The game must be IN_PROGRESS, COMPLETE or FINALIZED (GameNotInProgressError). A resourceId not requested for game media, or requested by another user, returns ResourceNotFoundError.
   """
   confirmGameMediaUpload(
     input: ConfirmGameMediaUploadInput!
   ): ConfirmGameMediaUploadResult!
   """
-  Delete a resource and its backing file.
+  Delete a resource and its backing file. Only for userProfilePicture uploads; game and chat media are removed through deleteGameMedia and deleteChatMessage, and their ids return ResourceNotFoundError. Only the uploader may delete.
   """
   deleteResource(input: DeleteResourceInput!): DeleteResourceResult!
 }

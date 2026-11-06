@@ -22,6 +22,8 @@ import type {
 } from "@/lib/types/chat";
 import type { ChatEvent } from "@/lib/types/chat-event";
 import { isUserChatMessage } from "@/lib/types/chat-guards";
+import { uploadFailureReason } from "@/lib/upload-errors";
+import { getMaxSizeLabel } from "@/lib/upload-validation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { hasReconnectGap, reconcileMessages } from "./chat-thread-utils";
@@ -401,18 +403,25 @@ export function ConversationView({
       file.size,
       roomId,
     );
-    if (!uploadResult.success || !uploadResult.resourceId) {
-      toast.add({ title: uploadResult.message || t("errors.sendMessage"), type: "error" });
+    if (!uploadResult.success) {
+      const reason = uploadFailureReason(uploadResult);
+      toast.add({
+        title: reason
+          ? t(`media.errors.${reason}`, {
+              limit: getMaxSizeLabel(file.type),
+              seconds: uploadResult.retryAfterSeconds ?? 60,
+            })
+          : uploadResult.message || t("errors.sendMessage"),
+        type: "error",
+      });
       throw new Error("Request upload failed");
     }
 
-    // 2. Upload to S3 (skip if uploadUrl is null for LOCAL storage dev environments)
-    if (uploadResult.uploadUrl) {
-      const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
-      if (!s3Result.success) {
-        toast.add({ title: t("errors.sendMessage"), type: "error" });
-        throw new Error("S3 upload failed");
-      }
+    // 2. Upload to S3
+    const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
+    if (!s3Result.success) {
+      toast.add({ title: t("errors.sendMessage"), type: "error" });
+      throw new Error("S3 upload failed");
     }
 
     // 3. Send media message + caption + reply target, one message

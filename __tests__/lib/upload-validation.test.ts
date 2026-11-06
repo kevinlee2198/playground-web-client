@@ -8,6 +8,7 @@ import {
   getAcceptAttribute,
   MAX_IMAGE_SIZE,
   MAX_VIDEO_SIZE,
+  MAX_PROFILE_PICTURE_SIZE,
 } from "@/lib/upload-validation";
 
 describe("isImageMimeType", () => {
@@ -63,6 +64,30 @@ describe("validateFile", () => {
     });
   });
 
+  it("rejects GIF for profilePicture", () => {
+    expect(validateFile(makeFile("image/gif", 1024), "profilePicture")).toEqual({
+      valid: false,
+      error: "invalidType",
+    });
+  });
+
+  it("accepts GIF for gameMedia and chatMedia", () => {
+    expect(validateFile(makeFile("image/gif", 1024), "gameMedia")).toEqual({ valid: true });
+    expect(validateFile(makeFile("image/gif", 1024), "chatMedia")).toEqual({ valid: true });
+  });
+
+  it("accepts a profile picture of exactly 5 MB", () => {
+    expect(
+      validateFile(makeFile("image/jpeg", MAX_PROFILE_PICTURE_SIZE), "profilePicture"),
+    ).toEqual({ valid: true });
+  });
+
+  it("rejects a profile picture over 5 MB", () => {
+    expect(
+      validateFile(makeFile("image/jpeg", MAX_PROFILE_PICTURE_SIZE + 1), "profilePicture"),
+    ).toEqual({ valid: false, error: "fileTooLarge" });
+  });
+
   it("accepts video for gameMedia context", () => {
     expect(validateFile(makeFile("video/mp4", 1024), "gameMedia")).toEqual({ valid: true });
   });
@@ -108,6 +133,10 @@ describe("getAcceptAttribute", () => {
     const result = getAcceptAttribute("profilePicture");
     expect(result).toContain("image/jpeg");
     expect(result).not.toContain("video/mp4");
+  });
+
+  it("omits GIF from the profilePicture accept attribute", () => {
+    expect(getAcceptAttribute("profilePicture")).not.toContain("image/gif");
   });
 
   it("returns all media types for gameMedia", () => {
