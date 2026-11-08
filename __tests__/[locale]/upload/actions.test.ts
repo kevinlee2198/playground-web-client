@@ -102,6 +102,7 @@ describe("requestProfilePictureUpload", () => {
   });
 
   it("selects uploadHeaders on requestUpload", async () => {
+    // Any response works: only the captured selection is asserted.
     mockMutateGraphqlError("ignored");
 
     await requestProfilePictureUpload("avatar.png", "image/png", 2048);
@@ -144,6 +145,7 @@ describe("requestProfilePictureUpload", () => {
   });
 
   it("selects field, code and retryAfterSeconds on requestUpload", async () => {
+    // Any response works: only the captured selection is asserted.
     mockMutateGraphqlError("ignored");
 
     await requestProfilePictureUpload("avatar.png", "image/png", 2048);
@@ -637,6 +639,7 @@ describe("UploadRejectedError on confirm", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("selects reason on UploadRejectedError for confirmUpload and confirmGameMediaUpload", async () => {
+    // Any response works: only the captured selection is asserted.
     mockMutateGraphqlError("ignored");
     mockMutateGraphqlError("ignored");
 

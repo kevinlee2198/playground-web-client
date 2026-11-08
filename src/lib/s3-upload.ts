@@ -17,7 +17,8 @@ export async function uploadToS3(
       headers: Object.fromEntries(uploadHeaders.map((h) => [h.name, h.value])),
     });
 
-    // 412: the write-once URL already holds this upload (e.g. a retried PUT); confirm it.
+    // 412: the write-once URL already holds an object (our retried PUT, or someone else's).
+    // Treat as uploaded; confirm verifies the stored bytes.
     if (!response.ok && response.status !== 412) {
       return { success: false };
     }

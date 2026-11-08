@@ -90,6 +90,19 @@ describe("GameMediaGallery delete rule", () => {
   });
 });
 
+function uploadPhotos(names: string[]) {
+  cleanup();
+  renderGallery(false, true);
+  const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
+  fireEvent.change(input, {
+    target: { files: names.map((name) => new File(["x"], name, { type: "image/jpeg" })) },
+  });
+}
+
+function uploadPhoto() {
+  uploadPhotos(["photo.jpg"]);
+}
+
 describe("GameMediaGallery request-time upload errors", () => {
   const failure = {
     success: false as const,
@@ -101,19 +114,6 @@ describe("GameMediaGallery request-time upload errors", () => {
   };
 
   beforeEach(() => vi.clearAllMocks());
-
-  function uploadPhotos(names: string[]) {
-    cleanup();
-    renderGallery(false, true);
-    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    fireEvent.change(input, {
-      target: { files: names.map((name) => new File(["x"], name, { type: "image/jpeg" })) },
-    });
-  }
-
-  function uploadPhoto() {
-    uploadPhotos(["photo.jpg"]);
-  }
 
   it("passes the request's uploadHeaders to uploadToS3", async () => {
     const uploadHeaders = [
@@ -209,15 +209,6 @@ describe("GameMediaGallery confirm-time rejection", () => {
     vi.mocked(requestGameMediaUpload).mockResolvedValueOnce(uploadReady);
     vi.mocked(uploadToS3).mockResolvedValueOnce({ success: true });
   });
-
-  function uploadPhoto() {
-    cleanup();
-    renderGallery(false, true);
-    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    fireEvent.change(input, {
-      target: { files: [new File(["x"], "photo.jpg", { type: "image/jpeg" })] },
-    });
-  }
 
   it("shows the contentMismatch copy when confirm is rejected", async () => {
     vi.mocked(confirmGameMediaUpload).mockResolvedValueOnce({
