@@ -18,7 +18,7 @@ import type { GameVisibility } from "@/lib/constants";
 import type { Edge, PageInfo } from "@/lib/graphql-connection";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { GameMediaNode } from "@/lib/types/game-media";
-import { uploadFailureReason } from "@/lib/upload-errors";
+import { uploadFailureReason, uploadRejectionCopyKey } from "@/lib/upload-errors";
 import {
   getAcceptAttribute,
   getMaxSizeLabel,
@@ -151,7 +151,11 @@ export function GameMediaGallery({
 
         const confirmResult = await confirmGameMediaUpload(requestResult.resourceId);
         if (!confirmResult.success) {
-          toast.add({ title: t("errors.saveFailed", { filename: file.name }), type: "error" });
+          const rejection = uploadRejectionCopyKey(confirmResult.rejectionReason);
+          toast.add({
+            title: t(`errors.${rejection ?? "saveFailed"}`, { filename: file.name }),
+            type: "error",
+          });
           markUploadError(fileId, file);
           return;
         }

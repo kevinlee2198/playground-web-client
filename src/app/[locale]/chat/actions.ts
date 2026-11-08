@@ -19,6 +19,7 @@ import type {
   ChatRoomMemberNode,
   ChatRoomRole as ChatRoomRoleType,
 } from "@/lib/types/chat";
+import type { UploadRejectionReason } from "@/lib/upload-errors";
 import { z } from "zod";
 
 const sendMessageSchema = z.object({
@@ -420,6 +421,7 @@ export async function sendMediaMessage(
   chatMessage?: ChatMessageNode;
   errorType?: string;
   message?: string;
+  rejectionReason?: UploadRejectionReason | null;
 }> {
   const parsed = sendMediaMessageSchema.safeParse({
     chatRoomId,
@@ -448,6 +450,7 @@ export async function sendMediaMessage(
         __on: [
           { __typeName: "SendChatMessageResponse", chatMessage: chatMessageNodeSelection },
           errorFragment,
+          { __typeName: "UploadRejectedError", reason: true },
         ],
       },
     });
@@ -457,7 +460,9 @@ export async function sendMediaMessage(
     }
 
     const result = extractMutationResult(response.data.sendChatMessage, "SendChatMessageResponse");
-    if (!result.success) return result;
+    if (!result.success) {
+      return { ...result, rejectionReason: response.data.sendChatMessage.reason ?? null };
+    }
 
     return { success: true, chatMessage: result.data.chatMessage };
   } catch (error) {

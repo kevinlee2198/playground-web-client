@@ -12,6 +12,7 @@ import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { GameMediaNode } from "@/lib/types/game-media";
 import type { Resource, UploadHeader } from "@/lib/types/resource";
+import type { UploadRejectionReason } from "@/lib/upload-errors";
 import { z } from "zod";
 
 export type RequestUploadResult =
@@ -32,11 +33,21 @@ export type RequestUploadResult =
 
 export type ConfirmUploadResult =
   | { success: true; resource: Resource }
-  | { success: false; errorType: string; message: string };
+  | {
+      success: false;
+      errorType: string;
+      message: string;
+      rejectionReason: UploadRejectionReason | null;
+    };
 
 export type ConfirmGameMediaUploadResult =
   | { success: true; gameMedia: GameMediaNode }
-  | { success: false; errorType: string; message: string };
+  | {
+      success: false;
+      errorType: string;
+      message: string;
+      rejectionReason: UploadRejectionReason | null;
+    };
 
 interface DeleteResourceResult {
   success: boolean;
@@ -157,6 +168,7 @@ export async function confirmUpload(
         __on: [
           { __typeName: "ConfirmUploadResponse", resource: resourceFragment },
           errorFragment,
+          { __typeName: "UploadRejectedError", reason: true },
         ],
       },
     });
@@ -166,11 +178,14 @@ export async function confirmUpload(
         success: false,
         errorType: MutationErrorType.GRAPHQL_ERROR,
         message: response.errors[0].message,
+        rejectionReason: null,
       };
     }
 
     const result = extractMutationResult(response.data.confirmUpload, "ConfirmUploadResponse");
-    if (!result.success) return result;
+    if (!result.success) {
+      return { ...result, rejectionReason: response.data.confirmUpload.reason ?? null };
+    }
 
     return { success: true, resource: result.data.resource };
   } catch {
@@ -178,6 +193,7 @@ export async function confirmUpload(
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to confirm upload",
+      rejectionReason: null,
     };
   }
 }
@@ -196,6 +212,7 @@ export async function confirmGameMediaUpload(
             gameMedia: gameMediaFragment,
           },
           errorFragment,
+          { __typeName: "UploadRejectedError", reason: true },
         ],
       },
     });
@@ -205,11 +222,14 @@ export async function confirmGameMediaUpload(
         success: false,
         errorType: MutationErrorType.GRAPHQL_ERROR,
         message: response.errors[0].message,
+        rejectionReason: null,
       };
     }
 
     const result = extractMutationResult(response.data.confirmGameMediaUpload, "ConfirmGameMediaUploadResponse");
-    if (!result.success) return result;
+    if (!result.success) {
+      return { ...result, rejectionReason: response.data.confirmGameMediaUpload.reason ?? null };
+    }
 
     return { success: true, gameMedia: normalizeGameMedia(result.data.gameMedia) };
   } catch {
@@ -217,6 +237,7 @@ export async function confirmGameMediaUpload(
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to confirm game media upload",
+      rejectionReason: null,
     };
   }
 }

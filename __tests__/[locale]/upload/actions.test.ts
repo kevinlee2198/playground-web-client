@@ -452,6 +452,7 @@ describe("confirmUpload", () => {
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Resource not found",
+      rejectionReason: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -461,7 +462,10 @@ describe("confirmUpload", () => {
 
     const result = await confirmUpload("res-bad");
 
-    expect(result).toEqual(mutationErrorShape("ResourceNotFoundError", "Upload resource missing"));
+    expect(result).toEqual({
+      ...mutationErrorShape("ResourceNotFoundError", "Upload resource missing"),
+      rejectionReason: null,
+    });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -474,6 +478,7 @@ describe("confirmUpload", () => {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to confirm upload",
+      rejectionReason: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -528,6 +533,7 @@ describe("confirmGameMediaUpload", () => {
       success: false,
       errorType: MutationErrorType.GRAPHQL_ERROR,
       message: "Resource not found",
+      rejectionReason: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -537,7 +543,10 @@ describe("confirmGameMediaUpload", () => {
 
     const result = await confirmGameMediaUpload("res-bad");
 
-    expect(result).toEqual(mutationErrorShape("ResourceNotFoundError", "Upload resource missing"));
+    expect(result).toEqual({
+      ...mutationErrorShape("ResourceNotFoundError", "Upload resource missing"),
+      rejectionReason: null,
+    });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -546,7 +555,10 @@ describe("confirmGameMediaUpload", () => {
 
     const result = await confirmGameMediaUpload("res-bad");
 
-    expect(result).toEqual(mutationErrorShape("GameNotFoundError", "Game not found"));
+    expect(result).toEqual({
+      ...mutationErrorShape("GameNotFoundError", "Game not found"),
+      rejectionReason: null,
+    });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -559,6 +571,7 @@ describe("confirmGameMediaUpload", () => {
       success: false,
       errorType: MutationErrorType.UNEXPECTED_ERROR,
       message: "Failed to confirm game media upload",
+      rejectionReason: null,
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -617,5 +630,48 @@ describe("deleteResource", () => {
       message: "Failed to delete resource",
     });
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe("UploadRejectedError on confirm", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("selects reason on UploadRejectedError for confirmUpload and confirmGameMediaUpload", async () => {
+    mockMutateGraphqlError("ignored");
+    mockMutateGraphqlError("ignored");
+
+    await confirmUpload("res-1");
+    await confirmGameMediaUpload("res-1");
+
+    for (const [selection] of mockAuthMutate.mock.calls) {
+      expect(validateOperation("mutation", selection)).toEqual([]);
+      expect(JSON.stringify(selection)).toContain("UploadRejectedError");
+      expect(JSON.stringify(selection)).toContain("reason");
+    }
+  });
+
+  it("returns rejectionReason CONTENT_MISMATCH", async () => {
+    mockMutateSuccess("confirmUpload", "UploadRejectedError", {
+      message: "bad bytes",
+      reason: "CONTENT_MISMATCH",
+    });
+    mockMutateSuccess("confirmGameMediaUpload", "UploadRejectedError", {
+      message: "bad bytes",
+      reason: "CONTENT_MISMATCH",
+    });
+
+    const profile = await confirmUpload("res-1");
+    const game = await confirmGameMediaUpload("res-1");
+
+    expect(profile).toMatchObject({
+      success: false,
+      errorType: "UploadRejectedError",
+      rejectionReason: "CONTENT_MISMATCH",
+    });
+    expect(game).toMatchObject({
+      success: false,
+      errorType: "UploadRejectedError",
+      rejectionReason: "CONTENT_MISMATCH",
+    });
   });
 });

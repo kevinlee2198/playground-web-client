@@ -22,7 +22,7 @@ import type {
 } from "@/lib/types/chat";
 import type { ChatEvent } from "@/lib/types/chat-event";
 import { isUserChatMessage } from "@/lib/types/chat-guards";
-import { uploadFailureReason } from "@/lib/upload-errors";
+import { uploadFailureReason, uploadRejectionCopyKey } from "@/lib/upload-errors";
 import { getMaxSizeLabel } from "@/lib/upload-validation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -437,7 +437,12 @@ export function ConversationView({
       replyToId,
     );
     if (!sendResult.success || !sendResult.chatMessage) {
-      handleSendError(sendResult, { text: caption });
+      const rejection = uploadRejectionCopyKey(sendResult.rejectionReason);
+      if (rejection) {
+        toast.add({ title: t(`media.errors.${rejection}`), type: "error" });
+      } else {
+        handleSendError(sendResult, { text: caption });
+      }
       throw new Error("Send message failed");
     }
 

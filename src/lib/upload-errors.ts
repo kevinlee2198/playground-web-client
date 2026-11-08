@@ -45,3 +45,14 @@ export function profilePictureFailureReason(
     ? reason
     : null;
 }
+
+export type UploadRejectionReason = "NOT_UPLOADED" | "CONTENT_MISMATCH";
+
+/** Copy key for a confirm-time rejection, or null to fall back to the path's existing message. */
+export function uploadRejectionCopyKey(
+  reason: UploadRejectionReason | null | undefined,
+): "notUploaded" | "contentMismatch" | null {
+  if (reason === "NOT_UPLOADED") return "notUploaded";
+  if (reason === "CONTENT_MISMATCH") return "contentMismatch";
+  return null;
+}

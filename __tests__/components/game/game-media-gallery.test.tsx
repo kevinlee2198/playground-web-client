@@ -32,7 +32,7 @@ vi.mock("@/components/game/game-media-item", () => ({
   ),
 }));
 
-import { requestGameMediaUpload } from "@/app/[locale]/upload/actions";
+import { confirmGameMediaUpload, requestGameMediaUpload } from "@/app/[locale]/upload/actions";
 import { uploadToS3 } from "@/lib/s3-upload";
 import { toast } from "@/components/ui/toast";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
@@ -186,6 +186,56 @@ describe("GameMediaGallery request-time upload errors", () => {
     uploadPhoto();
     await waitFor(() =>
       expect(toast.add).toHaveBeenCalledWith({ title: "raw server wording", type: "error" }),
+    );
+  });
+});
+
+describe("GameMediaGallery confirm-time rejection", () => {
+  const uploadReady = {
+    success: true as const,
+    uploadUrl: "https://s3.example.com/put",
+    resourceId: "res-1",
+    uploadHeaders: [],
+  };
+  const confirmFailure = {
+    success: false as const,
+    errorType: "UploadRejectedError",
+    message: "raw server wording",
+    rejectionReason: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce(uploadReady);
+    vi.mocked(uploadToS3).mockResolvedValueOnce({ success: true });
+  });
+
+  function uploadPhoto() {
+    cleanup();
+    renderGallery(false, true);
+    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
+    fireEvent.change(input, {
+      target: { files: [new File(["x"], "photo.jpg", { type: "image/jpeg" })] },
+    });
+  }
+
+  it("shows the contentMismatch copy when confirm is rejected", async () => {
+    vi.mocked(confirmGameMediaUpload).mockResolvedValueOnce({
+      ...confirmFailure,
+      rejectionReason: "CONTENT_MISMATCH",
+    });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.contentMismatch", type: "error" }),
+    );
+    expect(mockT).toHaveBeenCalledWith("errors.contentMismatch", { filename: "photo.jpg" });
+  });
+
+  it("keeps saveFailed for other confirm failures", async () => {
+    vi.mocked(confirmGameMediaUpload).mockResolvedValueOnce(confirmFailure);
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.saveFailed", type: "error" }),
     );
   });
 });
