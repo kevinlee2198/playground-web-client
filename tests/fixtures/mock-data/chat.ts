@@ -184,7 +184,10 @@ export function mockRequestUploadResponse(overrides?: Record<string, unknown>) {
         uploadUrl: "/test-s3-put",
         resourceId: "resource-uploaded-1",
         uploadHeaders: [
-          { name: "content-type", value: "image/png" },
+          // Deliberately differs from the staged file's type (image/png in the
+          // specs) so a PUT carrying this value proves the header comes from
+          // the server, not file.type.
+          { name: "content-type", value: "image/webp" },
           { name: "if-none-match", value: "*" },
         ],
         ...overrides,
@@ -255,6 +258,8 @@ interface ChatConversationHandlerOptions {
   /** Returned instead of `room.chatMessages` when the request's `before` cursor matches. */
   olderMessages?: { cursor: string; chatMessages: Record<string, unknown> };
   requestUpload?: Record<string, unknown>;
+  /** Replaces the sendChatMessage response (e.g. an UploadRejectedError). */
+  sendChatMessage?: Record<string, unknown>;
 }
 
 export function mockChatConversationHandler({
@@ -262,6 +267,7 @@ export function mockChatConversationHandler({
   room,
   olderMessages,
   requestUpload,
+  sendChatMessage,
 }: ChatConversationHandlerOptions) {
   return http.post("*/graphql", async ({ request }) => {
     const body = (await request.json()) as { query: string };
@@ -288,7 +294,9 @@ export function mockChatConversationHandler({
       return HttpResponse.json(requestUpload ?? mockRequestUploadResponse());
     }
     if (field === "sendChatMessage") {
-      return HttpResponse.json(mockSendChatMessageResponse(body.query));
+      return HttpResponse.json(
+        sendChatMessage ?? mockSendChatMessageResponse(body.query),
+      );
     }
 
     return HttpResponse.json({ data: {} });

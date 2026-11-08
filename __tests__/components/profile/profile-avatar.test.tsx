@@ -99,6 +99,15 @@ describe("ProfileAvatar", () => {
     expect(screen.getByRole("button", { name: "remove" })).toBeDefined();
   });
 
+  it("removes the newly uploaded picture, not the stale one", async () => {
+    await selectAndConfirmUpload(renderAvatar());
+    fireEvent.click(await screen.findByRole("button", { name: "remove" }));
+    fireEvent.click(await screen.findByRole("button", { name: "confirm" }));
+
+    await waitFor(() => expect(deleteResource).toHaveBeenCalledWith("new"));
+    expect(deleteResource).not.toHaveBeenCalledWith("old");
+  });
+
   it("passes the request's uploadHeaders to uploadToS3", async () => {
     const file = await selectAndConfirmUpload(renderAvatar());
 

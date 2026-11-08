@@ -220,8 +220,58 @@ test.describe("Chat Page", () => {
     await expect(authenticatedPage.getByText("A lovely caption")).toBeVisible();
     expect(putCalled).toBe(true);
     expect(putMethod).toBe("PUT");
-    expect(putContentType).toBe("image/png");
+    expect(putContentType).toBe("image/webp");
     expect(putIfNoneMatch).toBe("*");
+  });
+
+  test("a confirm-time content rejection toasts, keeping the caption and attachment", async ({
+    authenticatedPage,
+    msw,
+  }) => {
+    const room = mockChatRoomDetail({
+      id: "room-media-rejected",
+      chatMessages: { edges: [], pageInfo: { hasPreviousPage: false, startCursor: null } },
+    });
+    const roomListEntry = mockChatRoomListNode({ id: "room-media-rejected" });
+
+    msw.use(
+      mockChatConversationHandler({
+        roomListEntry,
+        room,
+        sendChatMessage: {
+          data: {
+            sendChatMessage: {
+              __typename: "UploadRejectedError",
+              reason: "CONTENT_MISMATCH",
+            },
+          },
+        },
+      }),
+    );
+    await authenticatedPage.route("**/test-s3-put", (route) =>
+      route.fulfill({ status: 200 }),
+    );
+
+    await authenticatedPage.goto("/en/chat?room=room-media-rejected");
+    await expect(authenticatedPage.getByPlaceholder("Type a message...")).toBeVisible();
+
+    await authenticatedPage.locator('input[type="file"]').setInputFiles({
+      name: "photo.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(PNG_1X1_BASE64, "base64"),
+    });
+    const caption = authenticatedPage.getByPlaceholder("Add a caption…");
+    await caption.fill("Keep this caption");
+    await authenticatedPage.getByRole("button", { name: "Send" }).click();
+
+    await expect(
+      authenticatedPage.getByText("This file isn't a valid image or video."),
+    ).toBeVisible();
+    await expect(caption).toHaveValue("Keep this caption");
+    await expect(authenticatedPage.getByText("photo.png")).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: "Remove attachment" }),
+    ).toBeVisible();
   });
 
   test("loading older same-day history preserves scroll position (no visual jump)", async ({

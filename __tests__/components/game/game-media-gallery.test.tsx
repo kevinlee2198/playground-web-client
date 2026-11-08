@@ -220,6 +220,7 @@ describe("GameMediaGallery confirm-time rejection", () => {
       expect(toast.add).toHaveBeenCalledWith({ title: "errors.contentMismatch", type: "error" }),
     );
     expect(mockT).toHaveBeenCalledWith("errors.contentMismatch", { filename: "photo.jpg" });
+    expect(await screen.findByRole("button", { name: "Dismiss" })).toBeDefined();
   });
 
   it("keeps saveFailed for other confirm failures", async () => {
@@ -228,5 +229,6 @@ describe("GameMediaGallery confirm-time rejection", () => {
     await waitFor(() =>
       expect(toast.add).toHaveBeenCalledWith({ title: "errors.saveFailed", type: "error" }),
     );
+    expect(await screen.findByRole("button", { name: "Dismiss" })).toBeDefined();
   });
 });
