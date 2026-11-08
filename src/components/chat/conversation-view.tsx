@@ -418,7 +418,11 @@ export function ConversationView({
     }
 
     // 2. Upload to S3
-    const s3Result = await uploadToS3(file, uploadResult.uploadUrl);
+    const s3Result = await uploadToS3(
+      file,
+      uploadResult.uploadUrl,
+      uploadResult.uploadHeaders,
+    );
     if (!s3Result.success) {
       toast.add({ title: t("errors.sendMessage"), type: "error" });
       throw new Error("S3 upload failed");

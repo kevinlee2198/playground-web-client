@@ -475,6 +475,7 @@ union SendChatMessageResult =
   | MutualFollowRequiredError
   | ChatRoomReadOnlyError
   | ResourceNotFoundError
+  | UploadRejectedError
 union UpdateChatMessageResult =
   | UpdateChatMessageResponse
   | ChatMessageNotFoundError
@@ -692,6 +693,30 @@ domain because it spans games and chat rooms.
 """
 type UploadNotPermittedError implements Error & AuthorizationError {
   message: String!
+}
+
+"""
+The stored bytes failed verification at confirm. The upload stays pending. After NOT_UPLOADED, PUT the file and
+confirm again while the upload URL is valid, or request a new upload once it has expired. After
+CONTENT_MISMATCH the stored file has been deleted, so request a new upload.
+"""
+type UploadRejectedError implements Error {
+  message: String!
+  """
+  Why verification failed.
+  """
+  reason: UploadRejectionReason!
+}
+
+enum UploadRejectionReason {
+  """
+  Nothing is stored at the upload URL yet.
+  """
+  NOT_UPLOADED
+  """
+  The stored bytes are not an allowed format of the kind declared at requestUpload.
+  """
+  CONTENT_MISMATCH
 }
 type FollowRequest implements Node {
   id: ID!
@@ -1248,6 +1273,7 @@ union ConfirmGameMediaUploadResult =
   | ResourceNotFoundError
   | GameNotFoundError
   | GameNotInProgressError
+  | UploadRejectedError
 
 # ============================================================================
 # Error Types
@@ -7728,7 +7754,7 @@ extend type Mutation {
 # ============================================================================
 # Resource / File Management (v2)
 #
-# Resources are files (images, documents, videos) stored in S3.
+# Resources are files (images, videos) stored in S3.
 # Clients interact with resources through fields on parent types
 # (User.profilePicture, Game.media, MediaChatMessage.resource)
 # rather than through generic polymorphic queries.
@@ -7746,14 +7772,20 @@ A stored file. Concrete types carry format-specific metadata.
 """
 interface Resource implements Node {
   id: ID!
+  """
+  The display name. When verification detects a different format than declared, its extension is the detected one.
+  """
   filename: String!
   """
-  The file size in bytes as declared at upload request; it is not measured from the stored file.
+  The stored file's size in bytes, measured when the upload was confirmed.
   """
   size: Long!
+  """
+  The verified type, detected from the stored bytes at confirm.
+  """
   mimeType: String!
   """
-  Presigned download URL. Ephemeral — generated on demand by the resolver.
+  Presigned download URL. Ephemeral — generated on demand by the resolver. Served inline with the verified Content-Type and the filename.
   """
   downloadUrl: String!
   createdDate: DateTime!
@@ -7781,7 +7813,7 @@ type ImageResource implements Resource & Node {
 }
 
 """
-A generic file resource (documents, etc.).
+A non-image file resource, such as a video.
 """
 type FileResource implements Resource & Node {
   id: ID!
@@ -7811,7 +7843,7 @@ type ResourceConnection implements Connection {
 # ============================================================================
 
 """
-Identifies what entity the resource will be attached to. The purpose it implies sets which declared file types and sizes requestUpload accepts; until the stored bytes are verified, the limits apply to the declared values only.
+Identifies what entity the resource will be attached to. The purpose it implies sets which declared file types and sizes requestUpload accepts, checked on the declared values at requestUpload and on the stored bytes at confirm.
 """
 input UploadContextInput @oneOf {
   """
@@ -7855,11 +7887,31 @@ input RequestUploadInput {
   context: UploadContextInput!
 }
 
+"""
+A header the client must send, with exactly this value, on the presigned PUT.
+"""
+type UploadHeader {
+  """
+  Lowercase header name, as signed.
+  """
+  name: String!
+  """
+  The exact value to send.
+  """
+  value: String!
+}
+
 type RequestUploadResponse {
   """
-  Presigned PUT URL. Client uploads file bytes directly to this URL.
+  Presigned PUT URL, valid for a limited time. Write-once: once an object is stored at it, another PUT fails with
+  412, which means the bytes are already stored and the client should confirm.
   """
   uploadUrl: String!
+  """
+  Headers the PUT must send verbatim. The body must be exactly the declared size; any other header value or
+  size fails with 403.
+  """
+  uploadHeaders: [UploadHeader!]!
   """
   Resource ID. Use this to confirm the upload (phase 2) or to
   reference the resource when sending a chat message.
@@ -7907,7 +7959,10 @@ union RequestUploadResult =
   | UploadTargetNotFoundError
   | UploadNotPermittedError
   | RateLimitedError
-union ConfirmUploadResult = ConfirmUploadResponse | ResourceNotFoundError
+union ConfirmUploadResult =
+  | ConfirmUploadResponse
+  | ResourceNotFoundError
+  | UploadRejectedError
 union DeleteResourceResult = DeleteResourceResponse | ResourceNotFoundError
 scalar DateTime
 scalar JSON
@@ -8479,7 +8534,7 @@ type Mutation {
   """
   leaveChatRoom(input: LeaveChatRoomInput!): LeaveChatRoomResult!
   """
-  Send a chat message
+  Send a chat message. A media message verifies its upload first (UploadRejectedError, as for confirmUpload).
   """
   sendChatMessage(input: SendChatMessageInput!): SendChatMessageResult!
   """
@@ -8661,23 +8716,25 @@ type Mutation {
   Checks the target first: UploadTargetNotFoundError when it is missing or not visible, UploadNotPermittedError
   when the caller may not upload to it, or InvalidInputError with a null field and code
   TARGET_NOT_ACCEPTING_MEDIA or TARGET_READ_ONLY. Then checks the declared file: InvalidInputError on mimeType
-  (UNSUPPORTED_FILE_TYPE) or size (FILE_TOO_LARGE). mimeType must be the file's canonical type, and the PUT must
-  send that same value as Content-Type.
+  (UNSUPPORTED_FILE_TYPE) or size (FILE_TOO_LARGE). mimeType is matched case-insensitively and without parameters; image/jpg and video/x-m4v are accepted as JPEG and
+  MP4. The PUT must send uploadHeaders verbatim and exactly size bytes.
   Rate limited (RateLimitedError): bursts of 30, then 30 per minute; bursts of 200, then 200 per hour; refused requests do not count.
   """
   requestUpload(input: RequestUploadInput!): RequestUploadResult!
   """
   Confirm that an upload is complete. Phase 2 of the upload flow.
-  Transitions resource status from REQUESTED to PERMANENT.
+  Verifies the stored bytes, then transitions the resource from REQUESTED to PERMANENT. UploadRejectedError when nothing is stored yet or the bytes are not an allowed format of the declared kind.
   Not needed for chat media — sendChatMessage confirms chat resources automatically.
   Not needed for game media — use confirmGameMediaUpload instead.
   Only for userProfilePicture uploads. A resourceId requested for game or chat media returns ResourceNotFoundError.
+  Replaces the caller's current profile picture; the previous file is deleted after commit. Do not deleteResource the old one.
   """
   confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResult!
   """
   Confirm a game media upload. Creates the GameMedia record.
   Phase 2 of the upload flow for game media specifically.
   An unreadable or missing game returns GameNotFoundError; lacking game_media:create is top-level FORBIDDEN. The game must be IN_PROGRESS, COMPLETE or FINALIZED (GameNotInProgressError). A resourceId not requested for game media, or requested by another user, returns ResourceNotFoundError.
+  The stored bytes are verified as for confirmUpload (UploadRejectedError).
   """
   confirmGameMediaUpload(
     input: ConfirmGameMediaUploadInput!

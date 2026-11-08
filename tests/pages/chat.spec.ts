@@ -185,10 +185,12 @@ test.describe("Chat Page", () => {
     let putCalled = false;
     let putMethod: string | undefined;
     let putContentType: string | undefined;
+    let putIfNoneMatch: string | undefined;
     await authenticatedPage.route("**/test-s3-put", (route) => {
       putCalled = true;
       putMethod = route.request().method();
       putContentType = route.request().headers()["content-type"];
+      putIfNoneMatch = route.request().headers()["if-none-match"];
       return route.fulfill({ status: 200 });
     });
 
@@ -219,6 +221,7 @@ test.describe("Chat Page", () => {
     expect(putCalled).toBe(true);
     expect(putMethod).toBe("PUT");
     expect(putContentType).toBe("image/png");
+    expect(putIfNoneMatch).toBe("*");
   });
 
   test("loading older same-day history preserves scroll position (no visual jump)", async ({

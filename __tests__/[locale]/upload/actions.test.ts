@@ -71,6 +71,7 @@ describe("requestProfilePictureUpload", () => {
     mockMutateSuccess("requestUpload", "RequestUploadResponse", {
       uploadUrl: "https://storage.example.com/upload",
       resourceId: "res-abc",
+      uploadHeaders: [],
     });
 
     const result = await requestProfilePictureUpload("avatar.png", "image/png", 2048);
@@ -79,8 +80,35 @@ describe("requestProfilePictureUpload", () => {
       success: true,
       uploadUrl: "https://storage.example.com/upload",
       resourceId: "res-abc",
+      uploadHeaders: [],
     });
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns uploadHeaders on success", async () => {
+    const uploadHeaders = [
+      { name: "content-type", value: "image/png" },
+      { name: "if-none-match", value: "*" },
+    ];
+    mockMutateSuccess("requestUpload", "RequestUploadResponse", {
+      uploadUrl: "https://storage.example.com/upload",
+      resourceId: "res-abc",
+      uploadHeaders,
+    });
+
+    const result = await requestProfilePictureUpload("avatar.png", "image/png", 2048);
+
+    expect(result).toMatchObject({ success: true, uploadHeaders });
+  });
+
+  it("selects uploadHeaders on requestUpload", async () => {
+    mockMutateGraphqlError("ignored");
+
+    await requestProfilePictureUpload("avatar.png", "image/png", 2048);
+
+    const selection = mockAuthMutate.mock.calls[0][0];
+    expect(validateOperation("mutation", selection)).toEqual([]);
+    expect(JSON.stringify(selection)).toContain("uploadHeaders");
   });
 
   it("returns GRAPHQL_ERROR on top-level errors", async () => {

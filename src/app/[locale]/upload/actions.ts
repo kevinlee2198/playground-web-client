@@ -11,11 +11,16 @@ import {
 import { authMutate } from "@/lib/graphql-request";
 import { extractMutationResult, MutationErrorType } from "@/lib/graphql-result";
 import type { GameMediaNode } from "@/lib/types/game-media";
-import type { Resource } from "@/lib/types/resource";
+import type { Resource, UploadHeader } from "@/lib/types/resource";
 import { z } from "zod";
 
 export type RequestUploadResult =
-  | { success: true; uploadUrl: string; resourceId: string }
+  | {
+      success: true;
+      uploadUrl: string;
+      resourceId: string;
+      uploadHeaders: UploadHeader[];
+    }
   | {
       success: false;
       errorType: string;
@@ -60,7 +65,12 @@ async function requestUpload(
         },
         __typename: true,
         __on: [
-          { __typeName: "RequestUploadResponse", uploadUrl: true, resourceId: true },
+          {
+            __typeName: "RequestUploadResponse",
+            uploadUrl: true,
+            resourceId: true,
+            uploadHeaders: { name: true, value: true },
+          },
           errorFragment,
           invalidInputErrorFragment,
           authorizationErrorFragment,
@@ -96,6 +106,7 @@ async function requestUpload(
       success: true,
       uploadUrl: result.data.uploadUrl,
       resourceId: result.data.resourceId,
+      uploadHeaders: result.data.uploadHeaders,
     };
   } catch {
     return {

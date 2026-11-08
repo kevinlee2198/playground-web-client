@@ -183,6 +183,10 @@ export function mockRequestUploadResponse(overrides?: Record<string, unknown>) {
         __typename: "RequestUploadResponse",
         uploadUrl: "/test-s3-put",
         resourceId: "resource-uploaded-1",
+        uploadHeaders: [
+          { name: "content-type", value: "image/png" },
+          { name: "if-none-match", value: "*" },
+        ],
         ...overrides,
       },
     },

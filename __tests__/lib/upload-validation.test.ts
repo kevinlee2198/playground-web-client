@@ -100,6 +100,27 @@ describe("validateFile", () => {
   });
 });
 
+describe("video/x-m4v", () => {
+  it("accepts video/x-m4v for gameMedia and chatMedia, with the 100 MB limit", () => {
+    for (const context of ["gameMedia", "chatMedia"] as const) {
+      expect(validateFile(makeFile("video/x-m4v", MAX_VIDEO_SIZE), context)).toEqual({
+        valid: true,
+      });
+      expect(validateFile(makeFile("video/x-m4v", MAX_VIDEO_SIZE + 1), context)).toEqual({
+        valid: false,
+        error: "fileTooLarge",
+      });
+    }
+  });
+
+  it("rejects video/x-m4v for profilePicture", () => {
+    expect(validateFile(makeFile("video/x-m4v", 1024), "profilePicture")).toEqual({
+      valid: false,
+      error: "invalidType",
+    });
+  });
+});
+
 describe("formatFileSize", () => {
   it("formats bytes", () => {
     expect(formatFileSize(500)).toBe("500 B");

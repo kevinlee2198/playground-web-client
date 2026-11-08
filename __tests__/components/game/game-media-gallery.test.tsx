@@ -33,6 +33,7 @@ vi.mock("@/components/game/game-media-item", () => ({
 }));
 
 import { requestGameMediaUpload } from "@/app/[locale]/upload/actions";
+import { uploadToS3 } from "@/lib/s3-upload";
 import { toast } from "@/components/ui/toast";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameVisibility } from "@/lib/constants";
@@ -113,6 +114,28 @@ describe("GameMediaGallery request-time upload errors", () => {
   function uploadPhoto() {
     uploadPhotos(["photo.jpg"]);
   }
+
+  it("passes the request's uploadHeaders to uploadToS3", async () => {
+    const uploadHeaders = [
+      { name: "content-type", value: "image/jpeg" },
+      { name: "if-none-match", value: "*" },
+    ];
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
+      success: true,
+      uploadUrl: "https://s3.example.com/put",
+      resourceId: "res-1",
+      uploadHeaders,
+    });
+    vi.mocked(uploadToS3).mockResolvedValueOnce({ success: false });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(uploadToS3).toHaveBeenCalledWith(
+        expect.any(File),
+        "https://s3.example.com/put",
+        uploadHeaders,
+      ),
+    );
+  });
 
   it("shows the size copy when the server returns FILE_TOO_LARGE", async () => {
     vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({ ...failure, code: "FILE_TOO_LARGE" });

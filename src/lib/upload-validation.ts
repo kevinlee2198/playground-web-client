@@ -21,6 +21,7 @@ export const VIDEO_MIME_TYPES = [
   "video/mp4",
   "video/quicktime",
   "video/webm",
+  "video/x-m4v",
 ] as const;
 
 /** All media MIME types (images + videos) */

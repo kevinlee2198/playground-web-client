@@ -112,6 +112,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
       const s3Result = await uploadToS3(
         selectedFile,
         requestResult.uploadUrl,
+        requestResult.uploadHeaders,
       );
       if (!s3Result.success) {
         toast.add({ title: t("errors.uploadFailed"), type: "error" });
