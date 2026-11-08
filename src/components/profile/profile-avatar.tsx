@@ -130,17 +130,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
         return;
       }
 
-      // 4. Delete old profile picture (fire-and-forget)
-      const oldResource = profilePicture;
-      if (oldResource) {
-        deleteResource(oldResource.id).then((result) => {
-          if (!result.success) {
-            console.warn("Failed to delete old profile picture:", result.message);
-          }
-        });
-      }
-
-      // 5. Update local state
+      // 4. Update local state
       setProfilePicture(confirmResult.resource);
       toast.add({ title: t("success"), type: "success" });
       setShowPreview(false);
