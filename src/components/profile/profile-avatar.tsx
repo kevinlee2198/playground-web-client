@@ -8,7 +8,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadToS3 } from "@/lib/s3-upload";
 import type { Resource } from "@/lib/types/resource";
-import { profilePictureFailureReason } from "@/lib/upload-errors";
+import { profilePictureFailureReason, uploadRejectionCopyKey } from "@/lib/upload-errors";
 import { getAcceptAttribute, validateFile } from "@/lib/upload-validation";
 import { getInitials } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -112,6 +112,7 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
       const s3Result = await uploadToS3(
         selectedFile,
         requestResult.uploadUrl,
+        requestResult.uploadHeaders,
       );
       if (!s3Result.success) {
         toast.add({ title: t("errors.uploadFailed"), type: "error" });
@@ -121,21 +122,15 @@ export function ProfileAvatar({ user }: ProfileAvatarProps) {
       // 3. Confirm upload
       const confirmResult = await confirmUpload(requestResult.resourceId);
       if (!confirmResult.success) {
-        toast.add({ title: t("errors.saveFailed"), type: "error" });
+        const rejection = uploadRejectionCopyKey(confirmResult.rejectionReason);
+        toast.add({
+          title: rejection ? t(`errors.${rejection}`) : t("errors.saveFailed"),
+          type: "error",
+        });
         return;
       }
 
-      // 4. Delete old profile picture (fire-and-forget)
-      const oldResource = profilePicture;
-      if (oldResource) {
-        deleteResource(oldResource.id).then((result) => {
-          if (!result.success) {
-            console.warn("Failed to delete old profile picture:", result.message);
-          }
-        });
-      }
-
-      // 5. Update local state
+      // 4. Update local state
       setProfilePicture(confirmResult.resource);
       toast.add({ title: t("success"), type: "success" });
       setShowPreview(false);

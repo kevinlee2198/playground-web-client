@@ -778,7 +778,35 @@ describe("sendMediaMessage", () => {
 
     const result = await sendMediaMessage("room1", "resource1");
 
-    expect(result).toEqual(mutationErrorShape("ResourceNotFoundError", "Resource not found"));
+    expect(result).toEqual({
+      ...mutationErrorShape("ResourceNotFoundError", "Resource not found"),
+      rejectionReason: null,
+    });
+  });
+
+  it("selects reason on UploadRejectedError", async () => {
+    mockMutateGraphqlError("ignored");
+
+    await sendMediaMessage("room1", "resource1");
+
+    const selection = mockAuthMutate.mock.calls[0][0];
+    expect(validateOperation("mutation", selection)).toEqual([]);
+    expect(JSON.stringify(selection)).toContain("UploadRejectedError");
+  });
+
+  it("returns rejectionReason CONTENT_MISMATCH", async () => {
+    mockMutateSuccess("sendChatMessage", "UploadRejectedError", {
+      message: "bad bytes",
+      reason: "CONTENT_MISMATCH",
+    });
+
+    const result = await sendMediaMessage("room1", "resource1");
+
+    expect(result).toMatchObject({
+      success: false,
+      errorType: "UploadRejectedError",
+      rejectionReason: "CONTENT_MISMATCH",
+    });
   });
 
   it("returns UNEXPECTED_ERROR on network failure", async () => {

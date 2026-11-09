@@ -23,3 +23,9 @@ export interface FileResource extends ResourceBase {
 
 /** Discriminated union of all resource types */
 export type Resource = ImageResource | FileResource;
+
+/** A header the presigned PUT must send verbatim */
+export interface UploadHeader {
+  name: string;
+  value: string;
+}

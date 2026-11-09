@@ -32,7 +32,8 @@ vi.mock("@/components/game/game-media-item", () => ({
   ),
 }));
 
-import { requestGameMediaUpload } from "@/app/[locale]/upload/actions";
+import { confirmGameMediaUpload, requestGameMediaUpload } from "@/app/[locale]/upload/actions";
+import { uploadToS3 } from "@/lib/s3-upload";
 import { toast } from "@/components/ui/toast";
 import { GameMediaGallery } from "@/components/game/game-media-gallery";
 import { GameVisibility } from "@/lib/constants";
@@ -89,6 +90,19 @@ describe("GameMediaGallery delete rule", () => {
   });
 });
 
+function uploadPhotos(names: string[]) {
+  cleanup();
+  renderGallery(false, true);
+  const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
+  fireEvent.change(input, {
+    target: { files: names.map((name) => new File(["x"], name, { type: "image/jpeg" })) },
+  });
+}
+
+function uploadPhoto() {
+  uploadPhotos(["photo.jpg"]);
+}
+
 describe("GameMediaGallery request-time upload errors", () => {
   const failure = {
     success: false as const,
@@ -101,18 +115,27 @@ describe("GameMediaGallery request-time upload errors", () => {
 
   beforeEach(() => vi.clearAllMocks());
 
-  function uploadPhotos(names: string[]) {
-    cleanup();
-    renderGallery(false, true);
-    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    fireEvent.change(input, {
-      target: { files: names.map((name) => new File(["x"], name, { type: "image/jpeg" })) },
+  it("passes the request's uploadHeaders to uploadToS3", async () => {
+    const uploadHeaders = [
+      { name: "content-type", value: "image/jpeg" },
+      { name: "if-none-match", value: "*" },
+    ];
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({
+      success: true,
+      uploadUrl: "https://s3.example.com/put",
+      resourceId: "res-1",
+      uploadHeaders,
     });
-  }
-
-  function uploadPhoto() {
-    uploadPhotos(["photo.jpg"]);
-  }
+    vi.mocked(uploadToS3).mockResolvedValueOnce({ success: false });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(uploadToS3).toHaveBeenCalledWith(
+        expect.any(File),
+        "https://s3.example.com/put",
+        uploadHeaders,
+      ),
+    );
+  });
 
   it("shows the size copy when the server returns FILE_TOO_LARGE", async () => {
     vi.mocked(requestGameMediaUpload).mockResolvedValueOnce({ ...failure, code: "FILE_TOO_LARGE" });
@@ -164,5 +187,48 @@ describe("GameMediaGallery request-time upload errors", () => {
     await waitFor(() =>
       expect(toast.add).toHaveBeenCalledWith({ title: "raw server wording", type: "error" }),
     );
+  });
+});
+
+describe("GameMediaGallery confirm-time rejection", () => {
+  const uploadReady = {
+    success: true as const,
+    uploadUrl: "https://s3.example.com/put",
+    resourceId: "res-1",
+    uploadHeaders: [],
+  };
+  const confirmFailure = {
+    success: false as const,
+    errorType: "UploadRejectedError",
+    message: "raw server wording",
+    rejectionReason: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requestGameMediaUpload).mockResolvedValueOnce(uploadReady);
+    vi.mocked(uploadToS3).mockResolvedValueOnce({ success: true });
+  });
+
+  it("shows the contentMismatch copy when confirm is rejected", async () => {
+    vi.mocked(confirmGameMediaUpload).mockResolvedValueOnce({
+      ...confirmFailure,
+      rejectionReason: "CONTENT_MISMATCH",
+    });
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.contentMismatch", type: "error" }),
+    );
+    expect(mockT).toHaveBeenCalledWith("errors.contentMismatch", { filename: "photo.jpg" });
+    expect(await screen.findByRole("button", { name: "Dismiss" })).toBeDefined();
+  });
+
+  it("keeps saveFailed for other confirm failures", async () => {
+    vi.mocked(confirmGameMediaUpload).mockResolvedValueOnce(confirmFailure);
+    uploadPhoto();
+    await waitFor(() =>
+      expect(toast.add).toHaveBeenCalledWith({ title: "errors.saveFailed", type: "error" }),
+    );
+    expect(await screen.findByRole("button", { name: "Dismiss" })).toBeDefined();
   });
 });

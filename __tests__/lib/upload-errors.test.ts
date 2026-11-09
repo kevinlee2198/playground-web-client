@@ -3,7 +3,9 @@ import messages from "../../messages/en.json";
 import {
   profilePictureFailureReason,
   uploadFailureReason,
+  uploadRejectionCopyKey,
   type UploadFailureReason,
+  type UploadRejectionReason,
 } from "@/lib/upload-errors";
 
 function failure(
@@ -54,6 +56,15 @@ describe("profilePictureFailureReason", () => {
   });
 });
 
+describe("uploadRejectionCopyKey", () => {
+  it("maps NOT_UPLOADED and CONTENT_MISMATCH, and null/undefined to null", () => {
+    expect(uploadRejectionCopyKey("NOT_UPLOADED")).toBe("notUploaded");
+    expect(uploadRejectionCopyKey("CONTENT_MISMATCH")).toBe("contentMismatch");
+    expect(uploadRejectionCopyKey(null)).toBeNull();
+    expect(uploadRejectionCopyKey(undefined)).toBeNull();
+  });
+});
+
 describe("copy for every reason", () => {
   // Record keys force this list to match UploadFailureReason at compile time.
   const reasons: Record<UploadFailureReason, true> = {
@@ -78,6 +89,25 @@ describe("copy for every reason", () => {
   it("profile.picture.errors has a string for each profile reason", () => {
     for (const reason of profileReasons) {
       expect(typeof (messages.profile.picture.errors as Record<string, unknown>)[reason]).toBe("string");
+    }
+  });
+
+  it("every namespace has a string for each rejection copy key", () => {
+    // Record keys force this list to match UploadRejectionReason at compile time.
+    const rejections: Record<UploadRejectionReason, true> = {
+      NOT_UPLOADED: true,
+      CONTENT_MISMATCH: true,
+    };
+    const keys = Object.keys(rejections).map((r) => uploadRejectionCopyKey(r as UploadRejectionReason));
+    expect(keys).toEqual(["notUploaded", "contentMismatch"]);
+    for (const errors of [
+      messages.game.media.errors,
+      messages.chat.media.errors,
+      messages.profile.picture.errors,
+    ]) {
+      for (const key of keys) {
+        expect(typeof (errors as Record<string, unknown>)[key as string]).toBe("string");
+      }
     }
   });
 });
