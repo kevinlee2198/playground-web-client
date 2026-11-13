@@ -595,6 +595,16 @@ describe("deleteResource", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("selects a deleteResource document valid against the committed schema", async () => {
+    // Any response works: only the captured selection is asserted.
+    mockMutateGraphqlError("ignored");
+
+    await deleteResource("res-del-1");
+
+    const selection = mockAuthMutate.mock.calls[0][0];
+    expect(validateOperation("mutation", selection)).toEqual([]);
+  });
+
   it("returns GRAPHQL_ERROR on top-level errors", async () => {
     mockMutateGraphqlError("Forbidden");
 

@@ -680,7 +680,8 @@ type ResourceNotFoundError implements Error {
 
 """
 The upload target does not exist or is not visible to the caller. One generic type because the resource
-module cannot build per-domain not-found errors. Echoes only the id the caller supplied.
+module cannot build per-domain not-found errors. Echoes only the id the caller supplied; at confirmUpload, the
+target the upload was requested for.
 """
 type UploadTargetNotFoundError implements Error {
   message: String!
@@ -688,8 +689,8 @@ type UploadTargetNotFoundError implements Error {
 }
 
 """
-The caller can see the upload target but may not upload to it. Named for the target rather than a role
-domain because it spans games and chat rooms.
+The caller can see the upload target but may not change its file (upload, confirm or remove). Named for the
+target rather than a role domain because it spans games, chat rooms and logo owners.
 """
 type UploadNotPermittedError implements Error & AuthorizationError {
   message: String!
@@ -3483,9 +3484,10 @@ type Group implements Owner & Node {
   """
   timezone: String!
   """
-  Logo resource. Null when no logo is set.
+  Current logo, always an ImageResource. Null when no logo is set. Set it with requestUpload (groupLogo)
+  and confirmUpload; remove it with deleteResource.
   """
-  logoResourceId: ID
+  logo: Resource
   createdBy: User!
   """
   Dedicated chat room for group-wide discussion. Created atomically with
@@ -3617,7 +3619,6 @@ input CreateGroupInput {
   IANA timezone id. Required — drives game-series materialization.
   """
   timezone: String!
-  logoResourceId: ID
 }
 
 input UpdateGroupInput {
@@ -3625,7 +3626,6 @@ input UpdateGroupInput {
   name: String
   description: String
   timezone: String
-  logoResourceId: ID
   expectedVersion: Long
 }
 
@@ -5042,6 +5042,10 @@ interface Owner implements Node {
   id: ID!
   name: String!
   slug: String!
+  """
+  Current logo. Null when no logo is set.
+  """
+  logo: Resource
 }
 
 """
@@ -6269,9 +6273,10 @@ type League implements Owner & Node {
   """
   timezone: String!
   """
-  Logo resource. Null when no logo is set.
+  Current logo, always an ImageResource. Null when no logo is set. Set it with requestUpload (leagueLogo)
+  and confirmUpload; remove it with deleteResource.
   """
-  logoResourceId: ID
+  logo: Resource
   createdBy: User!
   """
   Dedicated chat room for league-wide discussion. Created atomically with
@@ -6415,7 +6420,6 @@ input CreateLeagueInput {
   IANA timezone id. Required — drives season end-of-day transitions.
   """
   timezone: String!
-  logoResourceId: ID
 }
 
 input UpdateLeagueInput {
@@ -6428,7 +6432,6 @@ input UpdateLeagueInput {
   """
   visibility: LeagueVisibility
   timezone: String
-  logoResourceId: ID
   expectedVersion: Long
 }
 
@@ -7046,9 +7049,10 @@ type Organization implements Node {
   name: String!
   description: String
   """
-  Logo resource. Null when no logo is set.
+  Current logo, always an ImageResource. Null when no logo is set. Set it with requestUpload
+  (organizationLogo) and confirmUpload; remove it with deleteResource.
   """
-  logoResourceId: ID
+  logo: Resource
   """
   Soft-archive timestamp. Null when the Organization is active. Archived
   orgs are filtered from discovery queries; their Leagues continue to
@@ -7141,14 +7145,12 @@ input OrganizationFilterInput {
 input CreateOrganizationInput {
   name: String!
   description: String
-  logoResourceId: ID
 }
 
 input UpdateOrganizationInput {
   organizationId: ID!
   name: String
   description: String
-  logoResourceId: ID
   """
   Optimistic concurrency token.
   """
@@ -7756,7 +7758,8 @@ extend type Mutation {
 #
 # Resources are files (images, videos) stored in S3.
 # Clients interact with resources through fields on parent types
-# (User.profilePicture, Game.media, MediaChatMessage.resource)
+# (User.profilePicture, Game.media, MediaChatMessage.resource,
+# League.logo, Group.logo, Organization.logo)
 # rather than through generic polymorphic queries.
 #
 # Backend-only concerns (purpose, resourceStatus) are not
@@ -7863,6 +7866,21 @@ input UploadContextInput @oneOf {
   JPEG, PNG, WebP or GIF up to 10 MiB; MP4, MOV or WebM up to 100 MiB.
   """
   chatMedia: ChatMediaUploadContextInput
+  """
+  Upload a logo for a league. JPEG, PNG or WebP, up to 2 MiB. Requires league admin (organization admins
+  included). confirmUpload replaces the current logo; deleteResource removes it.
+  """
+  leagueLogo: LeagueLogoUploadContextInput
+  """
+  Upload a logo for a group. JPEG, PNG or WebP, up to 2 MiB. Requires group admin. confirmUpload replaces the
+  current logo; deleteResource removes it.
+  """
+  groupLogo: GroupLogoUploadContextInput
+  """
+  Upload a logo for an organization. JPEG, PNG or WebP, up to 2 MiB. Requires organization admin. confirmUpload
+  replaces the current logo; deleteResource removes it.
+  """
+  organizationLogo: OrganizationLogoUploadContextInput
 }
 
 input UserProfilePictureUploadContextInput {
@@ -7878,6 +7896,18 @@ input GameMediaUploadContextInput {
 
 input ChatMediaUploadContextInput {
   chatRoomId: ID!
+}
+
+input LeagueLogoUploadContextInput {
+  leagueId: ID!
+}
+
+input GroupLogoUploadContextInput {
+  groupId: ID!
+}
+
+input OrganizationLogoUploadContextInput {
+  organizationId: ID!
 }
 
 input RequestUploadInput {
@@ -7963,7 +7993,13 @@ union ConfirmUploadResult =
   | ConfirmUploadResponse
   | ResourceNotFoundError
   | UploadRejectedError
-union DeleteResourceResult = DeleteResourceResponse | ResourceNotFoundError
+  | UploadTargetNotFoundError
+  | UploadNotPermittedError
+  | InvalidInputError
+union DeleteResourceResult =
+  | DeleteResourceResponse
+  | ResourceNotFoundError
+  | UploadNotPermittedError
 scalar DateTime
 scalar JSON
 """
@@ -8715,7 +8751,8 @@ type Mutation {
   Request a presigned upload URL. Phase 1 of the upload flow.
   Checks the target first: UploadTargetNotFoundError when it is missing or not visible, UploadNotPermittedError
   when the caller may not upload to it, or InvalidInputError with a null field and code
-  TARGET_NOT_ACCEPTING_MEDIA or TARGET_READ_ONLY. Then checks the declared file: InvalidInputError on mimeType
+  TARGET_NOT_ACCEPTING_MEDIA, TARGET_READ_ONLY or TARGET_ARCHIVED.
+  Then checks the declared file: InvalidInputError on mimeType
   (UNSUPPORTED_FILE_TYPE) or size (FILE_TOO_LARGE). mimeType is matched case-insensitively and without parameters; image/jpg and video/x-m4v are accepted as JPEG and
   MP4. The PUT must send uploadHeaders verbatim and exactly size bytes.
   Rate limited (RateLimitedError): bursts of 30, then 30 per minute; bursts of 200, then 200 per hour; refused requests do not count.
@@ -8723,11 +8760,17 @@ type Mutation {
   requestUpload(input: RequestUploadInput!): RequestUploadResult!
   """
   Confirm that an upload is complete. Phase 2 of the upload flow.
+  Only the uploader may confirm (anyone else gets ResourceNotFoundError).
+  Re-checks the target as requestUpload does, before reading the stored bytes:
+  UploadTargetNotFoundError, UploadNotPermittedError, or InvalidInputError with a null field (for example
+  TARGET_ARCHIVED).
   Verifies the stored bytes, then transitions the resource from REQUESTED to PERMANENT. UploadRejectedError when nothing is stored yet or the bytes are not an allowed format of the declared kind.
   Not needed for chat media — sendChatMessage confirms chat resources automatically.
   Not needed for game media — use confirmGameMediaUpload instead.
-  Only for userProfilePicture uploads. A resourceId requested for game or chat media returns ResourceNotFoundError.
-  Replaces the caller's current profile picture; the previous file is deleted after commit. Do not deleteResource the old one.
+  For userProfilePicture, leagueLogo, groupLogo and organizationLogo uploads. A resourceId requested for game or
+  chat media returns ResourceNotFoundError.
+  Replaces the target's current file (the caller's profile picture, or the logo); the previous file is deleted
+  after commit. Do not deleteResource the old one.
   """
   confirmUpload(input: ConfirmUploadInput!): ConfirmUploadResult!
   """
@@ -8740,7 +8783,12 @@ type Mutation {
     input: ConfirmGameMediaUploadInput!
   ): ConfirmGameMediaUploadResult!
   """
-  Delete a resource and its backing file. Only for userProfilePicture uploads; game and chat media are removed through deleteGameMedia and deleteChatMessage, and their ids return ResourceNotFoundError. Only the uploader may delete.
+  Delete a confirmed file and its backing object. For profile pictures and logos; game and chat media are
+  removed through deleteGameMedia and deleteChatMessage, and their ids return ResourceNotFoundError. An
+  unconfirmed upload cannot be deleted (ResourceNotFoundError); it expires on its own. Authorized like an upload
+  to the file's target: a profile picture by its owner, a logo by an admin of its league, group or organization,
+  even an archived one. A target the caller cannot see returns ResourceNotFoundError; a refusal returns
+  UploadNotPermittedError.
   """
   deleteResource(input: DeleteResourceInput!): DeleteResourceResult!
 }
