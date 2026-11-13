@@ -3276,7 +3276,7 @@ type GameSeriesEndedError implements Error {
 }
 
 """
-The group is archived; its series accept no further writes.
+The Group is archived and cannot accept the requested mutation.
 """
 type GroupArchivedError implements Error {
   message: String!
@@ -3745,6 +3745,7 @@ union CreateGroupResult =
 union UpdateGroupResult =
   | UpdateGroupResponse
   | GroupNotFoundError
+  | GroupArchivedError
   | InvalidTimezoneError
   | InsufficientGroupRoleError
   | StaleWriteError
@@ -3834,6 +3835,12 @@ extend type Mutation {
   `GroupMembershipChangedEvent`.
   """
   createGroup(input: CreateGroupInput!): CreateGroupResult!
+  """
+  Edit the Group's settings. Once the Group is archived every call returns
+  GroupArchivedError, an empty input included.
+  Callers who may not update the Group get the same error they would get for
+  an active Group.
+  """
   updateGroup(input: UpdateGroupInput!): UpdateGroupResult!
   """
   Soft-archive a Group. Terminal write-freeze — status becomes `ARCHIVED`
@@ -6499,6 +6506,9 @@ type LeagueNotFoundError implements Error {
   leagueId: ID
 }
 
+"""
+The League is archived and cannot accept the requested mutation.
+"""
 type LeagueArchivedError implements Error {
   message: String!
   leagueId: ID!
@@ -6621,8 +6631,16 @@ extend type Mutation {
   `LeagueMembership(ADMIN)` + creator's `ChatRoomMember(ADMIN)` all
   committed together, or rolled back together. Emits `LeagueCreatedEvent`
   and `LeagueMembershipChangedEvent`.
+  Returns OrganizationArchivedError when the Organization is archived (only
+  to a caller who may create leagues in it).
   """
   createLeague(input: CreateLeagueInput!): CreateLeagueResult!
+  """
+  Edit the League's settings. Once the League is archived every call returns
+  LeagueArchivedError, an empty input included.
+  Callers who may not update the League get the same error they would get
+  for an active League.
+  """
   updateLeague(input: UpdateLeagueInput!): UpdateLeagueResult!
   """
   Soft-archive a League. Terminal write-freeze — status becomes `ARCHIVED`.
@@ -7283,8 +7301,8 @@ union LeaveOrganizationResult =
 
 extend type Query {
   """
-  Resolve a single Organization by numeric id or by slug. Returns null for
-  unknown or archived orgs. Readable without authentication — anonymous
+  Resolve a single Organization by numeric id or by slug. Returns null for an unknown id or slug.
+  Archived organizations resolve, with archivedAt set. Readable without authentication — anonymous
   callers get the same PUBLIC projection as signed-in non-members.
   """
   organization(idOrSlug: ID!): Organization
@@ -7313,11 +7331,19 @@ extend type Query {
 
 extend type Mutation {
   createOrganization(input: CreateOrganizationInput!): CreateOrganizationResult!
+  """
+  Edit the Organization's settings. Once the Organization is archived
+  (archivedAt set) every call returns OrganizationArchivedError, an empty
+  input included.
+  Callers who may not update the Organization get the same error they would
+  get for an active Organization.
+  """
   updateOrganization(input: UpdateOrganizationInput!): UpdateOrganizationResult!
   """
   Soft-archive an Organization. Sets `archivedAt = now`. Leagues under this
   Organization are not implicitly archived — they continue to enforce their
-  own lifecycle.
+  own lifecycle. Archiving is permanent. updateOrganization then returns
+  OrganizationArchivedError, and createLeague refuses new Leagues under it.
   """
   archiveOrganization(organizationId: ID!): ArchiveOrganizationResult!
   """
