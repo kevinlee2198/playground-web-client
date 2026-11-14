@@ -3758,6 +3758,7 @@ union ArchiveGroupResult =
 union AddGroupMemberResult =
   | AddGroupMemberResponse
   | GroupNotFoundError
+  | GroupArchivedError
   | InsufficientGroupRoleError
   | SendInvitationsResponse
 
@@ -3845,12 +3846,18 @@ extend type Mutation {
   """
   Soft-archive a Group. Terminal write-freeze — status becomes `ARCHIVED`
   and every ACTIVE `GameSeries` in the group is cascaded to `ENDED`.
+  Revokes every pending invitation and active invite link in the same
+  transaction; inviters are not notified. Afterwards nobody can be added:
+  addGroupMember, sendInvitations, resendInvitation and createInviteLink
+  return GroupArchivedError; acceptInvitation and redeemInviteLink return
+  InvitationOwnerArchivedError.
   """
   archiveGroup(groupId: ID!): ArchiveGroupResult!
   """
   Add a member (group admin only). Direct-add creates the membership row
   immediately; email path delegates to `sendInvitations` and returns
-  `SendInvitationsResponse`.
+  `SendInvitationsResponse`. Returns `GroupArchivedError` when the Group is
+  archived.
   """
   addGroupMember(input: AddGroupMemberInput!): AddGroupMemberResult!
   promoteToGroupAdmin(
@@ -4218,9 +4225,9 @@ Lifecycle status of an `Invitation`.
 - `DECLINED`: invitee declined. Terminal. Firing `declineInvitation` on a
   direct-add invite sends notification #3 to the inviter; no notification
   is fired for link-based or email-only invites.
-- `REVOKED`: an Admin revoked the invitation before it was answered.
-  Terminal. A new send to the same recipient auto-revokes the prior `SENT`
-  invitation and starts fresh.
+- `REVOKED`: an Admin revoked the invitation before it was answered, or its
+  League or Group was archived. Terminal. A new send to the same recipient
+  auto-revokes the prior `SENT` invitation and starts fresh.
 - `EXPIRED`: Quartz `InvitationExpirySweepJob` flipped a `SENT` invitation
   past its `expiresAt`. Terminal.
 """
@@ -4303,6 +4310,13 @@ type Invitation implements Node {
   decline, expire). Drives list ordering when sorting by activity.
   """
   lastEventAt: DateTime!
+  """
+  True exactly when `acceptInvitation` would answer this invitation's
+  recipient with `InvitationOwnerArchivedError`: the owning League or Group is
+  archived and the invitation is `SENT` or `REVOKED` and not past `expiresAt`.
+  `owner` stays null for a viewer who cannot read it.
+  """
+  ownerArchived: Boolean!
 }
 
 type InvitationEdge implements Edge {
@@ -4378,7 +4392,7 @@ type InvitePreview {
   """
   kind: InviteTokenKind!
   """
-  Always SENT: resolveInvite returns null for every non-actionable token.
+  SENT for an actionable token; REVOKED when ownerArchived is true.
   """
   status: InvitationStatus!
   """
@@ -4390,6 +4404,12 @@ type InvitePreview {
   (which are one-shot) and for links without a max-uses cap.
   """
   usesRemaining: Int
+  """
+  True when the owning League or Group is archived: the token would work on
+  an active owner, but nobody can join now. `status` is REVOKED then, so a
+  client that gates Join on SENT stays correct.
+  """
+  ownerArchived: Boolean!
 }
 
 """
@@ -4399,7 +4419,9 @@ to consume. Atomic `usesRemaining` decrement guards against concurrent
 redeems exceeding the cap.
 
 Existing-member redeem is a no-op (returns success). Re-visiting the same
-link as a user who has already redeemed is a no-op.
+link as a user who has already redeemed and is still a member is a no-op;
+if the League or Group is archived, a former member gets
+`InvitationOwnerArchivedError` instead.
 """
 type InviteLink implements Node {
   id: ID!
@@ -4440,11 +4462,13 @@ type InviteLink implements Node {
   """
   expiresAt: DateTime
   """
-  When the link was revoked. Null until `revokeInviteLink` is called.
+  When the link was revoked. Null until `revokeInviteLink` is called or its
+  League or Group is archived.
   """
   revokedAt: DateTime
   """
-  Admin who revoked the link, if revoked.
+  Admin who revoked the link, if revoked. Null when the link was revoked by
+  archiving its League or Group.
   """
   revokedBy: User
   createdDate: DateTime!
@@ -4659,7 +4683,7 @@ type RateLimitError implements Error {
 
 """
 The owning `League` or `Group` referenced by an invitation operation does
-not exist, is archived, or is not visible to the caller. Used in PR 4
+not exist or is not visible to the caller. Used in PR 4
 before aggregate-specific `LeagueNotFoundError` / `GroupNotFoundError` are
 introduced; subsequent schemas may narrow this to the aggregate-specific
 variant.
@@ -4749,6 +4773,19 @@ type InviteLinkExpiredError implements Error {
   linkId: ID!
 }
 
+"""
+The League or Group is archived and is not accepting new members. Returned
+only to the invitation's recipient (for a SENT or REVOKED, unexpired
+invitation), to a holder of a link that would otherwise still work (not
+revoked by an Admin, expired or used up), or to a former member re-using an
+unexpired link they already redeemed (not revoked by an Admin). Carries no owner id: the caller may not
+be able to read the owner.
+"""
+type InvitationOwnerArchivedError implements Error {
+  message: String!
+  ownerType: OwnerType!
+}
+
 # ============================================================================
 # Result unions (one per mutation)
 # ============================================================================
@@ -4760,6 +4797,8 @@ union SendInvitationsResult =
   | InsufficientGroupRoleError
   | InvitationBatchCapExceededError
   | EmailInvitationsUnavailableError
+  | LeagueArchivedError
+  | GroupArchivedError
   | RateLimitError
 
 union ResendInvitationResult =
@@ -4767,6 +4806,8 @@ union ResendInvitationResult =
   | InvitationNotFoundError
   | InsufficientLeagueRoleError
   | InsufficientGroupRoleError
+  | LeagueArchivedError
+  | GroupArchivedError
   | InvitationAlreadyRespondedError
   | InvitationExpiredError
   | RateLimitError
@@ -4784,6 +4825,7 @@ union AcceptInvitationResult =
   | InvitationAlreadyRespondedError
   | InvitationExpiredError
   | InvitationRecipientMismatchError
+  | InvitationOwnerArchivedError
 
 union DeclineInvitationResult =
   | DeclineInvitationResponse
@@ -4799,6 +4841,8 @@ union CreateInviteLinkResult =
   | RateLimitError
   | InsufficientLeagueRoleError
   | InsufficientGroupRoleError
+  | LeagueArchivedError
+  | GroupArchivedError
 
 # The role-error members are currently unreachable: invite_link read and revoke share the same
 # derived roles, so a caller who can read a link can always revoke it. They exist for the
@@ -4815,6 +4859,7 @@ union RedeemInviteLinkResult =
   | InviteLinkExhaustedError
   | InviteLinkRevokedError
   | InviteLinkExpiredError
+  | InvitationOwnerArchivedError
 
 # ============================================================================
 # Query / Mutation extensions
@@ -4826,8 +4871,10 @@ extend type Query {
   for rendering an accept/decline landing page. Token-gated: the caller
   does not need to be authenticated, but anonymous callers cannot act on
   the preview (they must sign in to call `acceptInvitation` /
-  `redeemInviteLink`). Returns null when the token is unknown, revoked,
-  expired, or the owning aggregate is archived.
+  `redeemInviteLink`). Returns null when the token is unknown, revoked by an
+  Admin, expired or used up. When the owning League or Group is archived, an
+  invite link or invitation that would otherwise still work resolves with
+  ownerArchived = true and status REVOKED.
   """
   resolveInvite(token: String!): InvitePreview
 }
@@ -4843,6 +4890,9 @@ extend type Mutation {
   A caller who cannot read the owner (or an owner that does not exist)
   gets `InvitationOwnerNotFoundError`; a caller who can read it but is not
   its Admin gets `InsufficientLeagueRoleError` / `InsufficientGroupRoleError`.
+
+  An Admin of an archived League or Group gets `LeagueArchivedError` /
+  `GroupArchivedError` for every call, an empty `recipients` list included.
   """
   sendInvitations(input: SendInvitationsInput!): SendInvitationsResult!
 
@@ -4852,8 +4902,10 @@ extend type Mutation {
 
   Checks run in order: a caller who cannot read the invitation or its
   owner gets `InvitationNotFoundError`; a non-Admin of the owner gets
-  `InsufficientLeagueRoleError` / `InsufficientGroupRoleError`; only then
-  does a terminal or expired invitation yield
+  `InsufficientLeagueRoleError` / `InsufficientGroupRoleError`; an Admin of
+  an archived League or Group gets `LeagueArchivedError` /
+  `GroupArchivedError`, whatever the invitation's state; only then does a
+  terminal or expired invitation yield
   `InvitationAlreadyRespondedError` / `InvitationExpiredError`.
   """
   resendInvitation(invitationId: ID!): ResendInvitationResult!
@@ -4876,7 +4928,9 @@ extend type Mutation {
   not the recipient gets `InvitationRecipientMismatchError` whatever the
   invitation's status, so only the recipient learns that it is expired
   (`InvitationExpiredError`) or already answered
-  (`InvitationAlreadyRespondedError`). On success, atomically:
+  (`InvitationAlreadyRespondedError`). When the League or Group is archived,
+  the recipient of a `SENT` or `REVOKED` invitation that is not past
+  `expiresAt` gets `InvitationOwnerArchivedError`. On success, atomically:
   - sets `status = ACCEPTED` + `acceptedBy`
   - creates `LeagueMembership` / `GroupMembership` with the invited role
   - for LEAGUE owners, creates or re-activates the `LeaguePlayer`
@@ -4904,6 +4958,9 @@ extend type Mutation {
   exactly once on the response — Admins viewing the link afterwards will
   only see `InviteLink.tokenPreview`. In v1, links can only grant
   `MEMBER` role (Admin role is reserved for direct-add invitations).
+
+  An Admin of an archived League or Group gets `LeagueArchivedError` /
+  `GroupArchivedError`, invalid input included.
   """
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkResult!
 
@@ -4920,6 +4977,13 @@ extend type Mutation {
   decrement). On successful first-time redeem, performs the same
   membership + chat-sync + notification side-effects as
   `acceptInvitation`.
+
+  When the League or Group is archived, a link that would otherwise still
+  work (not revoked by an Admin, expired or used up) gets
+  `InvitationOwnerArchivedError`, as does a prior redeemer of an unexpired
+  link who is no longer a member; a prior redeemer of this link who is
+  still a member gets `alreadyMember = true`. A current member who joined
+  another way gets `InvitationOwnerArchivedError`.
   """
   redeemInviteLink(input: RedeemInviteLinkInput!): RedeemInviteLinkResult!
 }
@@ -6644,11 +6708,17 @@ extend type Mutation {
   updateLeague(input: UpdateLeagueInput!): UpdateLeagueResult!
   """
   Soft-archive a League. Terminal write-freeze — status becomes `ARCHIVED`.
+  Revokes every pending invitation and active invite link in the same
+  transaction; inviters are not notified. Afterwards nobody can be added:
+  addLeagueMember, sendInvitations, resendInvitation and createInviteLink
+  return LeagueArchivedError; acceptInvitation and redeemInviteLink return
+  InvitationOwnerArchivedError.
   """
   archiveLeague(leagueId: ID!): ArchiveLeagueResult!
   """
   Add a member. Direct-add creates the membership row immediately; email
   path delegates to `sendInvitations` and returns `SendInvitationsResponse`.
+  Returns `LeagueArchivedError` when the League is archived.
   """
   addLeagueMember(input: AddLeagueMemberInput!): AddLeagueMemberResult!
   promoteToLeagueAdmin(
@@ -7281,6 +7351,7 @@ union ArchiveOrganizationResult =
 union AddOrganizationAdminResult =
   | AddOrganizationAdminResponse
   | OrganizationNotFoundError
+  | OrganizationArchivedError
   | InsufficientOrganizationRoleError
   | SendInvitationsResponse
 
@@ -7344,12 +7415,14 @@ extend type Mutation {
   Organization are not implicitly archived — they continue to enforce their
   own lifecycle. Archiving is permanent. updateOrganization then returns
   OrganizationArchivedError, and createLeague refuses new Leagues under it.
+  addOrganizationAdmin then returns OrganizationArchivedError.
   """
   archiveOrganization(organizationId: ID!): ArchiveOrganizationResult!
   """
   Add a new admin. Direct-add (userId) creates the admin row immediately;
   email path delegates to the shared `sendInvitations` pipeline and returns
   `SendInvitationsResponse` instead of `AddOrganizationAdminResponse`.
+  Returns `OrganizationArchivedError` when the Organization is archived.
   """
   addOrganizationAdmin(
     input: AddOrganizationAdminInput!
