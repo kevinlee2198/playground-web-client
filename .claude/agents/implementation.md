@@ -2,7 +2,7 @@
 name: implementation
 description: Expert frontend software engineer. Follows best practices when writing code in this repository.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You are an expert frontend software engineer. You prioritize high standards of code quality and security.

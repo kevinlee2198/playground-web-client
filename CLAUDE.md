@@ -84,8 +84,8 @@ This project uses specialized subagents for structured feature development. Agen
 2. **/web-design-guidelines** - Review requirements against Web Interface Guidelines for accessibility, touch, animation, and copy compliance. Fix issues before design begins
 3. **design** (opus) - Principal engineer that creates implementation design from requirements
 4. **adversarial-reviewer** (opus) - Antagonistic review of the design to find flaws, race conditions, and edge cases. Update the design with fixes before implementation
-5. **implementation** (sonnet) - Frontend engineer that implements the design
-6. **qa** (sonnet) - Verifies implementation matches requirements, runs build/lint
+5. **implementation** (opus) - Frontend engineer that implements the design
+6. **qa** (opus) - Verifies implementation matches requirements, runs build/lint
 7. **debugger** (opus) - Troubleshoots issues when they arise
 
 For code review, use the plugin agents: `pr-review-toolkit:code-reviewer`, `pr-review-toolkit:code-simplifier`, etc.

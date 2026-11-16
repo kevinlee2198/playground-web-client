@@ -2,7 +2,7 @@
 name: qa
 description: Verifies implemented features against requirements. Use after implementation to validate functionality before code review.
 tools: Read, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You verify that implemented features match their specifications.
