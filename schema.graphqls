@@ -3787,21 +3787,25 @@ union LeaveGroupResult =
 union CreateGroupPlaceholderPlayerResult =
   | CreateGroupPlaceholderPlayerResponse
   | GroupNotFoundError
+  | GroupArchivedError
   | InsufficientGroupRoleError
 
 union UpdateGroupPlaceholderPlayerResult =
   | UpdateGroupPlaceholderPlayerResponse
   | GroupPlayerNotFoundError
+  | GroupArchivedError
   | InsufficientGroupRoleError
 
 union DeleteGroupPlaceholderPlayerResult =
   | DeleteGroupPlaceholderPlayerResponse
   | GroupPlayerNotFoundError
+  | GroupArchivedError
   | InsufficientGroupRoleError
 
 union RemoveGroupPlayerResult =
   | RemoveGroupPlayerResponse
   | GroupPlayerNotFoundError
+  | GroupArchivedError
   | InsufficientGroupRoleError
 
 # ============================================================================
@@ -3851,6 +3855,7 @@ extend type Mutation {
   addGroupMember, sendInvitations, resendInvitation and createInviteLink
   return GroupArchivedError; acceptInvitation and redeemInviteLink return
   InvitationOwnerArchivedError.
+  Group placeholder-player writes then return GroupArchivedError.
   """
   archiveGroup(groupId: ID!): ArchiveGroupResult!
   """
@@ -3874,21 +3879,31 @@ extend type Mutation {
   Self-initiated leave. `LastAdminError` when the caller is the sole remaining admin.
   """
   leaveGroup(groupId: ID!): LeaveGroupResult!
+  """
+  Creates a placeholder `GroupPlayer` in a Group. Group admins only.
+  Returns GroupArchivedError once the Group is archived.
+  """
   createGroupPlaceholderPlayer(
     input: CreateGroupPlaceholderPlayerInput!
   ): CreateGroupPlaceholderPlayerResult!
+  """
+  Renames a placeholder `GroupPlayer`. Group admins only.
+  Returns GroupArchivedError once the Group is archived.
+  """
   updateGroupPlaceholderPlayer(
     input: UpdateGroupPlaceholderPlayerInput!
   ): UpdateGroupPlaceholderPlayerResult!
   """
   Hard-delete a placeholder `GroupPlayer`. Real-user players use
   `removeGroupPlayer` (which flips status to REMOVED).
+  Returns GroupArchivedError once the Group is archived.
   """
   deleteGroupPlaceholderPlayer(
     playerId: ID!
   ): DeleteGroupPlaceholderPlayerResult!
   """
   Flip a `GroupPlayer` status to REMOVED. Idempotent.
+  Returns GroupArchivedError once the Group is archived.
   """
   removeGroupPlayer(input: RemoveGroupPlayerInput!): RemoveGroupPlayerResult!
 }
@@ -5447,30 +5462,30 @@ extend type Game {
   outcome: GameOutcome!
 }
 
-# League module's contribution to the core-owned GameViewerCan. All false when Game.league is null for the viewer.
+# League module's contribution to the core-owned GameViewerCan. All false when Game.league is null for the viewer or the League is archived.
 extend type GameViewerCan {
   """
-  game_result:report AND no result row AND status reportable.
+  game_result:report AND no result row AND status reportable. False once the League is archived.
   """
   reportResult: Boolean!
   """
-  game_result:confirm AND a reported, unconfirmed row (plus confirm()'s existing service checks).
+  game_result:confirm AND a reported, unconfirmed row (plus confirm()'s existing service checks). False once the League is archived.
   """
   confirmResult: Boolean!
   """
-  game_result:dispute AND a reported, unconfirmed row.
+  game_result:dispute AND a reported, unconfirmed row. False once the League is archived.
   """
   disputeResult: Boolean!
   """
-  game_result:void AND a confirmed, non-forfeit row.
+  game_result:void AND a confirmed, non-forfeit row. False once the League is archived.
   """
   voidResult: Boolean!
   """
-  league schedule reschedule AND gameStatus = SCHEDULED.
+  league schedule reschedule AND gameStatus = SCHEDULED. False once the League is archived.
   """
   reschedule: Boolean!
   """
-  league forfeit AND status reportable AND no confirmed row.
+  league forfeit AND status reportable AND no confirmed row. False once the League is archived.
   """
   forfeit: Boolean!
 }
@@ -5519,6 +5534,7 @@ extend type Mutation {
   can be determined the call returns `ScoreNotEnteredError`. Re-report
   overwrites an unconfirmed result; once confirmed,
   `GameResultAlreadyConfirmedError` is returned.
+  Returns LeagueArchivedError once the League is archived.
   """
   reportGameResult(input: ReportGameResultInput!): ReportGameResultResult!
 
@@ -5531,6 +5547,7 @@ extend type Mutation {
   re-report-vs-confirmed guard, event publication). The two-step flow
   (`update*TeamMetadata` then `reportGameResult`) remains available for
   clients that enter scores incrementally.
+  Returns LeagueArchivedError once the League is archived.
   """
   reportGameResultWithScore(
     input: ReportGameResultWithScoreInput!
@@ -5541,16 +5558,19 @@ extend type Mutation {
   report (`SelfConfirmBlockedError`); league admins bypass that rule. The
   winner is derived from the current scores, so tied scores return
   `ScoreNotEnteredError`. Moves the game to FINALIZED.
+  Returns LeagueArchivedError once the League is archived.
   """
   confirmGameResult(input: ConfirmGameResultInput!): ConfirmGameResultResult!
 
   """
   Reject an UNCONFIRMED report. Captains of either team or league admins. Clears the report so it can be re-reported; notifies the reporter and admins with the note (≤ 1000 characters).
+  Returns LeagueArchivedError once the League is archived.
   """
   disputeGameResult(input: DisputeGameResultInput!): DisputeGameResultResult!
 
   """
   League admin only. Voids a CONFIRMED, non-forfeit result: audit row, clears the result, moves the game FINALIZED → COMPLETE (scores become editable again), notifies both captains.
+  Returns LeagueArchivedError once the League is archived.
   """
   voidGameResult(input: VoidGameResultInput!): VoidGameResultResult!
 }
@@ -5749,6 +5769,7 @@ type GameNotReportableError implements Error {
 union ReportGameResultResult =
   | ReportGameResultResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | ScoreNotEnteredError
   | GameResultAlreadyConfirmedError
   | GameNotReportableError
@@ -5757,6 +5778,7 @@ union ReportGameResultResult =
 union ReportGameResultWithScoreResult =
   | ReportGameResultResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | ScoreValidationError
   | TeamScoreError
   | ScoreNotEnteredError
@@ -5767,6 +5789,7 @@ union ReportGameResultWithScoreResult =
 union ConfirmGameResultResult =
   | ConfirmGameResultResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | GameResultNotReportedError
   | GameResultAlreadyConfirmedError
   | SelfConfirmBlockedError
@@ -5777,6 +5800,7 @@ union ConfirmGameResultResult =
 union DisputeGameResultResult =
   | DisputeGameResultResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | GameResultNotReportedError
   | GameResultAlreadyConfirmedError
   | GameNotReportableError
@@ -5786,6 +5810,7 @@ union DisputeGameResultResult =
 union VoidGameResultResult =
   | VoidGameResultResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | GameResultNotReportedError
   | GameResultNotConfirmedError
   | GameNotReportableError
@@ -5920,16 +5945,19 @@ type RemoveLeaguePlayerResponse {
 union CreateLeaguePlaceholderPlayerResult =
   | CreateLeaguePlaceholderPlayerResponse
   | LeagueNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
 
 union UpdateLeaguePlaceholderPlayerResult =
   | UpdateLeaguePlaceholderPlayerResponse
   | LeaguePlayerNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
 
 union DeleteLeaguePlaceholderPlayerResult =
   | DeleteLeaguePlaceholderPlayerResponse
   | LeaguePlayerNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | PlaceholderHasReferencesError
 
@@ -5937,6 +5965,7 @@ union AddLeaguePlayerToTeamResult =
   | AddLeaguePlayerToTeamResponse
   | LeagueTeamNotFoundError
   | LeaguePlayerNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | CrossLeaguePlayerError
   | ArchivedLeagueTeamError
@@ -5944,6 +5973,7 @@ union AddLeaguePlayerToTeamResult =
 union RemoveLeaguePlayerFromTeamResult =
   | RemoveLeaguePlayerFromTeamResponse
   | LeagueTeamNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | ArchivedLeagueTeamError
 
@@ -5951,6 +5981,7 @@ union SwapLeagueTeamPlayerResult =
   | SwapLeagueTeamPlayerResponse
   | LeagueTeamNotFoundError
   | LeaguePlayerNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | CrossLeaguePlayerError
   | ArchivedLeagueTeamError
@@ -5958,6 +5989,7 @@ union SwapLeagueTeamPlayerResult =
 union RemoveLeaguePlayerResult =
   | RemoveLeaguePlayerResponse
   | LeaguePlayerNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
 
 # ============================================================================
@@ -5965,9 +5997,17 @@ union RemoveLeaguePlayerResult =
 # ============================================================================
 
 extend type Mutation {
+  """
+  Creates a placeholder `LeaguePlayer` in a League. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   createLeaguePlaceholderPlayer(
     input: CreateLeaguePlaceholderPlayerInput!
   ): CreateLeaguePlaceholderPlayerResult!
+  """
+  Renames a placeholder `LeaguePlayer`. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   updateLeaguePlaceholderPlayer(
     input: UpdateLeaguePlaceholderPlayerInput!
   ): UpdateLeaguePlaceholderPlayerResult!
@@ -5976,18 +6016,28 @@ extend type Mutation {
   `PlaceholderHasReferencesError` when any `LeagueTeamRoster` references it.
   Real-user players use `removeLeaguePlayer` (which flips status to REMOVED
   and cascades roster removal).
+  Returns LeagueArchivedError once the League is archived.
   """
   deleteLeaguePlaceholderPlayer(
     playerId: ID!
   ): DeleteLeaguePlaceholderPlayerResult!
+  """
+  Adds a player to a team's roster. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   addLeaguePlayerToTeam(
     input: AddLeaguePlayerToTeamInput!
   ): AddLeaguePlayerToTeamResult!
+  """
+  Takes a player off a team's roster. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   removeLeaguePlayerFromTeam(
     input: RemoveLeaguePlayerFromTeamInput!
   ): RemoveLeaguePlayerFromTeamResult!
   """
   Atomic soft-remove + insert. Rejects `fromPlayerId == toPlayerId`.
+  Returns LeagueArchivedError once the League is archived.
   """
   swapLeagueTeamPlayer(
     input: SwapLeagueTeamPlayerInput!
@@ -5995,6 +6045,7 @@ extend type Mutation {
   """
   Flip a real-user `LeaguePlayer` status to REMOVED and cascade soft-remove
   of any active `LeagueTeamRoster` entries for the player.
+  Returns LeagueArchivedError once the League is archived.
   """
   removeLeaguePlayer(input: RemoveLeaguePlayerInput!): RemoveLeaguePlayerResult!
 }
@@ -6212,17 +6263,20 @@ type AppliedCopyResponse {
 union CreateLeagueTeamResult =
   | CreateLeagueTeamResponse
   | SeasonNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
 
 union UpdateLeagueTeamResult =
   | UpdateLeagueTeamResponse
   | LeagueTeamNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | StaleWriteError
 
 union SetLeagueTeamCaptainResult =
   | SetLeagueTeamCaptainResponse
   | LeagueTeamNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | CaptainNotRosteredError
 
@@ -6230,12 +6284,14 @@ union DeleteLeagueTeamResult =
   | HardDeletedLeagueTeamResponse
   | ArchivedLeagueTeamResponse
   | LeagueTeamNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
 
 union CopyTeamsFromPreviousSeasonResult =
   | PlannedCopyResponse
   | AppliedCopyResponse
   | SeasonNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | CrossLeaguePlayerError
 
@@ -6244,8 +6300,20 @@ union CopyTeamsFromPreviousSeasonResult =
 # ============================================================================
 
 extend type Mutation {
+  """
+  Creates a team in a Season. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   createLeagueTeam(input: CreateLeagueTeamInput!): CreateLeagueTeamResult!
+  """
+  Changes a team's name and color. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   updateLeagueTeam(input: UpdateLeagueTeamInput!): UpdateLeagueTeamResult!
+  """
+  Sets or clears a team's captain. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   setLeagueTeamCaptain(
     input: SetLeagueTeamCaptainInput!
   ): SetLeagueTeamCaptainResult!
@@ -6253,12 +6321,14 @@ extend type Mutation {
   Hard-deletes the team when no Game references it via
   `TeamInstance.sourceTeamId`; otherwise sets `archivedAt` (soft archive).
   The returned union branch signals which path was taken.
+  Returns LeagueArchivedError once the League is archived.
   """
   deleteLeagueTeam(teamId: ID!): DeleteLeagueTeamResult!
   """
   Seeds teams in `targetSeasonId` from `sourceSeasonId`. Both seasons must
   belong to the same League (else `CrossLeaguePlayerError`). With
   `dryRun=true`, returns a planned preview and writes nothing.
+  Returns LeagueArchivedError once the League is archived, dry runs included.
   """
   copyTeamsFromPreviousSeason(
     input: CopyTeamsFromPreviousSeasonInput!
@@ -6713,6 +6783,15 @@ extend type Mutation {
   addLeagueMember, sendInvitations, resendInvitation and createInviteLink
   return LeagueArchivedError; acceptInvitation and redeemInviteLink return
   InvitationOwnerArchivedError.
+  Afterwards league competition writes return LeagueArchivedError: result
+  reports, confirmations, disputes and voids, scheduling, rescheduling,
+  forfeits, team-instance refreshes, and every season, team and player write.
+  Writes through the core game mutations (scores and stats, updateGame,
+  deleteGame, start/end, finalize/unfinalize, cancel, game rosters and
+  participants) are not yet refused.
+  promoteToLeagueAdmin and demoteFromLeagueAdmin are not yet refused.
+  reportGameIssue, leaveLeague and removeLeagueMember stay open; leaving or
+  being removed still clears that person's team captaincies.
   """
   archiveLeague(leagueId: ID!): ArchiveLeagueResult!
   """
@@ -7449,6 +7528,7 @@ extend type Mutation {
   same League and (when `seasonId` is supplied) the same Season. Roster is
   snapshotted from each team's currently-active LeagueTeamRoster (real users
   only — placeholders are excluded). The caller must be a league admin.
+  Returns LeagueArchivedError once the League is archived.
   """
   createScheduledGame(
     input: CreateScheduledGameInput!
@@ -7461,6 +7541,7 @@ extend type Mutation {
   returns) without aborting siblings. Empty input or > 50 rows returns
   `BatchCapExceededError`. Caller must be a league admin for every league
   referenced.
+  A row whose League is archived returns LeagueArchivedError in its `result`.
   """
   createScheduledGames(
     input: CreateScheduledGamesBatchInput!
@@ -7469,6 +7550,7 @@ extend type Mutation {
   """
   Moves a SCHEDULED Game to a new start instant. Other states reject — once
   a game starts, scheduling is no longer the right verb. League admins only.
+  Returns LeagueArchivedError once the League is archived.
   """
   rescheduleGame(input: RescheduleGameInput!): RescheduleGameResult!
 
@@ -7478,6 +7560,7 @@ extend type Mutation {
   participant report → confirm flow). The `winnerTeamInstanceId` must belong
   to the game; the losing side is the other TeamInstance. Already-forfeited
   or cancelled games cannot be forfeited again. League admins only.
+  Returns LeagueArchivedError once the League is archived.
   """
   forfeitGame(input: ForfeitGameInput!): ForfeitGameResult!
 
@@ -7485,6 +7568,7 @@ extend type Mutation {
   Re-copies the current LeagueTeam name + color + active roster onto a Game's
   TeamInstance. Use when a team renames mid-season so freshly-rendered Games
   reflect the change without rewriting historical Games. League admins only.
+  Returns LeagueArchivedError once the League is archived.
   """
   refreshTeamInstanceFromTeam(
     input: RefreshTeamInstanceInput!
@@ -7604,6 +7688,7 @@ union CreateScheduledGamesBatchResult =
 union RescheduleGameResult =
   | RescheduleGameResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | InvalidGameStatusTransitionError
   | InvalidScheduleInputError
   | InsufficientLeagueRoleError
@@ -7611,6 +7696,7 @@ union RescheduleGameResult =
 union ForfeitGameResult =
   | ForfeitGameResponse
   | GameNotFoundError
+  | LeagueArchivedError
   | TeamInstanceNotFoundError
   | InvalidGameStatusTransitionError
   | InvalidScheduleInputError
@@ -7620,6 +7706,7 @@ union RefreshTeamInstanceResult =
   | RefreshTeamInstanceResponse
   | TeamInstanceNotFoundError
   | LeagueTeamNotFoundError
+  | LeagueArchivedError
   | InvalidScheduleInputError
   | InsufficientLeagueRoleError
 # ============================================================================
@@ -7819,6 +7906,7 @@ union CreateSeasonResult =
 union UpdateSeasonResult =
   | UpdateSeasonResponse
   | SeasonNotFoundError
+  | LeagueArchivedError
   | SeasonNotMutableError
   | InsufficientLeagueRoleError
   | InvalidDateRangeError
@@ -7827,12 +7915,14 @@ union UpdateSeasonResult =
 union SetSeasonStatusResult =
   | SetSeasonStatusResponse
   | SeasonNotFoundError
+  | LeagueArchivedError
   | InsufficientLeagueRoleError
   | SeasonEndDatePassedError
 
 union DeleteSeasonResult =
   | DeleteSeasonResponse
   | SeasonNotFoundError
+  | LeagueArchivedError
   | SeasonHasReferencedGamesError
   | InsufficientLeagueRoleError
 
@@ -7841,14 +7931,27 @@ union DeleteSeasonResult =
 # ============================================================================
 
 extend type Mutation {
+  """
+  Creates an ACTIVE Season in a League. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   createSeason(input: CreateSeasonInput!): CreateSeasonResult!
+  """
+  Changes a Season's name and dates. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   updateSeason(input: UpdateSeasonInput!): UpdateSeasonResult!
+  """
+  Sets a Season's `SeasonStatus`. League admins only.
+  Returns LeagueArchivedError once the League is archived.
+  """
   setSeasonStatus(input: SetSeasonStatusInput!): SetSeasonStatusResult!
   """
   Hard delete a Season. Fails with `SeasonHasReferencedGamesError` when any
   Game references this Season via `Game.seasonId`. (That check becomes
   active once PR 7 wires `Game.seasonId` from the schedule service; until
   then `deleteSeason` succeeds unconditionally on authorized calls.)
+  Returns LeagueArchivedError once the League is archived.
   """
   deleteSeason(seasonId: ID!): DeleteSeasonResult!
 }
