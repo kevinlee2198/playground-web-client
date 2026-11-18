@@ -3850,6 +3850,8 @@ extend type Mutation {
   """
   Soft-archive a Group. Terminal write-freeze — status becomes `ARCHIVED`
   and every ACTIVE `GameSeries` in the group is cascaded to `ENDED`.
+  Cancels the Group's upcoming games (every SCHEDULED game starting after
+  the archive) in the same transaction, without notifying anyone.
   Revokes every pending invitation and active invite link in the same
   transaction; inviters are not notified. Afterwards nobody can be added:
   addGroupMember, sendInvitations, resendInvitation and createInviteLink
@@ -6464,10 +6466,42 @@ type League implements Owner & Node {
   """
   viewerIsAdmin: Boolean!
   """
+  What archiveLeague would do if it ran now. Null unless the viewer may archive this League
+  (a league admin or an admin of its Organization) and it is not archived. Advisory and read
+  without locks: the counts can change before archiveLeague runs, which decides again under
+  its own locks.
+  """
+  archivePreview: LeagueArchivePreview
+  """
   The viewer's active membership on this League, or null if none. Returns
   null for anonymous callers.
   """
   viewerMembership: LeagueMembership
+}
+
+"""
+What archiving a League would cancel now, and what it would leave unfinished. No game is
+counted twice.
+"""
+type LeagueArchivePreview {
+  """
+  Upcoming games that archiving cancels (see archiveLeague).
+  """
+  gamesToCancelCount: Int!
+  """
+  Reported results not yet confirmed, on games that are not cancelled and that archiving
+  does not cancel. They stay unconfirmed and do not count in standings.
+  """
+  unconfirmedResultCount: Int!
+  """
+  Games, not cancelled, whose start time has arrived with no result reported. They stay
+  without a result.
+  """
+  unreportedPastGameCount: Int!
+  """
+  ACTIVE seasons. Archiving completes them.
+  """
+  activeSeasonCount: Int!
 }
 
 """
@@ -6604,6 +6638,11 @@ type UpdateLeagueResponse {
 
 type ArchiveLeagueResponse {
   league: League!
+  """
+  How many upcoming games this call cancelled. 0 when the League was already
+  archived.
+  """
+  cancelledGameCount: Int!
 }
 
 type AddLeagueMemberResponse {
@@ -6779,7 +6818,22 @@ extend type Mutation {
   """
   Soft-archive a League. Terminal write-freeze — status becomes `ARCHIVED`.
   Revokes every pending invitation and active invite link in the same
-  transaction; inviters are not notified. Afterwards nobody can be added:
+  transaction; inviters are not notified.
+  Cancels the League's upcoming games in the same transaction: every
+  SCHEDULED game starting after the archive, whether or not a result was
+  reported on it; an early report stays on the cancelled game, unconfirmed.
+  Their players get no message per game (members are told once). Games in
+  progress, played, already cancelled, and past games that never started are
+  left as they are; unconfirmed results stay unconfirmed and do not count in
+  standings. If one of those games stays locked by another write for longer
+  than the database lock timeout, the archive fails with a top-level error and
+  nothing changes.
+  Completes the League's ACTIVE seasons, without a season notification.
+  Every current member except the archiving admin gets one
+  LeagueArchivedNotification, after commit.
+  A second call on an archived League changes nothing and returns
+  cancelledGameCount 0.
+  Afterwards nobody can be added:
   addLeagueMember, sendInvitations, resendInvitation and createInviteLink
   return LeagueArchivedError; acceptInvitation and redeemInviteLink return
   InvitationOwnerArchivedError.
@@ -6936,6 +6990,28 @@ type LeagueMemberRemovedNotification implements Notification & Node {
   The admin who removed you. Null for a system-driven change.
   """
   removedBy: User
+}
+
+"""
+A league you are a member of was archived (see archiveLeague for what that changes). cancelledGameCount says how many of its upcoming games the archive cancelled.
+"""
+type LeagueArchivedNotification implements Notification & Node {
+  id: ID!
+  isRead: Boolean!
+  createdDate: DateTime!
+  """
+  The league. Null once you can no longer read it (e.g. you left an UNLISTED league).
+  """
+  league: League
+  leagueName: String!
+  """
+  The admin who archived it. Null when you can no longer see that user.
+  """
+  archivedBy: User
+  """
+  How many upcoming games the archive cancelled, league-wide. 0 when there were none.
+  """
+  cancelledGameCount: Int!
 }
 
 """
@@ -7723,9 +7799,11 @@ in a `COMPLETED` Season, and late-confirmed results still count in standings.
 
 - `ACTIVE`: the Season is in progress.
 - `COMPLETED`: set by an admin call to `setSeasonStatus`, or automatically
-  within an hour after end-of-day on `endDate` in the league's timezone.
-  An admin can reopen it with `setSeasonStatus(ACTIVE)` while `endDate` is
-  unset or not yet passed; otherwise extend `endDate` first.
+  within an hour after end-of-day on `endDate` in the league's timezone, or
+  when its League is archived (no season notification then).
+  An admin can reopen it with `setSeasonStatus(ACTIVE)` (not once the League
+  is archived) while `endDate` is unset or not yet passed; otherwise extend
+  `endDate` first.
 """
 enum SeasonStatus {
   ACTIVE
