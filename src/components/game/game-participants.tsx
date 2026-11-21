@@ -99,6 +99,7 @@ export function GameParticipants({
                   currentUserId={currentUserId}
                   isUserOnAnyTeam={isUserOnAnyTeam}
                   canJoin={game.viewerCan.join}
+                  canLeave={game.viewerCan.leave}
                   canManageParticipants={game.viewerCan.addParticipants}
                   participantIndex={index}
                 />
@@ -116,6 +117,7 @@ export function GameParticipants({
           currentUserId={currentUserId}
           atParticipantLimit={atParticipantLimit}
           canJoin={game.viewerCan.join}
+          canLeave={game.viewerCan.leave}
           canManageParticipants={game.viewerCan.addParticipants}
         />
       )}

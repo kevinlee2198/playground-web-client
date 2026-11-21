@@ -26,6 +26,7 @@ interface IndividualParticipantListProps {
   currentUserId: number;
   atParticipantLimit: boolean;
   canJoin: boolean;
+  canLeave: boolean;
   canManageParticipants: boolean;
 }
 
@@ -35,6 +36,7 @@ export function IndividualParticipantList({
   currentUserId,
   atParticipantLimit,
   canJoin,
+  canLeave,
   canManageParticipants,
 }: IndividualParticipantListProps) {
   const t = useTranslations();
@@ -89,7 +91,7 @@ export function IndividualParticipantList({
     <div className="space-y-4">
       {/* Join/Leave Game Button */}
       <div className="flex justify-end">
-        {currentUserParticipant ? (
+        {currentUserParticipant && canLeave ? (
           <Button
             variant="outline"
             size="sm"

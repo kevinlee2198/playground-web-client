@@ -48,6 +48,7 @@ interface TeamCardProps {
   currentUserId: number;
   isUserOnAnyTeam: boolean;
   canJoin: boolean;
+  canLeave: boolean;
   canManageParticipants: boolean;
   participantIndex: number;
 }
@@ -58,6 +59,7 @@ export function TeamCard({
   currentUserId,
   isUserOnAnyTeam,
   canJoin,
+  canLeave,
   canManageParticipants,
   participantIndex,
 }: TeamCardProps) {
@@ -73,7 +75,7 @@ export function TeamCard({
     gameStatus === GameStatus.IN_PROGRESS || gameStatus === GameStatus.COMPLETE;
 
   const showJoinButton = !isUserOnTeam && !isUserOnAnyTeam && canJoin;
-  const showLeaveButton = isUserOnTeam;
+  const showLeaveButton = isUserOnTeam && canLeave;
 
   const borderColor = BORDER_COLORS[participantIndex % BORDER_COLORS.length];
   const teamName = deriveTeamName(team, t("leagues.team.unnamed"));

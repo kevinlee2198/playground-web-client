@@ -43,6 +43,15 @@ const otherParticipant = {
   },
 } as unknown as GameParticipantDetail;
 
+const mine = {
+  ...otherParticipant,
+  id: 12,
+  participant: {
+    ...(otherParticipant as never as { participant: object }).participant,
+    id: 1,
+  },
+} as unknown as GameParticipantDetail;
+
 type Props = Parameters<typeof IndividualParticipantList>[0];
 
 function renderList(overrides: Partial<Props> = {}) {
@@ -52,6 +61,7 @@ function renderList(overrides: Partial<Props> = {}) {
     currentUserId: 1,
     atParticipantLimit: false,
     canJoin: false,
+    canLeave: false,
     canManageParticipants: false,
     ...overrides,
   };
@@ -69,6 +79,7 @@ describe("IndividualParticipantList", () => {
         currentUserId={1}
         atParticipantLimit={false}
         canJoin={false}
+        canLeave={false}
         canManageParticipants={false}
       />,
     );
@@ -100,6 +111,7 @@ describe("IndividualParticipantList", () => {
       gameId: 1,
       currentUserId: 1,
       atParticipantLimit: false,
+      canLeave: false,
       canManageParticipants: false,
     };
     const { rerender } = render(
@@ -110,17 +122,15 @@ describe("IndividualParticipantList", () => {
     expect(screen.queryByText("Join Game")).toBeNull();
   });
 
-  it("still shows Leave for the current participant regardless of flags", () => {
-    const mine = {
-      ...otherParticipant,
-      id: 12,
-      participant: {
-        ...(otherParticipant as never as { participant: object }).participant,
-        id: 1,
-      },
-    } as unknown as GameParticipantDetail;
-    renderList({ participants: [mine] });
+  it("shows Leave for the current participant when canLeave is true, regardless of the other flags", () => {
+    renderList({ participants: [mine], canLeave: true });
     expect(screen.getByText("Leave Game")).toBeTruthy();
+    expect(screen.queryByText("Join Game")).toBeNull();
+  });
+
+  it('hides "Leave game" when canLeave is false', () => {
+    renderList({ participants: [mine], canLeave: false });
+    expect(screen.queryByText("Leave Game")).toBeNull();
     expect(screen.queryByText("Join Game")).toBeNull();
   });
 });

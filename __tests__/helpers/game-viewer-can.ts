@@ -15,6 +15,7 @@ export function gameViewerCan(overrides: Partial<GameViewerCan> = {}): GameViewe
     enterStats: false,
     enterOwnStats: false,
     join: false,
+    leave: false,
     addParticipants: false,
     addMedia: false,
     moderateMedia: false,

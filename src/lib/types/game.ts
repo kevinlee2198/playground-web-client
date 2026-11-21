@@ -287,6 +287,7 @@ export interface GameViewerCan {
   enterStats: boolean;
   enterOwnStats: boolean;
   join: boolean;
+  leave: boolean;
   addParticipants: boolean;
   addMedia: boolean;
   moderateMedia: boolean;

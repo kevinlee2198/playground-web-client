@@ -13,6 +13,7 @@ const GAME_VIEWER_CAN_FLAGS = [
   "enterStats",
   "enterOwnStats",
   "join",
+  "leave",
   "addParticipants",
   "addMedia",
   "moderateMedia",
@@ -24,7 +25,7 @@ const GAME_VIEWER_CAN_FLAGS = [
   "forfeit",
 ] as const;
 
-/** All 21 GameViewerCan flags false, plus overrides. */
+/** All 22 GameViewerCan flags false, plus overrides. */
 export function mockGameViewerCan(overrides?: Record<string, boolean>) {
   return {
     ...Object.fromEntries(GAME_VIEWER_CAN_FLAGS.map((flag) => [flag, false])),
