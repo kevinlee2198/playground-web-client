@@ -40,9 +40,9 @@ describe("gameViewerCanFragment", () => {
       [
         "update", "delete", "start", "end", "cancel", "finalizeResults",
         "unfinalizeResults", "manageEditors", "invite", "enterStats",
-        "enterOwnStats", "join", "leave", "addParticipants", "addMedia", "moderateMedia",
-        "reportResult", "confirmResult", "disputeResult", "voidResult",
-        "reschedule", "forfeit",
+        "enterOwnStats", "join", "leave", "addParticipants", "addMedia",
+        "moderateMedia", "reportResult", "confirmResult", "disputeResult",
+        "voidResult", "reschedule", "forfeit",
       ].sort(),
     );
   });

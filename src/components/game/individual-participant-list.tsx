@@ -91,7 +91,7 @@ export function IndividualParticipantList({
     <div className="space-y-4">
       {/* Join/Leave Game Button */}
       <div className="flex justify-end">
-        {currentUserParticipant && canLeave ? (
+        {currentUserParticipant && canLeave && (
           <Button
             variant="outline"
             size="sm"
@@ -100,18 +100,17 @@ export function IndividualParticipantList({
           >
             {t("game.participants.leaveGame")}
           </Button>
-        ) : (
-          showJoinButton && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleJoinGame}
-              disabled={isPending}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              {t("game.participants.joinGame")}
-            </Button>
-          )
+        )}
+        {showJoinButton && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleJoinGame}
+            disabled={isPending}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            {t("game.participants.joinGame")}
+          </Button>
         )}
       </div>
 
