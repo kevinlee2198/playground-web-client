@@ -35,14 +35,14 @@ describe("error fragments", () => {
 });
 
 describe("gameViewerCanFragment", () => {
-  it("selects all 21 capability flags", () => {
+  it("selects all 22 capability flags", () => {
     expect(Object.keys(gameViewerCanFragment).sort()).toEqual(
       [
         "update", "delete", "start", "end", "cancel", "finalizeResults",
         "unfinalizeResults", "manageEditors", "invite", "enterStats",
-        "enterOwnStats", "join", "addParticipants", "addMedia", "moderateMedia",
-        "reportResult", "confirmResult", "disputeResult", "voidResult",
-        "reschedule", "forfeit",
+        "enterOwnStats", "join", "leave", "addParticipants", "addMedia",
+        "moderateMedia", "reportResult", "confirmResult", "disputeResult",
+        "voidResult", "reschedule", "forfeit",
       ].sort(),
     );
   });

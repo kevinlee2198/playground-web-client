@@ -590,6 +590,7 @@ export const gameViewerCanFragment = {
   enterStats: true,
   enterOwnStats: true,
   join: true,
+  leave: true,
   addParticipants: true,
   addMedia: true,
   moderateMedia: true,

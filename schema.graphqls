@@ -605,6 +605,15 @@ type ChatRoomReadOnlyError implements Error {
   chatRoomId: ID!
 }
 
+"""
+This Game is read-only because its League or Group is archived. The error names the League or Group nowhere: read
+Game.league or Game.group, which are null for a viewer who cannot read them.
+"""
+type GameReadOnlyError implements Error {
+  message: String!
+  gameId: ID!
+}
+
 type ChatMessageNotFoundError implements Error {
   message: String!
 }
@@ -1712,35 +1721,35 @@ type ViewerFollowingUsers {
 }
 
 """
-What the viewer may do to a game right now. Every flag is false for an anonymous viewer. A true flag means the matching mutation will not be refused on permission or game-status grounds.
+What the viewer may do to a game right now. Every flag is false for an anonymous viewer. A true flag means the matching mutation will not be refused on permission or game-status grounds, or because the Game's League or Group is archived.
 """
 type GameViewerCan {
   """
-  game:update AND gameStatus not CANCELLED/FORFEITED.
+  game:update AND gameStatus not CANCELLED/FORFEITED. False when the Game's League or Group is archived.
   """
   update: Boolean!
   """
-  game:delete AND gameStatus not CANCELLED/FORFEITED.
+  game:delete AND gameStatus not CANCELLED/FORFEITED. False when the Game's League or Group is archived.
   """
   delete: Boolean!
   """
-  game:start AND gameStatus = SCHEDULED.
+  game:start AND gameStatus = SCHEDULED. False when the Game's League or Group is archived.
   """
   start: Boolean!
   """
-  game:end AND gameStatus = IN_PROGRESS.
+  game:end AND gameStatus = IN_PROGRESS. False when the Game's League or Group is archived.
   """
   end: Boolean!
   """
-  game:cancel AND gameStatus = SCHEDULED.
+  game:cancel AND gameStatus = SCHEDULED. False when the Game's League or Group is archived.
   """
   cancel: Boolean!
   """
-  game:update AND gameStatus = COMPLETE.
+  game:update AND gameStatus = COMPLETE. False when the Game's League or Group is archived.
   """
   finalizeResults: Boolean!
   """
-  game:update AND gameStatus = FINALIZED. On a league game with a confirmed result, unfinalizing reopens confirmation.
+  game:update AND gameStatus = FINALIZED. On a league game with a confirmed result, unfinalizing reopens confirmation. False when the Game's League or Group is archived.
   """
   unfinalizeResults: Boolean!
   """
@@ -1748,23 +1757,27 @@ type GameViewerCan {
   """
   manageEditors: Boolean!
   """
-  game:send_invitation AND the game accepts invitations (not COMPLETE, FINALIZED, CANCELLED or FORFEITED).
+  game:send_invitation AND the game accepts invitations (not COMPLETE, FINALIZED, CANCELLED or FORFEITED). False when the Game's League or Group is archived.
   """
   invite: Boolean!
   """
-  May enter or edit stats for ANY player (per-sport *_stats:create without a target: owner, editor, group admin or league admin in any state, or a participant in OPEN mode while not FINALIZED). False on CANCELLED/FORFEITED.
+  May enter or edit stats for ANY player (per-sport *_stats:create without a target: owner, editor, group admin or league admin in any state, or a participant in OPEN mode while not FINALIZED). False on CANCELLED/FORFEITED. False when the Game's League or Group is archived.
   """
   enterStats: Boolean!
   """
-  May enter or edit the viewer's OWN stats row (per-sport *_stats:create targeting the viewer, viewer is a participant: SELF_REPORT or OPEN mode while not FINALIZED). False on CANCELLED/FORFEITED. A row for user U is editable iff enterStats || (enterOwnStats && U is the viewer).
+  May enter or edit the viewer's OWN stats row (per-sport *_stats:create targeting the viewer, viewer is a participant: SELF_REPORT or OPEN mode while not FINALIZED). False on CANCELLED/FORFEITED. A row for user U is editable iff enterStats || (enterOwnStats && U is the viewer). False when the Game's League or Group is archived.
   """
   enterOwnStats: Boolean!
   """
-  individual_participant:create / team_instance:add_user for the viewer themself; not FINALIZED, CANCELLED or FORFEITED; false when already a participant, and on team games false unless some team still has room.
+  individual_participant:create / team_instance:add_user for the viewer themself; not FINALIZED, CANCELLED or FORFEITED; false when already a participant, and on team games false unless some team still has room. False when the Game's League or Group is archived.
   """
   join: Boolean!
   """
-  team_instance:create for others (owner, editor, group/league admin) AND gameStatus not CANCELLED/FORFEITED.
+  team_instance:remove_user / individual_participant:delete for the viewer themself, when the viewer is on the game. False when the Game's League or Group is archived.
+  """
+  leave: Boolean!
+  """
+  team_instance:create for others (owner, editor, group/league admin) AND gameStatus not CANCELLED/FORFEITED. False when the Game's League or Group is archived.
   """
   addParticipants: Boolean!
   """
@@ -2562,73 +2575,93 @@ union UpdateGameResult =
   | GameNotFoundError
   | InvalidSportConfigError
   | InvalidDateRangeError
-union DeleteGameResult = DeleteGameResponse | GameNotFoundError
+  | GameReadOnlyError
+union DeleteGameResult =
+  | DeleteGameResponse
+  | GameNotFoundError
+  | GameReadOnlyError
 union StartGameResult =
   | StartGameResponse
   | GameNotFoundError
   | InvalidGameStatusTransitionError
+  | GameReadOnlyError
 union EndGameResult =
   | EndGameResponse
   | GameNotFoundError
   | InvalidGameStatusTransitionError
+  | GameReadOnlyError
 union FinalizeGameResultsResult =
   | FinalizeGameResultsResponse
   | GameNotFoundError
   | InvalidGameStatusTransitionError
+  | GameReadOnlyError
 union UnfinalizeGameResultsResult =
   | UnfinalizeGameResultsResponse
   | GameNotFoundError
   | InvalidGameStatusTransitionError
+  | GameReadOnlyError
 union CancelGameResult =
   | CancelGameResponse
   | GameNotFoundError
   | InvalidGameStatusTransitionError
   | InsufficientGameRoleError
+  | GameReadOnlyError
 union AddGameParticipantResult =
   | AddGameParticipantResponse
   | GameNotFoundError
   | UserNotFoundError
   | InvalidParticipantTypeError
+  | GameReadOnlyError
 union AddGameParticipantsResult =
   | AddGameParticipantsResponse
   | GameNotFoundError
   | UserNotFoundError
   | InvalidParticipantTypeError
+  | GameReadOnlyError
 union UpdateGameParticipantResult =
   | UpdateGameParticipantResponse
   | GameNotFoundError
   | ParticipantNotFoundError
+  | GameReadOnlyError
 union UpdateGameParticipantsResult =
   | UpdateGameParticipantsResponse
   | GameNotFoundError
   | ParticipantNotFoundError
+  | GameReadOnlyError
 union RemoveGameParticipantResult =
   | RemoveGameParticipantResponse
   | GameNotFoundError
   | ParticipantNotFoundError
+  | GameReadOnlyError
 union RemoveGameParticipantsResult =
   | RemoveGameParticipantsResponse
   | GameNotFoundError
   | ParticipantNotFoundError
+  | GameReadOnlyError
 union AddUserToTeamInstanceResult =
   | AddUserToTeamInstanceResponse
   | TeamInstanceNotFoundError
   | UserNotFoundError
+  | GameReadOnlyError
 union AddUsersToTeamInstanceResult =
   | AddUsersToTeamInstanceResponse
   | TeamInstanceNotFoundError
   | UserNotFoundError
+  | GameReadOnlyError
 union AddGuestToTeamInstanceResult =
   | AddGuestToTeamInstanceResponse
   | TeamInstanceNotFoundError
+  | GameReadOnlyError
 union RemoveUserFromTeamInstanceResult =
   | RemoveUserFromTeamInstanceResponse
   | TeamInstanceNotFoundError
   | UserNotFoundError
+  | GameReadOnlyError
 union RemoveUsersFromTeamInstanceResult =
   | RemoveUsersFromTeamInstanceResponse
   | TeamInstanceNotFoundError
   | UserNotFoundError
+  | GameReadOnlyError
 
 # ============================================================================
 # Game Editor Management
@@ -2927,10 +2960,12 @@ union SendGameInvitationResult =
   | AlreadyParticipantError
   | UserBlockedError
   | GameCompleteError
+  | GameReadOnlyError
 union SendGameInvitationsResult =
   | SendGameInvitationsResponse
   | GameNotFoundError
   | GameCompleteError
+  | GameReadOnlyError
 union AcceptGameInvitationResult =
   | AcceptGameInvitationResponse
   | InvitationNotFoundError
@@ -3354,6 +3389,7 @@ union RemoveGameSeriesSkipDateResult =
 union CreateGameFromSeriesOccurrenceResult =
   | CreateGameFromSeriesOccurrenceResponse
   | GameSeriesNotFoundError
+  | GroupArchivedError
   | GameSeriesEndedError
   | OccurrenceOutsideMaterializationWindowError
   | OccurrenceSkippedError
@@ -3366,6 +3402,7 @@ union CreateGameFromSeriesOccurrenceResult =
 extend type Mutation {
   """
   Create a weekly series in a group (group admin only).
+  Returns GroupArchivedError once the Group is archived.
   """
   createGameSeries(input: CreateGameSeriesInput!): CreateGameSeriesResult!
   """
@@ -3399,6 +3436,7 @@ extend type Mutation {
   a repeat call returns the existing game with `created: false`. Singles
   formats promote YES RSVPs (and their guests) to participants; team formats
   start participant-less and teams are formed on game day.
+  Returns GroupArchivedError once the Group is archived.
   """
   createGameFromSeriesOccurrence(
     input: CreateGameFromSeriesOccurrenceInput!
@@ -3858,6 +3896,13 @@ extend type Mutation {
   return GroupArchivedError; acceptInvitation and redeemInviteLink return
   InvitationOwnerArchivedError.
   Group placeholder-player writes then return GroupArchivedError.
+  Afterwards the core game mutations return GameReadOnlyError on its games:
+  editing, deleting, starting, ending, cancelling, finalizing and reopening
+  them, score and stat edits, roster changes and new game invitations. Adding
+  and removing game media, answering a game invitation and managing a game's
+  editors stay open. createGameSeries, createGameFromSeriesOccurrence and
+  withdrawFromOccurrence return GroupArchivedError; leaving the Group and
+  removing a member stay open.
   """
   archiveGroup(groupId: ID!): ArchiveGroupResult!
   """
@@ -4164,6 +4209,7 @@ union RemoveOccurrenceRsvpResult =
 union WithdrawFromOccurrenceResult =
   | WithdrawFromOccurrenceResponse
   | GameSeriesNotFoundError
+  | GroupArchivedError
   | OccurrenceNotMaterializedError
   | GameNotScheduledError
   | OccurrenceAlreadyStartedError
@@ -4203,6 +4249,7 @@ extend type Mutation {
   has not started. The caller's YES/WAITLIST becomes NO, the waitlist is
   drained, and on singles games the roster follows (the caller's party leaves,
   promoted parties join); on team games the caller leaves their team.
+  Returns GroupArchivedError once the Group is archived.
   """
   withdrawFromOccurrence(
     input: OccurrenceRsvpTargetInput!
@@ -6840,9 +6887,11 @@ extend type Mutation {
   Afterwards league competition writes return LeagueArchivedError: result
   reports, confirmations, disputes and voids, scheduling, rescheduling,
   forfeits, team-instance refreshes, and every season, team and player write.
-  Writes through the core game mutations (scores and stats, updateGame,
-  deleteGame, start/end, finalize/unfinalize, cancel, game rosters and
-  participants) are not yet refused.
+  Afterwards the core game mutations return GameReadOnlyError on its games:
+  editing, deleting, starting, ending, cancelling, finalizing and reopening
+  them, score and stat edits, roster changes and new game invitations. Adding
+  and removing game media, answering a game invitation and managing a game's
+  editors stay open.
   promoteToLeagueAdmin and demoteFromLeagueAdmin are not yet refused.
   reportGameIssue, leaveLeague and removeLeagueMember stay open; leaving or
   being removed still clears that person's team captaincies.
@@ -8621,19 +8670,23 @@ type Mutation {
   createGame(input: CreateGameInput!): CreateGameResult!
   """
   Update a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   updateGame(input: UpdateGameInput!): UpdateGameResult!
   """
   Delete a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   deleteGame(input: DeleteGameInput!): DeleteGameResult!
   """
   Add a participant to a game.
   Use teamInstance for team sports, individual for individual competition formats.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   addGameParticipant(input: AddGameParticipantInput!): AddGameParticipantResult!
   """
   Add multiple participants to a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   addGameParticipants(
     input: AddGameParticipantsInput!
@@ -8641,54 +8694,63 @@ type Mutation {
   """
   Update a participant in a game.
   Currently only team instances have updatable fields.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   updateGameParticipant(
     input: UpdateGameParticipantInput!
   ): UpdateGameParticipantResult!
   """
   Update multiple participants in a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   updateGameParticipants(
     input: UpdateGameParticipantsInput!
   ): UpdateGameParticipantsResult!
   """
   Remove a participant from a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   removeGameParticipant(
     input: RemoveGameParticipantInput!
   ): RemoveGameParticipantResult!
   """
   Remove multiple participants from a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   removeGameParticipants(
     input: RemoveGameParticipantsInput!
   ): RemoveGameParticipantsResult!
   """
   Add a user to an existing team instance.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   addUserToTeamInstance(
     input: AddUserToTeamInstanceInput!
   ): AddUserToTeamInstanceResult!
   """
   Add multiple users to an existing team instance.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   addUsersToTeamInstance(
     input: AddUsersToTeamInstanceInput!
   ): AddUsersToTeamInstanceResult!
   """
   Add a named guest (no account) to an existing team instance. Game managers only.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   addGuestToTeamInstance(
     input: AddGuestToTeamInstanceInput!
   ): AddGuestToTeamInstanceResult!
   """
   Remove a user from a team instance.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   removeUserFromTeamInstance(
     input: RemoveUserFromTeamInstanceInput!
   ): RemoveUserFromTeamInstanceResult!
   """
   Remove multiple users from a team instance.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   removeUsersFromTeamInstance(
     input: RemoveUsersFromTeamInstanceInput!
@@ -8702,16 +8764,19 @@ type Mutation {
   """
   Start a game.
   Enables saving of statistics to the game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   startGame(input: StartGameInput!): StartGameResult!
   """
   End a game.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   endGame(input: EndGameInput!): EndGameResult!
   """
   Finalize the game. Transitions status from COMPLETE to FINALIZED.
   When finalized, all scores, statistics, rosters, and participants are locked.
   Only the organizer (owner/editor) can modify data while finalized.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   finalizeGameResults(
     input: FinalizeGameResultsInput!
@@ -8719,12 +8784,14 @@ type Mutation {
   """
   Reverse finalization. Transitions status from FINALIZED back to COMPLETE,
   allowing participants to edit scores and statistics again.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   unfinalizeGameResults(
     input: UnfinalizeGameResultsInput!
   ): UnfinalizeGameResultsResult!
   """
   Cancel a SCHEDULED game. Owner, editor, group admin (group games) or league admin (league games).
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   cancelGame(input: CancelGameInput!): CancelGameResult!
   """
@@ -8863,148 +8930,171 @@ type Mutation {
   deleteChatMessage(input: DeleteChatMessageInput!): DeleteChatMessageResult!
   """
   Save stats for a basketball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBasketballStats(
     input: SaveBasketballStatsInput!
   ): SaveBasketballStatsResult!
   """
   Save stats for multiple users in a basketball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBasketballStatsBulk(
     input: SaveBasketballStatsBulkInput!
   ): SaveBasketballStatsBulkResult!
   """
   Save offensive stats for a football game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveFootballOffensiveStats(
     input: SaveFootballOffensiveStatsInput!
   ): SaveFootballOffensiveStatsResult!
   """
   Save offensive stats for multiple users in a football game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveFootballOffensiveStatsBulk(
     input: SaveFootballOffensiveStatsBulkInput!
   ): SaveFootballOffensiveStatsBulkResult!
   """
   Save defensive stats for a football game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveFootballDefensiveStats(
     input: SaveFootballDefensiveStatsInput!
   ): SaveFootballDefensiveStatsResult!
   """
   Save defensive stats for multiple users in a football game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveFootballDefensiveStatsBulk(
     input: SaveFootballDefensiveStatsBulkInput!
   ): SaveFootballDefensiveStatsBulkResult!
   """
   Save special teams stats for a football game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveFootballSpecialTeamsStats(
     input: SaveFootballSpecialTeamsStatsInput!
   ): SaveFootballSpecialTeamsStatsResult!
   """
   Save special teams stats for multiple users in a football game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveFootballSpecialTeamsStatsBulk(
     input: SaveFootballSpecialTeamsStatsBulkInput!
   ): SaveFootballSpecialTeamsStatsBulkResult!
   """
   Save stats for a pickleball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   savePickleballStats(
     input: SavePickleballStatsInput!
   ): SavePickleballStatsResult!
   """
   Save stats for multiple users in a pickleball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   savePickleballStatsBulk(
     input: SavePickleballStatsBulkInput!
   ): SavePickleballStatsBulkResult!
   """
   Save stats for a tennis match.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveTennisStats(input: SaveTennisStatsInput!): SaveTennisStatsResult!
   """
   Save stats for multiple users in a tennis match.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveTennisStatsBulk(
     input: SaveTennisStatsBulkInput!
   ): SaveTennisStatsBulkResult!
   """
   Save batting stats for a baseball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBaseballBattingStats(
     input: SaveBaseballBattingStatsInput!
   ): SaveBaseballBattingStatsResult!
   """
   Save batting stats for multiple users in a baseball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBaseballBattingStatsBulk(
     input: SaveBaseballBattingStatsBulkInput!
   ): SaveBaseballBattingStatsBulkResult!
   """
   Save pitching stats for a baseball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBaseballPitchingStats(
     input: SaveBaseballPitchingStatsInput!
   ): SaveBaseballPitchingStatsResult!
   """
   Save pitching stats for multiple users in a baseball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBaseballPitchingStatsBulk(
     input: SaveBaseballPitchingStatsBulkInput!
   ): SaveBaseballPitchingStatsBulkResult!
   """
   Save fielding stats for a baseball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBaseballFieldingStats(
     input: SaveBaseballFieldingStatsInput!
   ): SaveBaseballFieldingStatsResult!
   """
   Save fielding stats for multiple users in a baseball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveBaseballFieldingStatsBulk(
     input: SaveBaseballFieldingStatsBulkInput!
   ): SaveBaseballFieldingStatsBulkResult!
   """
   Save stats for a volleyball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveVolleyballStats(
     input: SaveVolleyballStatsInput!
   ): SaveVolleyballStatsResult!
   """
   Save stats for multiple users in a volleyball game.
-  Only available for games that are IN_PROGRESS or COMPLETE
+  Only available for games that are IN_PROGRESS or COMPLETE.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   saveVolleyballStatsBulk(
     input: SaveVolleyballStatsBulkInput!
   ): SaveVolleyballStatsBulkResult!
   """
   Send a game invitation to a user. Only managers (owner/editor) can send.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   sendGameInvitation(input: SendGameInvitationInput!): SendGameInvitationResult!
   """
-  Send game invitations to multiple users. Partial-failure semantics.
+  Send game invitations to multiple users. Partial-failure semantics per invitee;
+  GameNotFoundError, GameCompleteError and GameReadOnlyError refuse the whole call and send nothing.
+  Returns GameReadOnlyError once the Game's League or Group is archived.
   """
   sendGameInvitations(
     input: SendGameInvitationsInput!
@@ -9217,10 +9307,12 @@ union SaveBasketballStatsResult =
   | SaveBasketballStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveBasketballStatsBulkResult =
   | SaveBasketballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Football Offensive Stats
@@ -9347,10 +9439,12 @@ union SaveFootballOffensiveStatsResult =
   | SaveFootballOffensiveStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveFootballOffensiveStatsBulkResult =
   | SaveFootballOffensiveStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Football Defensive Stats
@@ -9466,10 +9560,12 @@ union SaveFootballDefensiveStatsResult =
   | SaveFootballDefensiveStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveFootballDefensiveStatsBulkResult =
   | SaveFootballDefensiveStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Football Special Teams Stats
@@ -9589,10 +9685,12 @@ union SaveFootballSpecialTeamsStatsResult =
   | SaveFootballSpecialTeamsStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveFootballSpecialTeamsStatsBulkResult =
   | SaveFootballSpecialTeamsStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Pickleball Stats
@@ -9707,10 +9805,12 @@ union SavePickleballStatsResult =
   | SavePickleballStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SavePickleballStatsBulkResult =
   | SavePickleballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Tennis Stats
@@ -9877,10 +9977,12 @@ union SaveTennisStatsResult =
   | SaveTennisStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveTennisStatsBulkResult =
   | SaveTennisStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Baseball Batting Stats
@@ -9996,10 +10098,12 @@ union SaveBaseballBattingStatsResult =
   | SaveBaseballBattingStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveBaseballBattingStatsBulkResult =
   | SaveBaseballBattingStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Baseball Pitching Stats
@@ -10115,10 +10219,12 @@ union SaveBaseballPitchingStatsResult =
   | SaveBaseballPitchingStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveBaseballPitchingStatsBulkResult =
   | SaveBaseballPitchingStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Baseball Fielding Stats
@@ -10203,10 +10309,12 @@ union SaveBaseballFieldingStatsResult =
   | SaveBaseballFieldingStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveBaseballFieldingStatsBulkResult =
   | SaveBaseballFieldingStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 
 # ============================================================================
 # Volleyball Stats
@@ -10317,10 +10425,12 @@ union SaveVolleyballStatsResult =
   | SaveVolleyballStatsResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 union SaveVolleyballStatsBulkResult =
   | SaveVolleyballStatsBulkResponse
   | GameNotFoundError
   | InvalidSportTypeError
+  | GameReadOnlyError
 type RotateIcalTokenResponse {
   """
   When the new secret took effect. Personal `calendarFeed` URLs issued before this stop working.
